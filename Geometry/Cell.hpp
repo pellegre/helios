@@ -54,12 +54,17 @@ public:
     };
 
 	Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo flags = NONE);
+	/* Prevent copy */
+	Cell(const Cell& surface);
+	Cell& operator= (const Cell& other);
 
     /* Get container of bounding surfaces. */
     const std::vector<CellSurface>& getBoundingSurfaces() const { return surfaces;}
 
     /* Return the cell ID. */
     const CellId& getCellId() const {return cellid;}
+	/* Return the internal ID associated with this surface. */
+	const InternalCellId& getInternalId() const {return int_cellid;}
 
     /* Return information about this cell */
     CellInfo getFlag() const {return flag;}
@@ -78,7 +83,10 @@ public:
 	virtual ~Cell() {/* */};
 
 private:
-
+	/* Static counter, incremented by one each time a surface is created */
+	static size_t counter;
+	/* Internal identification of this surface */
+	InternalCellId int_cellid;
     /* A vector of surfaces and senses that define this cell */
     std::vector<CellSurface> surfaces;
     /* Cell id choose by the user */

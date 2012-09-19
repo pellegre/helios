@@ -33,17 +33,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /* Some types used in the program */
 
 namespace Helios {
-
 	BZ_USING_NAMESPACE(blitz)
+
 	/* Define a coordinate */
 	typedef TinyVector<double,3> Coordinate;
 	/* Define a direction */
 	typedef TinyVector<double,3> Direction;
+
 	/* Surface ID defined by the user */
 	typedef unsigned int SurfaceId;
 	/* Cell ID defined by the user */
 	typedef unsigned int CellId;
 
+	/* Surface ID used internally */
+	typedef unsigned int InternalSurfaceId;
+	/* Cell ID used internally */
+	typedef unsigned int InternalCellId;
 }
 
 #endif /* TYPES_H_ */

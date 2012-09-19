@@ -30,15 +30,17 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <map>
 #include <exception>
 #include <fstream>
-#include <map>
-#include <blitz/array.h>
 
 #include "../Common.hpp"
 
 namespace Helios {
+
+	/* Define the Cell class */
+	class Cell;
 
 	class Surface {
 
@@ -58,7 +60,9 @@ namespace Helios {
 		virtual bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) = 0;
 
 		/* Return the user ID associated with this surface. */
-		SurfaceId getUserId() const {return surfid;}
+		const SurfaceId& getUserId() const {return surfid;}
+		/* Return the internal ID associated with this surface. */
+		const InternalSurfaceId& getInternalId() const {return int_surfid;}
 		/* Get the extra information of the surface */
 		SurfaceInfo getFlags() const {return flag;}
 		/* Set different options for the surfaces */
@@ -67,21 +71,25 @@ namespace Helios {
 	protected:
 
 		/* Surface constructor function */
-		typedef Surface(*(*Constructor)(const SurfaceId&));
+		typedef Surface(*(*Constructor)(const SurfaceId&, const std::vector<double>&));
 		/* Friendly factory */
 		friend class SurfaceFactory;
 		/* Friendly printer */
 		friend std::ostream& operator<<(std::ostream& out, const Surface& q);
 
 		/* Create surface from user id */
-		Surface(const SurfaceId& surfid) : surfid(surfid), flag(NONE) {/* */};
+		Surface(const SurfaceId& surfid);
 		/* Create surface from user id and flags */
-		Surface(const SurfaceId& surfid, SurfaceInfo flag) : surfid(surfid), flag(flag) {/* */};
-		/* Copy constructor */
-		Surface(const Surface& surface) : surfid(surface.surfid), flag(surface.flag) {/* */};
+		Surface(const SurfaceId& surfid, SurfaceInfo flag);
+		/* Prevent copy */
+		Surface(const Surface& surface);
+		Surface& operator= (const Surface& other);
 
-		/* Setup internal data from stream (this function is called from the parser) */
-		virtual void setup(const std::ifstream& in) = 0;
+		/* Add a neighbor cell of this surface */
+		void addNeighborCell(const bool& sense, Cell* cell);
+		/* Get neighbor cells of this surface */
+		const std::vector<Cell*>& getNeighborCell(const bool& sense) const;
+
 		/* Mathematically define a surface as a collection of points that satisfy this equation */
 		virtual double function(const Coordinate& pos) const = 0;
 		/* Print internal parameters of the surface */
@@ -95,12 +103,32 @@ namespace Helios {
 		virtual ~Surface() {/* */};
 
 	private:
-
+		/* Static counter, incremented by one each time a surface is created */
+		static size_t counter;
+		/* Internal identification of this surface */
+		InternalSurfaceId int_surfid;
 		/* User's identification of this surface */
 		SurfaceId surfid;
 		/* Information about the surface */
 		SurfaceInfo flag;
+		/* Neighbor cells */
+		std::vector<Cell*> neighbor_pos;
+		std::vector<Cell*> neighbor_neg;
 	};
+
+	inline void Surface::addNeighborCell(const bool& sense, Cell* cell) {
+		if(sense)
+			neighbor_pos.push_back(cell);
+		else
+			neighbor_neg.push_back(cell);
+	}
+
+	inline const std::vector<Cell*>& Surface::getNeighborCell(const bool& sense) const {
+		if(sense)
+			return neighbor_pos;
+		else
+			return neighbor_neg;
+	}
 
 	class SurfaceFactory {
 
@@ -137,7 +165,7 @@ namespace Helios {
 		void registerSurface(const Surface& surface);
 
 		/* Create a new surface */
-		Surface* createSurface(const std::string& type, const SurfaceId& surid) const;
+		Surface* createSurface(const std::string& type, const SurfaceId& surid, const std::vector<double>& coeffs) const;
 
 	};
 

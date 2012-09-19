@@ -31,13 +31,30 @@ using namespace std;
 
 namespace Helios {
 
+/* Global counter */
+size_t Surface::counter = 0;
+
 /* Static global instance of the singleton */
 SurfaceFactory SurfaceFactory::factory;
 
-Surface* SurfaceFactory::createSurface(const string& type, const SurfaceId& surid) const {
+Surface::Surface(const SurfaceId& surfid) : surfid(surfid), flag(NONE) {
+	/* Set internal ID */
+	int_surfid = counter;
+	/* Increment counter */
+	counter++;
+};
+
+Surface::Surface(const SurfaceId& surfid, SurfaceInfo flag) : surfid(surfid), flag(flag) {
+	/* Set internal ID */
+	int_surfid = counter;
+	/* Increment counter */
+	counter++;
+}
+
+Surface* SurfaceFactory::createSurface(const string& type, const SurfaceId& surid, const std::vector<double>& coeffs) const {
 	map<string,Surface::Constructor>::const_iterator it_type = constructor_table.find(type);
 	if(it_type != constructor_table.end())
-		return (*it_type).second(surid);
+		return (*it_type).second(surid,coeffs);
 	else
 		throw BadSurfaceCreation(type);
 }

@@ -33,11 +33,18 @@ using namespace std;
 
 namespace Helios {
 
+/* Global counter */
+size_t Cell::counter = 0;
+
 Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo flag) :
 	cellid(cellid),
 	surfaces(surfaces),
-	flag(flag)
-	{/* */}
+	flag(flag) {
+	/* Set internal ID */
+	int_cellid = counter;
+	/* Increment counter */
+	counter++;
+}
 
 std::ostream& operator<<(std::ostream& out, const Cell& q) {
 	vector<Cell::CellSurface>::const_iterator it_sur = q.surfaces.begin();
