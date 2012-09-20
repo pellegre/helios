@@ -60,16 +60,56 @@ namespace Helios {
 
 	public:
 
+		/* ---- Geometry classes : Encapsulate all the geometry entities information */
+
+		class SurfaceDefinition {
+			SurfaceId userSurfaceId;
+			std::string type;
+			std::vector<double> coeffs;
+		public:
+			SurfaceDefinition(const SurfaceId& userSurfaceId, const std::string& type, const std::vector<double>& coeffs) :
+				userSurfaceId(userSurfaceId), type(type), coeffs(coeffs) {/* */}
+			std::vector<double> getCoeffs() const {
+				return coeffs;
+			}
+			std::string getType() const {
+				return type;
+			}
+			SurfaceId getUserSurfaceId() const {
+				return userSurfaceId;
+			}
+			~SurfaceDefinition() {/* */}
+		};
+
+		class CellDefinition {
+			CellId userCellId;
+			std::vector<signed int> surfacesId;
+			Cell::CellInfo flags;
+		public:
+			CellDefinition(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo flags = Cell::NONE) :
+				userCellId(userCellId), surfacesId(surfacesId), flags(flags) {/* */}
+			Cell::CellInfo getFlags() const {
+				return flags;
+			}
+			std::vector<signed int> getSurfacesId() const {
+				return surfacesId;
+			}
+			CellId getUserCellId() const {
+				return userCellId;
+			}
+			~CellDefinition() {/* */}
+		};
+
 		/* Access to the geometry of the problem */
 		static inline Geometry& access() {return geo;}
 
 		/* ---- Geometry setup */
 
 		/* Add a surface */
-		void addSurface(const SurfaceId& userSurfaceId, const std::string& type, const std::vector<double>& coeffs);
+		void addSurface(const SurfaceDefinition& sur_def);
 
 		/* Add cell */
-		void addCell(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo flags = Cell::NONE);
+		void addCell(const CellDefinition& cell_def);
 
 		/* Print cell with each surface of the geometry */
 		void printGeo(std::ostream& out) const;

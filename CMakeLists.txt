@@ -31,7 +31,12 @@ MARK_AS_ADVANCED(Blitz_INCLUDE_DIR Blitz_LIBRARY)
 add_executable(mc++ 
                Geometry/Cell.cpp
                Geometry/Surface.cpp
-               Geometry/Geometry.cpp                  
+               Geometry/Geometry.cpp
+               Parser/Parser.cpp
+               Parser/XMLParser/tinystr.cpp
+               Parser/XMLParser/tinyxml.cpp                  
+               Parser/XMLParser/tinyxmlerror.cpp                  
+               Parser/XMLParser/tinyxmlparser.cpp                  
                Main.cpp
                )
 

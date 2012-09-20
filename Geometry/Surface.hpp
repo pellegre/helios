@@ -79,6 +79,11 @@ namespace Helios {
 		/* Determine distance to intersection with the surface. Returns whether it hits and pass back what the distance is. */
 		virtual bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) = 0;
 
+		/* Add a neighbor cell of this surface */
+		void addNeighborCell(const bool& sense, Cell* cell);
+		/* Get neighbor cells of this surface */
+		const std::vector<Cell*>& getNeighborCell(const bool& sense) const;
+
 		/* Return the user ID associated with this surface. */
 		const SurfaceId& getUserId() const {return surfid;}
 		/* Return the internal ID associated with this surface. */
@@ -99,11 +104,6 @@ namespace Helios {
 		/* Prevent copy */
 		Surface(const Surface& surface);
 		Surface& operator= (const Surface& other);
-
-		/* Add a neighbor cell of this surface */
-		void addNeighborCell(const bool& sense, Cell* cell);
-		/* Get neighbor cells of this surface */
-		const std::vector<Cell*>& getNeighborCell(const bool& sense) const;
 
 		/* Mathematically define a surface as a collection of points that satisfy this equation */
 		virtual double function(const Coordinate& pos) const = 0;

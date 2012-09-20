@@ -39,7 +39,12 @@ Geometry Geometry::geo;
 
 Geometry::Geometry() {/* */}
 
-void Geometry::addSurface(const SurfaceId& userSurfaceId, const string& type, const std::vector<double>& coeffs) {
+void Geometry::addSurface(const SurfaceDefinition& sur_def) {
+	/* Surface information */
+	SurfaceId userSurfaceId(sur_def.getUserSurfaceId());
+	string type(sur_def.getType());
+	vector<double> coeffs(sur_def.getCoeffs());
+
 	/* Check duplicated IDs */
 	map<SurfaceId, InternalSurfaceId>::const_iterator it_id = surface_map.find(userSurfaceId);
 	if(it_id != surface_map.end())
@@ -53,7 +58,12 @@ void Geometry::addSurface(const SurfaceId& userSurfaceId, const string& type, co
 	surfaces.push_back(new_surface);
 }
 
-void Geometry::addCell(const CellId& userCellId, const vector<signed int>& surfacesId, const Cell::CellInfo flags) {
+void Geometry::addCell(const CellDefinition& cell_def) {
+	/* Cell information */
+	CellId userCellId(cell_def.getUserCellId());
+	vector<signed int> surfacesId(cell_def.getSurfacesId());
+	const Cell::CellInfo flags(cell_def.getFlags());
+
 	/* Check duplicated IDs */
 	map<CellId, InternalCellId>::const_iterator it_id = cell_map.find(userCellId);
 	if(it_id != cell_map.end())
@@ -85,6 +95,11 @@ void Geometry::addCell(const CellId& userCellId, const vector<signed int>& surfa
     cell_map[new_cell->getUserId()] = new_cell->getInternalId();
     /* Push the cell into the container */
     cells.push_back(new_cell);
+
+    /* Set the new cell on surfaces neighbor container */
+    vector<Cell::CellSurface>::iterator it_sur = boundingSurfaces.begin();
+    for(; it_sur != boundingSurfaces.end() ; ++it_sur)
+    	(*it_sur).first->addNeighborCell((*it_sur).second,new_cell);
 }
 
 Geometry::~Geometry() {

@@ -27,8 +27,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 
-using namespace std;
+#include "Parser/Parser.hpp"
 
-int main() {
+using namespace std;
+using namespace Helios;
+
+int main(int argc, char* argv[]) {
+
 	return 0;
 }

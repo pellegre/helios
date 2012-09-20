@@ -52,20 +52,13 @@ namespace Helios {
 	/* Cell ID used internally */
 	typedef unsigned int InternalCellId;
 
+	/* Get a value from a string */
 	template<typename T>
-	static T fromString(const std::string& str) {
-		std::istringstream s(str);
-		T t;
-		s >> t;
-		return t;
-	}
+	static inline T fromString(const std::string& str) {std::istringstream s(str);T t;s >> t;return t;}
 
+	/* Convert to string */
 	template<typename T>
-	static std::string toString(const T& t) {
-		std::ostringstream s;
-		s << t;
-		return s.str();
-	}
+	static inline std::string toString(const T& t) {std::ostringstream s;s << t;return s.str();}
 
 }
 
