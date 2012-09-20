@@ -36,6 +36,9 @@ namespace Helios {
 /* Global counter */
 size_t Cell::counter = 0;
 
+/* Static global instance of the singleton */
+CellFactory CellFactory::factory;
+
 Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo flag) :
 	cellid(cellid),
 	surfaces(surfaces),
@@ -48,7 +51,7 @@ Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellI
 
 std::ostream& operator<<(std::ostream& out, const Cell& q) {
 	vector<Cell::CellSurface>::const_iterator it_sur = q.surfaces.begin();
-	out << "[#] Cell = " << q.getCellId() << endl;
+	out << "[#] Cell = " << q.getUserId() << "( Internal = " << q.getInternalId() << " )" << endl;
 	while(it_sur != q.surfaces.end()) {
 		out << "    ";
 		out << (*(*it_sur).first);

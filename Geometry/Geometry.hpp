@@ -25,48 +25,57 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Surface.hpp"
+#ifndef GEOMETRY_HPP_
+#define GEOMETRY_HPP_
 
-using namespace std;
+#include <vector>
+#include <ostream>
+#include <string>
+
+#include "Surface.hpp"
+#include "Cell.hpp"
+#include "../Common.hpp"
 
 namespace Helios {
 
-/* Global counter */
-size_t Surface::counter = 0;
+	class Geometry {
 
-/* Static global instance of the singleton */
-SurfaceFactory SurfaceFactory::factory;
+		/* Static instance of this class */
+		static Geometry geo;
 
-Surface::Surface(const SurfaceId& surfid) : surfid(surfid), flag(NONE) {
-	/* Set internal ID */
-	int_surfid = counter;
-	/* Increment counter */
-	counter++;
-};
+		/* Container of surfaces defined on the problem */
+		std::vector<Surface*> surfaces;
+		/* Container of cells defined on the problem */
+		std::vector<Cell*> cells;
 
-Surface::Surface(const SurfaceId& surfid, SurfaceInfo flag) : surfid(surfid), flag(flag) {
-	/* Set internal ID */
-	int_surfid = counter;
-	/* Increment counter */
-	counter++;
-}
+		/* Map internal index to user index */
+		std::map<SurfaceId, InternalSurfaceId> surface_map;
+		std::map<CellId, InternalCellId> cell_map;
 
-Surface* SurfaceFactory::createSurface(const string& type, const SurfaceId& surid, const std::vector<double>& coeffs) const {
-	map<string,Surface::Constructor>::const_iterator it_type = constructor_table.find(type);
-	if(it_type != constructor_table.end())
-		return (*it_type).second(surid,coeffs);
-	else
-		throw Surface::BadSurfaceCreation(surid," Surface type " + type + " is not defined");
-}
+		/* Prevent creation */
+		Geometry();
+		/* Prevent copy */
+		Geometry(const Geometry& geo);
+		Geometry& operator= (const Geometry& other);
 
-void SurfaceFactory::registerSurface(const Surface& surface) {
-	constructor_table[surface.name()] = surface.constructor();
-}
+	public:
 
-std::ostream& operator<<(std::ostream& out, const Surface& q) {
-	out << "[@] surface = " << q.getUserId() << "( Internal = " << q.getInternalId() << " )" << " ; type = " << q.name() << " : ";
-	q.print(out);
-	return out;
-}
+		/* Access to the geometry of the problem */
+		static inline Geometry& access() {return geo;}
+
+		/* ---- Geometry setup */
+
+		/* Add a surface */
+		void addSurface(const SurfaceId& userSurfaceId, const std::string& type, const std::vector<double>& coeffs);
+
+		/* Add cell */
+		void addCell(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo flags = Cell::NONE);
+
+		/* Print cell with each surface of the geometry */
+		void printGeo(std::ostream& out) const;
+
+		virtual ~Geometry();
+	};
 
 } /* namespace Helios */
+#endif /* GEOMETRY_HPP_ */

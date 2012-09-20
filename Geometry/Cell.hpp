@@ -36,64 +36,100 @@
 
 namespace Helios {
 
-class Cell {
+	class Cell {
 
-public:
-    /* Pair of surface and sense */
-    typedef std::pair<Surface*, bool> CellSurface;
+	public:
+		/* Pair of surface and sense */
+		typedef std::pair<Surface*, bool> CellSurface;
+		/* Friendly factory */
+		friend class CellFactory;
+		/* Friendly printer */
+		friend std::ostream& operator<<(std::ostream& out, const Cell& q);
 
-	/* Friendly printer */
-	friend std::ostream& operator<<(std::ostream& out, const Cell& q);
+		/* Exception */
+		class BadCellCreation : public std::exception {
+			std::string reason;
+		public:
+			BadCellCreation(const CellId& cellid, const std::string& msg) {
+				reason = "Cannot create cell " + toString(cellid) + " : " + msg;
+			}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			~BadCellCreation() throw() {/* */};
+		};
 
-	/* Hold extra information about the cell */
-	enum CellInfo {
-        NONE     = 0, /* No special cell attributes */
-        DEADCELL = 1, /* Particles should be killed when entering us */
-        NEGATED  = 2, /* We are "everything but" what is inside our bounds */
-        VOID     = 3  /* No material inside this cell */
-    };
+		/* Hold extra information about the cell */
+		enum CellInfo {
+			NONE     = 0, /* No special cell attributes */
+			DEADCELL = 1, /* Particles should be killed when entering us */
+			NEGATED  = 2, /* We are "everything but" what is inside our bounds */
+			VOID     = 3  /* No material inside this cell */
+		};
 
-	Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo flags = NONE);
-	/* Prevent copy */
-	Cell(const Cell& surface);
-	Cell& operator= (const Cell& other);
+		Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo flags = NONE);
+		/* Prevent copy */
+		Cell(const Cell& surface);
+		Cell& operator= (const Cell& other);
 
-    /* Get container of bounding surfaces. */
-    const std::vector<CellSurface>& getBoundingSurfaces() const { return surfaces;}
+		/* Get container of bounding surfaces. */
+		const std::vector<CellSurface>& getBoundingSurfaces() const { return surfaces;}
 
-    /* Return the cell ID. */
-    const CellId& getCellId() const {return cellid;}
-	/* Return the internal ID associated with this surface. */
-	const InternalCellId& getInternalId() const {return int_cellid;}
+		/* Return the cell ID. */
+		const CellId& getUserId() const {return cellid;}
+		/* Return the internal ID associated with this surface. */
+		const InternalCellId& getInternalId() const {return int_cellid;}
 
-    /* Return information about this cell */
-    CellInfo getFlag() const {return flag;}
-	/* Set different options for the cell */
-	void setFlags(CellInfo new_flag) {flag = new_flag;}
+		/* Return information about this cell */
+		CellInfo getFlag() const {return flag;}
+		/* Set different options for the cell */
+		void setFlags(CellInfo new_flag) {flag = new_flag;}
 
-    /*
-     * Check if the cell contains the point.
-     * Optionally skip checking one surface if we know we've crossed it.
-     */
-    bool checkPoint(const Coordinate& position, const Surface* skip = 0) const;
+		/*
+		 * Check if the cell contains the point.
+		 * Optionally skip checking one surface if we know we've crossed it.
+		 */
+		bool checkPoint(const Coordinate& position, const Surface* skip = 0) const;
 
-    /* Get the nearest surface to a point in a given direction */
-    void intersect(const Coordinate& position, const Direction& direction, Surface*& surface, bool& sense, double& distance) const;
+		/* Get the nearest surface to a point in a given direction */
+		void intersect(const Coordinate& position, const Direction& direction, Surface*& surface, bool& sense, double& distance) const;
 
-	virtual ~Cell() {/* */};
+		virtual ~Cell() {/* */};
 
-private:
-	/* Static counter, incremented by one each time a surface is created */
-	static size_t counter;
-	/* Internal identification of this surface */
-	InternalCellId int_cellid;
-    /* A vector of surfaces and senses that define this cell */
-    std::vector<CellSurface> surfaces;
-    /* Cell id choose by the user */
-    CellId cellid;
-    /* Other information about this cell */
-    CellInfo flag;
-};
+	private:
+		/* Static counter, incremented by one each time a surface is created */
+		static size_t counter;
+		/* Internal identification of this surface */
+		InternalCellId int_cellid;
+		/* A vector of surfaces and senses that define this cell */
+		std::vector<CellSurface> surfaces;
+		/* Cell id choose by the user */
+		CellId cellid;
+		/* Other information about this cell */
+		CellInfo flag;
+	};
+
+	class CellFactory {
+
+		/* Static instance of the factory */
+		static CellFactory factory;
+
+		/* Prevent construction or copy */
+		CellFactory() {/* */};
+		CellFactory& operator= (const CellFactory& other);
+		CellFactory(const CellFactory&);
+		virtual ~CellFactory() {/* */}
+
+	public:
+		/* Access the factory, reference to the static singleton */
+		static CellFactory& access() {return factory;}
+
+		/* Create a new surface */
+		Cell* createCell(const CellId& cellid, std::vector<Cell::CellSurface>& surfaces, const Cell::CellInfo flags = Cell::NONE) const {
+			return new Cell(cellid,surfaces,flags);
+		}
+
+	};
 
 } /* namespace Helios */
 #endif /* CELL_HPP_ */

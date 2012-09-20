@@ -46,6 +46,26 @@ namespace Helios {
 
 	public:
 
+		/* Surface constructor function */
+		typedef Surface(*(*Constructor)(const SurfaceId&, const std::vector<double>&));
+		/* Friendly factory */
+		friend class SurfaceFactory;
+		/* Friendly printer */
+		friend std::ostream& operator<<(std::ostream& out, const Surface& q);
+
+		/* Exception */
+		class BadSurfaceCreation : public std::exception {
+			std::string reason;
+		public:
+			BadSurfaceCreation(const SurfaceId& surid, const std::string& msg) {
+				reason = "Cannot create surface " + toString(surid) + " : " + msg;
+			}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			~BadSurfaceCreation() throw() {/* */};
+		};
+
 		/* Information about the surfaces */
 		enum SurfaceInfo {
 			NONE       = 0,
@@ -68,14 +88,9 @@ namespace Helios {
 		/* Set different options for the surfaces */
 		void setFlags(SurfaceInfo new_flag) {flag = new_flag;}
 
-	protected:
+		virtual ~Surface() {/* */};
 
-		/* Surface constructor function */
-		typedef Surface(*(*Constructor)(const SurfaceId&, const std::vector<double>&));
-		/* Friendly factory */
-		friend class SurfaceFactory;
-		/* Friendly printer */
-		friend std::ostream& operator<<(std::ostream& out, const Surface& q);
+	protected:
 
 		/* Create surface from user id */
 		Surface(const SurfaceId& surfid);
@@ -99,8 +114,6 @@ namespace Helios {
 		virtual std::string name() const = 0;
 		/* Get the constructor function (used by the parser) */
 		virtual Constructor constructor() const = 0;
-
-		virtual ~Surface() {/* */};
 
 	private:
 		/* Static counter, incremented by one each time a surface is created */
@@ -138,28 +151,15 @@ namespace Helios {
 		/* Map of surfaces types and constructors */
 		std::map<std::string, Surface::Constructor> constructor_table;
 
-		/* Private constructor */
+		/* Prevent construction or copy */
 		SurfaceFactory() {/* */};
-		void operator=(SurfaceFactory&);
+		SurfaceFactory& operator= (const SurfaceFactory& other);
 		SurfaceFactory(const SurfaceFactory&);
 		virtual ~SurfaceFactory() {/* */}
 
 	public:
 		/* Access the factory, reference to the static singleton */
 		static SurfaceFactory& access() {return factory;}
-
-		/* Exception */
-		class BadSurfaceCreation : public std::exception {
-			std::string reason;
-		public:
-			BadSurfaceCreation(const std::string& type) {
-				reason = "Cannot create type " + type;
-			}
-			const char *what() const throw() {
-				return reason.c_str();
-			}
-			~BadSurfaceCreation() throw() {/* */};
-		};
 
 		/* Register a new surface */
 		void registerSurface(const Surface& surface);

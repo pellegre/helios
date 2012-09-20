@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef COMMON_HPP_
 #define COMMON_HPP_
 
+#include <sstream>
+#include <string>
 #include <blitz/array.h>
 
 /* Some types used in the program */
@@ -49,6 +51,22 @@ namespace Helios {
 	typedef unsigned int InternalSurfaceId;
 	/* Cell ID used internally */
 	typedef unsigned int InternalCellId;
+
+	template<typename T>
+	static T fromString(const std::string& str) {
+		std::istringstream s(str);
+		T t;
+		s >> t;
+		return t;
+	}
+
+	template<typename T>
+	static std::string toString(const T& t) {
+		std::ostringstream s;
+		s << t;
+		return s.str();
+	}
+
 }
 
 #endif /* TYPES_H_ */

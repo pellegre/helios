@@ -29,9 +29,10 @@ MARK_AS_ADVANCED(Blitz_INCLUDE_DIR Blitz_LIBRARY)
 # ---- Executable
 
 add_executable(mc++ 
-                    Geometry/Cell.cpp
-                    Geometry/Surface.cpp
-                    Main.cpp
+               Geometry/Cell.cpp
+               Geometry/Surface.cpp
+               Geometry/Geometry.cpp                  
+               Main.cpp
                )
 
 target_link_libraries (mc++ ${Blitz_LIBRARY})
