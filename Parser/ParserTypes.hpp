@@ -25,16 +25,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <iostream>
+#ifndef PARSERTYPES_HPP_
+#define PARSERTYPES_HPP_
 
-#include "Parser/ParserTypes.hpp"
+/* Base class */
+#include "Parser.hpp"
 
-using namespace std;
-using namespace Helios;
+/* XML parser */
+#include "XMLParser/XmlParser.hpp"
 
-int main(int argc, char* argv[]) {
-
-	XmlParser::access().parseGeometry(string(argv[1]));
-
-	return 0;
-}
+#endif /* PARSERTYPS_HPP_ */

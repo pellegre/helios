@@ -37,12 +37,6 @@ namespace Helios {
 
 	class Parser {
 
-		/* Prevent creation */
-		Parser() {/* */};
-		/* Prevent copy */
-		Parser(const Parser& p);
-		Parser& operator=(const Parser& p);
-
 	protected:
 
 		/* Set of functions implemented on the derived class */
@@ -51,6 +45,7 @@ namespace Helios {
 				                    		std::vector<Geometry::CellDefinition>& cell_def) const = 0;
 
 	public:
+		Parser() {/* */};
 
 		/* Parse the geometry file, and set each surface and cell */
 		void parseGeometry(const std::string& geo_file) const;

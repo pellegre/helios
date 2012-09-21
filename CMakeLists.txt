@@ -36,7 +36,8 @@ add_executable(mc++
                Parser/XMLParser/tinystr.cpp
                Parser/XMLParser/tinyxml.cpp                  
                Parser/XMLParser/tinyxmlerror.cpp                  
-               Parser/XMLParser/tinyxmlparser.cpp                  
+               Parser/XMLParser/tinyxmlparser.cpp  
+               Parser/XMLParser/XmlParser.cpp                               
                Main.cpp
                )
 

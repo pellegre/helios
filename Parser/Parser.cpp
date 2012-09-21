@@ -25,6 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cstdlib>
+
 #include "Parser.hpp"
 
 using namespace std;
@@ -32,6 +34,9 @@ using namespace std;
 namespace Helios {
 
 void Parser::parseGeometry(const std::string& geo_file) const {
+	/* Number of errors encountered while parsing */
+	size_t nerrors = 0;
+
 	/* Cell and surfaces definitions */
 	vector<Geometry::SurfaceDefinition> sur_def;
 	vector<Geometry::CellDefinition> cell_def;
@@ -46,8 +51,9 @@ void Parser::parseGeometry(const std::string& geo_file) const {
 			/* Add surface into the geometry */
 			Geometry::access().addSurface((*it_sur));
 		} catch (Surface::BadSurfaceCreation& exception) {
+			nerrors++;
 			/* Catch exception */
-			cerr << "[@] Exception caught : " << exception.what() << endl;
+			cerr << "[@] " << exception.what() << endl;
 		}
 	}
 
@@ -57,12 +63,18 @@ void Parser::parseGeometry(const std::string& geo_file) const {
 		try {
 			/* Add surface into the geometry */
 			Geometry::access().addCell((*it_cell));
-		} catch (Surface::BadSurfaceCreation& exception) {
+		} catch (Cell::BadCellCreation& exception) {
+			nerrors++;
 			/* Catch exception */
-			cerr << "[@] Exception caught : " << exception.what() << endl;
+			cerr << "[@] " << exception.what() << endl;
 		}
 	}
 
+	if(nerrors) {
+		cerr << "[@] Errors founds : " << nerrors << endl;
+		cerr << "[@] Aborting " << endl;
+		exit(1);
+	}
 }
 
 } /* namespace Helios */

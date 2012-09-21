@@ -31,6 +31,7 @@
 #include <vector>
 #include <string>
 
+#include "tinyxml.h"
 #include "../Parser.hpp"
 
 namespace Helios {
@@ -42,11 +43,18 @@ namespace Helios {
 		XmlParser(const XmlParser& p);
 		XmlParser& operator=(const XmlParser& p);
 
+		void getGeometryNode(TiXmlNode* pParent, std::vector<Geometry::SurfaceDefinition>& sur_def, std::vector<Geometry::CellDefinition>& cell_def) const;
+
 		/* Set of functions implemented on the derived class */
 		void getGeometryInformation(const std::string& geo_file,
 				                    std::vector<Geometry::SurfaceDefinition>& sur_def,
 				                    std::vector<Geometry::CellDefinition>& cell_def) const;
+
 	public:
+
+		/* Access the parser */
+		static Parser& access();
+
 		virtual ~XmlParser() {/* */};
 	};
 

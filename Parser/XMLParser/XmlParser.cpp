@@ -25,100 +25,103 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <map>
+#include <sstream>
+
 #include "XmlParser.hpp"
-#include "tinyxml.h"
 
 using namespace std;
 
-//int dump_attribs_to_stdout(TiXmlElement* pElement, unsigned int indent)
-//{
-//	if ( !pElement ) return 0;
-//
-//	TiXmlAttribute* pAttrib=pElement->FirstAttribute();
-//	int i=0;
-//	int ival;
-//	double dval;
-//	const char* pIndent=getIndent(indent);
-//	printf("\n");
-//	while (pAttrib)
-//	{
-//		printf( "%s%s: value=[%s]", pIndent, pAttrib->Name(), pAttrib->Value());
-//
-//		if (pAttrib->QueryIntValue(&ival)==TIXML_SUCCESS)    printf( " int=%d", ival);
-//		if (pAttrib->QueryDoubleValue(&dval)==TIXML_SUCCESS) printf( " d=%1.1f", dval);
-//		printf( "\n" );
-//		i++;
-//		pAttrib=pAttrib->Next();
-//	}
-//	return i;
-//}
-
-//void dump_to_stdout( TiXmlNode* pParent, unsigned int indent = 0 )
-//{
-//	if ( !pParent ) return;
-//
-//	TiXmlNode* pChild;
-//	TiXmlText* pText;
-//	int t = pParent->Type();
-//	printf( "%s", getIndent(indent));
-//	int num;
-//
-//	switch ( t )
-//	{
-//	case TiXmlNode::DOCUMENT:
-//		printf( "Document" );
-//		break;
-//
-//	case TiXmlNode::ELEMENT:
-//		printf( "Element [%s]", pParent->Value() );
-//		num=dump_attribs_to_stdout(pParent->ToElement(), indent+1);
-//		switch(num)
-//		{
-//			case 0:  printf( " (No attributes)"); break;
-//			case 1:  printf( "%s1 attribute", getIndentAlt(indent)); break;
-//			default: printf( "%s%d attributes", getIndentAlt(indent), num); break;
-//		}
-//		break;
-//
-//	case TiXmlNode::COMMENT:
-//		printf( "Comment: [%s]", pParent->Value());
-//		break;
-//
-//	case TiXmlNode::UNKNOWN:
-//		printf( "Unknown" );
-//		break;
-//
-//	case TiXmlNode::TEXT:
-//		pText = pParent->ToText();
-//		printf( "Text: [%s]", pText->Value() );
-//		break;
-//
-//	case TiXmlNode::DECLARATION:
-//		printf( "Declaration" );
-//		break;
-//	default:
-//		break;
-//	}
-//	printf( "\n" );
-//	for ( pChild = pParent->FirstChild(); pChild != 0; pChild = pChild->NextSibling())
-//	{
-//		dump_to_stdout( pChild, indent+1 );
-//	}
-//}
-
 namespace Helios {
 
-void getGeometryInformation(const string& geo_file,
-		                    vector<Geometry::SurfaceDefinition>& sur_def,
-		                    vector<Geometry::CellDefinition>& cell_def) const {
+static map<string,string> dump_attribs(TiXmlElement* pElement) {
+	if ( !pElement ) return map<string,string>();
+
+	TiXmlAttribute* pAttrib=pElement->FirstAttribute();
+	/* Map of attributes */
+	map<string,string> mapAttrib;
+	while (pAttrib) {
+		/* Get attribute and push it into the map */
+		mapAttrib[pAttrib->Name()] = pAttrib->Value();
+		pAttrib=pAttrib->Next();
+	}
+	/* Return map */
+	return mapAttrib;
+}
+
+static Geometry::SurfaceDefinition surfaceAttrib(TiXmlElement* pElement) {
+	map<string,string> mapAttrib = dump_attribs(pElement);
+	/* Get attributes */
+	SurfaceId id = fromString<SurfaceId>(mapAttrib["id"]);
+	string type = mapAttrib["type"];
+	std::istringstream sin(mapAttrib["coeffs"]);
+	vector<double> coeffs;
+	while(sin.good()) {
+		double c;
+		sin >> c;
+		coeffs.push_back(c);
+	}
+	/* Return surface definition */
+	return Geometry::SurfaceDefinition(id,type,coeffs);
+}
+
+static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
+	map<string,string> mapAttrib = dump_attribs(pElement);
+	/* Get attributes */
+	CellId id = fromString<CellId>(mapAttrib["id"]);
+	std::istringstream sin(mapAttrib["surfaces"]);
+	vector<signed int> surfaces;
+	while(sin.good()) {
+		signed int c;
+		sin >> c;
+		surfaces.push_back(c);
+	}
+	/* Return surface definition */
+	return Geometry::CellDefinition(id,surfaces);
+}
+
+void XmlParser::getGeometryNode(TiXmlNode* pParent, vector<Geometry::SurfaceDefinition>& sur_def, vector<Geometry::CellDefinition>& cell_def) const {
+	if ( !pParent ) return;
+
+	TiXmlNode* pChild;
+	TiXmlText* pText;
+	int t = pParent->Type();
+	int num;
+
+	if (t == TiXmlNode::TINYXML_ELEMENT) {
+		string element_value(pParent->Value());
+		if(element_value == "geometry") {
+			cout << "[@] Reading geometry " << endl;
+		} else if (element_value == "surface") {
+			sur_def.push_back(surfaceAttrib(pParent->ToElement()));
+		} else if (element_value == "cell") {
+			cell_def.push_back(cellAttrib(pParent->ToElement()));
+		} else {
+			cerr << "[@] Error: Unrecognized geometry keyword = " << element_value << endl;
+		}
+
+	}
+
+	for (pChild = pParent->FirstChild(); pChild != 0; pChild = pChild->NextSibling())
+		getGeometryNode(pChild,sur_def,cell_def);
+}
+
+void XmlParser::getGeometryInformation(const string& geo_file,
+		                    			vector<Geometry::SurfaceDefinition>& sur_def,
+		                    			vector<Geometry::CellDefinition>& cell_def) const {
 	/* Open document */
 	TiXmlDocument doc(geo_file.c_str());
 	bool loadOkay = doc.LoadFile();
-	if (loadOkay) {
-
-	} else {
+	if (loadOkay)
+		getGeometryNode(&doc,sur_def,cell_def);
+	else
 		cerr << "[@] Failed to load file : " << geo_file;
-	}
 }
+
+XmlParser::Parser& XmlParser::access() {
+	static XmlParser* parser = new XmlParser;
+	return (*parser);
+}
+
 
 } /* namespace Helios */
