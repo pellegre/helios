@@ -34,9 +34,9 @@ using namespace std;
 
 namespace Helios {
 
-static map<string,string> dump_attribs(TiXmlElement* pElement) {
-	if ( !pElement ) return map<string,string>();
-
+/* Returns a string map of attributes on a node */
+static inline map<string,string> dump_attribs(TiXmlElement* pElement) {
+	if ( !pElement ) return map<string,string>(); /* No attributes */
 	TiXmlAttribute* pAttrib=pElement->FirstAttribute();
 	/* Map of attributes */
 	map<string,string> mapAttrib;
@@ -49,6 +49,7 @@ static map<string,string> dump_attribs(TiXmlElement* pElement) {
 	return mapAttrib;
 }
 
+/* Parse surface attributes */
 static Geometry::SurfaceDefinition surfaceAttrib(TiXmlElement* pElement) {
 	map<string,string> mapAttrib = dump_attribs(pElement);
 	/* Get attributes */
@@ -65,6 +66,7 @@ static Geometry::SurfaceDefinition surfaceAttrib(TiXmlElement* pElement) {
 	return Geometry::SurfaceDefinition(id,type,coeffs);
 }
 
+/* Parse cell attributes */
 static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	map<string,string> mapAttrib = dump_attribs(pElement);
 	/* Get attributes */
@@ -80,42 +82,64 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	return Geometry::CellDefinition(id,surfaces);
 }
 
-void XmlParser::getGeometryNode(TiXmlNode* pParent, vector<Geometry::SurfaceDefinition>& sur_def, vector<Geometry::CellDefinition>& cell_def) const {
-	if ( !pParent ) return;
+void XmlParser::geoNode(TiXmlNode* pParent) {
+	vector<Geometry::SurfaceDefinition> sur_def;
+	vector<Geometry::CellDefinition> cell_def;
 
 	TiXmlNode* pChild;
-	TiXmlText* pText;
-	int t = pParent->Type();
-	int num;
-
-	if (t == TiXmlNode::TINYXML_ELEMENT) {
-		string element_value(pParent->Value());
-		if(element_value == "geometry") {
-			cout << "[@] Reading geometry " << endl;
-		} else if (element_value == "surface") {
-			sur_def.push_back(surfaceAttrib(pParent->ToElement()));
-		} else if (element_value == "cell") {
-			cell_def.push_back(cellAttrib(pParent->ToElement()));
-		} else {
-			cerr << "[@] Error: Unrecognized geometry keyword = " << element_value << endl;
+	for (pChild = pParent->FirstChild(); pChild != 0; pChild = pChild->NextSibling()) {
+		int t = pChild->Type();
+		if (t == TiXmlNode::TINYXML_ELEMENT) {
+			string element_value(pChild->Value());
+			if (element_value == "surface")
+				sur_def.push_back(surfaceAttrib(pChild->ToElement()));
+			else if (element_value == "cell")
+				cell_def.push_back(cellAttrib(pChild->ToElement()));
+			else
+				cerr << "[@] Error: Unrecognized geometry keyword = " << element_value << endl;
 		}
-
 	}
 
-	for (pChild = pParent->FirstChild(); pChild != 0; pChild = pChild->NextSibling())
-		getGeometryNode(pChild,sur_def,cell_def);
+	/* Add the geometries entities */
+	Parser::addSurfaces(sur_def);
+	Parser::addCells(cell_def);
 }
 
-void XmlParser::getGeometryInformation(const string& geo_file,
-		                    			vector<Geometry::SurfaceDefinition>& sur_def,
-		                    			vector<Geometry::CellDefinition>& cell_def) const {
+void XmlParser::rootNode(TiXmlNode* pParent) const {
+	int t = pParent->Type();
+	TiXmlNode* pChild;
+
+	/* Loop over "childs" */
+	for (pChild = pParent->FirstChild(); pChild != 0; pChild = pChild->NextSibling()) {
+
+		if (t == TiXmlNode::TINYXML_ELEMENT) {
+			/* Element value */
+			string element_value(pParent->Value());
+			map<string,NodeParser>::const_iterator it_root = root_map.find(element_value);
+
+			/* Check node parser map */
+			if(it_root != root_map.end())
+				/* Process node */
+				(*it_root).second(pParent);
+			else
+				cerr << "[@] Error: Unrecognized root node = " << element_value << endl;
+
+			/* Done with this node */
+			return;
+		}
+
+		rootNode(pChild);
+	}
+}
+
+void XmlParser::parseFile(const string& file) const {
 	/* Open document */
-	TiXmlDocument doc(geo_file.c_str());
+	TiXmlDocument doc(file.c_str());
 	bool loadOkay = doc.LoadFile();
 	if (loadOkay)
-		getGeometryNode(&doc,sur_def,cell_def);
+		rootNode(&doc);
 	else
-		cerr << "[@] Failed to load file : " << geo_file;
+		cerr << "[@] Failed to load file : " << file;
 }
 
 XmlParser::Parser& XmlParser::access() {
@@ -123,5 +147,8 @@ XmlParser::Parser& XmlParser::access() {
 	return (*parser);
 }
 
+XmlParser::XmlParser() {
+	root_map["geometry"] = &XmlParser::geoNode;
+}
 
 } /* namespace Helios */

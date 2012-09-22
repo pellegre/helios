@@ -33,32 +33,12 @@ using namespace std;
 
 namespace Helios {
 
-void Parser::parseGeometry(const std::string& geo_file) const {
+/* Add cells to the geometry */
+void Parser::addCells(const std::vector<Geometry::CellDefinition>& cell_def) {
 	/* Number of errors encountered while parsing */
 	size_t nerrors = 0;
-
-	/* Cell and surfaces definitions */
-	vector<Geometry::SurfaceDefinition> sur_def;
-	vector<Geometry::CellDefinition> cell_def;
-
-	/* Get geometry information */
-	getGeometryInformation(geo_file,sur_def,cell_def);
-
-	/* Add surfaces */
-	vector<Geometry::SurfaceDefinition>::iterator it_sur = sur_def.begin();
-	for(; it_sur != sur_def.end() ; ++it_sur) {
-		try {
-			/* Add surface into the geometry */
-			Geometry::access().addSurface((*it_sur));
-		} catch (Surface::BadSurfaceCreation& exception) {
-			nerrors++;
-			/* Catch exception */
-			cerr << "[@] " << exception.what() << endl;
-		}
-	}
-
 	/* Add cells */
-	vector<Geometry::CellDefinition>::iterator it_cell = cell_def.begin();
+	vector<Geometry::CellDefinition>::const_iterator it_cell = cell_def.begin();
 	for(; it_cell != cell_def.end() ; ++it_cell) {
 		try {
 			/* Add surface into the geometry */
@@ -70,11 +50,31 @@ void Parser::parseGeometry(const std::string& geo_file) const {
 		}
 	}
 
-	if(nerrors) {
-		cerr << "[@] Errors founds : " << nerrors << endl;
-		cerr << "[@] Aborting " << endl;
-		exit(1);
+	if(nerrors)
+		cerr << "[@] Errors founds while parsing cells : " << nerrors << endl;
+
+}
+
+/* Add surfaces to the geometry */
+void Parser::addSurfaces(const std::vector<Geometry::SurfaceDefinition>& sur_def) {
+	/* Number of errors encountered while parsing */
+	size_t nerrors = 0;
+
+	/* Add surfaces */
+	vector<Geometry::SurfaceDefinition>::const_iterator it_sur = sur_def.begin();
+	for(; it_sur != sur_def.end() ; ++it_sur) {
+		try {
+			/* Add surface into the geometry */
+			Geometry::access().addSurface((*it_sur));
+		} catch (Surface::BadSurfaceCreation& exception) {
+			nerrors++;
+			/* Catch exception */
+			cerr << "[@] " << exception.what() << endl;
+		}
 	}
+
+	if(nerrors)
+		cerr << "[@] Errors founds while parsing surfaces : " << nerrors << endl;
 }
 
 } /* namespace Helios */

@@ -29,6 +29,7 @@ MARK_AS_ADVANCED(Blitz_INCLUDE_DIR Blitz_LIBRARY)
 # ---- Executable
 
 add_executable(mc++ 
+               Log/Log.cpp
                Geometry/Cell.cpp
                Geometry/Surface.cpp
                Geometry/Geometry.cpp

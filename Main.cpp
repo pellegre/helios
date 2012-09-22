@@ -34,7 +34,7 @@ using namespace Helios;
 
 int main(int argc, char* argv[]) {
 
-	XmlParser::access().parseGeometry(string(argv[1]));
+	XmlParser::access().parseFile(string(argv[1]));
 
 	return 0;
 }

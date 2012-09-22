@@ -39,16 +39,16 @@ namespace Helios {
 
 	protected:
 
-		/* Set of functions implemented on the derived class */
-		virtual void getGeometryInformation(const std::string& geo_file,
-				                    		std::vector<Geometry::SurfaceDefinition>& sur_def,
-				                    		std::vector<Geometry::CellDefinition>& cell_def) const = 0;
+		/* Add cells to the geometry */
+		static void addCells(const std::vector<Geometry::CellDefinition>& cell_def);
+		/* Add surfaces to the geometry */
+		static void addSurfaces(const std::vector<Geometry::SurfaceDefinition>& sur_def);
 
 	public:
 		Parser() {/* */};
 
 		/* Parse the geometry file, and set each surface and cell */
-		void parseGeometry(const std::string& geo_file) const;
+		virtual void parseFile(const std::string& file) const = 0;
 
 		virtual ~Parser() {/* */};
 	};

@@ -37,23 +37,30 @@
 namespace Helios {
 
 	class XmlParser : public Parser {
+
 		/* Prevent creation */
-		XmlParser() {/* */};
+		XmlParser();
 		/* Prevent copy */
 		XmlParser(const XmlParser& p);
 		XmlParser& operator=(const XmlParser& p);
 
-		void getGeometryNode(TiXmlNode* pParent, std::vector<Geometry::SurfaceDefinition>& sur_def, std::vector<Geometry::CellDefinition>& cell_def) const;
+		/* Process root node */
+		void rootNode(TiXmlNode* pParent) const;
 
-		/* Set of functions implemented on the derived class */
-		void getGeometryInformation(const std::string& geo_file,
-				                    std::vector<Geometry::SurfaceDefinition>& sur_def,
-				                    std::vector<Geometry::CellDefinition>& cell_def) const;
+		/* ---- Process nodes */
+		static void geoNode(TiXmlNode* pParent);
+
+		/* Map of functions for each root node */
+		typedef void (*NodeParser)(TiXmlNode* node);
+		std::map<std::string,NodeParser> root_map;
 
 	public:
 
 		/* Access the parser */
 		static Parser& access();
+
+		/* Parse a file */
+		void parseFile(const std::string& file) const;
 
 		virtual ~XmlParser() {/* */};
 	};
