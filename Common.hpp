@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <blitz/array.h>
 
+#include "Log/Log.hpp"
+
 /* Some types used in the program */
 
 namespace Helios {

@@ -25,48 +25,50 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Surface.hpp"
+#ifndef LOG_HPP_
+#define LOG_HPP_
 
-using namespace std;
+#include <iostream>
+#include <fstream>
+#include <ostream>
+#include <string>
 
 namespace Helios {
 
-/* Global counter */
-size_t Surface::counter = 0;
+class Log {
+	/* There is only one logger in the program */
+	static Log logger;
+	Log();
+	Log(const Log& log);
+	Log& operator=(const Log& log);
 
-/* Static global instance of the singleton */
-SurfaceFactory SurfaceFactory::factory;
+	/* ---- Stream channels */
 
-Surface::Surface(const SurfaceId& surfid) : surfid(surfid), flag(NONE) {
-	/* Set internal ID */
-	int_surfid = counter;
-	/* Increment counter */
-	counter++;
+	/* General messages - this does to the "console" */
+	std::ostream& messages;
+	/* Error channel, to standard error */
+	std::ostream& oerror;
+	/* Output file */
+	std::ofstream output;
+
+public:
+
+	/* Set output file */
+	static void setOutput(const std::string& out_file);
+
+	/* Write stuff */
+	static std::ostream& msg();   /* This is a ordinary message printed into the screen */
+	static std::ostream& warn();  /* A warning printed in the error channel */
+	static std::ostream& error(); /* Error message */
+	static std::ostream& ok();    /* O.K. message, printed on the screen */
+
+	/* A lot of cool stuff to print on the screen / output */
+
+	static std::string ident(size_t n = 0);      /* Indentation */
+	static const std::string endl;               /* End of line */
+
+	~Log();
 };
 
-Surface::Surface(const SurfaceId& surfid, SurfaceInfo flag) : surfid(surfid), flag(flag) {
-	/* Set internal ID */
-	int_surfid = counter;
-	/* Increment counter */
-	counter++;
-}
-
-Surface* SurfaceFactory::createSurface(const string& type, const SurfaceId& surid, const std::vector<double>& coeffs) const {
-	map<string,Surface::Constructor>::const_iterator it_type = constructor_table.find(type);
-	if(it_type != constructor_table.end())
-		return (*it_type).second(surid,coeffs);
-	else
-		throw Surface::BadSurfaceCreation(surid,"Surface type " + type + " is not defined");
-}
-
-void SurfaceFactory::registerSurface(const Surface& surface) {
-	constructor_table[surface.name()] = surface.constructor();
-}
-
-std::ostream& operator<<(std::ostream& out, const Surface& q) {
-	out << "[@] surface = " << q.getUserId() << "( Internal = " << q.getInternalId() << " )" << " ; type = " << q.name() << " : ";
-	q.print(out);
-	return out;
-}
-
 } /* namespace Helios */
+#endif /* LOG_HPP_ */

@@ -118,11 +118,15 @@ void XmlParser::rootNode(TiXmlNode* pParent) const {
 			map<string,NodeParser>::const_iterator it_root = root_map.find(element_value);
 
 			/* Check node parser map */
-			if(it_root != root_map.end())
+			if(it_root != root_map.end()) {
 				/* Process node */
 				(*it_root).second(pParent);
-			else
-				cerr << "[@] Error: Unrecognized root node = " << element_value << endl;
+			}
+			else {
+				vector<string> keywords;
+				keywords.push_back(element_value);
+				throw KeywordParserError("Unrecognized root node <" + element_value + ">",keywords);
+			}
 
 			/* Done with this node */
 			return;
@@ -139,12 +143,12 @@ void XmlParser::parseFile(const string& file) const {
 	if (loadOkay)
 		rootNode(&doc);
 	else
-		cerr << "[@] Failed to load file : " << file;
+		throw(ParserError("File " + file + " : " + doc.ErrorDesc()));
 }
 
 XmlParser::Parser& XmlParser::access() {
-	static XmlParser* parser = new XmlParser;
-	return (*parser);
+	static XmlParser parser;
+	return parser;
 }
 
 XmlParser::XmlParser() {

@@ -26,15 +26,52 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include "Parser/ParserTypes.hpp"
+#include "Log/Log.hpp"
 
 using namespace std;
 using namespace Helios;
 
-int main(int argc, char* argv[]) {
+static size_t seachKeyWords(const string& filename, vector<string> search_keys) {
+	string line;
+	ifstream file (filename.c_str());
+	size_t counter = 0;
+	if (file.is_open()) {
+		while (file.good()) {
+			getline (file,line);
+			bool find = true;
+			for(size_t key = 0 ; key < search_keys.size() ; key++)
+				find &= (line.find(search_keys[key]) != string::npos);
+			if(find) break;
+			counter++;
+		}
+		file.close();
+	}
+	return counter;
+}
 
-	XmlParser::access().parseFile(string(argv[1]));
+int main(int argc, char* argv[]) {
+	string filename = string(argv[1]);
+
+	try {
+		/* Read the input file */
+		XmlParser::access().parseFile(filename);
+	} catch(Parser::ParserError& parsererror) {
+		/* Nothing to do, just print the message and exit */
+		Log::error() << parsererror.what() << Log::endl;
+		return 1;
+	} catch(Parser::KeywordParserError& keyerror) {
+		/* Try to find the -bad- keyword */
+		size_t line = seachKeyWords(filename,keyerror.getKeys());
+		if(line)
+			Log::error() << "Line " << (line + 1) << " : " << keyerror.what() << Log::endl;
+		else
+			Log::error() << keyerror.what() << Log::endl;
+		return 1;
+	}
 
 	return 0;
 }

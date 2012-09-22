@@ -62,7 +62,7 @@ namespace Helios {
 		/* Parse a file */
 		void parseFile(const std::string& file) const;
 
-		virtual ~XmlParser() {/* */};
+		~XmlParser() {/* */};
 	};
 
 } /* namespace Helios */

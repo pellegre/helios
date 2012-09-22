@@ -45,6 +45,34 @@ namespace Helios {
 		static void addSurfaces(const std::vector<Geometry::SurfaceDefinition>& sur_def);
 
 	public:
+
+		/* Exception */
+		class ParserError : public std::exception {
+			std::string reason;
+		public:
+			ParserError(const std::string& msg) : reason(msg) {/* */}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			virtual ~ParserError() throw() {/* */};
+		};
+
+		/* Exception */
+		class KeywordParserError : public std::exception {
+			/* Reason */
+			std::string reason;
+			/* Information to locate the *bad* keyword on the file */
+			std::vector<std::string> search_keys;
+		public:
+			KeywordParserError(const std::string& msg, const std::vector<std::string>& search_keys) :
+				               reason(msg), search_keys(search_keys) {/* */}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			const std::vector<std::string>& getKeys() const {return search_keys;}
+			virtual ~KeywordParserError() throw() {/* */};
+		};
+
 		Parser() {/* */};
 
 		/* Parse the geometry file, and set each surface and cell */
