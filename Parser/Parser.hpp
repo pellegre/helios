@@ -69,7 +69,7 @@ namespace Helios {
 			const char *what() const throw() {
 				return reason.c_str();
 			}
-			const std::vector<std::string>& getKeys() const {return search_keys;}
+			const std::vector<std::string> search_keys& getKeys() const {return search_keys;}
 			virtual ~KeywordParserError() throw() {/* */};
 		};
 
