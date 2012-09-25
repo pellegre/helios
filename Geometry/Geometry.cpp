@@ -109,6 +109,16 @@ void Geometry::printGeo(std::ostream& out) const {
 		out << *(*it_cell);
 }
 
+InternalCellId Geometry::findCell(const Coordinate& position) const {
+	/* loop through all cells in problem */
+	for (vector<Cell*>::const_iterator it_cell = cells.begin(); it_cell != cells.end(); ++it_cell) {
+	  if ((*it_cell)->checkPoint(position))  {
+		  return it_cell - cells.begin();
+	  }
+	}
+	return 0;
+}
+
 Geometry::~Geometry() {
 	vector<Surface*>::iterator it_sur = surfaces.begin();
 	for(; it_sur != surfaces.end() ; ++it_sur)

@@ -25,47 +25,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef COMMON_HPP_
-#define COMMON_HPP_
+#ifndef SURFACETYPES_HPP_
+#define SURFACETYPES_HPP_
 
-#include <sstream>
-#include <string>
-#include <blitz/array.h>
+#include "CylinderOnAxis.hpp"
 
-#include "Log/Log.hpp"
-
-/* Some types used in the program */
-
-namespace Helios {
-	BZ_USING_NAMESPACE(blitz)
-
-	/* Define a coordinate */
-	typedef TinyVector<double,3> Coordinate;
-	/* Define a direction */
-	typedef TinyVector<double,3> Direction;
-
-	/* Surface ID defined by the user */
-	typedef unsigned int SurfaceId;
-	/* Cell ID defined by the user */
-	typedef unsigned int CellId;
-
-	/* Surface ID used internally */
-	typedef unsigned int InternalSurfaceId;
-	/* Cell ID used internally */
-	typedef unsigned int InternalCellId;
-
-	/* Get a value from a string */
-	template<typename T>
-	static inline T fromString(const std::string& str) {std::istringstream s(str);T t;s >> t;return t;}
-
-	/* Convert to string */
-	template<typename T>
-	static inline std::string toString(const T& t) {std::ostringstream s;s << t;return s.str();}
-
-	/* Axis */
-	const int xaxis = 0;
-	const int yaxis = 1;
-	const int zaxis = 2;
-}
-
-#endif /* TYPES_H_ */
+#endif /* SURFACETYPES_HPP_ */

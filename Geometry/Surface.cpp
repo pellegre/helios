@@ -54,9 +54,9 @@ Surface::Surface(const SurfaceId& surfid, SurfaceInfo flag) : surfid(surfid), fl
 
 SurfaceFactory::SurfaceFactory() {
 	/* Surface registering */
-	registerSurface(CylinderOnAxis<0>()); /* cx */
-	registerSurface(CylinderOnAxis<1>()); /* cy */
-	registerSurface(CylinderOnAxis<2>()); /* cz */
+	registerSurface(CylinderOnAxis<xaxis>()); /* cx */
+	registerSurface(CylinderOnAxis<yaxis>()); /* cy */
+	registerSurface(CylinderOnAxis<zaxis>()); /* cz */
 }
 
 Surface* SurfaceFactory::createSurface(const string& type, const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) const {
