@@ -64,33 +64,33 @@ std::ostream& operator<<(std::ostream& out, const Cell& q) {
 	return out;
 }
 
-bool Cell::checkPoint(const Coordinate& position, const Surface* skip) const {
+const Cell* Cell::getCell(const Coordinate& position, const Surface* skip) const {
 	vector<CellSurface>::const_iterator it;
 	/* Deal with a negated cell */
     if (flag & NEGATED) {
 		for (it = surfaces.begin() ; it != surfaces.end(); ++it) {
 			if (it->first != skip) {
 				if (it->first->sense(position) != it->second)
-					return true;
+					return this;
 			} else {
 				/* We just get out of the cell, we are outside for sure */
-				return true;
+				return this;
 			}
 		}
 		/* We are inside all the surfaces */
-		return false;
+		return 0;
     }
     else {
 		for (it = surfaces.begin(); it != surfaces.end(); ++it) {
 			if (it->first != skip) {
 				if (it->first->sense(position) != it->second)
 				/* The sense of the point isn't the same the same sense as we know this cell is defined... */
-				return false;
+				return 0;
 			}
 		}
     }
     /* If we get here, we are inside the cell :-) */
-    return true;
+    return this;
 }
 
 void Cell::intersect(const Coordinate& position, const Direction& direction, Surface*& surface, bool& sense, double& distance) const {

@@ -119,8 +119,9 @@ namespace Helios {
 		void printGeo(std::ostream& out) const;
 
 	    /* Find a cell given an arbitrary point in the problem */
-		InternalCellId findCell(const Coordinate& position) const;
+		const Cell* findCell(const Coordinate& position) const;
 
+		/* Clear and delete all the geometry stuff */
 		virtual ~Geometry();
 	};
 

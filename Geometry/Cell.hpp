@@ -46,6 +46,14 @@ namespace Helios {
 		/* Friendly printer */
 		friend std::ostream& operator<<(std::ostream& out, const Cell& q);
 
+		/* Hold extra information about the cell */
+		enum CellInfo {
+			NONE     = 0, /* No special cell attributes */
+			DEADCELL = 1, /* Particles should be killed when entering us */
+			NEGATED  = 2, /* We are "everything but" what is inside our bounds */
+			VOID     = 3  /* No material inside this cell */
+		};
+
 		/* Exception */
 		class BadCellCreation : public std::exception {
 			std::string reason;
@@ -57,14 +65,6 @@ namespace Helios {
 				return reason.c_str();
 			}
 			~BadCellCreation() throw() {/* */};
-		};
-
-		/* Hold extra information about the cell */
-		enum CellInfo {
-			NONE     = 0, /* No special cell attributes */
-			DEADCELL = 1, /* Particles should be killed when entering us */
-			NEGATED  = 2, /* We are "everything but" what is inside our bounds */
-			VOID     = 3  /* No material inside this cell */
 		};
 
 		Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo flags = NONE);
@@ -86,10 +86,12 @@ namespace Helios {
 		void setFlags(CellInfo new_flag) {flag = new_flag;}
 
 		/*
-		 * Check if the cell contains the point.
+		 * Check if the cell contains the point and return a reference to the cell that the point is contained.
+		 * The cell could be at other level (universe) on the geometry. A NULL pointer is returned if the point
+		 * is not inside this cell.
 		 * Optionally skip checking one surface if we know we've crossed it.
 		 */
-		bool checkPoint(const Coordinate& position, const Surface* skip = 0) const;
+		const Cell* getCell(const Coordinate& position, const Surface* skip = 0) const;
 
 		/* Get the nearest surface to a point in a given direction */
 		void intersect(const Coordinate& position, const Direction& direction, Surface*& surface, bool& sense, double& distance) const;
