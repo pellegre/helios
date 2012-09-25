@@ -67,11 +67,6 @@ namespace Helios {
 			~BadCellCreation() throw() {/* */};
 		};
 
-		Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo flags = NONE);
-		/* Prevent copy */
-		Cell(const Cell& surface);
-		Cell& operator= (const Cell& other);
-
 		/* Get container of bounding surfaces. */
 		const std::vector<CellSurface>& getBoundingSurfaces() const { return surfaces;}
 
@@ -98,7 +93,15 @@ namespace Helios {
 
 		virtual ~Cell() {/* */};
 
+	protected:
+
+		Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo flags = NONE);
+		/* Prevent copy */
+		Cell(const Cell& surface);
+		Cell& operator= (const Cell& other);
+
 	private:
+
 		/* Static counter, incremented by one each time a surface is created */
 		static size_t counter;
 		/* Internal identification of this surface */
