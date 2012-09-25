@@ -36,7 +36,7 @@ make.errors
 .settings/
 .cproject
 *~
-
+*.swp
 # OS generated files #
 ######################
 .DS_Store*
