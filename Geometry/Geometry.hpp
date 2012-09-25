@@ -66,9 +66,10 @@ namespace Helios {
 			SurfaceId userSurfaceId;
 			std::string type;
 			std::vector<double> coeffs;
+			Surface::SurfaceInfo flags;
 		public:
-			SurfaceDefinition(const SurfaceId& userSurfaceId, const std::string& type, const std::vector<double>& coeffs) :
-				userSurfaceId(userSurfaceId), type(type), coeffs(coeffs) {/* */}
+			SurfaceDefinition(const SurfaceId& userSurfaceId, const std::string& type, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags = Surface::NONE) :
+				userSurfaceId(userSurfaceId), type(type), coeffs(coeffs), flags(flags) {/* */}
 			std::vector<double> getCoeffs() const {
 				return coeffs;
 			}
@@ -78,6 +79,9 @@ namespace Helios {
 			SurfaceId getUserSurfaceId() const {
 				return userSurfaceId;
 			}
+			Surface::SurfaceInfo getFlags() const {
+				return flags;
+			}
 			~SurfaceDefinition() {/* */}
 		};
 
@@ -86,7 +90,7 @@ namespace Helios {
 			std::vector<signed int> surfacesId;
 			Cell::CellInfo flags;
 		public:
-			CellDefinition(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo flags = Cell::NONE) :
+			CellDefinition(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo& flags = Cell::NONE) :
 				userCellId(userCellId), surfacesId(surfacesId), flags(flags) {/* */}
 			Cell::CellInfo getFlags() const {
 				return flags;

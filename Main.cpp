@@ -58,12 +58,16 @@ int main(int argc, char* argv[]) {
 
 	try {
 		/* Read the input file */
+		Log::ok() << "Reading file " + filename << Log::endl;
 		XmlParser::access().parseFile(filename);
+		Geometry::access().printGeo(std::cout);
 	} catch(Parser::ParserError& parsererror) {
+		Log::error() << "Error parsing file : " + filename + "." << Log::endl;
 		/* Nothing to do, just print the message and exit */
 		Log::error() << parsererror.what() << Log::endl;
 		return 1;
 	} catch(Parser::KeywordParserError& keyerror) {
+		Log::error() << "Error parsing file : " + filename << Log::endl;
 		/* Try to find the -bad- keyword */
 		size_t line = seachKeyWords(filename,keyerror.getKeys());
 		if(line)

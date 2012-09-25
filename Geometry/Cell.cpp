@@ -51,11 +51,15 @@ Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellI
 
 std::ostream& operator<<(std::ostream& out, const Cell& q) {
 	vector<Cell::CellSurface>::const_iterator it_sur = q.surfaces.begin();
-	out << "[#] Cell = " << q.getUserId() << "( Internal = " << q.getInternalId() << " )" << endl;
+	out << "cell = " << q.getUserId() << " (internal = " << q.getInternalId() << ")" << endl;
 	while(it_sur != q.surfaces.end()) {
 		out << "    ";
-		out << (*(*it_sur).first);
+		if((*it_sur).second)
+			out << "(+) " << (*(*it_sur).first);
+		else
+			out << "(-) " << (*(*it_sur).first);
 		out << endl;
+		++it_sur;
 	}
 	return out;
 }

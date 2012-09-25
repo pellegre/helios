@@ -26,6 +26,7 @@
  */
 
 #include "Surface.hpp"
+#include "Surfaces/SurfaceTypes.hpp"
 
 using namespace std;
 
@@ -51,10 +52,17 @@ Surface::Surface(const SurfaceId& surfid, SurfaceInfo flag) : surfid(surfid), fl
 	counter++;
 }
 
-Surface* SurfaceFactory::createSurface(const string& type, const SurfaceId& surid, const std::vector<double>& coeffs) const {
+SurfaceFactory::SurfaceFactory() {
+	/* Surface registering */
+	registerSurface(CylinderOnAxis<0>()); /* cx */
+	registerSurface(CylinderOnAxis<1>()); /* cy */
+	registerSurface(CylinderOnAxis<2>()); /* cz */
+}
+
+Surface* SurfaceFactory::createSurface(const string& type, const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) const {
 	map<string,Surface::Constructor>::const_iterator it_type = constructor_table.find(type);
 	if(it_type != constructor_table.end())
-		return (*it_type).second(surid,coeffs);
+		return (*it_type).second(surid,coeffs,flags);
 	else
 		throw Surface::BadSurfaceCreation(surid,"Surface type " + type + " is not defined");
 }
@@ -64,7 +72,7 @@ void SurfaceFactory::registerSurface(const Surface& surface) {
 }
 
 std::ostream& operator<<(std::ostream& out, const Surface& q) {
-	out << "[@] surface = " << q.getUserId() << "( Internal = " << q.getInternalId() << " )" << " ; type = " << q.name() << " : ";
+	out << "surface = " << q.getUserId() << " (internal = " << q.getInternalId() << ")" << " ; type = " << q.name() << " : ";
 	q.print(out);
 	return out;
 }

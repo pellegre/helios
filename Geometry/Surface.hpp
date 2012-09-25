@@ -46,8 +46,14 @@ namespace Helios {
 
 	public:
 
+		/* Information about the surfaces */
+		enum SurfaceInfo {
+			NONE       = 0,
+			REFLECTING = 1
+		};
+
 		/* Surface constructor function */
-		typedef Surface(*(*Constructor)(const SurfaceId&, const std::vector<double>&));
+		typedef Surface(*(*Constructor)(const SurfaceId&, const std::vector<double>&, const Surface::SurfaceInfo&));
 		/* Friendly factory */
 		friend class SurfaceFactory;
 		/* Friendly printer */
@@ -66,18 +72,12 @@ namespace Helios {
 			~BadSurfaceCreation() throw() {/* */};
 		};
 
-		/* Information about the surfaces */
-		enum SurfaceInfo {
-			NONE       = 0,
-			REFLECTING = 1
-		};
-
 		/* Sense of the coordinate respect this surface */
 		inline bool sense(const Coordinate& pos) const {return (function(pos) >= 0);}
-		/* Return a normal vector at some point on the surface */
+		/* Return a normal vector at some point on the surface, needed for reflection */
 		virtual void normal(const Coordinate& point, Direction& vnormal) const = 0;
 		/* Determine distance to intersection with the surface. Returns whether it hits and pass back what the distance is. */
-		virtual bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) = 0;
+		virtual bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const  = 0;
 
 		/* Add a neighbor cell of this surface */
 		void addNeighborCell(const bool& sense, Cell* cell);
@@ -96,7 +96,8 @@ namespace Helios {
 		virtual ~Surface() {/* */};
 
 	protected:
-
+		/* Default, used only on factory */
+		Surface() {/* */};
 		/* Create surface from user id */
 		Surface(const SurfaceId& surfid);
 		/* Create surface from user id and flags */
@@ -152,7 +153,7 @@ namespace Helios {
 		std::map<std::string, Surface::Constructor> constructor_table;
 
 		/* Prevent construction or copy */
-		SurfaceFactory() {/* */};
+		SurfaceFactory();
 		SurfaceFactory& operator= (const SurfaceFactory& other);
 		SurfaceFactory(const SurfaceFactory&);
 		virtual ~SurfaceFactory() {/* */}
@@ -165,7 +166,7 @@ namespace Helios {
 		void registerSurface(const Surface& surface);
 
 		/* Create a new surface */
-		Surface* createSurface(const std::string& type, const SurfaceId& surid, const std::vector<double>& coeffs) const;
+		Surface* createSurface(const std::string& type, const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) const;
 
 	};
 

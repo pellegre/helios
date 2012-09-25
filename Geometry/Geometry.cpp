@@ -44,6 +44,7 @@ void Geometry::addSurface(const SurfaceDefinition& sur_def) {
 	SurfaceId userSurfaceId(sur_def.getUserSurfaceId());
 	string type(sur_def.getType());
 	vector<double> coeffs(sur_def.getCoeffs());
+	Surface::SurfaceInfo flags = sur_def.getFlags();
 
 	/* Check duplicated IDs */
 	map<SurfaceId, InternalSurfaceId>::const_iterator it_id = surface_map.find(userSurfaceId);
@@ -51,7 +52,7 @@ void Geometry::addSurface(const SurfaceDefinition& sur_def) {
 		throw Surface::BadSurfaceCreation(userSurfaceId,"Duplicated id");
 
 	/* Create surface */
-	Surface* new_surface = SurfaceFactory::access().createSurface(type,userSurfaceId,coeffs);
+	Surface* new_surface = SurfaceFactory::access().createSurface(type,userSurfaceId,coeffs,flags);
 	/* Update surface map */
 	surface_map[new_surface->getUserId()] = new_surface->getInternalId();
 	/* Push the surface into the container */
@@ -100,6 +101,12 @@ void Geometry::addCell(const CellDefinition& cell_def) {
     vector<Cell::CellSurface>::iterator it_sur = boundingSurfaces.begin();
     for(; it_sur != boundingSurfaces.end() ; ++it_sur)
     	(*it_sur).first->addNeighborCell((*it_sur).second,new_cell);
+}
+
+void Geometry::printGeo(std::ostream& out) const {
+	vector<Cell*>::const_iterator it_cell = cells.begin();
+	for(; it_cell != cells.end() ; it_cell++)
+		out << *(*it_cell);
 }
 
 Geometry::~Geometry() {

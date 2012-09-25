@@ -56,6 +56,66 @@ namespace Helios {
 
 	public:
 
+		/* Map of attributes of a XML elements */
+		typedef std::map<std::string,std::string> AttribMap;
+
+		class XmlAttributes {
+			/* Required arguments */
+			std::vector<std::string> required;
+			/* Optional arguments */
+			std::vector<std::string> optional;
+		public:
+			XmlAttributes(const std::vector<std::string>& required, const std::vector<std::string>& optional) : required(required), optional(optional) {/* */};
+			/* Checks attributes from the user specified map, this will throw an exception if something is wrong */
+			void checkAttributes(const AttribMap& attrib_map);
+			~XmlAttributes() {/* */};
+		};
+
+		template<class T>
+		class AttributeValue {
+			/* Attribute value */
+			std::string attrib_name;
+			/* Required arguments */
+			std::map<std::string,T> values;
+			/* Default value */
+			T default_value;
+		public:
+			AttributeValue(const std::string& attrib_name, const std::map<std::string,T>& values, const T& default_value) :
+				attrib_name(attrib_name), values(values), default_value(default_value) {/* */};
+			/* Checks attributes from the user specified map, this will throw an exception if something is wrong */
+			T getValue(const AttribMap& attrib_map) {
+				AttribMap::const_iterator it_att = attrib_map.find(attrib_name);
+				if(it_att != attrib_map.end()) {
+					/* Found attribute, get value */
+					std::string value = (*it_att).second;
+					if(values.find(value) != values.end()) {
+						return values[value];
+					}
+					else {
+						/* Bad value for attribute, throw an exception */
+						std::vector<std::string> keywords;
+						AttribMap::const_iterator it_att = attrib_map.begin();
+						for(; it_att != attrib_map.end() ; ++it_att) {
+							keywords.push_back((*it_att).first);
+							keywords.push_back((*it_att).second);
+						}
+						/* And also we should print the available options into the screen */
+						std::string options = "";
+						typename std::map<std::string,T>::const_iterator it_values = values.begin();
+						for(; it_values != values.end() ; ++it_values)
+							options += (*it_values).first + " ";
+
+						throw KeywordParserError("Bad value <" + value + "> for attribute *" + attrib_name + "* ( options are : "
+								+ options + ")", keywords);
+					}
+				}
+				/* Not found, return default value */
+				return default_value;
+
+			}
+			~AttributeValue() {/* */};
+		};
+
 		/* Access the parser */
 		static Parser& access();
 

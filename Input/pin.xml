@@ -7,11 +7,12 @@
 <!-- Defition of Surfaces -->
   <surface id="1" type="cz" coeffs="0.2" />
   <surface id="2" type="cz" coeffs="0.3" />
-  <surface id="3" type="cz" coeffs="0.5" boundary="reflective" />
+  <surface id="3" type="cz" coeffs="0.5" />
 
 <!-- Definition of Cells -->
   <cell id="1" material="fuel"  surfaces="-1" />
   <cell id="2" material="clad"  surfaces=" 1 -2"/>
   <cell id="3" material="water" surfaces=" 2 -3"/>
-      
+  <cell id="4" type="dead"      surfaces=" 3"/>
+     
 </geometry>
