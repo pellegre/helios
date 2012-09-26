@@ -30,6 +30,7 @@ MARK_AS_ADVANCED(Blitz_INCLUDE_DIR Blitz_LIBRARY)
 
 add_executable(mc++ 
                Log/Log.cpp
+               Utils/Utils.cpp
                Geometry/Geometry.cpp
                Geometry/Universe.cpp               
                Geometry/Cell.cpp

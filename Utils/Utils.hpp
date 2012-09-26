@@ -25,43 +25,15 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef UTILS_HPP_
+#define UTILS_HPP_
+
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "Parser/ParserTypes.hpp"
-#include "Log/Log.hpp"
-#include "Utils/Utils.hpp"
+#include "../Log/Log.hpp"
 
-using namespace std;
-using namespace Helios;
+size_t seachKeyWords(const std::string& filename, std::vector<std::string> search_keys);
 
-int main(int argc, char* argv[]) {
-	string filename = string(argv[1]);
-
-	try {
-		/* Read the input file */
-		Log::ok() << "Reading file " + filename << Log::endl;
-		XmlParser::access().parseFile(filename);
-	} catch(Parser::ParserError& parsererror) {
-		Log::error() << "Error parsing file : " + filename + "." << Log::endl;
-		/* Nothing to do, just print the message and exit */
-		Log::error() << parsererror.what() << Log::endl;
-		return 1;
-	} catch(Parser::KeywordParserError& keyerror) {
-		Log::error() << "Error parsing file : " + filename << Log::endl;
-		/* Try to find the -bad- keyword */
-		size_t line = seachKeyWords(filename,keyerror.getKeys());
-		if(line)
-			Log::error() << "Line " << (line + 1) << " : " << keyerror.what() << Log::endl;
-		else
-			Log::error() << keyerror.what() << Log::endl;
-		return 1;
-	}
-
-	Geometry::access().printGeo(std::cout);
-	/* Check some functions */
-	cout << "Find = " << Geometry::access().findCell(Coordinate(0.0,0.001,0.0))->getUserId() << endl;
-
-	return 0;
-}
+#endif /* UTILS_HPP_ */
