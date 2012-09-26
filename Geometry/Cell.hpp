@@ -129,29 +129,6 @@ namespace Helios {
 
 	};
 
-	/* Cell filled with an universe */
-	class CellFilled : public Cell {
-
-		/* Friendly factory */
-		friend class CellFactory;
-
-		CellFilled(const CellId& cellid, std::vector<CellSurface>& surfaces, const InternalUniverseId& univid,
-				   const CellInfo& flags, const Universe* fill);
-		/* Prevent copy */
-		CellFilled(const CellFilled& surface);
-		CellFilled& operator= (const CellFilled& other);
-
-		/* Print cell information */
-		void print(std::ostream& out) const;
-
-	public:
-
-		/* In this case, we should look for cells inside the internal universe */
-		const Cell* findCell(const Coordinate& position, const Surface* skip = 0) const;
-
-		~CellFilled() {/* */};
-	};
-
 	class CellFactory {
 
 		/* Static instance of the factory */
@@ -170,10 +147,7 @@ namespace Helios {
 		/* Create a new surface */
 		Cell* createCell(const CellId& cellid, std::vector<Cell::CellSurface>& surfaces,
 				         const InternalUniverseId& univid, const Cell::CellInfo& flags, const Universe* fill) const {
-			if(fill)
-				return new CellFilled(cellid,surfaces,univid,flags,fill);
-			else
-				return new Cell(cellid,surfaces,univid,flags);
+				return new Cell(cellid,surfaces,univid,flags,fill);
 		}
 
 	};

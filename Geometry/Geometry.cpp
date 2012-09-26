@@ -127,11 +127,23 @@ void Geometry::addCell(const CellDefinition& cell_def) {
     cells.push_back(new_cell);
     /* Put this cell into the universe */
     universes[universe_map[universe]]->addCell(new_cell);
+}
 
-    /* Set the new cell on surfaces neighbor container */
-    vector<Cell::CellSurface>::iterator it_sur = boundingSurfaces.begin();
-    for(; it_sur != boundingSurfaces.end() ; ++it_sur)
-    	(*it_sur).first->addNeighborCell((*it_sur).second,new_cell);
+void Geometry::setupGeometry(const vector<SurfaceDefinition>& sur_def, const vector<CellDefinition>& cell_def) {
+	/* Add surfaces */
+	vector<Geometry::SurfaceDefinition>::const_iterator it_sur = sur_def.begin();
+	for(; it_sur != sur_def.end() ; ++it_sur)
+		/* Add surface into the geometry */
+		Geometry::access().addSurface((*it_sur));
+
+	/* Add cells */
+	vector<Geometry::CellDefinition>::const_iterator it_cell = cell_def.begin();
+	for(; it_cell != cell_def.end() ; ++it_cell)
+		/* Add surface into the geometry */
+		Geometry::access().addCell((*it_cell));
+
+	/* Add surface into the geometry */
+	Geometry::access().checkGeometry();
 }
 
 void Geometry::printGeo(std::ostream& out) const {

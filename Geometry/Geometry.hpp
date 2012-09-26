@@ -41,27 +41,6 @@ namespace Helios {
 
 	class Geometry {
 
-		/* Static instance of this class */
-		static Geometry geo;
-
-		/* Container of surfaces defined on the problem */
-		std::vector<Surface*> surfaces;
-		/* Container of cells defined on the problem */
-		std::vector<Cell*> cells;
-		/* Container of universes */
-		std::vector<Universe*> universes;
-
-		/* Map internal index to user index */
-		std::map<SurfaceId, InternalSurfaceId> surface_map;
-		std::map<CellId, InternalCellId> cell_map;
-		std::map<UniverseId, InternalUniverseId> universe_map;
-
-		/* Prevent creation */
-		Geometry();
-		/* Prevent copy */
-		Geometry(const Geometry& geo);
-		Geometry& operator= (const Geometry& other);
-
 	public:
 
 		/* ---- Geometry classes : Encapsulate all the geometry entities information */
@@ -121,18 +100,15 @@ namespace Helios {
 		static inline Geometry& access() {return geo;}
 
 		/* ---- Get information */
+
 		size_t getCellNumber() const {return cells.size();}
 		size_t getSurfaceNumber() const {return surfaces.size();}
 		size_t getUniverseNumber() const {return universes.size();}
 
 		/* ---- Geometry setup */
 
-		/* Add a surface */
-		void addSurface(const SurfaceDefinition& sur_def);
-		/* Add cell */
-		void addCell(const CellDefinition& cell_def);
-		/* Add a universe */
-		void addUniverse(const UniverseId& uni_def);
+		/* This is the interface to setup the geometry of the problem */
+		void setupGeometry(const std::vector<SurfaceDefinition>& sur_def, const std::vector<CellDefinition>& cell_def);
 
 		/* Print cell with each surface of the geometry */
 		void printGeo(std::ostream& out) const;
@@ -147,6 +123,37 @@ namespace Helios {
 
 		/* Clear and delete all the geometry stuff */
 		virtual ~Geometry();
+
+	private:
+
+		/* Static instance of this class */
+		static Geometry geo;
+
+		/* Container of surfaces defined on the problem */
+		std::vector<Surface*> surfaces;
+		/* Container of cells defined on the problem */
+		std::vector<Cell*> cells;
+		/* Container of universes */
+		std::vector<Universe*> universes;
+
+		/* Map internal index to user index */
+		std::map<SurfaceId, InternalSurfaceId> surface_map;
+		std::map<CellId, InternalCellId> cell_map;
+		std::map<UniverseId, InternalUniverseId> universe_map;
+
+		/* Prevent creation */
+		Geometry();
+		/* Prevent copy */
+		Geometry(const Geometry& geo);
+		Geometry& operator= (const Geometry& other);
+
+		/* Add a surface */
+		void addSurface(const SurfaceDefinition& sur_def);
+		/* Add cell */
+		void addCell(const CellDefinition& cell_def);
+		/* Add a universe */
+		void addUniverse(const UniverseId& uni_def);
+
 	};
 
 } /* namespace Helios */

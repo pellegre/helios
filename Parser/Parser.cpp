@@ -33,42 +33,16 @@ using namespace std;
 
 namespace Helios {
 
-/* Add cells to the geometry */
-void Parser::addCells(const std::vector<Geometry::CellDefinition>& cell_def) {
-	/* Add cells */
-	vector<Geometry::CellDefinition>::const_iterator it_cell = cell_def.begin();
-	for(; it_cell != cell_def.end() ; ++it_cell) {
-		try {
-			/* Add surface into the geometry */
-			Geometry::access().addCell((*it_cell));
-		} catch (Cell::BadCellCreation& exception) {
-			/* Catch exception */
-			throw ParserError(exception.what());
-		}
-	}
-
+void Parser::setupGeometry(const std::vector<Geometry::SurfaceDefinition>& sur_def, const std::vector<Geometry::CellDefinition>& cell_def) {
 	try {
 		/* Add surface into the geometry */
-		Geometry::access().checkGeometry();
+		Geometry::access().setupGeometry(sur_def,cell_def);
+	} catch (Surface::BadSurfaceCreation& exception) {
+		/* Catch exception */
+		throw ParserError(exception.what());
 	} catch (Cell::BadCellCreation& exception) {
 		/* Catch exception */
 		throw ParserError(exception.what());
 	}
 }
-
-/* Add surfaces to the geometry */
-void Parser::addSurfaces(const std::vector<Geometry::SurfaceDefinition>& sur_def) {
-	/* Add surfaces */
-	vector<Geometry::SurfaceDefinition>::const_iterator it_sur = sur_def.begin();
-	for(; it_sur != sur_def.end() ; ++it_sur) {
-		try {
-			/* Add surface into the geometry */
-			Geometry::access().addSurface((*it_sur));
-		} catch (Surface::BadSurfaceCreation& exception) {
-			/* Catch exception */
-			throw ParserError(exception.what());
-		}
-	}
-}
-
 } /* namespace Helios */

@@ -198,8 +198,7 @@ void XmlParser::geoNode(TiXmlNode* pParent) {
 	}
 
 	/* Add the geometries entities */
-	Parser::addSurfaces(sur_def);
-	Parser::addCells(cell_def);
+	Parser::setupGeometry(sur_def,cell_def);
 }
 
 void XmlParser::rootNode(TiXmlNode* pParent) const {

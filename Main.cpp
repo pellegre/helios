@@ -59,6 +59,10 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
+	Geometry::access().printGeo(std::cout);
+	/* Check some functions */
+	cout << "Find = " << Geometry::access().findCell(Coordinate(0.0,0.1,0.0))->getUserId() << endl;
+
 	plot(Geometry::access(),-0.5,0.5,-0.5,0.5,"test.png");
 
 	return 0;

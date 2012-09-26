@@ -50,6 +50,10 @@ Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const Inter
 	int_cellid = counter;
 	/* Increment counter */
 	counter++;
+    /* Set the new cell on surfaces neighbor container */
+    vector<Cell::CellSurface>::iterator it_sur = surfaces.begin();
+    for(; it_sur != surfaces.end() ; ++it_sur)
+    	(*it_sur).first->addNeighborCell((*it_sur).second,this);
 }
 
 std::ostream& operator<<(std::ostream& out, const Cell& q) {
@@ -59,7 +63,10 @@ std::ostream& operator<<(std::ostream& out, const Cell& q) {
 
 void Cell::print(std::ostream& out) const {
 	vector<Cell::CellSurface>::const_iterator it_sur = surfaces.begin();
-	out << "cell = " << getUserId() << " (internal = " << getInternalId() << ")" << " ; universe = " << univid << endl;
+	out << "cell = " << getUserId() << " (internal = " << getInternalId() << ")" << " ; universe = " << univid;
+	if(fill)
+		out << " ; fill " << fill->getUserId();
+	out << endl;
 	while(it_sur != surfaces.end()) {
 		out << "    ";
 		if((*it_sur).second)
@@ -78,10 +85,12 @@ const Cell* Cell::findCell(const Coordinate& position, const Surface* skip) cons
 		for (it = surfaces.begin() ; it != surfaces.end(); ++it) {
 			if (it->first != skip) {
 				if (it->first->sense(position) != it->second)
-					return this;
+					if(fill) return fill->findCell(position,skip);
+					else return this;
 			} else {
 				/* We just get out of the cell, we are outside for sure */
-				return this;
+				if(fill) return fill->findCell(position,skip);
+				else return this;
 			}
 		}
 		/* We are inside all the surfaces */
@@ -97,7 +106,8 @@ const Cell* Cell::findCell(const Coordinate& position, const Surface* skip) cons
 		}
     }
     /* If we get here, we are inside the cell :-) */
-    return this;
+	if(fill) return fill->findCell(position,skip);
+	else return this;
 }
 
 void Cell::intersect(const Coordinate& position, const Direction& direction, Surface*& surface, bool& sense, double& distance) const {
@@ -120,53 +130,6 @@ void Cell::intersect(const Coordinate& position, const Direction& direction, Sur
         }
 	}
 
-}
-
-CellFilled::CellFilled(const CellId& cellid, vector<CellSurface>& surfaces, const InternalUniverseId& univid,
-		               const CellInfo& flags, const Universe* fill) : Cell(cellid,surfaces,univid,flags,fill) {/* */}
-
-const Cell* CellFilled::findCell(const Coordinate& position, const Surface* skip) const {
-	vector<CellSurface>::const_iterator it;
-	/* Deal with a negated cell */
-    if (flag & NEGATED) {
-		for (it = surfaces.begin() ; it != surfaces.end(); ++it) {
-			if (it->first != skip) {
-				if (it->first->sense(position) != it->second)
-					return fill->findCell(position,skip);
-			} else {
-				/* We just get out of the cell, we are outside for sure */
-				return fill->findCell(position,skip);
-			}
-		}
-		/* We are inside all the surfaces */
-		return 0;
-    }
-    else {
-		for (it = surfaces.begin(); it != surfaces.end(); ++it) {
-			if (it->first != skip) {
-				if (it->first->sense(position) != it->second)
-				/* The sense of the point isn't the same the same sense as we know this cell is defined... */
-				return 0;
-			}
-		}
-    }
-    /* If we get here, we are inside the cell */
-    return fill->findCell(position,skip);
-}
-
-void CellFilled::print(std::ostream& out) const {
-	vector<Cell::CellSurface>::const_iterator it_sur = surfaces.begin();
-	out << "cell = " << getUserId() << " (internal = " << getInternalId() << ")"
-	    << " ; universe = " << univid << " ; fill = " << fill->getUserId() << endl;
-	while(it_sur != surfaces.end()) {
-		out << "    ";
-		if((*it_sur).second)
-			out << "(+) " << (*(*it_sur).first);
-		else
-			out << "(-) " << (*(*it_sur).first);
-		out << endl;
-		++it_sur;
-	}
 }
 
 } /* namespace Helios */

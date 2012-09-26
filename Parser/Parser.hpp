@@ -38,12 +38,8 @@ namespace Helios {
 	class Parser {
 
 	protected:
-
-		/* Add cells to the geometry */
-		static void addCells(const std::vector<Geometry::CellDefinition>& cell_def);
-		/* Add surfaces to the geometry */
-		static void addSurfaces(const std::vector<Geometry::SurfaceDefinition>& sur_def);
-
+		/* Setup geometry */
+		static void setupGeometry(const std::vector<Geometry::SurfaceDefinition>& sur_def, const std::vector<Geometry::CellDefinition>& cell_def);
 	public:
 
 		/* Exception */
