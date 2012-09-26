@@ -73,6 +73,17 @@ namespace Helios {
 			virtual ~KeywordParserError() throw() {/* */};
 		};
 
+		/* Exception */
+		class ParserWarning : public std::exception {
+			std::string reason;
+		public:
+			ParserWarning(const std::string& msg) : reason(msg) {/* */}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			virtual ~ParserWarning() throw() {/* */};
+		};
+
 		Parser() {/* */};
 
 		/* Parse the geometry file, and set each surface and cell */

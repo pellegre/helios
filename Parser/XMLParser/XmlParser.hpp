@@ -29,6 +29,7 @@
 #define XMLPARSER_HPP_
 
 #include <vector>
+#include <set>
 #include <string>
 
 #include "tinyxml.h"
@@ -79,50 +80,21 @@ namespace Helios {
 			std::map<std::string,T> values;
 			/* Default value */
 			T default_value;
+			/* Conflicts with this attribute */
+			std::set<std::string> conflicts;
+			/* Check for conflicts */
+			void checkConflicts(const AttribMap& attrib_map) const;
+			/* Throw exception */
+			void throwException(const AttribMap& attrib_map, const std::string& msg) const;
 		public:
 			AttributeValue(const std::string& attrib_name, const T& default_value,
-					       const std::map<std::string,T>& values = std::map<std::string,T>()) :
-				attrib_name(attrib_name), default_value(default_value), values(values) {/* */};
+					       const std::map<std::string,T>& values = std::map<std::string,T>(),
+					       const std::set<std::string>& conflicts = std::set<std::string>()) :
+				attrib_name(attrib_name), default_value(default_value), values(values), conflicts(conflicts) {/* */};
 			/* Checks attributes from the user specified map, this will throw an exception if something is wrong */
-			T getValue(const AttribMap& attrib_map) {
-				AttribMap::const_iterator it_att = attrib_map.find(attrib_name);
-				if(it_att != attrib_map.end()) {
-					/* Found attribute, get value */
-					std::string value = (*it_att).second;
-					if(values.find(value) != values.end()) {
-						return values[value];
-					}
-					else {
-						/* Bad value for attribute, throw an exception */
-						std::vector<std::string> keywords;
-						AttribMap::const_iterator it_att = attrib_map.begin();
-						for(; it_att != attrib_map.end() ; ++it_att) {
-							keywords.push_back((*it_att).first);
-							keywords.push_back((*it_att).second);
-						}
-						/* And also we should print the available options into the screen */
-						std::string options = "";
-						typename std::map<std::string,T>::const_iterator it_values = values.begin();
-						for(; it_values != values.end() ; ++it_values)
-							options += (*it_values).first + " ";
-
-						throw KeywordParserError("Bad value <" + value + "> for attribute *" + attrib_name + "* ( options are : "
-								+ options + ")", keywords);
-					}
-				}
-				/* Not found, return default value */
-				return default_value;
-			}
-
+			T getValue(const AttribMap& attrib_map) const;
 			/* Get value as a string */
-			std::string getString(const AttribMap& attrib_map) {
-				AttribMap::const_iterator it_att = attrib_map.find(attrib_name);
-				if(it_att != attrib_map.end())
-					return (*it_att).second;
-				else
-					return default_value;
-			}
-
+			std::string getString(const AttribMap& attrib_map) const;
 			~AttributeValue() {/* */};
 		};
 
@@ -135,6 +107,64 @@ namespace Helios {
 		~XmlParser() {/* */};
 	};
 
+	template<class T>
+	T XmlParser::AttributeValue<T>::getValue(const AttribMap& attrib_map) const {
+		AttribMap::const_iterator it_att = attrib_map.find(attrib_name);
+		if(it_att != attrib_map.end()) {
+			checkConflicts(attrib_map);
+			/* Found attribute, get value */
+			std::string value = (*it_att).second;
+			typename std::map<std::string,T>::const_iterator it_val = values.find(value);
+			if(it_val != values.end()) {
+				return (*it_val).second;
+			} else {
+				/* And also we should print the available options into the screen */
+				std::string options = "";
+				typename std::map<std::string,T>::const_iterator it_values = values.begin();
+				for(; it_values != values.end() ; ++it_values)
+					options += (*it_values).first + " ";
+				std::string msg = "Bad value <" + value + "> for attribute *" + attrib_name + "* ( options are : " + options + ")";
+				throwException(attrib_map,msg);
+			}
+		}
+		/* Not found, return default value */
+		return default_value;
+	}
+
+	template<class T>
+	std::string XmlParser::AttributeValue<T>::getString(const AttribMap& attrib_map) const {
+		AttribMap::const_iterator it_att = attrib_map.find(attrib_name);
+		if(it_att != attrib_map.end()) {
+			checkConflicts(attrib_map);
+			return (*it_att).second;
+		}
+		else
+			return default_value;
+	}
+
+	template<class T>
+	void XmlParser::AttributeValue<T>::checkConflicts(const AttribMap& attrib_map) const {
+		std::set<std::string>::iterator it_con = conflicts.begin();
+		for(; it_con != conflicts.end() ; ++it_con) {
+			if(attrib_map.find((*it_con)) != attrib_map.end()) {
+				throwException(attrib_map,"Attribute *" + attrib_name + "* is not compatible with *" + (*it_con) +"*");
+			}
+		}
+	}
+
+	template<class T>
+	void XmlParser::AttributeValue<T>::throwException(const AttribMap& attrib_map, const std::string& msg) const {
+		AttribMap::const_iterator it_att = attrib_map.find(attrib_name);
+		std::string value = (*it_att).second;
+		/* Bad value for attribute, throw an exception */
+		std::vector<std::string> keywords;
+		it_att = attrib_map.begin();
+		for(; it_att != attrib_map.end() ; ++it_att) {
+			keywords.push_back((*it_att).first);
+			keywords.push_back((*it_att).second);
+		}
+		throw KeywordParserError(msg,keywords);
+	}
 } /* namespace Helios */
 
 #endif /* XMLPARSER_H_ */

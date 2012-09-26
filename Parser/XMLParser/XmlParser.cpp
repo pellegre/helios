@@ -134,7 +134,6 @@ static map<string,Cell::CellInfo> initCellInfo() {
 	map<string,Cell::CellInfo> values_map;
 	values_map["dead"] = Cell::DEADCELL;
 	values_map["negated"] = Cell::NEGATED;
-	values_map["void"] = Cell::VOID;
 	return values_map;
 }
 /* Parse cell attributes */
@@ -145,8 +144,13 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	static XmlParser::XmlAttributes cellAttrib(vector<string>(required, required + 2), vector<string>(optional, optional + 4));
 	/* Cell flags values */
 	XmlParser::AttributeValue<Cell::CellInfo> cell_flags("type",Cell::NONE,initCellInfo());
+	/* Universe */
 	XmlParser::AttributeValue<string> inp_universe("universe","0");
-	XmlParser::AttributeValue<string> inp_fill("fill","0");
+
+	/* Universe filling this cell */
+	set<string> fill_conflicts;
+	fill_conflicts.insert("material");
+	XmlParser::AttributeValue<string> inp_fill("fill","0",map<string,string>(),fill_conflicts);
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */

@@ -53,7 +53,6 @@ namespace Helios {
 			NONE     = 0, /* No special cell attributes */
 			DEADCELL = 1, /* Particles should be killed when entering us */
 			NEGATED  = 2, /* We are "everything but" what is inside our bounds */
-			VOID     = 3  /* No material inside this cell */
 		};
 
 		/* Exception */
