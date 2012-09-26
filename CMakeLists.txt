@@ -13,7 +13,7 @@ set( ${PROJECT_NAME}_MINOR_VERSION 1 )
 
 # ---- Compiler settings
 
-set(CMAKE_CXX_FLAGS "-g -O0 -Wall")
+set(CMAKE_CXX_FLAGS "-g -O0 -Wall ")
 
 # ---- External dependencies
 
@@ -28,7 +28,14 @@ MARK_AS_ADVANCED(Blitz_INCLUDE_DIR Blitz_LIBRARY)
 
 # ---- Executable
 
+set(PNGWRITER Utils/pngwriter.cpp)
+SET_SOURCE_FILES_PROPERTIES(${PNGWRITER} PROPERTIES COMPILE_FLAGS -DNO_FREETYPE)
+
+find_package(PNG REQUIRED)
+include_directories(${PNG_INCLUDE_DIR})
+
 add_executable(mc++ 
+               ${PNGWRITER}
                Log/Log.cpp
                Utils/Utils.cpp
                Geometry/Geometry.cpp
@@ -45,7 +52,7 @@ add_executable(mc++
                Main.cpp
                )
 
-target_link_libraries (mc++ ${Blitz_LIBRARY})
+target_link_libraries (mc++ ${Blitz_LIBRARY} ${PNG_LIBRARY})
 
 # ---- Output
 

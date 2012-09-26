@@ -120,6 +120,11 @@ namespace Helios {
 		/* Access to the geometry of the problem */
 		static inline Geometry& access() {return geo;}
 
+		/* ---- Get information */
+		size_t getCellNumber() const {return cells.size();}
+		size_t getSurfaceNumber() const {return surfaces.size();}
+		size_t getUniverseNumber() const {return universes.size();}
+
 		/* ---- Geometry setup */
 
 		/* Add a surface */
