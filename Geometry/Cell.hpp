@@ -36,6 +36,8 @@
 
 namespace Helios {
 
+	class Universe;
+
 	class Cell {
 
 	public:
@@ -86,7 +88,7 @@ namespace Helios {
 		 * is not inside this cell.
 		 * Optionally skip checking one surface if we know we've crossed it.
 		 */
-		const Cell* getCell(const Coordinate& position, const Surface* skip = 0) const;
+		virtual const Cell* findCell(const Coordinate& position, const Surface* skip = 0) const;
 
 		/* Get the nearest surface to a point in a given direction */
 		void intersect(const Coordinate& position, const Direction& direction, Surface*& surface, bool& sense, double& distance) const;
@@ -95,23 +97,56 @@ namespace Helios {
 
 	protected:
 
-		Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo flags = NONE);
+		Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const InternalUniverseId& univid, const CellInfo& flags);
 		/* Prevent copy */
 		Cell(const Cell& surface);
 		Cell& operator= (const Cell& other);
 
-	private:
+		/* Print cell information */
+		virtual void print(std::ostream& out) const;
 
-		/* Static counter, incremented by one each time a surface is created */
-		static size_t counter;
-		/* Internal identification of this surface */
-		InternalCellId int_cellid;
 		/* A vector of surfaces and senses that define this cell */
 		std::vector<CellSurface> surfaces;
+		/* Internal identification of this surface */
+		InternalCellId int_cellid;
 		/* Cell id choose by the user */
 		CellId cellid;
+		/* Universe (internal) ID where this cell is in */
+		InternalUniverseId univid;
 		/* Other information about this cell */
 		CellInfo flag;
+
+	private:
+
+		/* Static counter, incremented by one each time a cell is created */
+		static size_t counter;
+
+	};
+
+	/* Cell filled with an universe */
+	class CellFilled : public Cell {
+
+		/* Friendly factory */
+		friend class CellFactory;
+
+		CellFilled(const CellId& cellid, std::vector<CellSurface>& surfaces, const InternalUniverseId& univid,
+				   const CellInfo& flags, const Universe* fill);
+		/* Prevent copy */
+		CellFilled(const CellFilled& surface);
+		CellFilled& operator= (const CellFilled& other);
+
+		/* Reference to the universe that is filling this cell */
+		const Universe* fill;
+
+		/* Print cell information */
+		void print(std::ostream& out) const;
+
+	public:
+
+		/* In this case, we should look for cells inside the internal universe */
+		const Cell* findCell(const Coordinate& position, const Surface* skip = 0) const;
+
+		~CellFilled() {/* */};
 	};
 
 	class CellFactory {
@@ -130,11 +165,17 @@ namespace Helios {
 		static CellFactory& access() {return factory;}
 
 		/* Create a new surface */
-		Cell* createCell(const CellId& cellid, std::vector<Cell::CellSurface>& surfaces, const Cell::CellInfo flags = Cell::NONE) const {
-			return new Cell(cellid,surfaces,flags);
+		Cell* createCell(const CellId& cellid, std::vector<Cell::CellSurface>& surfaces,
+				         const InternalUniverseId& univid, const Cell::CellInfo& flags, const Universe* fill) const {
+			if(fill)
+				return new CellFilled(cellid,surfaces,univid,flags,fill);
+			else
+				return new Cell(cellid,surfaces,univid,flags);
 		}
 
 	};
+
+	std::ostream& operator<<(std::ostream& out, const Cell& q);
 
 } /* namespace Helios */
 #endif /* CELL_HPP_ */

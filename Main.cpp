@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	/* Check some functions */
-	cout << "Find = " << Geometry::access().findCell(Coordinate(0.05,0.05,0.0))->getUserId() << endl;
+	cout << "Find = " << Geometry::access().findCell(Coordinate(0.0,0.21,0.0))->getUserId() << endl;
 
 	return 0;
 }

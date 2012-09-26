@@ -34,6 +34,7 @@
 
 #include "Surface.hpp"
 #include "Cell.hpp"
+#include "Universe.hpp"
 #include "../Common.hpp"
 
 namespace Helios {
@@ -47,10 +48,13 @@ namespace Helios {
 		std::vector<Surface*> surfaces;
 		/* Container of cells defined on the problem */
 		std::vector<Cell*> cells;
+		/* Container of universes */
+		std::vector<Universe*> universes;
 
 		/* Map internal index to user index */
 		std::map<SurfaceId, InternalSurfaceId> surface_map;
 		std::map<CellId, InternalCellId> cell_map;
+		std::map<UniverseId, InternalUniverseId> universe_map;
 
 		/* Prevent creation */
 		Geometry();
@@ -89,9 +93,12 @@ namespace Helios {
 			CellId userCellId;
 			std::vector<signed int> surfacesId;
 			Cell::CellInfo flags;
+			UniverseId universe;
+			UniverseId fill;
 		public:
-			CellDefinition(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo& flags = Cell::NONE) :
-				userCellId(userCellId), surfacesId(surfacesId), flags(flags) {/* */}
+			CellDefinition(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo& flags,
+					       const UniverseId& universe, const UniverseId& fill) :
+				userCellId(userCellId), surfacesId(surfacesId), flags(flags), universe(universe), fill(fill) {/* */}
 			Cell::CellInfo getFlags() const {
 				return flags;
 			}
@@ -100,6 +107,12 @@ namespace Helios {
 			}
 			CellId getUserCellId() const {
 				return userCellId;
+			}
+			UniverseId getUniverse() const {
+				return universe;
+			}
+			UniverseId getFill() const {
+				return fill;
 			}
 			~CellDefinition() {/* */}
 		};
@@ -111,15 +124,18 @@ namespace Helios {
 
 		/* Add a surface */
 		void addSurface(const SurfaceDefinition& sur_def);
-
 		/* Add cell */
 		void addCell(const CellDefinition& cell_def);
+		/* Add a universe */
+		void addUniverse(const UniverseId& uni_def);
 
 		/* Print cell with each surface of the geometry */
 		void printGeo(std::ostream& out) const;
 
-	    /* Find a cell given an arbitrary point in the problem */
+	    /* Find a cell given an arbitrary point in the problem (starting from the base universe) */
 		const Cell* findCell(const Coordinate& position) const;
+		/* Using a universe identifier as a starting point */
+		const Cell* findCell(const Coordinate& position, const InternalUniverseId& univid) const;
 
 		/* Clear and delete all the geometry stuff */
 		virtual ~Geometry();

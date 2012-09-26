@@ -28,6 +28,7 @@
 #include <limits>
 
 #include "Cell.hpp"
+#include "Universe.hpp"
 
 using namespace std;
 
@@ -39,9 +40,10 @@ size_t Cell::counter = 0;
 /* Static global instance of the singleton */
 CellFactory CellFactory::factory;
 
-Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo flag) :
+Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const InternalUniverseId& univid, const CellInfo& flag) :
 	cellid(cellid),
 	surfaces(surfaces),
+	univid(univid),
 	flag(flag) {
 	/* Set internal ID */
 	int_cellid = counter;
@@ -50,9 +52,14 @@ Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellI
 }
 
 std::ostream& operator<<(std::ostream& out, const Cell& q) {
-	vector<Cell::CellSurface>::const_iterator it_sur = q.surfaces.begin();
-	out << "cell = " << q.getUserId() << " (internal = " << q.getInternalId() << ")" << endl;
-	while(it_sur != q.surfaces.end()) {
+	q.print(out);
+	return out;
+}
+
+void Cell::print(std::ostream& out) const {
+	vector<Cell::CellSurface>::const_iterator it_sur = surfaces.begin();
+	out << "cell = " << getUserId() << " (internal = " << getInternalId() << ")" << " ; universe = " << univid << endl;
+	while(it_sur != surfaces.end()) {
 		out << "    ";
 		if((*it_sur).second)
 			out << "(+) " << (*(*it_sur).first);
@@ -61,10 +68,9 @@ std::ostream& operator<<(std::ostream& out, const Cell& q) {
 		out << endl;
 		++it_sur;
 	}
-	return out;
 }
 
-const Cell* Cell::getCell(const Coordinate& position, const Surface* skip) const {
+const Cell* Cell::findCell(const Coordinate& position, const Surface* skip) const {
 	vector<CellSurface>::const_iterator it;
 	/* Deal with a negated cell */
     if (flag & NEGATED) {
@@ -113,6 +119,53 @@ void Cell::intersect(const Coordinate& position, const Direction& direction, Sur
         }
 	}
 
+}
+
+CellFilled::CellFilled(const CellId& cellid, vector<CellSurface>& surfaces, const InternalUniverseId& univid,
+		               const CellInfo& flags, const Universe* fill) : Cell(cellid,surfaces,univid,flags), fill(fill) {/* */}
+
+const Cell* CellFilled::findCell(const Coordinate& position, const Surface* skip) const {
+	vector<CellSurface>::const_iterator it;
+	/* Deal with a negated cell */
+    if (flag & NEGATED) {
+		for (it = surfaces.begin() ; it != surfaces.end(); ++it) {
+			if (it->first != skip) {
+				if (it->first->sense(position) != it->second)
+					return fill->findCell(position,skip);
+			} else {
+				/* We just get out of the cell, we are outside for sure */
+				return fill->findCell(position,skip);
+			}
+		}
+		/* We are inside all the surfaces */
+		return 0;
+    }
+    else {
+		for (it = surfaces.begin(); it != surfaces.end(); ++it) {
+			if (it->first != skip) {
+				if (it->first->sense(position) != it->second)
+				/* The sense of the point isn't the same the same sense as we know this cell is defined... */
+				return 0;
+			}
+		}
+    }
+    /* If we get here, we are inside the cell */
+    return fill->findCell(position,skip);
+}
+
+void CellFilled::print(std::ostream& out) const {
+	vector<Cell::CellSurface>::const_iterator it_sur = surfaces.begin();
+	out << "cell = " << getUserId() << " (internal = " << getInternalId() << ")"
+	    << " ; universe = " << univid << " ; fill = " << fill->getUserId() << endl;
+	while(it_sur != surfaces.end()) {
+		out << "    ";
+		if((*it_sur).second)
+			out << "(+) " << (*(*it_sur).first);
+		else
+			out << "(-) " << (*(*it_sur).first);
+		out << endl;
+		++it_sur;
+	}
 }
 
 } /* namespace Helios */

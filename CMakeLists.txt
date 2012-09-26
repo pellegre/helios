@@ -30,9 +30,10 @@ MARK_AS_ADVANCED(Blitz_INCLUDE_DIR Blitz_LIBRARY)
 
 add_executable(mc++ 
                Log/Log.cpp
+               Geometry/Geometry.cpp
+               Geometry/Universe.cpp               
                Geometry/Cell.cpp
                Geometry/Surface.cpp
-               Geometry/Geometry.cpp
                Geometry/Surfaces/CylinderOnAxis.cpp               
                Parser/Parser.cpp
                Parser/XMLParser/tinystr.cpp

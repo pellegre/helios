@@ -80,8 +80,9 @@ namespace Helios {
 			/* Default value */
 			T default_value;
 		public:
-			AttributeValue(const std::string& attrib_name, const std::map<std::string,T>& values, const T& default_value) :
-				attrib_name(attrib_name), values(values), default_value(default_value) {/* */};
+			AttributeValue(const std::string& attrib_name, const T& default_value,
+					       const std::map<std::string,T>& values = std::map<std::string,T>()) :
+				attrib_name(attrib_name), default_value(default_value), values(values) {/* */};
 			/* Checks attributes from the user specified map, this will throw an exception if something is wrong */
 			T getValue(const AttribMap& attrib_map) {
 				AttribMap::const_iterator it_att = attrib_map.find(attrib_name);
@@ -111,8 +112,17 @@ namespace Helios {
 				}
 				/* Not found, return default value */
 				return default_value;
-
 			}
+
+			/* Get value as a string */
+			std::string getString(const AttribMap& attrib_map) {
+				AttribMap::const_iterator it_att = attrib_map.find(attrib_name);
+				if(it_att != attrib_map.end())
+					return (*it_att).second;
+				else
+					return default_value;
+			}
+
 			~AttributeValue() {/* */};
 		};
 

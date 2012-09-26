@@ -37,7 +37,10 @@ static inline bool getSign(const signed int& value) {return (value > 0);}
 
 Geometry Geometry::geo;
 
-Geometry::Geometry() {/* */}
+Geometry::Geometry() {
+	/* Universe zero always exist (is the "base" universe) */
+	addUniverse(0);
+}
 
 void Geometry::addSurface(const SurfaceDefinition& sur_def) {
 	/* Surface information */
@@ -57,6 +60,20 @@ void Geometry::addSurface(const SurfaceDefinition& sur_def) {
 	surface_map[new_surface->getUserId()] = new_surface->getInternalId();
 	/* Push the surface into the container */
 	surfaces.push_back(new_surface);
+}
+
+void Geometry::addUniverse(const UniverseId& uni_def) {
+	/* Check duplicated IDs */
+	map<UniverseId, InternalUniverseId>::const_iterator it_id = universe_map.find(uni_def);
+	if(it_id != universe_map.end())
+		return; /* Don't create the universe */
+
+	/* Create universe */
+	Universe* new_universe = UniverseFactory::access().createUniverse(uni_def);
+	/* Update universe map */
+	universe_map[new_universe->getUserId()] = new_universe->getInternalId();
+	/* Push the universe into the container */
+	universes.push_back(new_universe);
 }
 
 void Geometry::addCell(const CellDefinition& cell_def) {
@@ -90,12 +107,26 @@ void Geometry::addCell(const CellDefinition& cell_def) {
         boundingSurfaces.push_back(newSurface);
     }
 
+    /* Check for universes */
+    UniverseId universe = cell_def.getUniverse();
+    UniverseId fill = cell_def.getFill();
+    Universe* fill_universe = 0;
+
+    /* Add, if any */
+    if(universe) addUniverse(universe);
+    if(fill) {
+    	addUniverse(fill);
+    	fill_universe = universes[universe_map[fill]];
+    }
+
     /* Now we can construct the cell */
-    Cell* new_cell = CellFactory::access().createCell(userCellId,boundingSurfaces,flags);
+    Cell* new_cell = CellFactory::access().createCell(userCellId,boundingSurfaces,universe,flags,fill_universe);
 	/* Update cell map */
     cell_map[new_cell->getUserId()] = new_cell->getInternalId();
     /* Push the cell into the container */
     cells.push_back(new_cell);
+    /* Put this cell into the universe */
+    universes[universe_map[universe]]->addCell(new_cell);
 
     /* Set the new cell on surfaces neighbor container */
     vector<Cell::CellSurface>::iterator it_sur = boundingSurfaces.begin();
@@ -104,18 +135,21 @@ void Geometry::addCell(const CellDefinition& cell_def) {
 }
 
 void Geometry::printGeo(std::ostream& out) const {
-	vector<Cell*>::const_iterator it_cell = cells.begin();
-	for(; it_cell != cells.end() ; it_cell++)
-		out << *(*it_cell);
+	vector<Universe*>::const_iterator it_uni = universes.begin();
+	for(; it_uni != universes.end() ; it_uni++) {
+		out << "---- universe = " << (*it_uni)->getUserId() << endl;
+		out << *(*it_uni);
+	}
 }
 
 const Cell* Geometry::findCell(const Coordinate& position) const {
-	/* loop through all cells in problem */
-	for (vector<Cell*>::const_iterator it_cell = cells.begin(); it_cell != cells.end(); ++it_cell) {
-		const Cell* in_cell = (*it_cell)->getCell(position);
-		if (in_cell) return in_cell;
-	}
-	return 0;
+	/* Start with the base universe */
+	return universes[0]->findCell(position);
+}
+
+const Cell* Geometry::findCell(const Coordinate& position, const InternalUniverseId& univid) const {
+	/* Start with the universe provided */
+	return universes[univid]->findCell(position);
 }
 
 Geometry::~Geometry() {

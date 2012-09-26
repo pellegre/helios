@@ -108,7 +108,7 @@ static Geometry::SurfaceDefinition surfaceAttrib(TiXmlElement* pElement) {
 	static const string optional[1] = {"boundary"};
 	static XmlParser::XmlAttributes surAttrib(vector<string>(required, required + 3), vector<string>(optional, optional + 1));
 	/* Surface flags values */
-	XmlParser::AttributeValue<Surface::SurfaceInfo> sur_flags("boundary",initSurfaceInfo(),Surface::NONE);
+	XmlParser::AttributeValue<Surface::SurfaceInfo> sur_flags("boundary",Surface::NONE,initSurfaceInfo());
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
@@ -141,10 +141,12 @@ static map<string,Cell::CellInfo> initCellInfo() {
 static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[3] = {"id", "surfaces"};
-	static const string optional[2] = {"material","type"};
-	static XmlParser::XmlAttributes cellAttrib(vector<string>(required, required + 2), vector<string>(optional, optional + 2));
+	static const string optional[4] = {"material","type","fill","universe"};
+	static XmlParser::XmlAttributes cellAttrib(vector<string>(required, required + 2), vector<string>(optional, optional + 4));
 	/* Cell flags values */
-	XmlParser::AttributeValue<Cell::CellInfo> cell_flags("type",initCellInfo(),Cell::NONE);
+	XmlParser::AttributeValue<Cell::CellInfo> cell_flags("type",Cell::NONE,initCellInfo());
+	XmlParser::AttributeValue<string> inp_universe("universe","0");
+	XmlParser::AttributeValue<string> inp_fill("fill","0");
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
@@ -159,9 +161,15 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 		sin >> c;
 		surfaces.push_back(c);
 	}
+	/* Flags of the cell */
 	Cell::CellInfo flags = cell_flags.getValue(mapAttrib);
+
+	/* Get information about universes on this cell */
+	UniverseId universe = fromString<UniverseId>(inp_universe.getString(mapAttrib));
+	UniverseId fill = fromString<UniverseId>(inp_fill.getString(mapAttrib));
+
 	/* Return surface definition */
-	return Geometry::CellDefinition(id,surfaces,flags);
+	return Geometry::CellDefinition(id,surfaces,flags,universe,fill);
 }
 
 void XmlParser::geoNode(TiXmlNode* pParent) {

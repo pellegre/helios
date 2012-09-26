@@ -27,7 +27,15 @@
 
 #include "Universe.hpp"
 
+using namespace std;
+
 namespace Helios {
+
+/* Initialize global universe counter */
+size_t Universe::counter = 0;
+
+/* Static global instance of the singleton */
+UniverseFactory UniverseFactory::factory;
 
 Universe::Universe(const UniverseId& univid) : univid(univid) {
 	/* Set internal ID */
@@ -36,5 +44,20 @@ Universe::Universe(const UniverseId& univid) : univid(univid) {
 	counter++;
 }
 
+const Cell* Universe::findCell(const Coordinate& position, const Surface* skip) const {
+	/* loop through all cells in problem */
+	for (vector<Cell*>::const_iterator it_cell = cells.begin(); it_cell != cells.end(); ++it_cell) {
+		const Cell* in_cell = (*it_cell)->findCell(position,skip);
+		if (in_cell) return in_cell;
+	}
+	return 0;
+}
+
+std::ostream& operator<<(std::ostream& out, const Universe& q) {
+	vector<Cell*>::const_iterator it_cell = q.cells.begin();
+	for(; it_cell != q.cells.end() ; it_cell++)
+		out << *(*it_cell);
+	return out;
+}
 
 } /* namespace Helios */

@@ -30,42 +30,52 @@
 
 #include <vector>
 
+#include "Cell.hpp"
 #include "../Common.hpp"
 
 namespace Helios {
 
-class Universe {
+	class Universe {
 
-	/* Static counter, incremented by one each time a surface is created */
-	static size_t counter;
-	/* Internal identification of this universe */
-	InternalUniverseId int_univid;
-	/* A vector of cell */
-	std::vector<Cell*> cells;
-	/* Cell id choose by the user */
-	UniverseId univid;
+		friend class UniverseFactory;
+		/* Friendly printer */
+		friend std::ostream& operator<<(std::ostream& out, const Universe& q);
 
-protected:
+		/* Static counter, incremented by one each time a universe is created */
+		static size_t counter;
+		/* Internal identification of this universe */
+		InternalUniverseId int_univid;
+		/* A vector of cells */
+		std::vector<Cell*> cells;
+		/* Universe id choose by the user */
+		UniverseId univid;
 
-	Universe(const UniverseId& univid) : univid(univid) {/* */};
-	/* Prevent copy */
-	Universe(const Universe& uni);
-	Universe& operator=(const Universe& uni);
+	protected:
 
-public:
+		Universe(const UniverseId& univid);
+		/* Prevent copy */
+		Universe(const Universe& uni);
+		Universe& operator=(const Universe& uni);
 
-	/* Add a neighbor cell of this surface */
-	void addCell(Cell* cell) {cells.push_back(cell);};
-	/* Get neighbor cells of this surface */
-	const std::vector<Cell*>& getCells() const {return cells;};
+	public:
 
-	/* Return the user ID associated with this surface. */
-	const UniverseId& getUserId() const {return univid;}
-	/* Return the internal ID associated with this surface. */
-	const InternalUniverseId& getInternalId() const {return int_univid;}
+		/* Add a cell */
+		void addCell(Cell* cell) {cells.push_back(cell);};
+		/* Get cells of this universe */
+		const std::vector<Cell*>& getCells() const {return cells;};
 
-	virtual ~Universe() {/* */};
-};
+		/* Find cell inside the universe */
+		const Cell* findCell(const Coordinate& position, const Surface* skip = 0) const;
+
+		/* Return the user ID associated with the universe. */
+		const UniverseId& getUserId() const {return univid;}
+		/* Return the internal ID associated with the universe. */
+		const InternalUniverseId& getInternalId() const {return int_univid;}
+		/* Get number of cells */
+		size_t getCellCount() const {return cells.size();}
+
+		virtual ~Universe() {/* */};
+	};
 
 	class UniverseFactory {
 
@@ -88,5 +98,8 @@ public:
 		}
 
 	};
+
+	std::ostream& operator<<(std::ostream& out, const Universe& q);
+
 } /* namespace Helios */
 #endif /* UNIVERSE_HPP_ */
