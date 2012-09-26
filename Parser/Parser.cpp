@@ -43,10 +43,17 @@ void Parser::addCells(const std::vector<Geometry::CellDefinition>& cell_def) {
 			Geometry::access().addCell((*it_cell));
 		} catch (Cell::BadCellCreation& exception) {
 			/* Catch exception */
-			Log::error() << exception.what() << Log::endl;
+			throw ParserError(exception.what());
 		}
 	}
 
+	try {
+		/* Add surface into the geometry */
+		Geometry::access().checkGeometry();
+	} catch (Cell::BadCellCreation& exception) {
+		/* Catch exception */
+		throw ParserError(exception.what());
+	}
 }
 
 /* Add surfaces to the geometry */
@@ -59,7 +66,7 @@ void Parser::addSurfaces(const std::vector<Geometry::SurfaceDefinition>& sur_def
 			Geometry::access().addSurface((*it_sur));
 		} catch (Surface::BadSurfaceCreation& exception) {
 			/* Catch exception */
-			Log::error() << exception.what() << Log::endl;
+			throw ParserError(exception.what());
 		}
 	}
 }

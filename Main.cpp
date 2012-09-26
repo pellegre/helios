@@ -59,12 +59,7 @@ int main(int argc, char* argv[]) {
 	try {
 		/* Read the input file */
 		Log::ok() << "Reading file " + filename << Log::endl;
-		try {
-			XmlParser::access().parseFile(filename);
-		} catch (Parser::ParserWarning& parserwarning) {
-			/* Print the warning */
-			Log::error() << "File " + filename + " : " + parserwarning.what() << Log::endl;
-		}
+		XmlParser::access().parseFile(filename);
 	} catch(Parser::ParserError& parsererror) {
 		Log::error() << "Error parsing file : " + filename + "." << Log::endl;
 		/* Nothing to do, just print the message and exit */

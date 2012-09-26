@@ -137,6 +137,9 @@ namespace Helios {
 		/* Using a universe identifier as a starting point */
 		const Cell* findCell(const Coordinate& position, const InternalUniverseId& univid) const;
 
+		/* Check geometry. This function throw an error and/or prints some warnings about the geometry */
+		void checkGeometry() const;
+
 		/* Clear and delete all the geometry stuff */
 		virtual ~Geometry();
 	};

@@ -80,6 +80,10 @@ namespace Helios {
 		CellInfo getFlag() const {return flag;}
 		/* Set different options for the cell */
 		void setFlags(CellInfo new_flag) {flag = new_flag;}
+		/* Get the universe where this cell is */
+		UniverseId getUniverse() const {return univid;}
+		/* Get the universe that is filling this cell (NULL if any) */
+		const Universe* getFillUniverse() const {return fill;}
 
 		/*
 		 * Check if the cell contains the point and return a reference to the cell that the point is contained.
@@ -96,7 +100,8 @@ namespace Helios {
 
 	protected:
 
-		Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const InternalUniverseId& univid, const CellInfo& flags);
+		Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const InternalUniverseId& univid,
+		     const CellInfo& flags, const Universe* fill = 0);
 		/* Prevent copy */
 		Cell(const Cell& surface);
 		Cell& operator= (const Cell& other);
@@ -114,6 +119,8 @@ namespace Helios {
 		InternalUniverseId univid;
 		/* Other information about this cell */
 		CellInfo flag;
+		/* Reference to the universe that is filling this cell, NULL if any */
+		const Universe* fill;
 
 	private:
 
@@ -133,9 +140,6 @@ namespace Helios {
 		/* Prevent copy */
 		CellFilled(const CellFilled& surface);
 		CellFilled& operator= (const CellFilled& other);
-
-		/* Reference to the universe that is filling this cell */
-		const Universe* fill;
 
 		/* Print cell information */
 		void print(std::ostream& out) const;

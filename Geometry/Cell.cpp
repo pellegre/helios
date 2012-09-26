@@ -40,11 +40,12 @@ size_t Cell::counter = 0;
 /* Static global instance of the singleton */
 CellFactory CellFactory::factory;
 
-Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const InternalUniverseId& univid, const CellInfo& flag) :
+Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const InternalUniverseId& univid, const CellInfo& flag, const Universe* fill) :
 	cellid(cellid),
 	surfaces(surfaces),
 	univid(univid),
-	flag(flag) {
+	flag(flag),
+	fill(fill) {
 	/* Set internal ID */
 	int_cellid = counter;
 	/* Increment counter */
@@ -122,7 +123,7 @@ void Cell::intersect(const Coordinate& position, const Direction& direction, Sur
 }
 
 CellFilled::CellFilled(const CellId& cellid, vector<CellSurface>& surfaces, const InternalUniverseId& univid,
-		               const CellInfo& flags, const Universe* fill) : Cell(cellid,surfaces,univid,flags), fill(fill) {/* */}
+		               const CellInfo& flags, const Universe* fill) : Cell(cellid,surfaces,univid,flags,fill) {/* */}
 
 const Cell* CellFilled::findCell(const Coordinate& position, const Surface* skip) const {
 	vector<CellSurface>::const_iterator it;

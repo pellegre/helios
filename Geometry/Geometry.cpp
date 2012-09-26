@@ -152,6 +152,26 @@ const Cell* Geometry::findCell(const Coordinate& position, const InternalUnivers
 	return universes[univid]->findCell(position);
 }
 
+void Geometry::checkGeometry() const {
+	/* Check for empty surfaces */
+	vector<Surface*>::const_iterator it_sur = surfaces.begin();
+	for(; it_sur != surfaces.end() ; ++it_sur) {
+		/* Get number of neighbor cells */
+		size_t nneg = (*it_sur)->getNeighborCell(false).size();
+		size_t npos = (*it_sur)->getNeighborCell(true).size();
+		if(nneg + npos == 0)
+			Log::warn() << "Surface " << (*it_sur)->getUserId() << " is not used " << Log::endl;
+	}
+	/* Check for empty Universes */
+	vector<Cell*>::const_iterator it_cell = cells.begin();
+	for(; it_cell != cells.end() ; ++it_cell) {
+		const Universe* fill = (*it_cell)->getFillUniverse();
+		if(fill && fill->getCellCount() == 0)
+    		throw Cell::BadCellCreation((*it_cell)->getUserId(),"Attempting to fill with an empty universe (fill = " +
+    				                    toString(fill->getUserId()) + ") " );
+	}
+}
+
 Geometry::~Geometry() {
 	vector<Surface*>::iterator it_sur = surfaces.begin();
 	for(; it_sur != surfaces.end() ; ++it_sur)
