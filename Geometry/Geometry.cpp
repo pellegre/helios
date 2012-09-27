@@ -26,6 +26,7 @@
  */
 
 #include <cstdlib>
+#include <set>
 
 #include "Geometry.hpp"
 
@@ -37,112 +38,151 @@ static inline bool getSign(const signed int& value) {return (value > 0);}
 
 Geometry Geometry::geo;
 
-Geometry::Geometry() {
-	/* Universe zero always exist (is the "base" universe) */
-	addUniverse(0);
-}
+Geometry::Geometry() {/* */}
 
-void Geometry::addSurface(const SurfaceDefinition& sur_def) {
-	/* Surface information */
-	SurfaceId userSurfaceId(sur_def.getUserSurfaceId());
-	string type(sur_def.getType());
-	vector<double> coeffs(sur_def.getCoeffs());
-	Surface::SurfaceInfo flags = sur_def.getFlags();
-
-	/* Check duplicated IDs */
-	map<SurfaceId, InternalSurfaceId>::const_iterator it_id = surface_map.find(userSurfaceId);
-	if(it_id != surface_map.end())
-		throw Surface::BadSurfaceCreation(userSurfaceId,"Duplicated id");
-
-	/* Create surface */
-	Surface* new_surface = SurfaceFactory::access().createSurface(type,userSurfaceId,coeffs,flags);
-	/* Set internal / unique index */
-	new_surface->setInternalId(surfaces.size());
-	/* Update surface map */
-	surface_map[new_surface->getUserId()] = new_surface->getInternalId();
-	/* Push the surface into the container */
-	surfaces.push_back(new_surface);
-}
-
-void Geometry::addUniverse(const UniverseId& uni_def) {
+Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<CellDefinition> >& u_cells, const map<SurfaceId,Surface*>& user_surfaces) {
 	/* Create universe */
 	Universe* new_universe = UniverseFactory::access().createUniverse(uni_def);
 	/* Set internal / unique index */
 	new_universe->setInternalId(universes.size());
 	/* Push the universe into the container */
 	universes.push_back(new_universe);
-}
 
-void Geometry::addCell(const CellDefinition& cell_def) {
-	/* Cell information */
-	CellId userCellId(cell_def.getUserCellId());
-	vector<signed int> surfacesId(cell_def.getSurfacesId());
-	const Cell::CellInfo flags(cell_def.getFlags());
+	map<UniverseId,vector<CellDefinition> >::const_iterator it_uni_cells = u_cells.find(uni_def);
+	if(it_uni_cells == u_cells.end()) return 0;
 
-	/* Check duplicated IDs */
-	map<CellId, InternalCellId>::const_iterator it_id = cell_map.find(userCellId);
-	if(it_id != cell_map.end())
-		throw Cell::BadCellCreation(userCellId,"Duplicated id");
+	/* Get the cell of this level */
+	vector<CellDefinition> cell_def = (*it_uni_cells).second;
 
-	/* Now get the surfaces and put the references inside the cell */
-    vector<Cell::CellSurface> boundingSurfaces;
+	/* Add each cell of this universe */
+	vector<CellDefinition>::const_iterator it_cell = cell_def.begin();
+    /* Temporary map of surfaces */
+    map<SurfaceId,Surface*> temp_sur_map;
 
-    vector<signed int>::const_iterator it = surfacesId.begin();
-    for (;it != surfacesId.end(); ++it) {
-    	/* Get user ID */
-    	SurfaceId userSurfaceId(abs(*it));
+	for(; it_cell != cell_def.end() ; ++it_cell) {
 
-    	/* Get internal index */
-    	map<SurfaceId, InternalSurfaceId>::const_iterator it_id = surface_map.find(userSurfaceId);
-    	if(it_id == surface_map.end())
-    		throw Cell::BadCellCreation(userCellId,"Surface number " + toString(userSurfaceId) + " doesn't exist.");
+		/* Cell information */
+		CellId userCellId((*it_cell).getUserCellId());
+		vector<signed int> surfacesId((*it_cell).getSurfacesId());
+		const Cell::CellInfo flags((*it_cell).getFlags());
 
-    	/* Get surface with sense */
-    	Cell::CellSurface newSurface(surfaces[(*it_id).second],getSign(*it));
+		/* Now get the surfaces and put the references inside the cell */
+	    vector<Cell::CellSurface> boundingSurfaces;
+	    vector<signed int>::const_iterator it = surfacesId.begin();
 
-    	/* Push it into the container */
-        boundingSurfaces.push_back(newSurface);
-    }
+	    for (;it != surfacesId.end(); ++it) {
+	    	/* Get user ID */
+	    	SurfaceId userSurfaceId(abs(*it));
 
-    /* Now we can construct the cell */
-    Cell* new_cell = CellFactory::access().createCell(userCellId,boundingSurfaces,flags);
-	/* Set internal / unique index */
-    new_cell->setInternalId(cells.size());
-	/* Update cell map */
-    cell_map[new_cell->getUserId()] = new_cell->getInternalId();
-    /* Push the cell into the container */
-    cells.push_back(new_cell);
+	    	/* Get internal index */
+	    	map<SurfaceId,Surface*>::const_iterator it_sur = user_surfaces.find(userSurfaceId);
+	    	if(it_sur == user_surfaces.end())
+	    		throw Cell::BadCellCreation(userCellId,"Surface number " + toString(userSurfaceId) + " doesn't exist.");
+
+	    	/* New surface for this cell */
+	    	Surface* new_surface = 0;
+
+	    	map<SurfaceId,Surface*>::const_iterator it_temp_sur = temp_sur_map.find(userSurfaceId);
+
+	    	if(it_temp_sur != temp_sur_map.end()) {
+	    		/* The surface is created */
+	    		new_surface = (*it_temp_sur).second;
+	    	} else {
+	    		/* Create new surface */
+	    		new_surface = (*it_sur).second->translate(Direction(0,0,0));
+		    	/* Set internal / unique index */
+		    	new_surface->setInternalId(surfaces.size());
+		    	/* Update surface map */
+		    	surface_map[new_surface->getUserId()] = new_surface->getInternalId();
+		    	/* Update temporary map */
+		    	temp_sur_map[new_surface->getUserId()] = new_surface;
+		    	/* Push the surface into the container */
+		    	surfaces.push_back(new_surface);
+	    	}
+
+	    	/* Get surface with sense */
+	    	Cell::CellSurface newSurface(new_surface,getSign(*it));
+
+	    	/* Push it into the container */
+	        boundingSurfaces.push_back(newSurface);
+	    }
+
+	    /* Now we can construct the cell */
+	    Cell* new_cell = CellFactory::access().createCell(userCellId,boundingSurfaces,flags);
+		/* Set internal / unique index */
+	    new_cell->setInternalId(cells.size());
+		/* Update cell map */
+	    cell_map[new_cell->getUserId()] = new_cell->getInternalId();
+	    /* Push the cell into the container */
+	    cells.push_back(new_cell);
+	    /* Link this cell with the new universe */
+	    new_universe->addCell(new_cell);
+	    /* Check if this surface is filled by another universe */
+	    UniverseId fill_universe_id = (*it_cell).getFill();
+	    if(fill_universe_id){
+	    	Universe* fill_universe = addUniverse(fill_universe_id,u_cells,user_surfaces);
+	    	if(fill_universe)
+	    		new_cell->setFill(fill_universe);
+	    	else
+	    		throw Cell::BadCellCreation(new_cell->getUserId(),"Attempting to fill with an empty universe (fill = " +
+	    				                    toString(fill_universe_id) + ") " );
+	    }
+	}
+
+	/* Return the universe */
+	return new_universe;
 }
 
 void Geometry::setupGeometry(const vector<SurfaceDefinition>& sur_def, const vector<CellDefinition>& cell_def) {
-	/* First we add all the surfaces defined by the user. Ultimately, we'll have to clone and transform this ones */
-	vector<Geometry::SurfaceDefinition>::const_iterator it_sur = sur_def.begin();
-	for(; it_sur != sur_def.end() ; ++it_sur)
-		/* Add surface into the geometry */
-		addSurface((*it_sur));
 
-	/*
-	 * First, check how many of each universe we need to construct the geometry (each fill is a cloned universe) and
-	 * which cell conforms each universe.
-	 */
-	map<UniverseId,size_t> universe_count;
-	map<UniverseId,CellDefinition> universe_cells;
-	vector<Geometry::CellDefinition>::const_iterator it_cell = cell_def.begin();
-	for(; it_cell != cell_def.end() ; ++it_cell) {
-		UniverseId fill = (*it_cell).getFill();
-		if(fill)
-			universe_count[fill]++;
-		universe_cells[(*it_cell).getUniverse()] = (*it_cell);
+	/* First we add all the surfaces defined by the user. Ultimately, we'll have to clone and transform this ones */
+	map<SurfaceId,Surface*> user_surfaces;
+	vector<SurfaceDefinition>::const_iterator it_sur = sur_def.begin();
+	for(; it_sur != sur_def.end() ; ++it_sur) {
+		/* Surface information */
+		SurfaceId userSurfaceId((*it_sur).getUserSurfaceId());
+		string type((*it_sur).getType());
+		vector<double> coeffs((*it_sur).getCoeffs());
+		Surface::SurfaceInfo flags = (*it_sur).getFlags();
+
+		/* Check duplicated IDs */
+		map<SurfaceId,Surface*>::const_iterator it_id = user_surfaces.find(userSurfaceId);
+		if(it_id != user_surfaces.end())
+			throw Surface::BadSurfaceCreation(userSurfaceId,"Duplicated id");
+
+		/* Create surface */
+		Surface* new_surface = SurfaceFactory::access().createSurface(type,userSurfaceId,coeffs,flags);
+		/* Update surface map */
+		user_surfaces[new_surface->getUserId()] = new_surface;
 	}
 
-	/* Add cells */
-	vector<Geometry::CellDefinition>::const_iterator it_cell = cell_def.begin();
-	for(; it_cell != cell_def.end() ; ++it_cell)
-		/* Add surface into the geometry */
-		addCell((*it_cell));
+	/* Check for duplicated cells */
+	set<CellId> user_cell_ids;
+	vector<CellDefinition>::const_iterator it_cell = cell_def.begin();
+	for(; it_cell != cell_def.end() ; ++it_cell) {
+		CellId userCellId = (*it_cell).getUserCellId();
+		/* Check duplicated IDs */
+		set<CellId>::const_iterator it_id = user_cell_ids.find(userCellId);
+		if(it_id != user_cell_ids .end())
+			throw Cell::BadCellCreation(userCellId,"Duplicated id");
+		user_cell_ids.insert(userCellId);
+	}
 
-	/* Add surface into the geometry */
-	checkGeometry();
+	/*
+	 * First check which cell conforms each universe (different from the base universe).
+	 */
+	map<UniverseId,vector<CellDefinition> > u_cells;  /* Universe definition */
+	for(it_cell = cell_def.begin() ; it_cell != cell_def.end() ; ++it_cell) {
+		UniverseId universe = (*it_cell).getUniverse();
+		u_cells[universe].push_back(*it_cell);
+	}
+
+	addUniverse((*u_cells.begin()).first,u_cells,user_surfaces);
+
+	/* Clean surfaces */
+	map<SurfaceId,Surface*>::iterator it_user = user_surfaces.begin();
+	for(; it_user != user_surfaces.end() ; ++it_user)
+		delete (*it_user).second;
 }
 
 void Geometry::printGeo(std::ostream& out) const {
@@ -161,26 +201,6 @@ const Cell* Geometry::findCell(const Coordinate& position) const {
 const Cell* Geometry::findCell(const Coordinate& position, const InternalUniverseId& univid) const {
 	/* Start with the universe provided */
 	return universes[univid]->findCell(position);
-}
-
-void Geometry::checkGeometry() const {
-	/* Check for empty surfaces */
-	vector<Surface*>::const_iterator it_sur = surfaces.begin();
-	for(; it_sur != surfaces.end() ; ++it_sur) {
-		/* Get number of neighbor cells */
-		size_t nneg = (*it_sur)->getNeighborCell(false).size();
-		size_t npos = (*it_sur)->getNeighborCell(true).size();
-		if(nneg + npos == 0)
-			Log::warn() << "Surface " << (*it_sur)->getUserId() << " is not used " << Log::endl;
-	}
-	/* Check for empty Universes */
-	vector<Cell*>::const_iterator it_cell = cells.begin();
-	for(; it_cell != cells.end() ; ++it_cell) {
-		const Universe* fill = (*it_cell)->getFill();
-		if(fill && fill->getCellCount() == 0)
-    		throw Cell::BadCellCreation((*it_cell)->getUserId(),"Attempting to fill with an empty universe (fill = " +
-    				                    toString(fill->getUserId()) + ") " );
-	}
 }
 
 Geometry::~Geometry() {

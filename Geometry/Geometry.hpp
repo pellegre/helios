@@ -51,6 +51,7 @@ namespace Helios {
 			std::vector<double> coeffs;
 			Surface::SurfaceInfo flags;
 		public:
+			SurfaceDefinition() {/* */}
 			SurfaceDefinition(const SurfaceId& userSurfaceId, const std::string& type, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags = Surface::NONE) :
 				userSurfaceId(userSurfaceId), type(type), coeffs(coeffs), flags(flags) {/* */}
 			std::vector<double> getCoeffs() const {
@@ -75,6 +76,7 @@ namespace Helios {
 			UniverseId universe;
 			UniverseId fill;
 		public:
+			CellDefinition() {/* */}
 			CellDefinition(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo& flags,
 					       const UniverseId& universe, const UniverseId& fill) :
 				userCellId(userCellId), surfacesId(surfacesId), flags(flags), universe(universe), fill(fill) {/* */}
@@ -118,9 +120,6 @@ namespace Helios {
 		/* Using a universe identifier as a starting point */
 		const Cell* findCell(const Coordinate& position, const InternalUniverseId& univid) const;
 
-		/* Check geometry. This function throw an error and/or prints some warnings about the geometry */
-		void checkGeometry() const;
-
 		/* Clear and delete all the geometry stuff */
 		virtual ~Geometry();
 
@@ -147,12 +146,11 @@ namespace Helios {
 		Geometry& operator= (const Geometry& other);
 
 		/* Add a surface */
-		void addSurface(const SurfaceDefinition& sur_def);
+		Surface* addSurface(const SurfaceDefinition& sur_def);
 		/* Add cell */
-		void addCell(const CellDefinition& cell_def);
-		/* Add a universe */
-		void addUniverse(const UniverseId& uni_def);
-
+		Cell* addCell(const CellDefinition& cell_def, const std::map<SurfaceId,Surface*>& user_surfaces);
+		/* Add recursively all universe that are nested from <uni_def> */
+		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<CellDefinition> >& u_cells, const std::map<SurfaceId,Surface*>& user_surfaces);
 	};
 
 } /* namespace Helios */
