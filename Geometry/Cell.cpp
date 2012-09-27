@@ -34,22 +34,15 @@ using namespace std;
 
 namespace Helios {
 
-/* Global counter */
-size_t Cell::counter = 0;
-
 /* Static global instance of the singleton */
 CellFactory CellFactory::factory;
 
-Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const InternalUniverseId& univid, const CellInfo& flag, const Universe* fill) :
+Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo& flag) :
 	cellid(cellid),
 	surfaces(surfaces),
-	univid(univid),
 	flag(flag),
-	fill(fill) {
-	/* Set internal ID */
-	int_cellid = counter;
-	/* Increment counter */
-	counter++;
+	fill(0),
+	parent(0) {
     /* Set the new cell on surfaces neighbor container */
     vector<Cell::CellSurface>::iterator it_sur = surfaces.begin();
     for(; it_sur != surfaces.end() ; ++it_sur)
@@ -61,12 +54,28 @@ std::ostream& operator<<(std::ostream& out, const Cell& q) {
 	return out;
 }
 
+void Cell::setFill(Universe* universe) {
+	/* Link the universe filling this cell */
+	fill = universe;
+	fill->setParent(this);
+}
+
 void Cell::print(std::ostream& out) const {
 	vector<Cell::CellSurface>::const_iterator it_sur = surfaces.begin();
-	out << "cell = " << getUserId() << " (internal = " << getInternalId() << ")" << " ; universe = " << univid;
+	out << "cell = " << getUserId() << " (internal = " << getInternalId() << ")" << " ; universe = ";
+
+	/* Print universe where this cell is */
+	if(parent)
+		out << parent->getUserId();
+	else
+		out << "0";
+
+	/* If this cell is filled with another universe, print the universe ID */
 	if(fill)
 		out << " ; fill " << fill->getUserId();
 	out << endl;
+
+	/* Print surfaces */
 	while(it_sur != surfaces.end()) {
 		out << "    ";
 		if((*it_sur).second)
@@ -80,33 +89,16 @@ void Cell::print(std::ostream& out) const {
 
 const Cell* Cell::findCell(const Coordinate& position, const Surface* skip) const {
 	vector<CellSurface>::const_iterator it;
-	/* Deal with a negated cell */
-    if (flag & NEGATED) {
-		for (it = surfaces.begin() ; it != surfaces.end(); ++it) {
-			if (it->first != skip) {
-				if (it->first->sense(position) != it->second)
-					if(fill) return fill->findCell(position,skip);
-					else return this;
-			} else {
-				/* We just get out of the cell, we are outside for sure */
-				if(fill) return fill->findCell(position,skip);
-				else return this;
-			}
+	for (it = surfaces.begin(); it != surfaces.end(); ++it) {
+		if (it->first != skip) {
+			if (it->first->sense(position) != it->second)
+			/* The sense of the point isn't the same the same sense as we know this cell is defined... */
+			return 0;
 		}
-		/* We are inside all the surfaces */
-		return 0;
-    }
-    else {
-		for (it = surfaces.begin(); it != surfaces.end(); ++it) {
-			if (it->first != skip) {
-				if (it->first->sense(position) != it->second)
-				/* The sense of the point isn't the same the same sense as we know this cell is defined... */
-				return 0;
-			}
-		}
-    }
-    /* If we get here, we are inside the cell :-) */
+	}
+    /* If we get here, we are inside the cell, checkout internal universe  */
 	if(fill) return fill->findCell(position,skip);
+	/* Or return *this* if we are a *material* cell */
 	else return this;
 }
 

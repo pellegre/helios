@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <!-- Simple pin. -->
-
+ 
 <geometry>
 
 <!-- Defition of Surfaces -->
@@ -9,7 +9,7 @@
   <surface id="2"   type="cz" coeffs="0.3"   />
   <surface id="3"   type="cz" coeffs="0.5"   />
   <surface id="10"  type="cz" coeffs="0.02"  />
-  <surface id="11"  type="cz" coeffs="0.08"  />
+  <surface id="11"  type="cz" coeffs="0.08 "  />
   <surface id="12"  type="cz" coeffs="0.15"  />
   <surface id="100" type="cz" coeffs="0.002" />
   <surface id="101" type="cz" coeffs="0.008" />

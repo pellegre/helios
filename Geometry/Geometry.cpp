@@ -56,6 +56,8 @@ void Geometry::addSurface(const SurfaceDefinition& sur_def) {
 
 	/* Create surface */
 	Surface* new_surface = SurfaceFactory::access().createSurface(type,userSurfaceId,coeffs,flags);
+	/* Set internal / unique index */
+	new_surface->setInternalId(surfaces.size());
 	/* Update surface map */
 	surface_map[new_surface->getUserId()] = new_surface->getInternalId();
 	/* Push the surface into the container */
@@ -63,15 +65,10 @@ void Geometry::addSurface(const SurfaceDefinition& sur_def) {
 }
 
 void Geometry::addUniverse(const UniverseId& uni_def) {
-	/* Check duplicated IDs */
-	map<UniverseId, InternalUniverseId>::const_iterator it_id = universe_map.find(uni_def);
-	if(it_id != universe_map.end())
-		return; /* Don't create the universe */
-
 	/* Create universe */
 	Universe* new_universe = UniverseFactory::access().createUniverse(uni_def);
-	/* Update universe map */
-	universe_map[new_universe->getUserId()] = new_universe->getInternalId();
+	/* Set internal / unique index */
+	new_universe->setInternalId(universes.size());
 	/* Push the universe into the container */
 	universes.push_back(new_universe);
 }
@@ -107,43 +104,45 @@ void Geometry::addCell(const CellDefinition& cell_def) {
         boundingSurfaces.push_back(newSurface);
     }
 
-    /* Check for universes */
-    UniverseId universe = cell_def.getUniverse();
-    UniverseId fill = cell_def.getFill();
-    Universe* fill_universe = 0;
-
-    /* Add, if any */
-    if(universe) addUniverse(universe);
-    if(fill) {
-    	addUniverse(fill);
-    	fill_universe = universes[universe_map[fill]];
-    }
-
     /* Now we can construct the cell */
-    Cell* new_cell = CellFactory::access().createCell(userCellId,boundingSurfaces,universe,flags,fill_universe);
+    Cell* new_cell = CellFactory::access().createCell(userCellId,boundingSurfaces,flags);
+	/* Set internal / unique index */
+    new_cell->setInternalId(cells.size());
 	/* Update cell map */
     cell_map[new_cell->getUserId()] = new_cell->getInternalId();
     /* Push the cell into the container */
     cells.push_back(new_cell);
-    /* Put this cell into the universe */
-    universes[universe_map[universe]]->addCell(new_cell);
 }
 
 void Geometry::setupGeometry(const vector<SurfaceDefinition>& sur_def, const vector<CellDefinition>& cell_def) {
-	/* Add surfaces */
+	/* First we add all the surfaces defined by the user. Ultimately, we'll have to clone and transform this ones */
 	vector<Geometry::SurfaceDefinition>::const_iterator it_sur = sur_def.begin();
 	for(; it_sur != sur_def.end() ; ++it_sur)
 		/* Add surface into the geometry */
-		Geometry::access().addSurface((*it_sur));
+		addSurface((*it_sur));
+
+	/*
+	 * First, check how many of each universe we need to construct the geometry (each fill is a cloned universe) and
+	 * which cell conforms each universe.
+	 */
+	map<UniverseId,size_t> universe_count;
+	map<UniverseId,CellDefinition> universe_cells;
+	vector<Geometry::CellDefinition>::const_iterator it_cell = cell_def.begin();
+	for(; it_cell != cell_def.end() ; ++it_cell) {
+		UniverseId fill = (*it_cell).getFill();
+		if(fill)
+			universe_count[fill]++;
+		universe_cells[(*it_cell).getUniverse()] = (*it_cell);
+	}
 
 	/* Add cells */
 	vector<Geometry::CellDefinition>::const_iterator it_cell = cell_def.begin();
 	for(; it_cell != cell_def.end() ; ++it_cell)
 		/* Add surface into the geometry */
-		Geometry::access().addCell((*it_cell));
+		addCell((*it_cell));
 
 	/* Add surface into the geometry */
-	Geometry::access().checkGeometry();
+	checkGeometry();
 }
 
 void Geometry::printGeo(std::ostream& out) const {
@@ -177,7 +176,7 @@ void Geometry::checkGeometry() const {
 	/* Check for empty Universes */
 	vector<Cell*>::const_iterator it_cell = cells.begin();
 	for(; it_cell != cells.end() ; ++it_cell) {
-		const Universe* fill = (*it_cell)->getFillUniverse();
+		const Universe* fill = (*it_cell)->getFill();
 		if(fill && fill->getCellCount() == 0)
     		throw Cell::BadCellCreation((*it_cell)->getUserId(),"Attempting to fill with an empty universe (fill = " +
     				                    toString(fill->getUserId()) + ") " );
@@ -192,6 +191,10 @@ Geometry::~Geometry() {
 	vector<Cell*>::iterator it_cell = cells.begin();
 	for(; it_cell != cells.end() ; ++it_cell)
 		delete (*it_cell);
+
+	vector<Universe*>::iterator it_uni = universes.begin();
+	for(; it_uni != universes.end() ; ++it_uni)
+		delete (*it_uni);
 }
 
 } /* namespace Helios */

@@ -59,14 +59,20 @@ namespace Helios {
 
 	    /* Cylinder radius */
 	    double radius;
+	    /* Some point through which the cylinder's axis passes (defined only with two values) */
+	    Coordinate point;
 
 	public:
 		/* Default, used only on factory */
-	    CylinderOnAxis() {/* */};
+	    CylinderOnAxis() : radius(0) , point(0,0,0) {/* */};
+	    CylinderOnAxis(const SurfaceId& surid, const SurfaceInfo& flags, const double& radius, const Coordinate& point)
+	                   : Surface(surid,flags), radius(radius) , point(point) {/* */};
+
 	    CylinderOnAxis(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags);
 
 		void normal(const Coordinate& point, Direction& vnormal) const;
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
+		Surface* translate(const Direction& trans);
 
 		virtual ~CylinderOnAxis() {/* */};
 
@@ -94,33 +100,33 @@ namespace Helios {
 	CylinderOnAxis<axis>::CylinderOnAxis(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags)
 		: Surface(surid,flags) {
 		/* Check number of parameters */
-		if(coeffs.size() != 1)
+		if(coeffs.size() == 1) {
+			/* Get the radius */
+			radius = coeffs[0];
+			point = Coordinate(0,0,0);
+		} else if(coeffs.size() == 3) {
+			/* Get the radius */
+			radius = coeffs[0];
+			/* Get point */
+			point[axis] = 0.0;
+			size_t k = 0;
+			for(size_t i = 0 ; i < 3 ; i++) {
+				if(i != axis) {
+					point[i] = coeffs[k + 1];
+					k++;
+				}
+			}
+		} else {
 			throw Surface::BadSurfaceCreation(surid,"Bad number of coefficients");
-		/* Get the radius */
-		radius = coeffs[0];
+		}
+
 	}
 
 	/* Print surface internal data */
 	template<int axis>
 	void CylinderOnAxis<axis>::print(std::ostream& out) const {
-		out << "radius = " << radius;
-	}
-
-	/* Evaluate function */
-	template<int axis>
-	double CylinderOnAxis<axis>::function(const Coordinate& pos) const {
-		switch(axis) {
-		case xaxis :
-			return (pos[yaxis] * pos[yaxis] + pos[zaxis] * pos[zaxis] - radius * radius);
-			break;
-		case yaxis :
-			return (pos[xaxis] * pos[xaxis] + pos[zaxis] * pos[zaxis] - radius * radius);
-			break;
-		case zaxis :
-			return (pos[xaxis] * pos[xaxis] + pos[yaxis] * pos[yaxis] - radius * radius);
-			break;
-		}
-		return 0;
+		out << "radius = " << radius << " ; ";
+		out << "point = " << point;
 	}
 
 	template<int axis>
@@ -219,15 +225,27 @@ namespace Helios {
 		return 0;
 	}
 
+	/* Evaluate function */
+	template<int axis>
+	double CylinderOnAxis<axis>::function(const Coordinate& pos) const {
+		Coordinate trpos(pos - point);
+		return dotProduct<axis>(trpos, trpos) - radius * radius;
+	}
+
 	template<int axis>
 	bool CylinderOnAxis<axis>::intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const {
 		/* Calculate "quadratic" coefficients */
 		double a = 1 - dir[axis] * dir[axis];
 	    double k = dotProduct<axis>(dir, pos);
 	    double c = dotProduct<axis>(pos, pos) - radius*radius;
-
 	    return quadraticIntersect(a,k,c,sense,distance);
 	};
+
+	template<int axis>
+	Surface* CylinderOnAxis<axis>::translate(const Direction& trans) {
+		Coordinate new_point = point + trans;
+		return new CylinderOnAxis<axis>(this->getUserId(),this->getFlags(),this->radius,new_point);
+	}
 
 } /* namespace Helios */
 #endif /* CYLINDERONAXIS_HPP_ */

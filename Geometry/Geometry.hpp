@@ -139,7 +139,6 @@ namespace Helios {
 		/* Map internal index to user index */
 		std::map<SurfaceId, InternalSurfaceId> surface_map;
 		std::map<CellId, InternalCellId> cell_map;
-		std::map<UniverseId, InternalUniverseId> universe_map;
 
 		/* Prevent creation */
 		Geometry();

@@ -41,18 +41,22 @@ namespace Helios {
 		/* Friendly printer */
 		friend std::ostream& operator<<(std::ostream& out, const Universe& q);
 
-		/* Static counter, incremented by one each time a universe is created */
-		static size_t counter;
 		/* Internal identification of this universe */
 		InternalUniverseId int_univid;
 		/* A vector of cells */
 		std::vector<Cell*> cells;
 		/* Universe id choose by the user */
 		UniverseId univid;
+		/*
+		 * Parent cell : Each universe has ONLY one parent cell. If more than one cell
+		 * is filled with the same universe, the universe is cloned. The base universe
+		 * has a NULL parent.
+		 */
+		Cell* parent;
 
 	protected:
 
-		Universe(const UniverseId& univid);
+		Universe(const UniverseId& univid, Cell* parent = 0);
 		/* Prevent copy */
 		Universe(const Universe& uni);
 		Universe& operator=(const Universe& uni);
@@ -60,15 +64,22 @@ namespace Helios {
 	public:
 
 		/* Add a cell */
-		void addCell(Cell* cell) {cells.push_back(cell);};
+		void addCell(Cell* cell);
 		/* Get cells of this universe */
 		const std::vector<Cell*>& getCells() const {return cells;};
 
 		/* Find cell inside the universe */
 		const Cell* findCell(const Coordinate& position, const Surface* skip = 0) const;
 
+		/* Set a parent for this universe */
+		void setParent(Cell* cell) {parent = cell;};
+		/* Get parent cell */
+		const Cell* getParent() const {return parent;}
+
 		/* Return the user ID associated with the universe. */
 		const UniverseId& getUserId() const {return univid;}
+		/* Set internal / unique identifier for the cell */
+		void setInternalId(const InternalCellId& internal) {int_univid = internal;}
 		/* Return the internal ID associated with the universe. */
 		const InternalUniverseId& getInternalId() const {return int_univid;}
 		/* Get number of cells */
@@ -93,8 +104,8 @@ namespace Helios {
 		static UniverseFactory& access() {return factory;}
 
 		/* Create a new surface */
-		Universe* createUniverse(const UniverseId& univid) const {
-			return new Universe(univid);
+		Universe* createUniverse(const UniverseId& univid, Cell* parent = 0) const {
+			return new Universe(univid, parent);
 		}
 
 	};

@@ -54,8 +54,46 @@ static double colorFromCell(const InternalCellId& cell_id, const InternalCellId&
 	return (double)cell_id / (double)max_id;
 }
 
+
+const std::string trim(const std::string& pString,const std::string& pWhitespace)
+{
+    const size_t beginStr = pString.find_first_not_of(pWhitespace);
+    if (beginStr == std::string::npos)
+    {
+        // no content
+        return "";
+    }
+
+    const size_t endStr = pString.find_last_not_of(pWhitespace);
+    const size_t range = endStr - beginStr + 1;
+
+    return pString.substr(beginStr, range);
+}
+
+const std::string reduce(const std::string& pString,const std::string& pFill,const std::string& pWhitespace)
+{
+    // trim first
+    std::string result(trim(pString, pWhitespace));
+
+    // replace sub ranges
+    size_t beginSpace = result.find_first_of(pWhitespace);
+    while (beginSpace != std::string::npos)
+    {
+        const size_t endSpace =
+                        result.find_first_not_of(pWhitespace, beginSpace);
+        const size_t range = endSpace - beginSpace;
+
+        result.replace(beginSpace, range, pFill);
+
+        const size_t newStart = beginSpace + pFill.length();
+        beginSpace = result.find_first_of(pWhitespace, newStart);
+    }
+
+    return result;
+}
+
 void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, double ymax, const std::string& filename) {
-	static int pixel = 1000;
+	static int pixel = 500;
 	pngwriter png(pixel,pixel,1.0,filename.c_str());
 	/* Deltas */
 	double deltax = (xmax - xmin) / (double)(pixel);

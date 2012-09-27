@@ -52,7 +52,6 @@ namespace Helios {
 		enum CellInfo {
 			NONE     = 0, /* No special cell attributes */
 			DEADCELL = 1, /* Particles should be killed when entering us */
-			NEGATED  = 2, /* We are "everything but" what is inside our bounds */
 		};
 
 		/* Exception */
@@ -73,6 +72,9 @@ namespace Helios {
 
 		/* Return the cell ID. */
 		const CellId& getUserId() const {return cellid;}
+
+		/* Set internal / unique identifier for the cell */
+		void setInternalId(const InternalCellId& internal) {int_cellid = internal;}
 		/* Return the internal ID associated with this surface. */
 		const InternalCellId& getInternalId() const {return int_cellid;}
 
@@ -80,10 +82,16 @@ namespace Helios {
 		CellInfo getFlag() const {return flag;}
 		/* Set different options for the cell */
 		void setFlags(CellInfo new_flag) {flag = new_flag;}
-		/* Get the universe where this cell is */
-		UniverseId getUniverse() const {return univid;}
+
+		/* Fill the cell with an universe */
+		void setFill(Universe* universe);
 		/* Get the universe that is filling this cell (NULL if any) */
-		const Universe* getFillUniverse() const {return fill;}
+		const Universe* getFill() const {return fill;}
+
+		/* Set the parent universe of this cell */
+		void setParent(Universe* parent_universe) {parent = parent_universe;}
+		/* Get the universe where this cell is */
+		const Universe* getParent() const {return parent;}
 
 		/*
 		 * Check if the cell contains the point and return a reference to the cell that the point is contained.
@@ -100,8 +108,7 @@ namespace Helios {
 
 	protected:
 
-		Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const InternalUniverseId& univid,
-		     const CellInfo& flags, const Universe* fill = 0);
+		Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo& flags);
 		/* Prevent copy */
 		Cell(const Cell& surface);
 		Cell& operator= (const Cell& other);
@@ -115,17 +122,16 @@ namespace Helios {
 		InternalCellId int_cellid;
 		/* Cell id choose by the user */
 		CellId cellid;
-		/* Universe (internal) ID where this cell is in */
-		InternalUniverseId univid;
 		/* Other information about this cell */
 		CellInfo flag;
-		/* Reference to the universe that is filling this cell, NULL if any */
-		const Universe* fill;
 
-	private:
-
-		/* Static counter, incremented by one each time a cell is created */
-		static size_t counter;
+		/* Reference to the universe that is filling this cell, NULL if any (material cell). */
+		Universe* fill;
+		/*
+		 * Parent universe, which is the universe that contains this cell. NULL
+		 * if this cell is on the base universe
+		 */
+		Universe* parent;
 
 	};
 
@@ -145,9 +151,8 @@ namespace Helios {
 		static CellFactory& access() {return factory;}
 
 		/* Create a new surface */
-		Cell* createCell(const CellId& cellid, std::vector<Cell::CellSurface>& surfaces,
-				         const InternalUniverseId& univid, const Cell::CellInfo& flags, const Universe* fill) const {
-				return new Cell(cellid,surfaces,univid,flags,fill);
+		Cell* createCell(const CellId& cellid, std::vector<Cell::CellSurface>& surfaces,const Cell::CellInfo& flags) const {
+			return new Cell(cellid,surfaces,flags);
 		}
 
 	};

@@ -32,25 +32,11 @@ using namespace std;
 
 namespace Helios {
 
-/* Global counter */
-size_t Surface::counter = 0;
-
 /* Static global instance of the singleton */
 SurfaceFactory SurfaceFactory::factory;
 
-Surface::Surface(const SurfaceId& surfid) : surfid(surfid), flag(NONE) {
-	/* Set internal ID */
-	int_surfid = counter;
-	/* Increment counter */
-	counter++;
-};
-
-Surface::Surface(const SurfaceId& surfid, SurfaceInfo flag) : surfid(surfid), flag(flag) {
-	/* Set internal ID */
-	int_surfid = counter;
-	/* Increment counter */
-	counter++;
-}
+Surface::Surface(const SurfaceId& surfid) : surfid(surfid), flag(NONE) {/* */};
+Surface::Surface(const SurfaceId& surfid, SurfaceInfo flag) : surfid(surfid), flag(flag) {/* */}
 
 SurfaceFactory::SurfaceFactory() {
 	/* Surface registering */

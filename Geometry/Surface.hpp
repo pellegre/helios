@@ -86,12 +86,20 @@ namespace Helios {
 
 		/* Return the user ID associated with this surface. */
 		const SurfaceId& getUserId() const {return surfid;}
+		/* Set internal / unique identifier for the cell */
+		void setInternalId(const InternalSurfaceId& internal) {int_surfid = internal;}
 		/* Return the internal ID associated with this surface. */
 		const InternalSurfaceId& getInternalId() const {return int_surfid;}
 		/* Get the extra information of the surface */
 		SurfaceInfo getFlags() const {return flag;}
 		/* Set different options for the surfaces */
 		void setFlags(SurfaceInfo new_flag) {flag = new_flag;}
+
+		/*
+		 * Return a new instance of the surface translated (same flags but a different userId)
+		 * The return *type* is not necessarily the same of the original class.
+		 */
+		virtual Surface* translate(const Direction& trans) = 0;
 
 		virtual ~Surface() {/* */};
 
@@ -117,8 +125,6 @@ namespace Helios {
 		virtual Constructor constructor() const = 0;
 
 	private:
-		/* Static counter, incremented by one each time a surface is created */
-		static size_t counter;
 		/* Internal identification of this surface */
 		InternalSurfaceId int_surfid;
 		/* User's identification of this surface */

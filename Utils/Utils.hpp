@@ -41,4 +41,10 @@ size_t seachKeyWords(const std::string& filename, std::vector<std::string> searc
 /* Simple plotter, just for debugging */
 void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, double ymax, const std::string& filename);
 
+/* Trim a string */
+const std::string trim(const std::string& pString,const std::string& pWhitespace = " \t");
+
+/* Reduce spaces on a string */
+const std::string reduce(const std::string& pString,const std::string& pFill = " ",const std::string& pWhitespace = " \t");
+
 #endif /* UTILS_HPP_ */

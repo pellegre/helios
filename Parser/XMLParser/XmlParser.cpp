@@ -30,6 +30,7 @@
 #include <algorithm>
 
 #include "XmlParser.hpp"
+#include "../../Utils/Utils.hpp"
 
 using namespace std;
 
@@ -117,7 +118,7 @@ static Geometry::SurfaceDefinition surfaceAttrib(TiXmlElement* pElement) {
 	/* Get attributes */
 	SurfaceId id = fromString<SurfaceId>(mapAttrib["id"]);
 	string type = mapAttrib["type"];
-	std::istringstream sin(mapAttrib["coeffs"]);
+	std::istringstream sin(reduce(mapAttrib["coeffs"]));
 	vector<double> coeffs;
 	while(sin.good()) {
 		double c;
@@ -133,7 +134,6 @@ static Geometry::SurfaceDefinition surfaceAttrib(TiXmlElement* pElement) {
 static map<string,Cell::CellInfo> initCellInfo() {
 	map<string,Cell::CellInfo> values_map;
 	values_map["dead"] = Cell::DEADCELL;
-	values_map["negated"] = Cell::NEGATED;
 	return values_map;
 }
 /* Parse cell attributes */
@@ -158,7 +158,7 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 
 	/* Get attributes */
 	CellId id = fromString<CellId>(mapAttrib["id"]);
-	std::istringstream sin(mapAttrib["surfaces"]);
+	std::istringstream sin(reduce(mapAttrib["surfaces"]));
 	vector<signed int> surfaces;
 	while(sin.good()) {
 		signed int c;
