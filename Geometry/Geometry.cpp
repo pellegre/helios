@@ -40,7 +40,8 @@ Geometry Geometry::geo;
 
 Geometry::Geometry() {/* */}
 
-Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<CellDefinition> >& u_cells, const map<SurfaceId,Surface*>& user_surfaces) {
+Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<CellDefinition> >& u_cells,
+		                        const map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans) {
 	/* Create universe */
 	Universe* new_universe = UniverseFactory::access().createUniverse(uni_def);
 	/* Set internal / unique index */
@@ -89,7 +90,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    		new_surface = (*it_temp_sur).second;
 	    	} else {
 	    		/* Create new surface */
-	    		new_surface = (*it_sur).second->translate(Direction(0,0,0));
+	    		new_surface = trans((*it_sur).second);
 		    	/* Set internal / unique index */
 		    	new_surface->setInternalId(surfaces.size());
 		    	/* Update surface map */
@@ -119,8 +120,9 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    new_universe->addCell(new_cell);
 	    /* Check if this surface is filled by another universe */
 	    UniverseId fill_universe_id = (*it_cell).getFill();
-	    if(fill_universe_id){
-	    	Universe* fill_universe = addUniverse(fill_universe_id,u_cells,user_surfaces);
+	    if(fill_universe_id) {
+	    	/* Create recursively the other universes and also propagate the transformation */
+	    	Universe* fill_universe = addUniverse(fill_universe_id,u_cells,user_surfaces,trans + Transformation((*it_cell).getTranslation()));
 	    	if(fill_universe)
 	    		new_cell->setFill(fill_universe);
 	    	else

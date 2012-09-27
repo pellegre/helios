@@ -75,11 +75,12 @@ namespace Helios {
 			Cell::CellInfo flags;
 			UniverseId universe;
 			UniverseId fill;
+			Direction translation;
 		public:
 			CellDefinition() {/* */}
 			CellDefinition(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo& flags,
-					       const UniverseId& universe, const UniverseId& fill) :
-				userCellId(userCellId), surfacesId(surfacesId), flags(flags), universe(universe), fill(fill) {/* */}
+					       const UniverseId& universe, const UniverseId& fill, const Direction& translation) :
+				userCellId(userCellId), surfacesId(surfacesId), flags(flags), universe(universe), fill(fill), translation(translation) {/* */}
 			Cell::CellInfo getFlags() const {
 				return flags;
 			}
@@ -94,6 +95,9 @@ namespace Helios {
 			}
 			UniverseId getFill() const {
 				return fill;
+			}
+			Direction getTranslation() const {
+				return translation;
 			}
 			~CellDefinition() {/* */}
 		};
@@ -150,7 +154,8 @@ namespace Helios {
 		/* Add cell */
 		Cell* addCell(const CellDefinition& cell_def, const std::map<SurfaceId,Surface*>& user_surfaces);
 		/* Add recursively all universe that are nested from <uni_def> */
-		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<CellDefinition> >& u_cells, const std::map<SurfaceId,Surface*>& user_surfaces);
+		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<CellDefinition> >& u_cells,
+				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation());
 	};
 
 } /* namespace Helios */

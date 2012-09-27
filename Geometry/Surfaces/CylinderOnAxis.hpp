@@ -72,7 +72,7 @@ namespace Helios {
 
 		void normal(const Coordinate& point, Direction& vnormal) const;
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
-		Surface* translate(const Direction& trans);
+		Surface* transformate(const Direction& trans) const;
 
 		virtual ~CylinderOnAxis() {/* */};
 
@@ -242,7 +242,7 @@ namespace Helios {
 	};
 
 	template<int axis>
-	Surface* CylinderOnAxis<axis>::translate(const Direction& trans) {
+	Surface* CylinderOnAxis<axis>::transformate(const Direction& trans) const {
 		Coordinate new_point = point + trans;
 		return new CylinderOnAxis<axis>(this->getUserId(),this->getFlags(),this->radius,new_point);
 	}

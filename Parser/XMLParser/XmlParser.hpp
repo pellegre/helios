@@ -80,17 +80,12 @@ namespace Helios {
 			std::map<std::string,T> values;
 			/* Default value */
 			T default_value;
-			/* Conflicts with this attribute */
-			std::set<std::string> conflicts;
-			/* Check for conflicts */
-			void checkConflicts(const AttribMap& attrib_map) const;
 			/* Throw exception */
 			void throwException(const AttribMap& attrib_map, const std::string& msg) const;
 		public:
 			AttributeValue(const std::string& attrib_name, const T& default_value,
-					       const std::map<std::string,T>& values = std::map<std::string,T>(),
-					       const std::set<std::string>& conflicts = std::set<std::string>()) :
-				attrib_name(attrib_name), default_value(default_value), values(values), conflicts(conflicts) {/* */};
+					       const std::map<std::string,T>& values = std::map<std::string,T>()) :
+				attrib_name(attrib_name), default_value(default_value), values(values) {/* */};
 			/* Checks attributes from the user specified map, this will throw an exception if something is wrong */
 			T getValue(const AttribMap& attrib_map) const;
 			/* Get value as a string */
@@ -111,7 +106,6 @@ namespace Helios {
 	T XmlParser::AttributeValue<T>::getValue(const AttribMap& attrib_map) const {
 		AttribMap::const_iterator it_att = attrib_map.find(attrib_name);
 		if(it_att != attrib_map.end()) {
-			checkConflicts(attrib_map);
 			/* Found attribute, get value */
 			std::string value = (*it_att).second;
 			typename std::map<std::string,T>::const_iterator it_val = values.find(value);
@@ -135,21 +129,10 @@ namespace Helios {
 	std::string XmlParser::AttributeValue<T>::getString(const AttribMap& attrib_map) const {
 		AttribMap::const_iterator it_att = attrib_map.find(attrib_name);
 		if(it_att != attrib_map.end()) {
-			checkConflicts(attrib_map);
 			return (*it_att).second;
 		}
 		else
 			return default_value;
-	}
-
-	template<class T>
-	void XmlParser::AttributeValue<T>::checkConflicts(const AttribMap& attrib_map) const {
-		std::set<std::string>::iterator it_con = conflicts.begin();
-		for(; it_con != conflicts.end() ; ++it_con) {
-			if(attrib_map.find((*it_con)) != attrib_map.end()) {
-				throwException(attrib_map,"Attribute *" + attrib_name + "* is not compatible with *" + (*it_con) +"*");
-			}
-		}
 	}
 
 	template<class T>

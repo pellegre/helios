@@ -96,10 +96,10 @@ namespace Helios {
 		void setFlags(SurfaceInfo new_flag) {flag = new_flag;}
 
 		/*
-		 * Return a new instance of the surface translated (same flags but a different userId)
+		 * Return a new instance of the surface translated (same flags and userId)
 		 * The return *type* is not necessarily the same of the original class.
 		 */
-		virtual Surface* translate(const Direction& trans) = 0;
+		virtual Surface* transformate(const Direction& trans) const = 0;
 
 		virtual ~Surface() {/* */};
 

@@ -140,17 +140,17 @@ static map<string,Cell::CellInfo> initCellInfo() {
 static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[3] = {"id", "surfaces"};
-	static const string optional[4] = {"material","type","fill","universe"};
-	static XmlParser::XmlAttributes cellAttrib(vector<string>(required, required + 2), vector<string>(optional, optional + 4));
+	static const string optional[5] = {"material","type","fill","universe","translation"};
+	static XmlParser::XmlAttributes cellAttrib(vector<string>(required, required + 2), vector<string>(optional, optional + 5));
+
 	/* Cell flags values */
 	XmlParser::AttributeValue<Cell::CellInfo> cell_flags("type",Cell::NONE,initCellInfo());
 	/* Universe */
 	XmlParser::AttributeValue<string> inp_universe("universe","0");
-
 	/* Universe filling this cell */
-	set<string> fill_conflicts;
-	fill_conflicts.insert("material");
-	XmlParser::AttributeValue<string> inp_fill("fill","0",map<string,string>(),fill_conflicts);
+	XmlParser::AttributeValue<string> inp_fill("fill","0");
+	/* Translation */
+	XmlParser::AttributeValue<string> inp_translation("translation","0 0 0");
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
@@ -158,11 +158,11 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 
 	/* Get attributes */
 	CellId id = fromString<CellId>(mapAttrib["id"]);
-	std::istringstream sin(reduce(mapAttrib["surfaces"]));
+	std::istringstream sin_coeffs(reduce(mapAttrib["surfaces"]));
 	vector<signed int> surfaces;
-	while(sin.good()) {
+	while(sin_coeffs.good()) {
 		signed int c;
-		sin >> c;
+		sin_coeffs >> c;
 		surfaces.push_back(c);
 	}
 	/* Flags of the cell */
@@ -172,8 +172,19 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	UniverseId universe = fromString<UniverseId>(inp_universe.getString(mapAttrib));
 	UniverseId fill = fromString<UniverseId>(inp_fill.getString(mapAttrib));
 
+	/* Get the translation coefficients */
+	std::istringstream sin_trans(reduce(inp_translation.getString(mapAttrib)));
+	Direction trans(0,0,0);
+	size_t i = 0;
+	while(sin_trans.good()) {
+		double c;
+		sin_trans >> c;
+		trans[i] = c;
+		i++;
+	}
+
 	/* Return surface definition */
-	return Geometry::CellDefinition(id,surfaces,flags,universe,fill);
+	return Geometry::CellDefinition(id,surfaces,flags,universe,fill,trans);
 }
 
 void XmlParser::geoNode(TiXmlNode* pParent) {
