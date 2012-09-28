@@ -38,6 +38,7 @@ namespace Helios {
 	class Parser {
 
 	protected:
+
 		/* Setup geometry */
 		void setupGeometry(const std::vector<Geometry::SurfaceDefinition>& sur_def, const std::vector<Geometry::CellDefinition>& cell_def) const;
 
@@ -91,6 +92,15 @@ namespace Helios {
 
 		virtual ~Parser() {/* */};
 	};
+
+	/* Token */
+	void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = ",");
+
+	/* Trim a string */
+	const std::string trim(const std::string& pString,const std::string& pWhitespace = " \t");
+
+	/* Reduce spaces on a string */
+	const std::string reduce(const std::string& pString,const std::string& pFill = " ",const std::string& pWhitespace = " \t");
 
 } /* namespace Helios */
 

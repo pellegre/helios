@@ -66,31 +66,32 @@ int main(int argc, char* argv[]) {
 
 	geometry->printGeo(std::cout);
 
-	plot(*geometry,-0.6,0.6,-0.6,0.6,"test.png");
+	plot(*geometry,-3.6,3.6,-3.6,3.6,"test.png");
 
 	/* Parameters */
 	Direction dir(1,0,0);
-	Coordinate pos(0,0,0);
+	Coordinate pos(1.0,1.0,0);
 
 	/* Geometry stuff */
 	const Cell* cell(geometry->findCell(pos));
 	Surface* surface(0);
 	bool sense(true);
 	double distance(0.0);
-	cout << "[@] First cell : " << cell->getInternalId() << endl;
+	cout << "[@] First cell : " << cell->getUserId() << endl;
 	while(cell) {
 		/* Get next surface and distance */
 		cell->intersect(pos,dir,surface,sense,distance);
 		if(!surface) break;
 		/* Transport the particle */
 		pos = pos + distance * dir;
-		cout << pos <<  endl;
 		/* Now get next cell */
 		surface->cross(pos,sense,cell);
-		cout << "[@] Next cell : " << cell->getInternalId() << endl;
+		cout << "[@] Current cell : " << cell->getUserId() << endl;
+		if(cell->getFlag() & Cell::DEADCELL) break;
 	}
 
 	delete geometry;
 	delete parser;
+
 	return 0;
 }

@@ -45,4 +45,52 @@ void Parser::setupGeometry(const std::vector<Geometry::SurfaceDefinition>& sur_d
 		throw ParserError(exception.what());
 	}
 }
+
+void tokenize(const string& str, vector<string>& tokens, const string& delimiters) {
+  /* Skip delimiters at beginning */
+  string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+  /* Find first non-delimiter */
+  string::size_type pos = str.find_first_of(delimiters, lastPos);
+
+  while (string::npos != pos || string::npos != lastPos) {
+    /* Found a token, add it to the vector */
+    tokens.push_back(str.substr(lastPos, pos - lastPos));
+    /* Skip delimiters */
+    lastPos = str.find_first_not_of(delimiters, pos);
+    /* Find next non-delimiter */
+    pos = str.find_first_of(delimiters, lastPos);
+  }
+}
+
+const std::string trim(const std::string& pString,const std::string& pWhitespace) {
+    const size_t beginStr = pString.find_first_not_of(pWhitespace);
+    if (beginStr == std::string::npos) {
+        /* No content */
+        return "";
+    }
+
+    const size_t endStr = pString.find_last_not_of(pWhitespace);
+    const size_t range = endStr - beginStr + 1;
+    return pString.substr(beginStr, range);
+}
+
+const std::string reduce(const std::string& pString,const std::string& pFill,const std::string& pWhitespace) {
+    /* Trim first */
+    std::string result(trim(pString, pWhitespace));
+
+    /* Replace sub ranges */
+    size_t beginSpace = result.find_first_of(pWhitespace);
+    while (beginSpace != std::string::npos) {
+        const size_t endSpace =
+                        result.find_first_not_of(pWhitespace, beginSpace);
+        const size_t range = endSpace - beginSpace;
+
+        result.replace(beginSpace, range, pFill);
+
+        const size_t newStart = beginSpace + pFill.length();
+        beginSpace = result.find_first_of(pWhitespace, newStart);
+    }
+    return result;
+}
+
 } /* namespace Helios */

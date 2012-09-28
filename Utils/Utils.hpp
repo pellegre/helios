@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <string>
 #include <vector>
+#include <random/uniform.h>
 
 #include "../Log/Log.hpp"
 #include "../Geometry/Geometry.hpp"
@@ -41,10 +42,32 @@ size_t seachKeyWords(const std::string& filename, std::vector<std::string> searc
 /* Simple plotter, just for debugging */
 void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, double ymax, const std::string& filename);
 
-/* Trim a string */
-const std::string trim(const std::string& pString,const std::string& pWhitespace = " \t");
+/* ---- Debugging and testing functions */
 
-/* Reduce spaces on a string */
-const std::string reduce(const std::string& pString,const std::string& pFill = " ",const std::string& pWhitespace = " \t");
+/* Return a random number between 0.0 and 1.0 */
+double randomNumber() {
+	static Uniform<double> uniform;
+	return uniform.random();
+}
+
+/* Return a random direction on space */
+Helios::Direction randomDirection() {
+	return Helios::Direction(randomNumber(),randomNumber(),randomNumber());
+}
+
+/*
+ * Transport a particle from a start point with a fixed direction until a dead cell is found.
+ * The function returns two vectors :
+ * - cells    : Container of user defined cells IDs that are crossed by the particle.
+ * - surfaces : Container of user defined surfaces IDs that are crossed by the particle.
+ */
+void transport(const Helios::Geometry& geometry, const Helios::Coordinate& start_pos, const Helios::Direction& direction,
+		       std::vector<Helios::CellId>& cells, std::vector<Helios::SurfaceId>& surfaces);
+
+/*
+ * Move a coordinate from surface to surface and check the surface equation. This is done a fixed number times
+ * until the coordinate reach a dead cell. Returns the MAX evaluation of a surface equation.
+ */
+double randomTransport(const Helios::Geometry& geometry, const Helios::Coordinate& start_pos);
 
 #endif /* UTILS_HPP_ */

@@ -133,6 +133,7 @@ static Geometry::SurfaceDefinition surfaceAttrib(TiXmlElement* pElement) {
 /* Initialization of values on the surface flag */
 static map<string,Cell::CellInfo> initCellInfo() {
 	map<string,Cell::CellInfo> values_map;
+	values_map["none"] = Cell::NONE;
 	values_map["dead"] = Cell::DEADCELL;
 	values_map["negated"] = Cell::NEGATED;
 	return values_map;
@@ -145,7 +146,7 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	static XmlParser::XmlAttributes cellAttrib(vector<string>(required, required + 2), vector<string>(optional, optional + 5));
 
 	/* Cell flags values */
-	XmlParser::AttributeValue<Cell::CellInfo> cell_flags("type",Cell::NONE,initCellInfo());
+	XmlParser::AttributeValue<string> cell_flags("type","none");
 	/* Universe */
 	XmlParser::AttributeValue<string> inp_universe("universe","0");
 	/* Universe filling this cell */
@@ -166,8 +167,15 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 		sin_coeffs >> c;
 		surfaces.push_back(c);
 	}
+
 	/* Flags of the cell */
-	Cell::CellInfo flags = cell_flags.getValue(mapAttrib);
+	string str_flags = reduce(cell_flags.getString(mapAttrib));
+	vector<string> val_flags;
+	tokenize(str_flags,val_flags,",");
+	Cell::CellInfo flags = Cell::NONE;
+	map<string,Cell::CellInfo> flag_map = initCellInfo();
+	for(vector<string>::const_iterator it = val_flags.begin() ; it != val_flags.end() ; ++it)
+		flags |= flag_map[*it];
 
 	/* Get information about universes on this cell */
 	UniverseId universe = fromString<UniverseId>(inp_universe.getString(mapAttrib));

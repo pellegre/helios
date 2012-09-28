@@ -50,11 +50,10 @@ namespace Helios {
 		friend std::ostream& operator<<(std::ostream& out, const Cell& q);
 
 		/* Hold extra information about the cell */
-		enum CellInfo {
-			NONE     = 0, /* No special cell attributes */
-			DEADCELL = 1, /* Particles should be killed when entering us */
-			NEGATED  = 2, /* We are "everything but" what is inside our bounds */
-		};
+		typedef int CellInfo;
+		static const CellInfo NONE     = 0; /* No special cell attributes */
+		static const CellInfo DEADCELL = 2; /* Particles should be killed when entering us */
+		static const CellInfo NEGATED  = 4; /* We are "everything but" what is inside our bounds */
 
 		/* Exception */
 		class BadCellCreation : public std::exception {

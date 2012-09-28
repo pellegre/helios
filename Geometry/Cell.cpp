@@ -45,8 +45,9 @@ Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellI
 	parent(0) {
     /* Set the new cell on surfaces neighbor container */
     vector<Cell::CellSurface>::iterator it_sur = surfaces.begin();
-    for(; it_sur != surfaces.end() ; ++it_sur)
-    	(*it_sur).first->addNeighborCell((*it_sur).second,this);
+	/* Cell is inside out, so reverse the sense of the surface with respect to how it connects to other cells */
+	for(; it_sur != surfaces.end() ; ++it_sur)
+		(*it_sur).first->addNeighborCell((*it_sur).second,this);
 }
 
 std::ostream& operator<<(std::ostream& out, const Cell& q) {
@@ -73,6 +74,10 @@ void Cell::print(std::ostream& out) const {
 	/* If this cell is filled with another universe, print the universe ID */
 	if(fill)
 		out << " ; fill = " << fill->getUserId();
+
+	/* Print flags */
+	out << " ; flags = " << getFlag();
+
 	out << endl;
 
 	/* Print surfaces */
