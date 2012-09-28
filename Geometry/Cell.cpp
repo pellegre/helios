@@ -72,7 +72,7 @@ void Cell::print(std::ostream& out) const {
 
 	/* If this cell is filled with another universe, print the universe ID */
 	if(fill)
-		out << " ; fill " << fill->getUserId();
+		out << " ; fill = " << fill->getUserId();
 	out << endl;
 
 	/* Print surfaces */
@@ -89,23 +89,48 @@ void Cell::print(std::ostream& out) const {
 
 const Cell* Cell::findCell(const Coordinate& position, const Surface* skip) const {
 	vector<CellSurface>::const_iterator it;
-	for (it = surfaces.begin(); it != surfaces.end(); ++it) {
-		if (it->first != skip) {
-			if (it->first->sense(position) != it->second)
-			/* The sense of the point isn't the same the same sense as we know this cell is defined... */
-			return 0;
+	/* Deal with a negated cell */
+    if (flag & NEGATED) {
+		for (it = surfaces.begin() ; it != surfaces.end(); ++it) {
+			if (it->first != skip) {
+				if (it->first->sense(position) != it->second)
+					if(fill) return fill->findCell(position,skip);
+					else return this;
+			} else {
+				/* We just get out of the cell, we are outside for sure */
+				if(fill) return fill->findCell(position,skip);
+				else return this;
+			}
 		}
-	}
-    /* If we get here, we are inside the cell, checkout internal universe  */
+		/* We are inside all the surfaces */
+		return 0;
+    }
+    else {
+		for (it = surfaces.begin(); it != surfaces.end(); ++it) {
+			if (it->first != skip) {
+				if (it->first->sense(position) != it->second)
+				/* The sense of the point isn't the same the same sense as we know this cell is defined... */
+				return 0;
+			}
+		}
+    }
+    /* If we get here, we are inside the cell :-) */
 	if(fill) return fill->findCell(position,skip);
-	/* Or return *this* if we are a *material* cell */
 	else return this;
 }
 
 void Cell::intersect(const Coordinate& position, const Direction& direction, Surface*& surface, bool& sense, double& distance) const {
-    surface = 0;
-    sense = false;
-    distance = std::numeric_limits<double>::infinity();
+
+    /* If we have a parent "cell" we should check first on upper levels first */
+    const Cell* parent_cell = parent->getParent();
+    if(parent_cell){
+    	parent_cell->intersect(position,direction,surface,sense,distance);
+    } else {
+        surface = 0;
+        sense = false;
+        distance = std::numeric_limits<double>::infinity();
+    }
+
     /* Loop over surfaces */
 	vector<CellSurface>::const_iterator it;
 	for (it = surfaces.begin() ; it != surfaces.end(); ++it) {

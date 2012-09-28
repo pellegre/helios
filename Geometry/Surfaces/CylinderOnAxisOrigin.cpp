@@ -25,24 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cstdlib>
-
-#include "Parser.hpp"
-
-using namespace std;
+#include "CylinderOnAxisOrigin.hpp"
 
 namespace Helios {
 
-void Parser::setupGeometry(const std::vector<Geometry::SurfaceDefinition>& sur_def, const std::vector<Geometry::CellDefinition>& cell_def) const {
-	try {
-		/* Add surface into the geometry */
-		geometry.setupGeometry(sur_def,cell_def);
-	} catch (Surface::BadSurfaceCreation& exception) {
-		/* Catch exception */
-		throw ParserError(exception.what());
-	} catch (Cell::BadCellCreation& exception) {
-		/* Catch exception */
-		throw ParserError(exception.what());
-	}
-}
 } /* namespace Helios */

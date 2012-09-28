@@ -134,6 +134,7 @@ static Geometry::SurfaceDefinition surfaceAttrib(TiXmlElement* pElement) {
 static map<string,Cell::CellInfo> initCellInfo() {
 	map<string,Cell::CellInfo> values_map;
 	values_map["dead"] = Cell::DEADCELL;
+	values_map["negated"] = Cell::NEGATED;
 	return values_map;
 }
 /* Parse cell attributes */
@@ -187,7 +188,7 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	return Geometry::CellDefinition(id,surfaces,flags,universe,fill,trans);
 }
 
-void XmlParser::geoNode(TiXmlNode* pParent) {
+void XmlParser::geoNode(TiXmlNode* pParent) const {
 	vector<Geometry::SurfaceDefinition> sur_def;
 	vector<Geometry::CellDefinition> cell_def;
 
@@ -209,7 +210,7 @@ void XmlParser::geoNode(TiXmlNode* pParent) {
 	}
 
 	/* Add the geometries entities */
-	Parser::setupGeometry(sur_def,cell_def);
+	setupGeometry(sur_def,cell_def);
 }
 
 void XmlParser::rootNode(TiXmlNode* pParent) const {
@@ -227,7 +228,8 @@ void XmlParser::rootNode(TiXmlNode* pParent) const {
 			/* Check node parser map */
 			if(it_root != root_map.end()) {
 				/* Process node */
-				(*it_root).second(pParent);
+				NodeParser parser_function = (*it_root).second;
+				(this->*parser_function)(pParent);
 			}
 			else {
 				vector<string> keywords;
@@ -253,12 +255,7 @@ void XmlParser::parseFile(const string& file) const {
 		throw(ParserError("File " + file + " : " + doc.ErrorDesc()));
 }
 
-XmlParser::Parser& XmlParser::access() {
-	static XmlParser parser;
-	return parser;
-}
-
-XmlParser::XmlParser() {
+XmlParser::XmlParser(Geometry& geometry) : Parser(geometry) {
 	root_map["geometry"] = &XmlParser::geoNode;
 }
 

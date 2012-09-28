@@ -43,6 +43,9 @@ namespace Helios {
 
 	public:
 
+		/* Prevent creation */
+		Geometry();
+
 		/* ---- Geometry classes : Encapsulate all the geometry entities information */
 
 		class SurfaceDefinition {
@@ -102,9 +105,6 @@ namespace Helios {
 			~CellDefinition() {/* */}
 		};
 
-		/* Access to the geometry of the problem */
-		static inline Geometry& access() {return geo;}
-
 		/* ---- Get information */
 
 		size_t getCellNumber() const {return cells.size();}
@@ -129,9 +129,6 @@ namespace Helios {
 
 	private:
 
-		/* Static instance of this class */
-		static Geometry geo;
-
 		/* Container of surfaces defined on the problem */
 		std::vector<Surface*> surfaces;
 		/* Container of cells defined on the problem */
@@ -143,8 +140,6 @@ namespace Helios {
 		std::map<SurfaceId, InternalSurfaceId> surface_map;
 		std::map<CellId, InternalCellId> cell_map;
 
-		/* Prevent creation */
-		Geometry();
 		/* Prevent copy */
 		Geometry(const Geometry& geo);
 		Geometry& operator= (const Geometry& other);

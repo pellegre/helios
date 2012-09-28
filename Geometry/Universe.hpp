@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "Cell.hpp"
+#include "Surface.hpp"
 #include "../Common.hpp"
 
 namespace Helios {

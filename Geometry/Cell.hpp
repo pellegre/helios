@@ -32,11 +32,12 @@
 #include <fstream>
 #include <vector>
 
-#include "Surface.hpp"
+#include "../Common.hpp"
 
 namespace Helios {
 
 	class Universe;
+	class Surface;
 
 	class Cell {
 
@@ -52,6 +53,7 @@ namespace Helios {
 		enum CellInfo {
 			NONE     = 0, /* No special cell attributes */
 			DEADCELL = 1, /* Particles should be killed when entering us */
+			NEGATED  = 2, /* We are "everything but" what is inside our bounds */
 		};
 
 		/* Exception */

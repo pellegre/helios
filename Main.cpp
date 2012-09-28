@@ -37,12 +37,17 @@ using namespace std;
 using namespace Helios;
 
 int main(int argc, char* argv[]) {
-	string filename = string(argv[1]);
 
+	/* Geometry */
+	Geometry* geometry = new Geometry;
+	/* Parser (XML for now) */
+	Parser* parser = new XmlParser(*geometry);
+
+	string filename = string(argv[1]);
 	try {
 		/* Read the input file */
 		Log::ok() << "Reading file " + filename << Log::endl;
-		XmlParser::access().parseFile(filename);
+		parser->parseFile(filename);
 	} catch(Parser::ParserError& parsererror) {
 		Log::error() << "Error parsing file : " + filename + "." << Log::endl;
 		/* Nothing to do, just print the message and exit */
@@ -59,9 +64,33 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	Geometry::access().printGeo(std::cout);
+	geometry->printGeo(std::cout);
 
-	plot(Geometry::access(),-0.5,0.5,-0.5,0.5,"test.png");
+	plot(*geometry,-0.6,0.6,-0.6,0.6,"test.png");
 
+	/* Parameters */
+	Direction dir(1,0,0);
+	Coordinate pos(0,0,0);
+
+	/* Geometry stuff */
+	const Cell* cell(geometry->findCell(pos));
+	Surface* surface(0);
+	bool sense(true);
+	double distance(0.0);
+	cout << "[@] First cell : " << cell->getInternalId() << endl;
+	while(cell) {
+		/* Get next surface and distance */
+		cell->intersect(pos,dir,surface,sense,distance);
+		if(!surface) break;
+		/* Transport the particle */
+		pos = pos + distance * dir;
+		cout << pos <<  endl;
+		/* Now get next cell */
+		surface->cross(pos,sense,cell);
+		cout << "[@] Next cell : " << cell->getInternalId() << endl;
+	}
+
+	delete geometry;
+	delete parser;
 	return 0;
 }

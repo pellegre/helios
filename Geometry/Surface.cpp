@@ -28,6 +28,8 @@
 #include "Surface.hpp"
 #include "Surfaces/SurfaceTypes.hpp"
 
+#include "Cell.hpp"
+
 using namespace std;
 
 namespace Helios {
@@ -40,9 +42,15 @@ Surface::Surface(const SurfaceId& surfid, SurfaceInfo flag) : surfid(surfid), fl
 
 SurfaceFactory::SurfaceFactory() {
 	/* Surface registering */
-	registerSurface(CylinderOnAxis<xaxis>()); /* cx */
-	registerSurface(CylinderOnAxis<yaxis>()); /* cy */
-	registerSurface(CylinderOnAxis<zaxis>()); /* cz */
+	registerSurface(PlaneNormal<xaxis>());          /* px - coeffs */
+	registerSurface(PlaneNormal<yaxis>());          /* py - coeffs */
+	registerSurface(PlaneNormal<zaxis>());          /* pz - coeffs */
+	registerSurface(CylinderOnAxisOrigin<xaxis>()); /* cx - radius */
+	registerSurface(CylinderOnAxisOrigin<yaxis>()); /* cy - radius */
+	registerSurface(CylinderOnAxisOrigin<zaxis>()); /* cz - radius */
+	registerSurface(CylinderOnAxis<xaxis>());       /* c/x - radius y z */
+	registerSurface(CylinderOnAxis<yaxis>());       /* c/y - radius x z */
+	registerSurface(CylinderOnAxis<zaxis>());       /* c/z - radius x y */
 }
 
 Surface* SurfaceFactory::createSurface(const string& type, const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) const {

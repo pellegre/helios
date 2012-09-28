@@ -36,11 +36,9 @@
 #include <fstream>
 
 #include "../Common.hpp"
+#include "Cell.hpp"
 
 namespace Helios {
-
-	/* Define the Cell class */
-	class Cell;
 
 	class Surface {
 
@@ -95,6 +93,9 @@ namespace Helios {
 		/* Set different options for the surfaces */
 		void setFlags(SurfaceInfo new_flag) {flag = new_flag;}
 
+		/* Cross a surface, i.e. find next cell. Of course, this should be called on a position located on the surface */
+		void cross(const Coordinate& position, const bool& sense, const Cell*& cell) const ;
+
 		/*
 		 * Return a new instance of the surface translated (same flags and userId)
 		 * The return *type* is not necessarily the same of the original class.
@@ -148,6 +149,18 @@ namespace Helios {
 			return neighbor_pos;
 		else
 			return neighbor_neg;
+	}
+
+	/* Cross a surface, i.e. find next cell. Of course, this should be called on a position located on the surface */
+	inline void Surface::cross(const Coordinate& position, const bool& sense, const Cell*& cell) const {
+		/* Set to zero */
+		cell = 0;
+		const std::vector<Cell*>& neighbor = getNeighborCell(not sense);
+		std::vector<Cell*>::const_iterator it_neighbor = neighbor.begin();
+		for( ; it_neighbor != neighbor.end() ; ++it_neighbor) {
+			cell = (*it_neighbor)->findCell(position,this);
+			if(cell) break;
+		}
 	}
 
 	class SurfaceFactory {

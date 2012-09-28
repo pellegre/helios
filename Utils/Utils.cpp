@@ -100,15 +100,21 @@ void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, do
 	double deltay = (ymax - ymin) / (double)(pixel);
 	/* Number of cells */
 	size_t max_id = geo.getCellNumber();
-	InternalCellId old_cell_id = Geometry::access().findCell(Coordinate(0.0,0.0,0.0))->getInternalId();
+	const Cell* find_cell = geo.findCell(Coordinate(0.0,0.0,0.0));
+	InternalCellId old_cell_id = 0;
+	if(find_cell)
+		old_cell_id= find_cell->getInternalId();
 	/* Loop over pixels */
 	for(int i = 0 ; i < pixel ; ++i) {
 		for(int j = 0 ; j < pixel ; ++j) {
 			double x = xmin + (double)i * deltax;
 			double y = ymin + (double)j * deltay;
 			/* Get cell ID */
-			InternalCellId new_cell_id = Geometry::access().findCell(Coordinate(x,y,0.0))->getInternalId();
-			if(new_cell_id != old_cell_id) {
+			find_cell = geo.findCell(Coordinate(x,y,0.0));
+			InternalCellId new_cell_id = 0;
+			if(find_cell)
+				new_cell_id = find_cell->getInternalId();
+			if(new_cell_id != old_cell_id || !find_cell) {
 				png.plot(i,j,0.0,0.0,0.0);
 			} else {
 				double color = colorFromCell(new_cell_id,max_id);
@@ -117,15 +123,25 @@ void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, do
 			old_cell_id = new_cell_id;
 		}
 	}
+
 	/* Mark the "black" line on the other direction */
-	old_cell_id = Geometry::access().findCell(Coordinate(0.0,0.0,0.0))->getInternalId();
+	find_cell = geo.findCell(Coordinate(0.0,0.0,0.0));
+	if(find_cell)
+		old_cell_id = find_cell->getInternalId();
+	else
+		old_cell_id = 0;
+
 	for(int j = 0 ; j < pixel ; ++j) {
 		for(int i = 0 ; i < pixel ; ++i) {
 			double x = xmin + (double)i * deltax;
 			double y = ymin + (double)j * deltay;
 			/* Get cell ID */
-			InternalCellId new_cell_id = Geometry::access().findCell(Coordinate(x,y,0.0))->getInternalId();
-			if(new_cell_id != old_cell_id)
+			/* Get cell ID */
+			find_cell = geo.findCell(Coordinate(x,y,0.0));
+			InternalCellId new_cell_id = 0;
+			if(find_cell)
+				new_cell_id = find_cell->getInternalId();
+			if(new_cell_id != old_cell_id || !find_cell)
 				png.plot(i,j,0.0,0.0,0.0);
 			old_cell_id = new_cell_id;
 		}

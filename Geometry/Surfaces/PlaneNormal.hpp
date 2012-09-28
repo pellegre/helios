@@ -25,28 +25,25 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CYLINDERONAXIS_HPP_
-#define CYLINDERONAXIS_HPP_
-
-#include <cmath>
+#ifndef PLANENORMAL_HPP_
+#define PLANENORMAL_HPP_
 
 #include "../Surface.hpp"
-#include "SurfaceUtils.hpp"
 
 namespace Helios {
 
 	template<int axis>
-	class CylinderOnAxis: public Helios::Surface {
+	class PlaneNormal: public Helios::Surface {
 
 		/* Static constructor functions */
 		static Surface* xAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new CylinderOnAxis<xaxis>(surid,coeffs,flags);
+			return new PlaneNormal<xaxis>(surid,coeffs,flags);
 		}
 		static Surface* yAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new CylinderOnAxis<yaxis>(surid,coeffs,flags);
+			return new PlaneNormal<yaxis>(surid,coeffs,flags);
 		}
 		static Surface* zAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new CylinderOnAxis<zaxis>(surid,coeffs,flags);
+			return new PlaneNormal<zaxis>(surid,coeffs,flags);
 		}
 
 		/* Name of the surface */
@@ -58,39 +55,36 @@ namespace Helios {
 		/* Return constructor function */
 		Constructor constructor() const;
 
-	    /* Cylinder radius */
-	    double radius;
-	    /* Some point through which the cylinder's axis passes (defined only with two values) */
-	    Coordinate point;
+		/* Cylinder radius */
+		double coordinate;
 
 	public:
 		/* Default, used only on factory */
-	    CylinderOnAxis() : radius(0) , point(0,0,0) {/* */};
-	    CylinderOnAxis(const SurfaceId& surid, const SurfaceInfo& flags, const double& radius, const Coordinate& point)
-	                   : Surface(surid,flags), radius(radius) , point(point) {/* */};
+		PlaneNormal() : coordinate(0) {/* */};
+		PlaneNormal(const SurfaceId& surid, const SurfaceInfo& flags, const double& coordinate)
+					   : Surface(surid,flags), coordinate(coordinate) {/* */};
 
-	    CylinderOnAxis(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags);
+		PlaneNormal(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags);
 
 		void normal(const Coordinate& point, Direction& vnormal) const;
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
 		Surface* transformate(const Direction& trans) const;
 
-		virtual ~CylinderOnAxis() {/* */};
-
+		virtual ~PlaneNormal() {/* */};
 	};
 
 	/* Name of the surface */
 	template<int axis>
-	std::string CylinderOnAxis<axis>::name() const {
+	std::string PlaneNormal<axis>::name() const {
 		switch(axis) {
 		case xaxis :
-			return "c/x";
+			return "px";
 			break;
 		case yaxis :
-			return "c/y";
+			return "py";
 			break;
 		case zaxis :
-			return "c/z";
+			return "pz";
 			break;
 		}
 		return "";
@@ -98,21 +92,12 @@ namespace Helios {
 
 	/* Constructor */
 	template<int axis>
-	CylinderOnAxis<axis>::CylinderOnAxis(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags)
+	PlaneNormal<axis>::PlaneNormal(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags)
 		: Surface(surid,flags) {
 		/* Check number of parameters */
-		if(coeffs.size() == 3) {
+		if(coeffs.size() == 1) {
 			/* Get the radius */
-			radius = coeffs[0];
-			/* Get point */
-			point[axis] = 0.0;
-			size_t k = 0;
-			for(size_t i = 0 ; i < 3 ; i++) {
-				if(i != axis) {
-					point[i] = coeffs[k + 1];
-					k++;
-				}
-			}
+			coordinate = coeffs[0];
 		} else {
 			throw Surface::BadSurfaceCreation(surid,"Bad number of coefficients");
 		}
@@ -120,13 +105,12 @@ namespace Helios {
 
 	/* Print surface internal data */
 	template<int axis>
-	void CylinderOnAxis<axis>::print(std::ostream& out) const {
-		out << "radius = " << radius << " ; ";
-		out << "point = " << point;
+	void PlaneNormal<axis>::print(std::ostream& out) const {
+		out << "coordinate = " << coordinate;
 	}
 
 	template<int axis>
-	Surface::Constructor CylinderOnAxis<axis>::constructor() const {
+	Surface::Constructor PlaneNormal<axis>::constructor() const {
 		switch(axis) {
 		case xaxis :
 			return xAxisConstructor;
@@ -142,37 +126,33 @@ namespace Helios {
 	}
 
 	template<int axis>
-	void CylinderOnAxis<axis>::normal(const Coordinate& position, Direction& vnormal) const {
-	    /* We now this cylinder is centered on the origin (by definition) */
-		vnormal = position - point;
-	    /* Zero component that's not on the axis */
-	    vnormal[axis] = 0.0;
-	    /* Normalize */
-	    vnormal /= radius;
+	void PlaneNormal<axis>::normal(const Coordinate& point, Direction& vnormal) const {
+		vnormal = 0.0;
+		vnormal[axis] = 1.0;
 	}
 
 	/* Evaluate function */
 	template<int axis>
-	double CylinderOnAxis<axis>::function(const Coordinate& position) const {
-		Coordinate trpos(position - point);
-		return dotProduct<axis>(trpos, trpos) - radius * radius;
+	double PlaneNormal<axis>::function(const Coordinate& position) const {
+		return position[axis] - coordinate;
 	}
 
 	template<int axis>
-	bool CylinderOnAxis<axis>::intersect(const Coordinate& position, const Direction& dir, const bool& sense, double& distance) const {
-		/* Calculate "quadratic" coefficients */
-		double a = 1 - dir[axis] * dir[axis];
-	    Coordinate trpos(position - point);
-	    double k = dotProduct<axis>(dir, trpos);
-	    double c = dotProduct<axis>(trpos, trpos) - radius*radius;
-	    return quadraticIntersect(a,k,c,sense,distance);
+	bool PlaneNormal<axis>::intersect(const Coordinate& position, const Direction& dir, const bool& sense, double& distance) const {
+	    if (((sense == false) && (dir[axis] > 0)) || ((sense == true)  && (dir[axis] < 0))) {
+	        /* Headed towards surface */
+	        distance = (coordinate - position[axis]) / dir[axis];
+	        distance = std::max(0.0, distance);
+	        return true;
+	    }
+	    distance = 0.0;
+	    return false;
 	};
 
 	template<int axis>
-	Surface* CylinderOnAxis<axis>::transformate(const Direction& trans) const {
-		Coordinate new_point = point + trans;
-		return new CylinderOnAxis<axis>(this->getUserId(),this->getFlags(),this->radius,new_point);
+	Surface* PlaneNormal<axis>::transformate(const Direction& trans) const {
+		return new PlaneNormal<axis>(this->getUserId(),this->getFlags(),(this->coordinate + trans[axis]));
 	}
 
 } /* namespace Helios */
-#endif /* CYLINDERONAXIS_HPP_ */
+#endif /* PLANENORMAL_HPP_ */

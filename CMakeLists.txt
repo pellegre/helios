@@ -42,7 +42,8 @@ add_executable(mc++
                Geometry/Universe.cpp               
                Geometry/Cell.cpp
                Geometry/Surface.cpp
-               Geometry/Surfaces/CylinderOnAxis.cpp               
+               Geometry/Surfaces/CylinderOnAxis.cpp    
+               Geometry/Surfaces/CylinderOnAxisOrigin.cpp                                         
                Parser/Parser.cpp
                Parser/XMLParser/tinystr.cpp
                Parser/XMLParser/tinyxml.cpp                  

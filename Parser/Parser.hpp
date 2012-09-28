@@ -39,7 +39,11 @@ namespace Helios {
 
 	protected:
 		/* Setup geometry */
-		static void setupGeometry(const std::vector<Geometry::SurfaceDefinition>& sur_def, const std::vector<Geometry::CellDefinition>& cell_def);
+		void setupGeometry(const std::vector<Geometry::SurfaceDefinition>& sur_def, const std::vector<Geometry::CellDefinition>& cell_def) const;
+
+		/* Internal reference to the geometry of the problem */
+		Geometry& geometry;
+
 	public:
 
 		/* Exception */
@@ -80,7 +84,7 @@ namespace Helios {
 			virtual ~ParserWarning() throw() {/* */};
 		};
 
-		Parser() {/* */};
+		Parser(Geometry& geometry) : geometry(geometry) {/* */};
 
 		/* Parse the geometry file, and set each surface and cell */
 		virtual void parseFile(const std::string& file) const = 0;

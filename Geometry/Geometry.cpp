@@ -36,8 +36,6 @@ namespace Helios {
 
 static inline bool getSign(const signed int& value) {return (value > 0);}
 
-Geometry Geometry::geo;
-
 Geometry::Geometry() {/* */}
 
 Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<CellDefinition> >& u_cells,
