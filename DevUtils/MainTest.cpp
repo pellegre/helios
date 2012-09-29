@@ -24,52 +24,24 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#define GTEST_USE_OWN_TR1_TUPLE 1
 
-#include <iostream>
-#include <string>
-#include <vector>
+#include "Testing/Tests.hpp"
 
-#include "Parser/ParserTypes.hpp"
-#include "Log/Log.hpp"
-#include "DevUtils/Utils.hpp"
+InputPath InputPath::inputpath;
 
-using namespace std;
-using namespace Helios;
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  /* Check number of arguments */
+  if(argc < 2) {
+	  Helios::Log::error() << "Usage : " << argv[0] << " path/to/test/inputs" << Helios::Log::endl;
+	  exit(1);
+  }
 
-int main(int argc, char* argv[]) {
+  InputPath::access().setPath(argv[1]);
 
-	/* Geometry */
-	Geometry* geometry = new Geometry;
-	/* Parser (XML for now) */
-	Parser* parser = new XmlParser(*geometry);
-
-	string filename = string(argv[1]);
-	try {
-		/* Read the input file */
-		Log::ok() << "Reading file " + filename << Log::endl;
-		parser->parseFile(filename);
-	} catch(Parser::ParserError& parsererror) {
-		Log::error() << "Error parsing file : " + filename + "." << Log::endl;
-		/* Nothing to do, just print the message and exit */
-		Log::error() << parsererror.what() << Log::endl;
-		return 1;
-	} catch(Parser::KeywordParserError& keyerror) {
-		Log::error() << "Error parsing file : " + filename << Log::endl;
-		/* Try to find the -bad- keyword */
-		size_t line = seachKeyWords(filename,keyerror.getKeys());
-		if(line)
-			Log::error() << "Line " << (line + 1) << " : " << keyerror.what() << Log::endl;
-		else
-			Log::error() << keyerror.what() << Log::endl;
-		return 1;
-	}
-
-	geometry->printGeo(std::cout);
-	plot(*geometry,-3.6,3.6,-3.6,3.6,"test.png");
-
-	//cout << *geometry->findCell(Coordinate(0.364059,0.931376,0.927664)) << endl;
-	delete geometry;
-	delete parser;
-
-	return 0;
+  return RUN_ALL_TESTS();
 }
+
+
+

@@ -111,3 +111,29 @@ void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, do
 
 	png.close();
 }
+
+void transport(const Helios::Geometry& geometry, const Helios::Coordinate& start_pos, const Helios::Direction& start_dir,
+		       vector<Helios::CellId>& cells, vector<Helios::SurfaceId>& surfaces) {
+	Helios::Coordinate pos(start_pos);
+	/* Geometry stuff */
+	const Cell* cell(geometry.findCell(pos));
+	cells.push_back(cell->getUserId());
+	Surface* surface(0);
+	bool sense(true);
+	double distance(0.0);
+	while(cell) {
+		/* Get next surface and distance */
+		cell->intersect(pos,start_dir,surface,sense,distance);
+		/* Transport the particle */
+		pos = pos + distance * start_dir;
+		/* Now get next cell */
+		surface->cross(pos,sense,cell);
+//		cout << *surface << endl;
+//		cout << surface->function(pos) << endl;
+//		cout << cell << endl;
+		/* Put user IDs */
+		cells.push_back(cell->getUserId());
+		surfaces.push_back(surface->getUserId());
+		if(cell->getFlag() & Cell::DEADCELL) break;
+	}
+}

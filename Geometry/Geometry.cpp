@@ -38,6 +38,32 @@ static inline bool getSign(const signed int& value) {return (value > 0);}
 
 Geometry::Geometry() {/* */}
 
+Surface* Geometry::addSurface(const Surface* surface, const Transformation& trans) {
+	/* Create the new duplicated surface */
+	Surface* new_surface = trans(surface);
+
+	/* Check if the surface is not duplicated */
+	vector<Surface*>::iterator it_sur = surfaces.begin();
+	for(; it_sur != surfaces.end() ; ++it_sur) {
+		if(*new_surface == *(*it_sur)) {
+			if(new_surface->getUserId() != (*it_sur)->getUserId())
+				Log::warn() << "Surface " << new_surface->getUserId() << " is redundant and is eliminated from the geometry" << Log::endl;
+			delete new_surface;
+			return (*it_sur);
+		}
+	}
+
+	/* Set internal / unique index */
+	new_surface->setInternalId(surfaces.size());
+	/* Update surface map */
+	surface_map[new_surface->getUserId()] = new_surface->getInternalId();
+	/* Push the surface into the container */
+	surfaces.push_back(new_surface);
+
+	/* Return the new surface */
+	return new_surface;
+}
+
 Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<CellDefinition> >& u_cells,
 		                        const map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans) {
 	/* Create universe */
@@ -87,16 +113,10 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    		/* The surface is created */
 	    		new_surface = (*it_temp_sur).second;
 	    	} else {
-	    		/* Create new surface */
-	    		new_surface = trans((*it_sur).second);
-		    	/* Set internal / unique index */
-		    	new_surface->setInternalId(surfaces.size());
-		    	/* Update surface map */
-		    	surface_map[new_surface->getUserId()] = new_surface->getInternalId();
-		    	/* Update temporary map */
-		    	temp_sur_map[new_surface->getUserId()] = new_surface;
-		    	/* Push the surface into the container */
-		    	surfaces.push_back(new_surface);
+	    		/* Get new surface */
+	    		new_surface = addSurface((*it_sur).second,trans);
+	    		/* Update temporary map */
+	    		temp_sur_map[new_surface->getUserId()] = new_surface;
 	    	}
 
 	    	/* Get surface with sense */

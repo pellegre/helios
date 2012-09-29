@@ -148,9 +148,15 @@ namespace Helios {
 		Surface* addSurface(const SurfaceDefinition& sur_def);
 		/* Add cell */
 		Cell* addCell(const CellDefinition& cell_def, const std::map<SurfaceId,Surface*>& user_surfaces);
-		/* Add recursively all universe that are nested from <uni_def> */
+		/* Add recursively all universe that are nested */
 		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<CellDefinition> >& u_cells,
 				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation());
+
+		/*
+		 * Add a surface to the geometry, prior to check duplicated ones. If the surface exist (because the user
+		 * set the same one but with different IDs) is silently discarded.
+		 */
+		Surface* addSurface(const Surface* surface, const Transformation& trans);
 	};
 
 } /* namespace Helios */

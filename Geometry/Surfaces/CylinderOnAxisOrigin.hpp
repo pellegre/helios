@@ -52,8 +52,6 @@ namespace Helios {
 		std::string name() const;
 		/* Print surface internal data */
 		void print(std::ostream& out) const;
-		/* Evaluate function */
-		double function(const Coordinate& pos) const;
 		/* Return constructor function */
 		Constructor constructor() const;
 
@@ -71,6 +69,15 @@ namespace Helios {
 		void normal(const Coordinate& point, Direction& vnormal) const;
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
 		Surface* transformate(const Direction& trans) const;
+		/* Evaluate function */
+		double function(const Coordinate& pos) const;
+
+		/* Comparison */
+		bool compare(const Surface& sur) const {
+	        /* safe to static cast because Surface::== already confirmed the type */
+	        const CylinderOnAxisOrigin<axis>& cyl = static_cast<const CylinderOnAxisOrigin<axis>&>(sur);
+	        return (radius == cyl.radius);
+		}
 
 		virtual ~CylinderOnAxisOrigin() {/* */};
 	};
@@ -154,7 +161,7 @@ namespace Helios {
 
 	template<int axis>
 	Surface* CylinderOnAxisOrigin<axis>::transformate(const Direction& trans) const {
-		if(trans[0] == 0.0 && trans[1] == 0 && trans[2] == 0.0) {
+		if(compareVector(trans,Direction(0,0,0))) {
 			return new CylinderOnAxisOrigin<axis>(this->getUserId(),this->getFlags(),this->radius);
 		} else {
 			return new CylinderOnAxis<axis>(this->getUserId(),this->getFlags(),this->radius,trans);

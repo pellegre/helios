@@ -77,6 +77,13 @@ namespace Helios {
 		/* Determine distance to intersection with the surface. Returns whether it hits and pass back what the distance is. */
 		virtual bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const  = 0;
 
+		/* Comparison operator */
+		bool operator==(const Surface& sur) {
+			if (sur.name() != name())
+				return false;
+			return compare(sur);
+		}
+
 		/* Add a neighbor cell of this surface */
 		void addNeighborCell(const bool& sense, Cell* cell);
 		/* Get neighbor cells of this surface */
@@ -92,6 +99,9 @@ namespace Helios {
 		SurfaceInfo getFlags() const {return flag;}
 		/* Set different options for the surfaces */
 		void setFlags(SurfaceInfo new_flag) {flag = new_flag;}
+
+		/* Mathematically define a surface as a collection of points that satisfy this equation */
+		virtual double function(const Coordinate& pos) const = 0;
 
 		/* Cross a surface, i.e. find next cell. Of course, this should be called on a position located on the surface */
 		void cross(const Coordinate& position, const bool& sense, const Cell*& cell) const ;
@@ -115,10 +125,10 @@ namespace Helios {
 		Surface(const Surface& surface);
 		Surface& operator= (const Surface& other);
 
-		/* Mathematically define a surface as a collection of points that satisfy this equation */
-		virtual double function(const Coordinate& pos) const = 0;
 		/* Print internal parameters of the surface */
 		virtual void print(std::ostream& out) const = 0;
+		/* Virtual comparison operator, to avoid duplicated surfaces on the geometry */
+		virtual bool compare(const Surface& sur) const = 0;
 
 		/* Get the name of this surface */
 		virtual std::string name() const = 0;

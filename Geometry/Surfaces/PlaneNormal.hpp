@@ -50,8 +50,6 @@ namespace Helios {
 		std::string name() const;
 		/* Print surface internal data */
 		void print(std::ostream& out) const;
-		/* Evaluate function */
-		double function(const Coordinate& pos) const;
 		/* Return constructor function */
 		Constructor constructor() const;
 
@@ -69,6 +67,15 @@ namespace Helios {
 		void normal(const Coordinate& point, Direction& vnormal) const;
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
 		Surface* transformate(const Direction& trans) const;
+		/* Evaluate function */
+		double function(const Coordinate& pos) const;
+
+		/* Comparison */
+		bool compare(const Surface& sur) const {
+	        /* safe to static cast because Surface::== already confirmed the type */
+	        const PlaneNormal<axis>& cyl = static_cast<const PlaneNormal<axis>&>(sur);
+	        return (coordinate == cyl.coordinate);
+		}
 
 		virtual ~PlaneNormal() {/* */};
 	};

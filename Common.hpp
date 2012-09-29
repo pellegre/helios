@@ -44,6 +44,11 @@ namespace Helios {
 	/* Define a direction */
 	typedef TinyVector<double,3> Direction;
 
+	/* Compare tiny vectors */
+	static inline bool compareVector(const Coordinate& a, const Coordinate& b) {
+		return ((a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]));
+	}
+
 	/* Surface ID defined by the user */
 	typedef unsigned int SurfaceId;
 	/* Cell ID defined by the user */

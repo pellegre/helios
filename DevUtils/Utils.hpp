@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <string>
 #include <vector>
-#include <random/uniform.h>
 
 #include "../Log/Log.hpp"
 #include "../Geometry/Geometry.hpp"
@@ -44,15 +43,19 @@ void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, do
 
 /* ---- Debugging and testing functions */
 
-/* Return a random number between 0.0 and 1.0 */
-double randomNumber() {
-	static Uniform<double> uniform;
-	return uniform.random();
+/* Return a random number between 0.0 and 1.0, JUST FOR TESTING AND DEBUG */
+static inline double randomNumber() {
+	return (double)rand()/ (double)RAND_MAX;
+}
+/* Return a random number between a and b, JUST FOR TESTING AND DEBUG */
+static inline double randomNumber(double a, double b) {
+    return (b - a)*randomNumber() + a;
 }
 
-/* Return a random direction on space */
-Helios::Direction randomDirection() {
-	return Helios::Direction(randomNumber(),randomNumber(),randomNumber());
+/* Return a random direction on space, JUST FOR TESTING AND DEBU */
+static inline Helios::Direction randomDirection() {
+	Helios::Direction dir(randomNumber(),randomNumber(),randomNumber());
+	return dir/sqrt(dot(dir,dir));
 }
 
 /*
@@ -61,12 +64,13 @@ Helios::Direction randomDirection() {
  * - cells    : Container of user defined cells IDs that are crossed by the particle.
  * - surfaces : Container of user defined surfaces IDs that are crossed by the particle.
  */
-void transport(const Helios::Geometry& geometry, const Helios::Coordinate& start_pos, const Helios::Direction& direction,
+void transport(const Helios::Geometry& geometry, const Helios::Coordinate& start_pos, const Helios::Direction& start_dir,
 		       std::vector<Helios::CellId>& cells, std::vector<Helios::SurfaceId>& surfaces);
 
 /*
  * Move a coordinate from surface to surface and check the surface equation. This is done a fixed number times
- * until the coordinate reach a dead cell. Returns the MAX evaluation of a surface equation.
+ * until the coordinate reach a dead cell. Returns the MAX evaluation of a surface equation. Each movement is done
+ * in a random direction.
  */
 double randomTransport(const Helios::Geometry& geometry, const Helios::Coordinate& start_pos);
 
