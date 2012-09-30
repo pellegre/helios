@@ -40,7 +40,8 @@ namespace Helios {
 	protected:
 
 		/* Setup geometry */
-		void setupGeometry(const std::vector<Geometry::SurfaceDefinition>& sur_def, const std::vector<Geometry::CellDefinition>& cell_def) const;
+		void setupGeometry(std::vector<Geometry::SurfaceDefinition>& sur_def, std::vector<Geometry::CellDefinition>& cell_def,
+				           std::vector<Geometry::LatticeDefinition>& lat_def) const;
 
 		/* Internal reference to the geometry of the problem */
 		Geometry& geometry;
@@ -101,6 +102,19 @@ namespace Helios {
 
 	/* Reduce spaces on a string */
 	const std::string reduce(const std::string& pString,const std::string& pFill = " ",const std::string& pWhitespace = " \t");
+
+	/* Get a container from a string stream */
+	template<class T>
+	std::vector<T> getContainer(const std::string& str) {
+		std::istringstream sin(reduce(str));
+		std::vector<T> coeffs;
+		while(sin.good()) {
+			T c;
+			sin >> c;
+			coeffs.push_back(c);
+		}
+		return coeffs;
+	}
 
 } /* namespace Helios */
 

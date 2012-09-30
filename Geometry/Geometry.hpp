@@ -81,7 +81,7 @@ namespace Helios {
 			Direction translation;
 		public:
 			CellDefinition() {/* */}
-			CellDefinition(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo& flags,
+			CellDefinition(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo flags,
 					       const UniverseId& universe, const UniverseId& fill, const Direction& translation) :
 				userCellId(userCellId), surfacesId(surfacesId), flags(flags), universe(universe), fill(fill), translation(translation) {/* */}
 			Cell::CellInfo getFlags() const {
@@ -105,6 +105,49 @@ namespace Helios {
 			~CellDefinition() {/* */}
 		};
 
+		class LatticeDefinition {
+
+		public:
+			/* Type of lattices */
+			enum LatticeInfo {
+				RECTANGULAR = 0
+			};
+
+			LatticeDefinition() {/* */}
+			LatticeDefinition(const UniverseId& userLatticeId, const LatticeInfo& type, const std::vector<unsigned int>& dimension,
+					          const std::vector<double>& width, const std::vector<UniverseId>& universes) :
+					          userLatticeId(userLatticeId), type(type), dimension(dimension), width(width), universes(universes) {/* */}
+
+			std::vector<unsigned int> getDimension() const {
+				return dimension;
+			}
+
+			LatticeInfo getType() const {
+				return type;
+			}
+
+			std::vector<UniverseId> getUniverses() const {
+				return universes;
+			}
+
+			UniverseId getUserLatticeId() const {
+				return userLatticeId;
+			}
+
+			std::vector<double> getWidth() const {
+				return width;
+			}
+
+			~LatticeDefinition() {/* */}
+
+		private:
+			UniverseId userLatticeId;
+			LatticeInfo type;
+			std::vector<unsigned int> dimension;
+			std::vector<double> width;
+			std::vector<UniverseId> universes;
+
+		};
 		/* ---- Get information */
 
 		size_t getCellNumber() const {return cells.size();}
@@ -114,7 +157,8 @@ namespace Helios {
 		/* ---- Geometry setup */
 
 		/* This is the interface to setup the geometry of the problem */
-		void setupGeometry(const std::vector<SurfaceDefinition>& sur_def, const std::vector<CellDefinition>& cell_def);
+		void setupGeometry(std::vector<SurfaceDefinition>& sur_def, std::vector<CellDefinition>& cell_def,
+				           std::vector<LatticeDefinition>& lat_def);
 
 		/* Print cell with each surface of the geometry */
 		void printGeo(std::ostream& out) const;
@@ -158,6 +202,10 @@ namespace Helios {
 		/* Add recursively all universe that are nested */
 		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<CellDefinition> >& u_cells,
 				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation());
+
+		/* Add more surfaces/cells to construct the lattice (always centered at 0.0) */
+		void handleLattice(std::vector<SurfaceDefinition>& sur_def, std::vector<CellDefinition>& cell_def,
+				           std::vector<LatticeDefinition>& lat_def);
 
 		/*
 		 * Add a surface to the geometry, prior to check duplicated ones. If the surface exist (because the user

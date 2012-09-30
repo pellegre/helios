@@ -33,10 +33,14 @@ using namespace std;
 
 namespace Helios {
 
-void Parser::setupGeometry(const std::vector<Geometry::SurfaceDefinition>& sur_def, const std::vector<Geometry::CellDefinition>& cell_def) const {
+void Parser::setupGeometry(std::vector<Geometry::SurfaceDefinition>& sur_def, std::vector<Geometry::CellDefinition>& cell_def,
+		                   std::vector<Geometry::LatticeDefinition>& lat_def) const {
+	if(sur_def.size() == 0) throw ParserError("No surfaces?! I can't continue... Sorry :-(");
+	if(cell_def.size() == 0) throw ParserError("No cells?! I can't continue... Sorry :-(");
+
 	try {
 		/* Add surface into the geometry */
-		geometry.setupGeometry(sur_def,cell_def);
+		geometry.setupGeometry(sur_def,cell_def,lat_def);
 	} catch (Surface::BadSurfaceCreation& exception) {
 		/* Catch exception */
 		throw ParserError(exception.what());

@@ -35,6 +35,35 @@ using namespace std;
 namespace Helios {
 
 /* Initialization of values on the surface flag */
+static map<string,Geometry::LatticeDefinition::LatticeInfo> initLatticeInfo() {
+	map<string,Geometry::LatticeDefinition::LatticeInfo> values_map;
+	values_map["rectangular"] = Geometry::LatticeDefinition::RECTANGULAR;
+	return values_map;
+}
+/* Parse surface attributes */
+static Geometry::LatticeDefinition latticeAttrib(TiXmlElement* pElement) {
+	/* Initialize XML attribute checker */
+	static const string required[4] = {"id", "dimension","pitch","universes"};
+	static const string optional[1] = {"type"};
+	static XmlParser::XmlAttributes latAttrib(vector<string>(required, required + 4), vector<string>(optional, optional + 1));
+	/* Lattice Type */
+	XmlParser::AttributeValue<Geometry::LatticeDefinition::LatticeInfo> lat_type("type",Geometry::LatticeDefinition::RECTANGULAR,initLatticeInfo());
+
+	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
+	/* Check user input */
+	latAttrib.checkAttributes(mapAttrib);
+
+	/* Get attributes */
+	UniverseId id = fromString<UniverseId>(mapAttrib["id"]);
+	Geometry::LatticeDefinition::LatticeInfo type = lat_type.getValue(mapAttrib);
+	vector<unsigned int> dimension = getContainer<unsigned int>(mapAttrib["dimension"]);
+	vector<double> width = getContainer<double>(mapAttrib["pitch"]);
+	vector<UniverseId> universes = getContainer<UniverseId>(mapAttrib["universes"]);
+	/* Return surface definition */
+	return Geometry::LatticeDefinition(id,type,dimension,width,universes);
+}
+
+/* Initialization of values on the surface flag */
 static map<string,Surface::SurfaceInfo> initSurfaceInfo() {
 	map<string,Surface::SurfaceInfo> values_map;
 	values_map["reflective"] = Surface::REFLECTING;
@@ -56,13 +85,7 @@ static Geometry::SurfaceDefinition surfaceAttrib(TiXmlElement* pElement) {
 	/* Get attributes */
 	SurfaceId id = fromString<SurfaceId>(mapAttrib["id"]);
 	string type = mapAttrib["type"];
-	std::istringstream sin(reduce(mapAttrib["coeffs"]));
-	vector<double> coeffs;
-	while(sin.good()) {
-		double c;
-		sin >> c;
-		coeffs.push_back(c);
-	}
+	vector<double> coeffs = getContainer<double>(mapAttrib["coeffs"]);
 	Surface::SurfaceInfo flags = sur_flags.getValue(mapAttrib);
 	/* Return surface definition */
 	return Geometry::SurfaceDefinition(id,type,coeffs,flags);
@@ -98,13 +121,7 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 
 	/* Get attributes */
 	CellId id = fromString<CellId>(mapAttrib["id"]);
-	std::istringstream sin_coeffs(reduce(mapAttrib["surfaces"]));
-	vector<signed int> surfaces;
-	while(sin_coeffs.good()) {
-		signed int c;
-		sin_coeffs >> c;
-		surfaces.push_back(c);
-	}
+	vector<signed int> surfaces = getContainer<signed int>(mapAttrib["surfaces"]);
 
 	/* Flags of the cell */
 	string str_flags = reduce(cell_flags.getString(mapAttrib));
@@ -137,6 +154,7 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 void XmlParser::geoNode(TiXmlNode* pParent) const {
 	vector<Geometry::SurfaceDefinition> sur_def;
 	vector<Geometry::CellDefinition> cell_def;
+	vector<Geometry::LatticeDefinition> latt_def;
 
 	TiXmlNode* pChild;
 	for (pChild = pParent->FirstChild(); pChild != 0; pChild = pChild->NextSibling()) {
@@ -147,6 +165,8 @@ void XmlParser::geoNode(TiXmlNode* pParent) const {
 				sur_def.push_back(surfaceAttrib(pChild->ToElement()));
 			else if (element_value == "cell")
 				cell_def.push_back(cellAttrib(pChild->ToElement()));
+			else if (element_value == "lattice")
+				latt_def.push_back(latticeAttrib(pChild->ToElement()));
 			else {
 				vector<string> keywords;
 				keywords.push_back(element_value);
@@ -156,7 +176,7 @@ void XmlParser::geoNode(TiXmlNode* pParent) const {
 	}
 
 	/* Add the geometries entities */
-	setupGeometry(sur_def,cell_def);
+	setupGeometry(sur_def,cell_def,latt_def);
 }
 
 }

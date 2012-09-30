@@ -142,7 +142,91 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	return new_universe;
 }
 
-void Geometry::setupGeometry(const vector<SurfaceDefinition>& sur_def, const vector<CellDefinition>& cell_def) {
+void Geometry::handleLattice(vector<SurfaceDefinition>& sur_def, vector<CellDefinition>& cell_def, vector<LatticeDefinition>& lat_def)  {
+	/* Get max ID of user cells and surfaces */
+	SurfaceId maxSurfaceId = sur_def[0].getUserSurfaceId();
+	for(vector<SurfaceDefinition>::const_iterator it = sur_def.begin() ; it != sur_def.end() ; ++it) {
+		SurfaceId newSurfaceId = (*it).getUserSurfaceId();
+		if (newSurfaceId > maxSurfaceId) maxSurfaceId = newSurfaceId;
+	}
+	CellId maxCellId = cell_def[0].getUserCellId();
+	for(vector<CellDefinition>::const_iterator it = cell_def.begin() ; it != cell_def.end() ; ++it) {
+		CellId newCellId = (*it).getUserCellId();
+		if (newCellId > maxCellId) maxCellId = newCellId;
+	}
+
+	/* Now lets move on into the lattices */
+	for(vector<LatticeDefinition>::const_iterator it = lat_def.begin() ; it != lat_def.end() ; ++it) {
+		/* Get dimension and pitchs */
+		vector<unsigned int> dimension = (*it).getDimension();
+		vector<double> pitch = (*it).getWidth();
+
+		/* Set width of lattice */
+		vector<double> width(2);
+		width[xaxis] = pitch[xaxis] * dimension[xaxis];
+		width[yaxis] = pitch[yaxis] * dimension[yaxis];
+
+		/* Get coordinates on x axis */
+		double x_min = -width[xaxis]/2;
+		double x_max = width[xaxis]/2;
+		/* Get delta on x axis */
+		double x_delta = width[xaxis] / (double) dimension[xaxis];
+
+		/* Get coordinates on y axis */
+		double y_min = -width[yaxis]/2;
+		double y_max = width[yaxis]/2;
+		/* Get delta on y axis */
+		double y_delta = width[yaxis] / (double) dimension[yaxis];
+
+		/* Now create "y" surfaces from left to right */
+		vector<SurfaceDefinition> y_surfaces;
+		vector<double> y_coordinates;
+		for(size_t i = 0 ; i <= dimension[yaxis] ; i++) {
+			vector<double> coeff;
+			double sur_pos = y_min + (double)i * y_delta;
+			coeff.push_back(sur_pos);
+			if(i < dimension[yaxis]) y_coordinates.push_back(sur_pos + y_delta/2);
+			SurfaceDefinition new_surface = SurfaceDefinition(++maxSurfaceId,"py",coeff,Surface::NONE);
+			y_surfaces.push_back(new_surface);
+			sur_def.push_back(new_surface);
+		}
+
+		/* Now create "x" surfaces from bottom to top */
+		vector<SurfaceDefinition> x_surfaces;
+		vector<double> x_coordinates;
+		for(size_t i = 0 ; i <= dimension[xaxis] ; i++) {
+			vector<double> coeff;
+			double sur_pos = x_min + (double)i * x_delta;
+			coeff.push_back(sur_pos);
+			if(i < dimension[xaxis]) x_coordinates.push_back(sur_pos + x_delta/2);
+			SurfaceDefinition new_surface = SurfaceDefinition(++maxSurfaceId,"px",coeff,Surface::NONE);
+			x_surfaces.push_back(new_surface);
+			sur_def.push_back(new_surface);
+		}
+
+		/* Get universes to fill each cell */
+		vector<UniverseId> universes = (*it).getUniverses();
+		size_t uni_count = 0;
+		/* Now create each cell of the lattice, on the universe defined by the user (left to right, bottom to top) */
+		for(int i = dimension[yaxis] - 1 ; i >= 0  ; i--) {
+			for(int j = 0 ; j < dimension[xaxis]  ; j++) {
+				vector<signed int> surfs;
+				surfs.push_back(y_surfaces[i].getUserSurfaceId());
+				surfs.push_back(-y_surfaces[i + 1].getUserSurfaceId());
+				surfs.push_back(x_surfaces[j].getUserSurfaceId());
+				surfs.push_back(-x_surfaces[j + 1].getUserSurfaceId());
+				cell_def.push_back(CellDefinition(++maxCellId,surfs,Cell::NONE,(*it).getUserLatticeId()
+						           ,universes[uni_count],Direction(x_coordinates[j],y_coordinates[i],0)));
+				/* Get next universe */
+				uni_count++;
+			}
+		}
+	}
+}
+
+void Geometry::setupGeometry(vector<SurfaceDefinition>& sur_def, vector<CellDefinition>& cell_def, vector<LatticeDefinition>& lat_def) {
+	/* First handle lattices, if there is at least one, we should add more surfaces/cells to the geometry */
+	handleLattice(sur_def,cell_def,lat_def);
 
 	/* First we add all the surfaces defined by the user. Ultimately, we'll have to clone and transform this ones */
 	map<SurfaceId,Surface*> user_surfaces;
@@ -177,9 +261,7 @@ void Geometry::setupGeometry(const vector<SurfaceDefinition>& sur_def, const vec
 		user_cell_ids.insert(userCellId);
 	}
 
-	/*
-	 * First check which cell conforms each universe (different from the base universe).
-	 */
+	/* Map cell with universes */
 	map<UniverseId,vector<CellDefinition> > u_cells;  /* Universe definition */
 	for(it_cell = cell_def.begin() ; it_cell != cell_def.end() ; ++it_cell) {
 		UniverseId universe = (*it_cell).getUniverse();
