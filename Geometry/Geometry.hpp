@@ -120,9 +120,15 @@ namespace Helios {
 		void printGeo(std::ostream& out) const;
 
 	    /* Find a cell given an arbitrary point in the problem (starting from the base universe) */
-		const Cell* findCell(const Coordinate& position) const;
+		const Cell* findCell(const Coordinate& position) const {
+			/* Start with the base universe */
+			return universes[0]->findCell(position);
+		}
 		/* Using a universe identifier as a starting point */
-		const Cell* findCell(const Coordinate& position, const InternalUniverseId& univid) const;
+		const Cell* findCell(const Coordinate& position, const InternalUniverseId& univid) const {
+			/* Start with the universe provided */
+			return universes[univid]->findCell(position);
+		}
 
 		/* Clear and delete all the geometry stuff */
 		virtual ~Geometry();
@@ -137,8 +143,9 @@ namespace Helios {
 		std::vector<Universe*> universes;
 
 		/* Map internal index to user index */
-		std::map<SurfaceId, InternalSurfaceId> surface_map;
-		std::map<CellId, InternalCellId> cell_map;
+		std::map<SurfaceId, std::vector<InternalSurfaceId> > surface_map;
+		std::map<CellId, std::vector<InternalCellId> > cell_map;
+		std::map<UniverseId, std::vector<InternalUniverseId> > universe_map;
 
 		/* Prevent copy */
 		Geometry(const Geometry& geo);

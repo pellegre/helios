@@ -56,7 +56,7 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 	/* Set internal / unique index */
 	new_surface->setInternalId(surfaces.size());
 	/* Update surface map */
-	surface_map[new_surface->getUserId()] = new_surface->getInternalId();
+	surface_map[new_surface->getUserId()].push_back(new_surface->getInternalId());
 	/* Push the surface into the container */
 	surfaces.push_back(new_surface);
 
@@ -72,6 +72,8 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	new_universe->setInternalId(universes.size());
 	/* Push the universe into the container */
 	universes.push_back(new_universe);
+	/* Update universe map */
+	universe_map[new_universe->getUserId()].push_back(new_universe->getInternalId());
 
 	map<UniverseId,vector<CellDefinition> >::const_iterator it_uni_cells = u_cells.find(uni_def);
 	if(it_uni_cells == u_cells.end()) return 0;
@@ -117,7 +119,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 		/* Set internal / unique index */
 	    new_cell->setInternalId(cells.size());
 		/* Update cell map */
-	    cell_map[new_cell->getUserId()] = new_cell->getInternalId();
+	    cell_map[new_cell->getUserId()].push_back(new_cell->getInternalId());
 	    /* Push the cell into the container */
 	    cells.push_back(new_cell);
 	    /* Link this cell with the new universe */
@@ -198,16 +200,6 @@ void Geometry::printGeo(std::ostream& out) const {
 		out << "---- universe = " << (*it_uni)->getUserId() << endl;
 		out << *(*it_uni);
 	}
-}
-
-const Cell* Geometry::findCell(const Coordinate& position) const {
-	/* Start with the base universe */
-	return universes[0]->findCell(position);
-}
-
-const Cell* Geometry::findCell(const Coordinate& position, const InternalUniverseId& univid) const {
-	/* Start with the universe provided */
-	return universes[univid]->findCell(position);
 }
 
 Geometry::~Geometry() {
