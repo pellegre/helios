@@ -24,24 +24,27 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#define GTEST_USE_OWN_TR1_TUPLE 1
 
-#include "Testing/Tests.hpp"
+#include "Common.hpp"
 
-InputPath InputPath::inputpath;
+using namespace std;
 
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  /* Check number of arguments */
-  if(argc < 2) {
-	  Helios::Log::error() << "Usage : " << argv[0] << " path/to/test/inputs" << Helios::Log::endl;
-	  exit(1);
-  }
-
-  InputPath::access().setPath(argv[1]);
-
-  return RUN_ALL_TESTS();
+size_t Helios::seachKeyWords(const string& filename, vector<string> search_keys) {
+	string line;
+	ifstream file (filename.c_str());
+	size_t counter = 0;
+	if (file.is_open()) {
+		while (file.good()) {
+			getline (file,line);
+			bool find = true;
+			for(size_t key = 0 ; key < search_keys.size() ; key++)
+				find &= (line.find(search_keys[key]) != string::npos);
+			if(find) break;
+			counter++;
+		}
+		file.close();
+	}
+	return counter;
 }
-
 
 

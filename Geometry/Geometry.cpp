@@ -81,8 +81,6 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 
 	/* Add each cell of this universe */
 	vector<CellDefinition>::const_iterator it_cell = cell_def.begin();
-    /* Temporary map of surfaces */
-    map<SurfaceId,Surface*> temp_sur_map;
 
 	for(; it_cell != cell_def.end() ; ++it_cell) {
 
@@ -105,19 +103,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    		throw Cell::BadCellCreation(userCellId,"Surface number " + toString(userSurfaceId) + " doesn't exist.");
 
 	    	/* New surface for this cell */
-	    	Surface* new_surface = 0;
-
-	    	map<SurfaceId,Surface*>::const_iterator it_temp_sur = temp_sur_map.find(userSurfaceId);
-
-	    	if(it_temp_sur != temp_sur_map.end()) {
-	    		/* The surface is created */
-	    		new_surface = (*it_temp_sur).second;
-	    	} else {
-	    		/* Get new surface */
-	    		new_surface = addSurface((*it_sur).second,trans);
-	    		/* Update temporary map */
-	    		temp_sur_map[new_surface->getUserId()] = new_surface;
-	    	}
+	    	Surface* new_surface = addSurface((*it_sur).second,trans);
 
 	    	/* Get surface with sense */
 	    	Cell::CellSurface newSurface(new_surface,getSign(*it));
@@ -136,6 +122,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    cells.push_back(new_cell);
 	    /* Link this cell with the new universe */
 	    new_universe->addCell(new_cell);
+
 	    /* Check if this surface is filled by another universe */
 	    UniverseId fill_universe_id = (*it_cell).getFill();
 	    if(fill_universe_id) {

@@ -24,62 +24,23 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include "Tests.hpp"
 
-#ifndef COMMON_HPP_
-#define COMMON_HPP_
+InputPath InputPath::inputpath;
 
-#include <vector>
-#include <sstream>
-#include <string>
-#include <blitz/array.h>
+int main(int argc, char **argv) {
+	::testing::InitGoogleTest(&argc, argv);
 
-#include "Log/Log.hpp"
-
-/* Some types used in the program */
-
-namespace Helios {
-	BZ_USING_NAMESPACE(blitz)
-
-	/* Define a coordinate */
-	typedef TinyVector<double,3> Coordinate;
-	/* Define a direction */
-	typedef TinyVector<double,3> Direction;
-
-	/* Compare tiny vectors */
-	static inline bool compareVector(const Coordinate& a, const Coordinate& b) {
-		return ((a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]));
+	/* Check number of arguments */
+	if(argc < 2) {
+		Helios::Log::error() << "Usage : " << argv[0] << " path/to/test/inputs" << Helios::Log::endl;
+		exit(1);
 	}
 
-	/* Surface ID defined by the user */
-	typedef unsigned int SurfaceId;
-	/* Cell ID defined by the user */
-	typedef unsigned int CellId;
-	/* Universe ID defined by the user */
-	typedef unsigned int UniverseId;
+	InputPath::access().setPath(argv[1]);
 
-	/* Surface ID used internally */
-	typedef unsigned int InternalSurfaceId;
-	/* Cell ID used internally */
-	typedef unsigned int InternalCellId;
-	/* Universe ID used internally */
-	typedef unsigned int InternalUniverseId;
-
-	/* Get a value from a string */
-	template<typename T>
-	static inline T fromString(const std::string& str) {std::istringstream s(str);T t;s >> t;return t;}
-
-	/* Convert to string */
-	template<typename T>
-	static inline std::string toString(const T& t) {std::ostringstream s;s << t;return s.str();}
-
-	/* Axis */
-	const int xaxis = 0;
-	const int yaxis = 1;
-	const int zaxis = 2;
-
-	/* Search keywords on a file */
-	size_t seachKeyWords(const std::string& filename, std::vector<std::string> search_keys);
-
+	return RUN_ALL_TESTS();
 }
 
-#endif /* TYPES_H_ */
+
+

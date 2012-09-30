@@ -11,32 +11,26 @@ project(MC++)
 set( ${PROJECT_NAME}_MAJOR_VERSION 0 ) 
 set( ${PROJECT_NAME}_MINOR_VERSION 1 ) 
 
-# ---- Compiler settings
-
-set(CMAKE_CXX_FLAGS "-g -O0 -Wall -DGTEST_USE_OWN_TR1_TUPLE=1")
+# ---- Compiler settings for different builds
+set(CMAKE_AR xiar)
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -xHOST -O3 -ipo -no-prec-div -static-intel") 
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall")
 
 # ---- External dependencies
 
-FIND_PATH(Blitz_INCLUDE_DIR blitz/blitz.h)
-FIND_LIBRARY(Blitz_LIBRARY NAMES blitz )
+FIND_PATH(BLITZ_INCLUDE_DIR blitz/blitz.h)
+FIND_LIBRARY(BLITZ_LIBRARY NAMES blitz )
 
 IF(BLITZ_FOUND)
-  SET( Blitz_LIBRARIES ${Blitz_LIBRARY} )
+  SET( BLITZ_LIBRARIES ${BLITZ_LIBRARY} )
 ENDIF(BLITZ_FOUND)
 
-MARK_AS_ADVANCED(Blitz_INCLUDE_DIR Blitz_LIBRARY)
+MARK_AS_ADVANCED(BLITZ_INCLUDE_DIR BLITZ_LIBRARY)
 
-# ---- Executable
+# ---- Monte Carlo library
 
-set(PNGWRITER DevUtils/pngwriter.cpp)
-SET_SOURCE_FILES_PROPERTIES(${PNGWRITER} PROPERTIES COMPILE_FLAGS -DNO_FREETYPE)
-
-find_package(PNG REQUIRED)
-include_directories(${PNG_INCLUDE_DIR})
-
-set(MCFILES ${PNGWRITER}
+set(MCFILES Common.cpp
             Log/Log.cpp
-            DevUtils/Utils.cpp
             Geometry/Geometry.cpp
             Geometry/Universe.cpp               
             Geometry/Cell.cpp
@@ -49,30 +43,37 @@ set(MCFILES ${PNGWRITER}
             Parser/XMLParser/tinyxmlerror.cpp                  
             Parser/XMLParser/tinyxmlparser.cpp  
             Parser/XMLParser/XmlParser.cpp    
+            Parser/XMLParser/XmlParserGeometry.cpp                
             )
             
-add_executable(mc++ 
-               ${MCFILES}          
-               Main.cpp
-               )
+add_library(mc++ ${MCFILES})
 
-target_link_libraries (mc++ ${Blitz_LIBRARY} ${PNG_LIBRARY})
+target_link_libraries (mc++ ${BLITZ_LIBRARY})
 
-# ---- GTest
-ADD_SUBDIRECTORY (DevUtils/gtest)
-SET_SOURCE_FILES_PROPERTIES(DevUtils/gtest PROPERTIES COMPILE_FLAGS -DGTEST_USE_OWN_TR1_TUPLE=1)
+# ---- Unit Test
 
+add_subdirectory (DevUtils/Gtest)
 enable_testing()
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
-# ---- Unit Tests
-
-add_executable( testmc++ 
-                ${MCFILES}
-                DevUtils/MainTest.cpp 
-               )
+add_executable(testmc++ DevUtils/Utils.cpp DevUtils/Testing/Main.cpp)
                
-target_link_libraries(testmc++ ${Blitz_LIBRARY} ${PNG_LIBRARY} gtest gtest_main)
+target_link_libraries(testmc++ mc++ ${Blitz_LIBRARY} ${PNG_LIBRARY} gtest gtest_main)
+set(cxx_use_own_tuple "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
+set_target_properties (testmc++ PROPERTIES COMPILE_FLAGS ${cxx_use_own_tuple})
+
+# ---- Simple plotter
+
+set(PNGWRITER DevUtils/PngPlotter/pngwriter.cpp)
+set_source_files_properties(${PNGWRITER} PROPERTIES COMPILE_DEFINITIONS NO_FREETYPE)
+set_source_files_properties(DevUtils/PngPlotter/Main.cpp PROPERTIES COMPILE_DEFINITIONS NO_FREETYPE)
+
+find_package(PNG REQUIRED)
+include_directories(${PNG_INCLUDE_DIR})
+
+add_executable(plottermc++ ${PNGWRITER} DevUtils/PngPlotter/Main.cpp)
+               
+target_link_libraries(plottermc++ mc++ ${Blitz_LIBRARY} ${PNG_LIBRARY})
 
 message(STATUS "${PROJECT_NAME} version  ${${PROJECT_NAME}_VERSION}")
 message(STATUS "Build type:         ${CMAKE_BUILD_TYPE}")

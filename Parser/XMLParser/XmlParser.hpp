@@ -146,6 +146,21 @@ namespace Helios {
 		}
 		throw KeywordParserError(msg,keywords);
 	}
+
+	/* Returns a string map of attributes on a node */
+	static inline XmlParser::AttribMap dump_attribs(TiXmlElement* pElement) {
+		if ( !pElement ) return XmlParser::AttribMap(); /* No attributes */
+		TiXmlAttribute* pAttrib=pElement->FirstAttribute();
+		/* Map of attributes */
+		XmlParser::AttribMap mapAttrib;
+		while (pAttrib) {
+			/* Get attribute and push it into the map */
+			mapAttrib[pAttrib->Name()] = pAttrib->Value();
+			pAttrib=pAttrib->Next();
+		}
+		/* Return map */
+		return mapAttrib;
+	}
 } /* namespace Helios */
 
 #endif /* XMLPARSER_H_ */

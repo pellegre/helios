@@ -38,9 +38,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /* Search keywords inside a file (and gte the line with the best match) */
 size_t seachKeyWords(const std::string& filename, std::vector<std::string> search_keys);
 
-/* Simple plotter, just for debugging */
-void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, double ymax, const std::string& filename);
-
 /* ---- Debugging and testing functions */
 
 /* Return a random number between 0.0 and 1.0, JUST FOR TESTING AND DEBUG */
