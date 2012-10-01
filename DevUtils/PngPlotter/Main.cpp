@@ -57,8 +57,13 @@ void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, do
 		for(int j = 0 ; j < pixel ; ++j) {
 			double x = xmin + (double)i * deltax;
 			double y = ymin + (double)j * deltay;
+			Coordinate point(Coordinate(x,y,0.0));
+			const Cell* check_old = find_cell->findCell(point);
 			/* Get cell ID */
-			find_cell = geo.findCell(Coordinate(x,y,0.0));
+			if(check_old)
+				find_cell = check_old;
+			else
+				find_cell = geo.findCell(point);
 			InternalCellId new_cell_id = 0;
 			if(find_cell)
 				new_cell_id = find_cell->getInternalId();
@@ -83,7 +88,6 @@ void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, do
 		for(int i = 0 ; i < pixel ; ++i) {
 			double x = xmin + (double)i * deltax;
 			double y = ymin + (double)j * deltay;
-			/* Get cell ID */
 			/* Get cell ID */
 			find_cell = geo.findCell(Coordinate(x,y,0.0));
 			InternalCellId new_cell_id = 0;

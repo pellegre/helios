@@ -37,7 +37,9 @@ set(MCFILES Common/Common.cpp
             Geometry/Surface.cpp
             Geometry/LatticeFactory.cpp
             Geometry/Surfaces/CylinderOnAxis.cpp    
-            Geometry/Surfaces/CylinderOnAxisOrigin.cpp                                         
+            Geometry/Surfaces/CylinderOnAxisOrigin.cpp
+            Material/Material.cpp
+            Material/MaterialContainer.cpp                                         
             Parser/Parser.cpp
             Parser/XMLParser/tinystr.cpp
             Parser/XMLParser/tinyxml.cpp                  

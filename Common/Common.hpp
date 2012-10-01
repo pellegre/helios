@@ -55,6 +55,8 @@ namespace Helios {
 	typedef unsigned int CellId;
 	/* Universe ID defined by the user */
 	typedef unsigned int UniverseId;
+	/* Material ID defined by the user, usually a string */
+	typedef std::string MaterialId;
 
 	/* Surface ID used internally */
 	typedef unsigned int InternalSurfaceId;
@@ -62,6 +64,8 @@ namespace Helios {
 	typedef unsigned int InternalCellId;
 	/* Universe ID used internally */
 	typedef unsigned int InternalUniverseId;
+	/* Material ID used internally */
+	typedef unsigned int InternalMaterialId;
 
 	/* Get a value from a string */
 	template<typename T>

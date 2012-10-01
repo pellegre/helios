@@ -76,7 +76,7 @@ namespace Helios {
 
 		/* Set internal / unique identifier for the cell */
 		void setInternalId(const InternalCellId& internal) {int_cellid = internal;}
-		/* Return the internal ID associated with this surface. */
+		/* Return the internal ID associated with this cell. */
 		const InternalCellId& getInternalId() const {return int_cellid;}
 
 		/* Return information about this cell */
