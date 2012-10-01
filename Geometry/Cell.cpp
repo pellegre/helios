@@ -45,7 +45,6 @@ Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellI
 	parent(0) {
     /* Set the new cell on surfaces neighbor container */
     vector<Cell::CellSurface>::iterator it_sur = surfaces.begin();
-	/* Cell is inside out, so reverse the sense of the surface with respect to how it connects to other cells */
 	for(; it_sur != surfaces.end() ; ++it_sur)
 		(*it_sur).first->addNeighborCell((*it_sur).second,this);
 }
@@ -94,31 +93,13 @@ void Cell::print(std::ostream& out) const {
 
 const Cell* Cell::findCell(const Coordinate& position, const Surface* skip) const {
 	vector<CellSurface>::const_iterator it;
-	/* Deal with a negated cell */
-    if (flag & NEGATED) {
-		for (it = surfaces.begin() ; it != surfaces.end(); ++it) {
-			if (it->first != skip) {
-				if (it->first->sense(position) != it->second)
-					if(fill) return fill->findCell(position,skip);
-					else return this;
-			} else {
-				/* We just get out of the cell, we are outside for sure */
-				if(fill) return fill->findCell(position,skip);
-				else return this;
-			}
+	for (it = surfaces.begin(); it != surfaces.end(); ++it) {
+		if (it->first != skip) {
+			if (it->first->sense(position) != it->second)
+			/* The sense of the point isn't the same the same sense as we know this cell is defined... */
+			return 0;
 		}
-		/* We are inside all the surfaces */
-		return 0;
-    }
-    else {
-		for (it = surfaces.begin(); it != surfaces.end(); ++it) {
-			if (it->first != skip) {
-				if (it->first->sense(position) != it->second)
-				/* The sense of the point isn't the same the same sense as we know this cell is defined... */
-				return 0;
-			}
-		}
-    }
+	}
     /* If we get here, we are inside the cell :-) */
 	if(fill) return fill->findCell(position,skip);
 	else return this;
@@ -142,14 +123,14 @@ void Cell::intersect(const Coordinate& position, const Direction& direction, Sur
 		/* Distance to the surface */
         double newDistance;
         /* Check the intersection with each surface */
-        if(it->first->intersect(position,direction,it->second,newDistance)) {
-            if (newDistance < distance) {
-            	/* Update data */
-                distance = newDistance;
-                surface = it->first;
-                sense = it->second;
-            }
-        }
+		if(it->first->intersect(position,direction,it->second,newDistance)) {
+			if (newDistance < distance) {
+				/* Update data */
+				distance = newDistance;
+				surface = it->first;
+				sense = it->second;
+			}
+		}
 	}
 
 }

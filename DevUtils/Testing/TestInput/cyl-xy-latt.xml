@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+
+<!-- Simple 2x2 lattice. Each lattice cell is 2cm x 2cm with another 10x10 lattice
+      lattice inside.
+-->
+
+<geometry>
+
+<!-- Defition of the pin - universe 1 -->
+  <surface id="1" type="cz" coeffs=" 0.08" />
+  <cell id="100" universe="1" material="fuel" surfaces="-1"/>
+  <cell id="101" universe="1" material="water" surfaces="1"/>
+
+<!-- Defition of the internal lattice - universe 2 -->
+
+  <lattice id="2" type="xy" dimension="10 10" pitch="0.2 0.2" 
+           universes= "1 1 1 1 1 1 1 1 1 1
+                       1 1 1 1 1 1 1 1 1 1
+                       1 1 1 1 1 1 1 1 1 1
+                       1 1 1 1 1 1 1 1 1 1
+                       1 1 1 1 1 1 1 1 1 1
+                       1 1 1 1 1 1 1 1 1 1
+                       1 1 1 1 1 1 1 1 1 1
+                       1 1 1 1 1 1 1 1 1 1
+                       1 1 1 1 1 1 1 1 1 1
+                       1 1 1 1 1 1 1 1 1 1" />
+
+<!-- Defition of dummy infinite cell - universe 3 -->
+
+  <cell id="102" universe="3" material="fuel" />
+
+<!-- Definition of the main lattice - universe 4 -->
+  <lattice id="4" type="xy" dimension="4 4" pitch="2.0 2.0" 
+           universes= "3 3 3 3
+                       3 2 2 3
+                       3 2 2 3
+                       3 3 3 3" />
+  
+
+<!-- Definition of Cells -->
+  <cell id="1" fill="4" surfaces="2 -3 4 -5" />
+
+<!-- Outside -->
+  <cell id="2" material="void" type="dead" surfaces="-2 4 -5" />
+  <cell id="3" material="void" type="dead" surfaces=" 3 4 -5" />
+  <cell id="4" material="void" type="dead" surfaces="-4" />
+  <cell id="5" material="void" type="dead" surfaces=" 5" />
+
+  <surface id="2" type="px" coeffs="-2.2" />
+  <surface id="3" type="px" coeffs=" 2.2" />
+  <surface id="4" type="py" coeffs="-2.2" />
+  <surface id="5" type="py" coeffs=" 2.2" />
+
+</geometry>

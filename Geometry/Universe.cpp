@@ -36,15 +36,6 @@ UniverseFactory UniverseFactory::factory;
 
 Universe::Universe(const UniverseId& univid, Cell* parent) : univid(univid), parent(parent) {/* */}
 
-const Cell* Universe::findCell(const Coordinate& position, const Surface* skip) const {
-	/* loop through all cells in problem */
-	for (vector<Cell*>::const_iterator it_cell = cells.begin(); it_cell != cells.end(); ++it_cell) {
-		const Cell* in_cell = (*it_cell)->findCell(position,skip);
-		if (in_cell) return in_cell;
-	}
-	return 0;
-}
-
 void Universe::addCell(Cell* cell) {
 	/* Link the cell to this universe */
 	cell->setParent(this);

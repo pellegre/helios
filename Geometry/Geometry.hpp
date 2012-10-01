@@ -108,13 +108,9 @@ namespace Helios {
 		class LatticeDefinition {
 
 		public:
-			/* Type of lattices */
-			enum LatticeInfo {
-				RECTANGULAR = 0
-			};
 
 			LatticeDefinition() {/* */}
-			LatticeDefinition(const UniverseId& userLatticeId, const LatticeInfo& type, const std::vector<unsigned int>& dimension,
+			LatticeDefinition(const UniverseId& userLatticeId, const std::string& type, const std::vector<unsigned int>& dimension,
 					          const std::vector<double>& width, const std::vector<UniverseId>& universes) :
 					          userLatticeId(userLatticeId), type(type), dimension(dimension), width(width), universes(universes) {/* */}
 
@@ -122,7 +118,7 @@ namespace Helios {
 				return dimension;
 			}
 
-			LatticeInfo getType() const {
+			std::string getType() const {
 				return type;
 			}
 
@@ -142,7 +138,7 @@ namespace Helios {
 
 		private:
 			UniverseId userLatticeId;
-			LatticeInfo type;
+			std::string type;
 			std::vector<unsigned int> dimension;
 			std::vector<double> width;
 			std::vector<UniverseId> universes;
@@ -191,6 +187,13 @@ namespace Helios {
 		std::map<CellId, std::vector<InternalCellId> > cell_map;
 		std::map<UniverseId, std::vector<InternalUniverseId> > universe_map;
 
+		/*
+		 * Max user IDs of surfaces and cells, this should be set when lattices are created (because we need to add
+		 * more gemoetry entities into the problem)
+		 */
+		SurfaceId maxUserSurfaceId;
+		CellId maxUserCellId;
+
 		/* Prevent copy */
 		Geometry(const Geometry& geo);
 		Geometry& operator= (const Geometry& other);
@@ -204,7 +207,7 @@ namespace Helios {
 				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation());
 
 		/* Add more surfaces/cells to construct the lattice (always centered at 0.0) */
-		void handleLattice(std::vector<SurfaceDefinition>& sur_def, std::vector<CellDefinition>& cell_def,
+		void addLattice(std::vector<SurfaceDefinition>& sur_def, std::vector<CellDefinition>& cell_def,
 				           std::vector<LatticeDefinition>& lat_def);
 
 		/*
@@ -212,6 +215,41 @@ namespace Helios {
 		 * set the same one but with different IDs) is silently discarded.
 		 */
 		Surface* addSurface(const Surface* surface, const Transformation& trans);
+	};
+
+	/* Lattice factory class */
+	class LatticeFactory {
+
+	public:
+
+		typedef void(*Constructor)(const Geometry::LatticeDefinition& new_lat,
+		                           std::vector<Geometry::SurfaceDefinition>& sur_def,
+		                           std::vector<Geometry::CellDefinition>& cell_def,
+		                           SurfaceId& maxUserSurfaceId,
+		                           CellId& maxUserCellId);
+
+		/* Constructor with current surfaces and cells on the geometry */
+		LatticeFactory(const SurfaceId& maxUserSurfaceId, const CellId& maxUserCellId) :
+			maxUserSurfaceId(maxUserSurfaceId), maxUserCellId(maxUserCellId) {/* */};
+
+		/* Create a lattice and put the new cells/surfaces into the containers */
+		void createLattice(const Geometry::LatticeDefinition& new_lat,
+				           std::vector<Geometry::SurfaceDefinition>& sur_def,
+				           std::vector<Geometry::CellDefinition>& cell_def);
+
+		virtual ~LatticeFactory() {/* */}
+
+	private:
+		/* Map of lattices types and constructors */
+		static std::map<std::string, Constructor> constructor_table;
+
+		/* Prevent construction or copy */
+		LatticeFactory& operator= (const LatticeFactory& other);
+		LatticeFactory(const LatticeFactory&);
+
+		/* The factory keeps count of the user IDs to safely add more entities to the geometry */
+		SurfaceId maxUserSurfaceId;
+		CellId maxUserCellId;
 	};
 
 } /* namespace Helios */

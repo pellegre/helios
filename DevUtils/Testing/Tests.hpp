@@ -107,22 +107,26 @@ protected:
 
 			transport(*geometry,start_position,start_direction,cells,surfaces);
 
-			EXPECT_EQ(expected_cells.size(),cells.size());
-			if(expected_cells.size() != cells.size()) {
-				std::cout << "Start direction = " << start_direction << std::endl;
-				/* Print the cells to see what is going on */
-				for (size_t i = 0; i < cells.size(); ++i)
-					std::cout << "Cell[" << i << "] = " << cells[i] << std::endl;
-				ASSERT_EQ(1,0);
+			if(expected_cells.size() > 0) {
+				EXPECT_EQ(expected_cells.size(),cells.size());
+				if(expected_cells.size() != cells.size()) {
+					std::cout << "Start direction = " << start_direction << std::endl;
+					/* Print the cells to see what is going on */
+					for (size_t i = 0; i < cells.size(); ++i)
+						std::cout << "Cell[" << i << "] = " << cells[i] << std::endl;
+					ASSERT_EQ(1,0);
+				}
 			}
 
-			EXPECT_EQ(expected_surfaces.size(),surfaces.size());
-			if(expected_surfaces.size() != surfaces.size()) {
-				std::cout << "Start direction = " << start_direction << std::endl;
-				/* Print the surfaces to see what is going on */
-				for (size_t i = 0; i < surfaces.size(); ++i)
-					std::cout << "Surface[" << i << "] = " << surfaces[i] << std::endl;
-				ASSERT_EQ(1,0);
+			if(expected_surfaces.size() > 0) {
+				EXPECT_EQ(expected_surfaces.size(),surfaces.size());
+				if(expected_surfaces.size() != surfaces.size()) {
+					std::cout << "Start direction = " << start_direction << std::endl;
+					/* Print the surfaces to see what is going on */
+					for (size_t i = 0; i < surfaces.size(); ++i)
+						std::cout << "Surface[" << i << "] = " << surfaces[i] << std::endl;
+					ASSERT_EQ(1,0);
+				}
 			}
 
 			for (size_t i = 0; i < expected_cells.size(); ++i)
@@ -242,36 +246,45 @@ protected:
 	~CylinderXZConcentricTranslaUniverseTest() {/* */}
 };
 
-TEST_F(CylinderXYConcentricTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderYZConcentricTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderXZConcentricTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderXYConcentricTranslatedTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderYZConcentricTranslatedTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderXZConcentricTranslatedTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderXYConcentricUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderYZConcentricUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderXZConcentricUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderXYConcentricTransUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderYZConcentricTransUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderXZConcentricTransUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderXYConcentricTranslaUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderYZConcentricTranslaUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderXZConcentricTranslaUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
+/* Simple x-y lattice with *a lot* of pins. To checkout the random transport on heavy lattices */
+class LatticeXYConcentricTest : public ConcentricTest {
+protected:
+	LatticeXYConcentricTest() : ConcentricTest("cyl-xy-latt.xml",Helios::Coordinate(0,0,0),50000) {/* */};
+	~LatticeXYConcentricTest() {/* */}
+};
 
-TEST_F(CylinderXYConcentricTest, RandomTransport) {random();}
-TEST_F(CylinderYZConcentricTest, RandomTransport) {random();}
-TEST_F(CylinderXZConcentricTest, RandomTransport) {random();}
-TEST_F(CylinderXYConcentricTranslatedTest, RandomTransport) {random();}
-TEST_F(CylinderYZConcentricTranslatedTest, RandomTransport) {random();}
-TEST_F(CylinderXZConcentricTranslatedTest, RandomTransport) {random();}
-TEST_F(CylinderXYConcentricUniverseTest, RandomTransport) {random();}
-TEST_F(CylinderYZConcentricUniverseTest, RandomTransport) {random();}
-TEST_F(CylinderXZConcentricUniverseTest, RandomTransport) {random();}
-TEST_F(CylinderXYConcentricTransUniverseTest, RandomTransport) {random();}
-TEST_F(CylinderYZConcentricTransUniverseTest, RandomTransport) {random();}
-TEST_F(CylinderXZConcentricTransUniverseTest, RandomTransport) {random();}
-TEST_F(CylinderXYConcentricTranslaUniverseTest, RandomTransport) {random();}
-TEST_F(CylinderYZConcentricTranslaUniverseTest, RandomTransport) {random();}
-TEST_F(CylinderXZConcentricTranslaUniverseTest, RandomTransport) {random();}
+//TEST_F(CylinderXYConcentricTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
+//TEST_F(CylinderYZConcentricTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
+//TEST_F(CylinderXZConcentricTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
+//TEST_F(CylinderXYConcentricTranslatedTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
+//TEST_F(CylinderYZConcentricTranslatedTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
+//TEST_F(CylinderXZConcentricTranslatedTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
+//TEST_F(CylinderXYConcentricUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
+//TEST_F(CylinderYZConcentricUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
+//TEST_F(CylinderXZConcentricUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
+//TEST_F(CylinderXYConcentricTransUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
+//TEST_F(CylinderYZConcentricTransUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
+//TEST_F(CylinderXZConcentricTransUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
+//TEST_F(CylinderXYConcentricTranslaUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
+//TEST_F(CylinderYZConcentricTranslaUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
+//TEST_F(CylinderXZConcentricTranslaUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
+//
+//TEST_F(CylinderXYConcentricTest, RandomTransport) {random();}
+//TEST_F(CylinderYZConcentricTest, RandomTransport) {random();}
+//TEST_F(CylinderXZConcentricTest, RandomTransport) {random();}
+//TEST_F(CylinderXYConcentricTranslatedTest, RandomTransport) {random();}
+//TEST_F(CylinderYZConcentricTranslatedTest, RandomTransport) {random();}
+//TEST_F(CylinderXZConcentricTranslatedTest, RandomTransport) {random();}
+//TEST_F(CylinderXYConcentricUniverseTest, RandomTransport) {random();}
+//TEST_F(CylinderYZConcentricUniverseTest, RandomTransport) {random();}
+//TEST_F(CylinderXZConcentricUniverseTest, RandomTransport) {random();}
+//TEST_F(CylinderXYConcentricTransUniverseTest, RandomTransport) {random();}
+//TEST_F(CylinderYZConcentricTransUniverseTest, RandomTransport) {random();}
+//TEST_F(CylinderXZConcentricTransUniverseTest, RandomTransport) {random();}
+//TEST_F(CylinderXYConcentricTranslaUniverseTest, RandomTransport) {random();}
+//TEST_F(CylinderYZConcentricTranslaUniverseTest, RandomTransport) {random();}
+//TEST_F(CylinderXZConcentricTranslaUniverseTest, RandomTransport) {random();}
+
+TEST_F(LatticeXYConcentricTest, RandomTransport) {random();}
 
 #endif /* TESTS_HPP_ */

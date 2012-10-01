@@ -41,10 +41,7 @@ void Parser::setupGeometry(std::vector<Geometry::SurfaceDefinition>& sur_def, st
 	try {
 		/* Add surface into the geometry */
 		geometry.setupGeometry(sur_def,cell_def,lat_def);
-	} catch (Surface::BadSurfaceCreation& exception) {
-		/* Catch exception */
-		throw ParserError(exception.what());
-	} catch (Cell::BadCellCreation& exception) {
+	} catch (std::exception& exception) {
 		/* Catch exception */
 		throw ParserError(exception.what());
 	}

@@ -86,13 +86,33 @@ namespace Helios {
 
 	public:
 
+		/* Exception */
+		class BadUniverseCreation : public std::exception {
+			std::string reason;
+		public:
+			BadUniverseCreation(const UniverseId& uniid, const std::string& msg) {
+				reason = "Cannot create universe " + toString(uniid) + " : " + msg;
+			}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			~BadUniverseCreation() throw() {/* */};
+		};
+
 		/* Add a cell */
 		void addCell(Cell* cell);
 		/* Get cells of this universe */
 		const std::vector<Cell*>& getCells() const {return cells;};
 
 		/* Find cell inside the universe */
-		const Cell* findCell(const Coordinate& position, const Surface* skip = 0) const;
+		const Cell* findCell(const Coordinate& position, const Surface* skip = 0) const {
+			/* loop through all cells in problem */
+			for (std::vector<Cell*>::const_iterator it_cell = cells.begin(); it_cell != cells.end(); ++it_cell) {
+				const Cell* in_cell = (*it_cell)->findCell(position,skip);
+				if (in_cell) return in_cell;
+			}
+			return 0;
+		}
 
 		/* Set a parent for this universe */
 		void setParent(Cell* cell) {parent = cell;};

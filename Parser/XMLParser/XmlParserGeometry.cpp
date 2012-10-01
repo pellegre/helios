@@ -34,20 +34,11 @@ using namespace std;
 
 namespace Helios {
 
-/* Initialization of values on the surface flag */
-static map<string,Geometry::LatticeDefinition::LatticeInfo> initLatticeInfo() {
-	map<string,Geometry::LatticeDefinition::LatticeInfo> values_map;
-	values_map["rectangular"] = Geometry::LatticeDefinition::RECTANGULAR;
-	return values_map;
-}
 /* Parse surface attributes */
 static Geometry::LatticeDefinition latticeAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
-	static const string required[4] = {"id", "dimension","pitch","universes"};
-	static const string optional[1] = {"type"};
-	static XmlParser::XmlAttributes latAttrib(vector<string>(required, required + 4), vector<string>(optional, optional + 1));
-	/* Lattice Type */
-	XmlParser::AttributeValue<Geometry::LatticeDefinition::LatticeInfo> lat_type("type",Geometry::LatticeDefinition::RECTANGULAR,initLatticeInfo());
+	static const string required[5] = {"id","type","dimension","pitch","universes"};
+	static XmlParser::XmlAttributes latAttrib(vector<string>(required, required + 5), vector<string>());
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
@@ -55,7 +46,7 @@ static Geometry::LatticeDefinition latticeAttrib(TiXmlElement* pElement) {
 
 	/* Get attributes */
 	UniverseId id = fromString<UniverseId>(mapAttrib["id"]);
-	Geometry::LatticeDefinition::LatticeInfo type = lat_type.getValue(mapAttrib);
+	string type = mapAttrib["type"];
 	vector<unsigned int> dimension = getContainer<unsigned int>(mapAttrib["dimension"]);
 	vector<double> width = getContainer<double>(mapAttrib["pitch"]);
 	vector<UniverseId> universes = getContainer<UniverseId>(mapAttrib["universes"]);
@@ -96,18 +87,17 @@ static map<string,Cell::CellInfo> initCellInfo() {
 	map<string,Cell::CellInfo> values_map;
 	values_map["none"] = Cell::NONE;
 	values_map["dead"] = Cell::DEADCELL;
-	values_map["negated"] = Cell::NEGATED;
 	return values_map;
 }
 /* Parse cell attributes */
 static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
-	static const string required[3] = {"id", "surfaces"};
-	static const string optional[5] = {"material","type","fill","universe","translation"};
-	static XmlParser::XmlAttributes cellAttrib(vector<string>(required, required + 2), vector<string>(optional, optional + 5));
+	static const string required[3] = {"id"};
+	static const string optional[6] = {"material","type","fill","universe","translation","surfaces"};
+	static XmlParser::XmlAttributes cellAttrib(vector<string>(required, required + 1), vector<string>(optional, optional + 6));
 
 	/* Cell flags values */
-	XmlParser::AttributeValue<string> cell_flags("type","none");
+	XmlParser::AttributeValue<Cell::CellInfo> cell_flags("type",Cell::NONE,initCellInfo());
 	/* Universe */
 	XmlParser::AttributeValue<string> inp_universe("universe","0");
 	/* Universe filling this cell */
@@ -124,13 +114,7 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	vector<signed int> surfaces = getContainer<signed int>(mapAttrib["surfaces"]);
 
 	/* Flags of the cell */
-	string str_flags = reduce(cell_flags.getString(mapAttrib));
-	vector<string> val_flags;
-	tokenize(str_flags,val_flags,",");
-	Cell::CellInfo flags = Cell::NONE;
-	map<string,Cell::CellInfo> flag_map = initCellInfo();
-	for(vector<string>::const_iterator it = val_flags.begin() ; it != val_flags.end() ; ++it)
-		flags |= flag_map[*it];
+	Cell::CellInfo flags = cell_flags.getValue(mapAttrib);
 
 	/* Get information about universes on this cell */
 	UniverseId universe = fromString<UniverseId>(inp_universe.getString(mapAttrib));

@@ -110,7 +110,9 @@ namespace Helios {
 		std::vector<T> coeffs;
 		while(sin.good()) {
 			T c;
-			sin >> c;
+			if(!(sin >> c)){
+					break;
+			}
 			coeffs.push_back(c);
 		}
 		return coeffs;
