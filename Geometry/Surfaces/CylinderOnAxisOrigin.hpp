@@ -48,8 +48,6 @@ namespace Helios {
 			return new CylinderOnAxisOrigin<zaxis>(surid,coeffs,flags);
 		}
 
-		/* Name of the surface */
-		std::string name() const;
 		/* Print surface internal data */
 		void print(std::ostream& out) const;
 		/* Return constructor function */
@@ -69,6 +67,8 @@ namespace Helios {
 		void normal(const Coordinate& point, Direction& vnormal) const;
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
 		Surface* transformate(const Direction& trans) const;
+		/* Name of the surface */
+		std::string name() const;
 		/* Evaluate function */
 		double function(const Coordinate& pos) const;
 

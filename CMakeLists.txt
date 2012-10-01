@@ -35,6 +35,7 @@ set(MCFILES Common/Common.cpp
             Geometry/Universe.cpp               
             Geometry/Cell.cpp
             Geometry/Surface.cpp
+            Geometry/LatticeFactory.cpp
             Geometry/Surfaces/CylinderOnAxis.cpp    
             Geometry/Surfaces/CylinderOnAxisOrigin.cpp                                         
             Parser/Parser.cpp

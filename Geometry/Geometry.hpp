@@ -218,40 +218,5 @@ namespace Helios {
 		Surface* addSurface(const Surface* surface, const Transformation& trans);
 	};
 
-	/* Lattice factory class */
-	class LatticeFactory {
-
-	public:
-
-		typedef void(*Constructor)(const Geometry::LatticeDefinition& new_lat,
-		                           std::vector<Geometry::SurfaceDefinition>& sur_def,
-		                           std::vector<Geometry::CellDefinition>& cell_def,
-		                           SurfaceId& maxUserSurfaceId,
-		                           CellId& maxUserCellId);
-
-		/* Constructor with current surfaces and cells on the geometry */
-		LatticeFactory(const SurfaceId& maxUserSurfaceId, const CellId& maxUserCellId) :
-			maxUserSurfaceId(maxUserSurfaceId), maxUserCellId(maxUserCellId) {/* */};
-
-		/* Create a lattice and put the new cells/surfaces into the containers */
-		void createLattice(const Geometry::LatticeDefinition& new_lat,
-				           std::vector<Geometry::SurfaceDefinition>& sur_def,
-				           std::vector<Geometry::CellDefinition>& cell_def);
-
-		virtual ~LatticeFactory() {/* */}
-
-	private:
-		/* Map of lattices types and constructors */
-		static std::map<std::string, Constructor> constructor_table;
-
-		/* Prevent construction or copy */
-		LatticeFactory& operator= (const LatticeFactory& other);
-		LatticeFactory(const LatticeFactory&);
-
-		/* The factory keeps count of the user IDs to safely add more entities to the geometry */
-		SurfaceId maxUserSurfaceId;
-		CellId maxUserCellId;
-	};
-
 } /* namespace Helios */
 #endif /* GEOMETRY_HPP_ */

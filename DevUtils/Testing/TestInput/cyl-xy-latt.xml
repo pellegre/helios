@@ -11,8 +11,23 @@
   <cell id="100" universe="1" material="fuel" surfaces="-1"/>
   <cell id="101" universe="1" material="water" surfaces="1"/>
 
-<!-- Defition of the internal lattice - universe 2 -->
-  <lattice id="2" type="xy" dimension="10 10" pitch="0.2 0.2" 
+<!-- Defition of the pin - universe 2 -->
+  <surface id="2" type="cz" coeffs=" 0.06" />
+  <cell id="102" universe="2" material="fuel" surfaces="-2"/>
+  <cell id="103" universe="2" material="water" surfaces="2"/>
+
+<!-- Defition of the pin - universe 3 -->
+  <surface id="3" type="cz" coeffs=" 0.04" />
+  <cell id="104" universe="3" material="fuel" surfaces="-3"/>
+  <cell id="105" universe="3" material="water" surfaces="3"/>
+
+<!-- Defition of the pin - universe 4 -->
+  <surface id="4" type="cz" coeffs=" 0.02" />
+  <cell id="106" universe="4" material="fuel" surfaces="-4"/>
+  <cell id="107" universe="4" material="water" surfaces="4"/>
+
+<!-- Defition of the internal lattice - universe 5/8 -->
+  <lattice id="5" type="x-y" dimension="10 10" pitch="0.2 0.2" 
            universes= "1 1 1 1 1 1 1 1 1 1
                        1 1 1 1 1 1 1 1 1 1
                        1 1 1 1 1 1 1 1 1 1
@@ -23,25 +38,61 @@
                        1 1 1 1 1 1 1 1 1 1
                        1 1 1 1 1 1 1 1 1 1
                        1 1 1 1 1 1 1 1 1 1" />
+<!-- Defition of the internal lattice - universe 5/9 -->
+  <lattice id="6" type="x-y" dimension="10 10" pitch="0.2 0.2" 
+           universes= "2 2 2 2 2 2 2 2 2 2
+                       2 2 2 2 2 2 2 2 2 2
+                       2 2 2 2 2 2 2 2 2 2
+                       2 2 2 2 2 2 2 2 2 2
+                       2 2 2 2 2 2 2 2 2 2
+                       2 2 2 2 2 2 2 2 2 2
+                       2 2 2 2 2 2 2 2 2 2
+                       2 2 2 2 2 2 2 2 2 2
+                       2 2 2 2 2 2 2 2 2 2
+                       2 2 2 2 2 2 2 2 2 2" />
+<!-- Defition of the internal lattice - universe 5/9 -->
+  <lattice id="7" type="x-y" dimension="10 10" pitch="0.2 0.2" 
+           universes= "3 3 3 3 3 3 3 3 3 3
+                       3 3 3 3 3 3 3 3 3 3
+                       3 3 3 3 3 3 3 3 3 3
+                       3 3 3 3 3 3 3 3 3 3
+                       3 3 3 3 3 3 3 3 3 3
+                       3 3 3 3 3 3 3 3 3 3
+                       3 3 3 3 3 3 3 3 3 3
+                       3 3 3 3 3 3 3 3 3 3
+                       3 3 3 3 3 3 3 3 3 3
+                       3 3 3 3 3 3 3 3 3 3" />
+<!-- Defition of the internal lattice - universe 5/9 -->
+  <lattice id="8" type="x-y" dimension="10 10" pitch="0.2 0.2" 
+           universes= "4 4 4 4 4 4 4 4 4 4
+                       4 4 4 4 4 4 4 4 4 4
+                       4 4 4 4 4 4 4 4 4 4
+                       4 4 4 4 4 4 4 4 4 4
+                       4 4 4 4 4 4 4 4 4 4
+                       4 4 4 4 4 4 4 4 4 4
+                       4 4 4 4 4 4 4 4 4 4
+                       4 4 4 4 4 4 4 4 4 4
+                       4 4 4 4 4 4 4 4 4 4
+                       4 4 4 4 4 4 4 4 4 4" />
 
 <!-- Defition of dummy infinite cell - universe 3 -->
-  <cell id="102" universe="3" material="fuel" />
+  <cell id="108" universe="9" material="fuel" />
 
 <!-- Definition of the main lattice - universe 4 -->
-  <lattice id="4" type="xy" dimension="4 4" pitch="2.0 2.0" 
-           universes= "3 3 3 3
-                       3 2 2 3
-                       3 2 2 3
-                       3 3 3 3" />
+  <lattice id="10" type="x-y" dimension="4 4" pitch="2.0 2.0" 
+           universes= "9 9 9 9
+                       9 5 6 9
+                       9 7 8 9
+                       9 9 9 9" />
   
 <!-- Definition of Cells -->
-  <cell id="1" fill="4" surfaces="2 -3 4 -5" />
+  <cell id="1" fill="10" surfaces="5 -6 7 -8" />
 
 <!-- Surface (with vacuum boundary conditions) -->
 
-  <surface id="2" type="px" coeffs="-2.2" boundary="vacuum" />
-  <surface id="3" type="px" coeffs=" 2.2" boundary="vacuum" />
-  <surface id="4" type="py" coeffs="-2.2" boundary="vacuum" />
-  <surface id="5" type="py" coeffs=" 2.2" boundary="vacuum" />
+  <surface id="5" type="px" coeffs="-2.2" boundary="vacuum" />
+  <surface id="6" type="px" coeffs=" 2.2" boundary="vacuum" />
+  <surface id="7" type="py" coeffs="-2.2" boundary="vacuum" />
+  <surface id="8" type="py" coeffs=" 2.2" boundary="vacuum" />
 
 </geometry>

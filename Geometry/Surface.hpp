@@ -77,6 +77,8 @@ namespace Helios {
 		virtual void normal(const Coordinate& point, Direction& vnormal) const = 0;
 		/* Determine distance to intersection with the surface. Returns whether it hits and pass back what the distance is. */
 		virtual bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const  = 0;
+		/* Get the name of this surface */
+		virtual std::string name() const = 0;
 
 		/* Comparison operator */
 		bool operator==(const Surface& sur) {
@@ -131,8 +133,6 @@ namespace Helios {
 		/* Virtual comparison operator, to avoid duplicated surfaces on the geometry */
 		virtual bool compare(const Surface& sur) const = 0;
 
-		/* Get the name of this surface */
-		virtual std::string name() const = 0;
 		/* Get the constructor function (used by the parser) */
 		virtual Constructor constructor() const = 0;
 

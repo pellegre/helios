@@ -29,135 +29,13 @@
 #include <set>
 
 #include "Geometry.hpp"
+#include "LatticeFactory.hpp"
 
 using namespace std;
 
 namespace Helios {
 
 static inline bool getSign(const signed int& value) {return (value > 0);}
-
-/* ---- Lattice Factory stuff */
-
-static void genLattice(const Geometry::LatticeDefinition& new_lat,std::vector<Geometry::SurfaceDefinition>& sur_def,
-		               std::vector<Geometry::CellDefinition>& cell_def,SurfaceId& maxUserSurfaceId,CellId& maxUserCellId) {
-
-	/* Get dimension and pitch */
-	vector<unsigned int> dimension = new_lat.getDimension();
-	vector<double> pitch = new_lat.getWidth();
-	/* Get universes to fill each cell */
-	vector<UniverseId> universes = new_lat.getUniverses();
-	/* Get lattice id */
-	UniverseId latt_id = new_lat.getUserLatticeId();
-
-
-	/* Set width of lattice */
-	vector<double> width(2);
-	width[xaxis] = pitch[xaxis] * dimension[xaxis];
-	width[yaxis] = pitch[yaxis] * dimension[yaxis];
-
-	/* Get coordinates on x axis */
-	double x_min = -width[xaxis]/2;
-	double x_max = width[xaxis]/2;
-	/* Get delta on x axis */
-	double x_delta = width[xaxis] / (double) dimension[xaxis];
-
-	/* Get coordinates on y axis */
-	double y_min = -width[yaxis]/2;
-	double y_max = width[yaxis]/2;
-	/* Get delta on y axis */
-	double y_delta = width[yaxis] / (double) dimension[yaxis];
-
-	/* Now create "y" surfaces from left to right */
-	vector<Geometry::SurfaceDefinition> y_surfaces;
-	vector<double> y_coordinates;
-	for(size_t i = 0 ; i <= dimension[yaxis] ; i++) {
-		vector<double> coeff;
-		double sur_pos = y_min + (double)i * y_delta;
-		coeff.push_back(sur_pos);
-		if(i < dimension[yaxis]) y_coordinates.push_back(sur_pos + y_delta/2);
-		Geometry::SurfaceDefinition new_surface = Geometry::SurfaceDefinition(++maxUserSurfaceId,"py",coeff,Surface::NONE);
-		y_surfaces.push_back(new_surface);
-		sur_def.push_back(new_surface);
-	}
-
-	/* Now create "x" surfaces from bottom to top */
-	vector<Geometry::SurfaceDefinition> x_surfaces;
-	vector<double> x_coordinates;
-	for(size_t i = 0 ; i <= dimension[xaxis] ; i++) {
-		vector<double> coeff;
-		double sur_pos = x_min + (double)i * x_delta;
-		coeff.push_back(sur_pos);
-		if(i < dimension[xaxis]) x_coordinates.push_back(sur_pos + x_delta/2);
-		Geometry::SurfaceDefinition new_surface = Geometry::SurfaceDefinition(++maxUserSurfaceId,"px",coeff,Surface::NONE);
-		x_surfaces.push_back(new_surface);
-		sur_def.push_back(new_surface);
-	}
-
-	size_t uni_count = 0;
-	/* Now create each cell of the lattice, on the universe defined by the user (left to right, bottom to top) */
-	for(int i = dimension[yaxis] - 1 ; i >= 0  ; i--) {
-		for(int j = 0 ; j < dimension[xaxis]  ; j++) {
-			vector<signed int> surfs;
-			surfs.push_back(y_surfaces[i].getUserSurfaceId());
-			surfs.push_back(-y_surfaces[i + 1].getUserSurfaceId());
-			surfs.push_back(x_surfaces[j].getUserSurfaceId());
-			surfs.push_back(-x_surfaces[j + 1].getUserSurfaceId());
-			cell_def.push_back(Geometry::CellDefinition(++maxUserCellId,surfs,Cell::NONE,latt_id
-					           ,universes[uni_count],Direction(x_coordinates[j],y_coordinates[i],0)));
-			/* Get next universe */
-			uni_count++;
-		}
-	}
-}
-
-static map<string,LatticeFactory::Constructor> initLatticeConstructorTable() {
-	map<string,LatticeFactory::Constructor> m;
-	m["xy"] = genLattice;
-	return m;
-}
-
-/* Initialize constructor map */
-std::map<std::string,LatticeFactory::Constructor> LatticeFactory::constructor_table = initLatticeConstructorTable();
-
-void LatticeFactory::createLattice(const Geometry::LatticeDefinition& new_lat,vector<Geometry::SurfaceDefinition>& sur_def,
-		vector<Geometry::CellDefinition>& cell_def) {
-	/* Get dimension and pitch */
-	vector<unsigned int> dimension = new_lat.getDimension();
-	vector<double> pitch = new_lat.getWidth();
-	/* Get universes to fill each cell */
-	vector<UniverseId> universes = new_lat.getUniverses();
-	/* Get lattice id */
-	UniverseId latt_id = new_lat.getUserLatticeId();
-
-	/* ...and do some generic error checking */
-	if(dimension.size() > 3) throw Universe::BadUniverseCreation(latt_id,"Dimension of the lattice is bigger than 3");
-	if(pitch.size() > 3) throw Universe::BadUniverseCreation(latt_id,"You put more than 3 pitch values for the lattice");
-	if(pitch.size() != dimension.size())
-		throw Universe::BadUniverseCreation(latt_id,"Pitch and dimension arrays aren't of the same size");
-	if(pitch.size() == 0)
-		throw Universe::BadUniverseCreation(latt_id,"You need to put at least one value on the pitch and dimension arrays of the lattice");
-
-	/* Get type of lattice */
-	string type = new_lat.getType();
-
-	/* Get lattice constructor */
-	map<string,Constructor>::const_iterator it_const = constructor_table.find(type);
-	if(it_const == constructor_table.end())
-		throw Universe::BadUniverseCreation(latt_id,"Lattice type " + type + " doesn't exist");
-
-	/* Check number of universes */
-	size_t uni_count = 1;
-	for(size_t i = 0 ; i < dimension.size() ; i++)
-		uni_count *= dimension[i];
-
-	if(uni_count != universes.size())
-		throw Universe::BadUniverseCreation(latt_id,
-		"Invalid number of universes in lattice (expected = " + toString(uni_count) + " ; input = " + toString(universes.size()) + ")");
-
-	/* Create lattice */
-	(*it_const).second(new_lat,sur_def,cell_def,maxUserSurfaceId,maxUserCellId);
-
-}
 
 Geometry::Geometry() : maxUserSurfaceId(0), maxUserCellId(0) {/* */}
 
@@ -170,7 +48,7 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 	for(; it_sur != surfaces.end() ; ++it_sur) {
 		if(*new_surface == *(*it_sur)) {
 			if(new_surface->getUserId() != (*it_sur)->getUserId())
-				if(new_surface->getUserId() < maxUserSurfaceId)
+				if(new_surface->getUserId() <= maxUserSurfaceId)
 					Log::warn() << "Surface " << new_surface->getUserId() << " is redundant and is eliminated from the geometry" << Log::endl;
 			delete new_surface;
 			return (*it_sur);
@@ -324,6 +202,10 @@ void Geometry::setupGeometry(vector<SurfaceDefinition>& sur_def, vector<CellDefi
 		set<CellId>::const_iterator it_id = user_cell_ids.find(userCellId);
 		if(it_id != user_cell_ids .end())
 			throw Cell::BadCellCreation(userCellId,"Duplicated id");
+		/* Check other stuff */
+		if((*it_cell).getFill() && ((*it_cell).getFill() == (*it_cell).getUniverse()))
+			throw Cell::BadCellCreation(userCellId,"What are you trying to do? You can't fill a cell with the same universe in which is contained");
+
 		user_cell_ids.insert(userCellId);
 	}
 
