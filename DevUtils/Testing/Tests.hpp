@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-#include "../../Common.hpp"
+#include "../../Common/Common.hpp"
 #include "../../Parser/ParserTypes.hpp"
 #include "../../Log/Log.hpp"
 #include "../Utils.hpp"

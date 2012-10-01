@@ -29,7 +29,7 @@ MARK_AS_ADVANCED(BLITZ_INCLUDE_DIR BLITZ_LIBRARY)
 
 # ---- Monte Carlo library
 
-set(MCFILES Common.cpp
+set(MCFILES Common/Common.cpp
             Log/Log.cpp
             Geometry/Geometry.cpp
             Geometry/Universe.cpp               

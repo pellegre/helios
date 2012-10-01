@@ -33,7 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <blitz/array.h>
 
-#include "Log/Log.hpp"
+#include "../Log/Log.hpp"
+#include "FloatingGtest.hpp"
 
 /* Some types used in the program */
 
@@ -45,10 +46,8 @@ namespace Helios {
 	/* Define a direction */
 	typedef TinyVector<double,3> Direction;
 
-	/* Compare tiny vectors */
-	static inline bool compareVector(const Coordinate& a, const Coordinate& b) {
-		return ((a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]));
-	}
+	/* Epsilon of floating point */
+	const double eps = std::numeric_limits<double>::epsilon();
 
 	/* Surface ID defined by the user */
 	typedef unsigned int SurfaceId;
@@ -79,6 +78,21 @@ namespace Helios {
 
 	/* Search keywords on a file */
 	size_t seachKeyWords(const std::string& filename, std::vector<std::string> search_keys);
+
+	/* ---- Comparison function, ONLY FOR "ADMINISTRATIVE" CODE */
+
+	/* Compare two floating point numbers */
+	template<class T>
+	static inline bool compareFloating(const T& left, const T& right) {
+		/* From google testing framework */
+		const FloatingPoint<T> lhs(left), rhs(right);
+		return lhs.AlmostEquals(rhs);
+	}
+
+	/* Compare tiny vectors */
+	static inline bool compareTinyVector(const Coordinate& a, const Coordinate& b) {
+		return (compareFloating(a[0],b[0]) && compareFloating(a[1],b[1]) && compareFloating(a[2],b[2]));
+	}
 
 }
 

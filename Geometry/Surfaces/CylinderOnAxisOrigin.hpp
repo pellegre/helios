@@ -76,7 +76,7 @@ namespace Helios {
 		bool compare(const Surface& sur) const {
 	        /* safe to static cast because Surface::== already confirmed the type */
 	        const CylinderOnAxisOrigin<axis>& cyl = static_cast<const CylinderOnAxisOrigin<axis>&>(sur);
-	        return (radius == cyl.radius);
+	        return compareFloating(radius,cyl.radius);
 		}
 
 		virtual ~CylinderOnAxisOrigin() {/* */};
@@ -161,7 +161,7 @@ namespace Helios {
 
 	template<int axis>
 	Surface* CylinderOnAxisOrigin<axis>::transformate(const Direction& trans) const {
-		if(compareVector(trans,Direction(0,0,0))) {
+		if(compareTinyVector(trans,Direction(0,0,0))) {
 			return new CylinderOnAxisOrigin<axis>(this->getUserId(),this->getFlags(),this->radius);
 		} else {
 			return new CylinderOnAxis<axis>(this->getUserId(),this->getFlags(),this->radius,trans);

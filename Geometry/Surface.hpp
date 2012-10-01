@@ -35,7 +35,7 @@
 #include <exception>
 #include <fstream>
 
-#include "../Common.hpp"
+#include "../Common/Common.hpp"
 #include "Cell.hpp"
 
 namespace Helios {

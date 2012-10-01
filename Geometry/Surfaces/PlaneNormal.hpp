@@ -74,7 +74,7 @@ namespace Helios {
 		bool compare(const Surface& sur) const {
 	        /* safe to static cast because Surface::== already confirmed the type */
 	        const PlaneNormal<axis>& cyl = static_cast<const PlaneNormal<axis>&>(sur);
-	        return (coordinate == cyl.coordinate);
+	        return compareFloating(coordinate,cyl.coordinate);
 		}
 
 		virtual ~PlaneNormal() {/* */};

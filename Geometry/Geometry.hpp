@@ -35,7 +35,8 @@
 #include "Surface.hpp"
 #include "Cell.hpp"
 #include "Universe.hpp"
-#include "../Common.hpp"
+
+#include "../Common/Common.hpp"
 
 namespace Helios {
 

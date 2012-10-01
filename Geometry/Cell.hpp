@@ -32,7 +32,7 @@
 #include <fstream>
 #include <vector>
 
-#include "../Common.hpp"
+#include "../Common/Common.hpp"
 
 namespace Helios {
 

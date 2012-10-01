@@ -336,6 +336,8 @@ void Geometry::setupGeometry(vector<SurfaceDefinition>& sur_def, vector<CellDefi
 
 	addUniverse((*u_cells.begin()).first,u_cells,user_surfaces);
 
+	/* Once we got all the geometry setup, we should do additional checks to find holes between surfaces */
+
 	/* Clean surfaces */
 	map<SurfaceId,Surface*>::iterator it_user = user_surfaces.begin();
 	for(; it_user != user_surfaces.end() ; ++it_user)

@@ -79,7 +79,7 @@ namespace Helios {
 		bool compare(const Surface& sur) const {
 	        /* safe to static cast because Surface::== already confirmed the type */
 	        const CylinderOnAxis<axis>& cyl = static_cast<const CylinderOnAxis<axis>&>(sur);
-	        return ((radius == cyl.radius) && (compareVector(point,cyl.point)));
+	        return (compareFloating(radius,cyl.radius) && (compareTinyVector(point,cyl.point)));
 		}
 
 		virtual ~CylinderOnAxis() {/* */};
