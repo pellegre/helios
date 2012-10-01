@@ -47,7 +47,8 @@ namespace Helios {
 		/* Information about the surfaces */
 		enum SurfaceInfo {
 			NONE       = 0,
-			REFLECTING = 1
+			REFLECTING = 1,
+			VACUUM = 2
 		};
 
 		/* Surface constructor function */

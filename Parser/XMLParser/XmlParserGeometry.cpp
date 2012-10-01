@@ -58,6 +58,7 @@ static Geometry::LatticeDefinition latticeAttrib(TiXmlElement* pElement) {
 static map<string,Surface::SurfaceInfo> initSurfaceInfo() {
 	map<string,Surface::SurfaceInfo> values_map;
 	values_map["reflective"] = Surface::REFLECTING;
+	values_map["vacuum"] = Surface::VACUUM;
 	return values_map;
 }
 /* Parse surface attributes */

@@ -65,7 +65,7 @@ double randomTransport(const Helios::Geometry& geometry, const Helios::Coordinat
 		Direction start_dir(randomDirection());
 		/* Get next surface and distance */
 		cell->intersect(pos,start_dir,surface,sense,distance);
-		//cout << pos << ";" << distance << endl;
+		if(surface->getFlags() & Surface::VACUUM) break;
 		/* Transport the particle */
 		pos = pos + distance * start_dir;
 		max_eval = std::max(max_eval,surface->function(pos));
