@@ -35,18 +35,38 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace std;
 using namespace Helios;
 
+static size_t seachKeyWords(const string& filename, vector<string> search_keys) {
+	string line;
+	ifstream file (filename.c_str());
+	size_t counter = 0;
+	if (file.is_open()) {
+		while (file.good()) {
+			getline (file,line);
+			bool find = true;
+			for(size_t key = 0 ; key < search_keys.size() ; key++)
+				find &= (line.find(search_keys[key]) != string::npos);
+			if(find) break;
+			counter++;
+		}
+		file.close();
+	}
+	return counter;
+}
+
 int main(int argc, char* argv[]) {
 
 	/* Geometry */
 	Geometry* geometry = new Geometry;
 	/* Parser (XML for now) */
-	Parser* parser = new XmlParser(*geometry);
+	Parser* parser = new XmlParser;
 
 	string filename = string(argv[1]);
 	try {
 		/* Read the input file */
 		Log::ok() << "Reading file " + filename << Log::endl;
 		parser->parseFile(filename);
+		/* Setup geometry */
+		parser->setupGeometry(*geometry);
 	} catch(Parser::ParserError& parsererror) {
 		Log::error() << "Error parsing file : " + filename + "." << Log::endl;
 		/* Nothing to do, just print the message and exit */

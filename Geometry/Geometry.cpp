@@ -168,7 +168,7 @@ void Geometry::addLattice(vector<SurfaceDefinition>& sur_def, vector<CellDefinit
 	}
 }
 
-void Geometry::setupGeometry(vector<SurfaceDefinition>& sur_def, vector<CellDefinition>& cell_def, vector<LatticeDefinition>& lat_def) {
+void Geometry::setupGeometry(vector<SurfaceDefinition> sur_def, vector<CellDefinition> cell_def, vector<LatticeDefinition> lat_def) {
 	/* First handle lattices, if there is at least one, we should add more surfaces/cells to the geometry */
 	addLattice(sur_def,cell_def,lat_def);
 

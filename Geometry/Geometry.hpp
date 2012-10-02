@@ -44,10 +44,14 @@ namespace Helios {
 
 	public:
 
-		/* Prevent creation */
 		Geometry();
 
-		/* ---- Geometry classes : Encapsulate all the geometry entities information */
+		/*
+		 * ---- Geometry classes : Encapsulate all the geometry entities information
+		 * This classes should be simple ones to make easy the construction of the geometry
+		 * by external modules. The Geometry class is never aware who is setting up the entities
+		 * (could be an user of the library or the parser).
+		 */
 
 		class SurfaceDefinition {
 			SurfaceId userSurfaceId;
@@ -55,6 +59,7 @@ namespace Helios {
 			std::vector<double> coeffs;
 			Surface::SurfaceInfo flags;
 		public:
+
 			SurfaceDefinition() {/* */}
 			SurfaceDefinition(const SurfaceId& userSurfaceId, const std::string& type, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags = Surface::NONE) :
 				userSurfaceId(userSurfaceId), type(type), coeffs(coeffs), flags(flags) {/* */}
@@ -81,6 +86,7 @@ namespace Helios {
 			UniverseId fill;
 			Direction translation;
 		public:
+
 			CellDefinition() {/* */}
 			CellDefinition(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo flags,
 					       const UniverseId& universe, const UniverseId& fill, const Direction& translation) :
@@ -107,7 +113,11 @@ namespace Helios {
 		};
 
 		class LatticeDefinition {
-
+			UniverseId userLatticeId;
+			std::string type;
+			std::vector<unsigned int> dimension;
+			std::vector<double> width;
+			std::vector<UniverseId> universes;
 		public:
 
 			LatticeDefinition() {/* */}
@@ -136,26 +146,20 @@ namespace Helios {
 			}
 
 			~LatticeDefinition() {/* */}
-
-		private:
-			UniverseId userLatticeId;
-			std::string type;
-			std::vector<unsigned int> dimension;
-			std::vector<double> width;
-			std::vector<UniverseId> universes;
-
 		};
+
+		/* ---- Geometry setup */
+
+		/* This is the interface to setup the geometry of the problem */
+		void setupGeometry(std::vector<SurfaceDefinition> sur_def,
+				           std::vector<CellDefinition> cell_def,
+				           std::vector<LatticeDefinition> lat_def);
+
 		/* ---- Get information */
 
 		size_t getCellNumber() const {return cells.size();}
 		size_t getSurfaceNumber() const {return surfaces.size();}
 		size_t getUniverseNumber() const {return universes.size();}
-
-		/* ---- Geometry setup */
-
-		/* This is the interface to setup the geometry of the problem */
-		void setupGeometry(std::vector<SurfaceDefinition>& sur_def, std::vector<CellDefinition>& cell_def,
-				           std::vector<LatticeDefinition>& lat_def);
 
 		/* Print cell with each surface of the geometry */
 		void printGeo(std::ostream& out) const;

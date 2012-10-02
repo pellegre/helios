@@ -80,9 +80,6 @@ namespace Helios {
 	const int yaxis = 1;
 	const int zaxis = 2;
 
-	/* Search keywords on a file */
-	size_t seachKeyWords(const std::string& filename, std::vector<std::string> search_keys);
-
 	/* ---- Comparison function, ONLY FOR "ADMINISTRATIVE" CODE */
 
 	/* Compare two floating point numbers */

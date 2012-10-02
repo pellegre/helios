@@ -35,9 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Log/Log.hpp"
 #include "../Geometry/Geometry.hpp"
 
-/* Search keywords inside a file (and gte the line with the best match) */
-size_t seachKeyWords(const std::string& filename, std::vector<std::string> search_keys);
-
 /* ---- Debugging and testing functions */
 
 /* Return a random number between 0.0 and 1.0, JUST FOR TESTING AND DEBUG */

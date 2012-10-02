@@ -136,10 +136,7 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	return Geometry::CellDefinition(id,surfaces,flags,universe,fill,trans);
 }
 
-void XmlParser::geoNode(TiXmlNode* pParent) const {
-	vector<Geometry::SurfaceDefinition> sur_def;
-	vector<Geometry::CellDefinition> cell_def;
-	vector<Geometry::LatticeDefinition> latt_def;
+void XmlParser::geoNode(TiXmlNode* pParent) {
 
 	TiXmlNode* pChild;
 	for (pChild = pParent->FirstChild(); pChild != 0; pChild = pChild->NextSibling()) {
@@ -147,11 +144,11 @@ void XmlParser::geoNode(TiXmlNode* pParent) const {
 		if (t == TiXmlNode::TINYXML_ELEMENT) {
 			string element_value(pChild->Value());
 			if (element_value == "surface")
-				sur_def.push_back(surfaceAttrib(pChild->ToElement()));
+				surfaceDefinition.push_back(surfaceAttrib(pChild->ToElement()));
 			else if (element_value == "cell")
-				cell_def.push_back(cellAttrib(pChild->ToElement()));
+				cellDefinition.push_back(cellAttrib(pChild->ToElement()));
 			else if (element_value == "lattice")
-				latt_def.push_back(latticeAttrib(pChild->ToElement()));
+				latticeDefinition.push_back(latticeAttrib(pChild->ToElement()));
 			else {
 				vector<string> keywords;
 				keywords.push_back(element_value);
@@ -160,8 +157,6 @@ void XmlParser::geoNode(TiXmlNode* pParent) const {
 		}
 	}
 
-	/* Add the geometries entities */
-	setupGeometry(sur_def,cell_def,latt_def);
 }
 
 }

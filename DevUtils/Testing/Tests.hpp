@@ -72,9 +72,11 @@ protected:
 		/* Geometry */
 		geometry = new Helios::Geometry;
 		/* Parser (XML for now) */
-		parser = new Helios::XmlParser(*geometry);
+		parser = new Helios::XmlParser;
 		/* Parse the file */
 		parser->parseFile(InputPath::access().getPath() + filename);
+		/* Setup geometry */
+		parser->setupGeometry(*geometry);
 	}
 
 	void TearDown() {

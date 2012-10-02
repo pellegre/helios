@@ -44,19 +44,19 @@ namespace Helios {
 		XmlParser& operator=(const XmlParser& p);
 
 		/* Process root node */
-		void rootNode(TiXmlNode* pParent) const;
+		void rootNode(TiXmlNode* pParent, const std::string& filename);
 
 		/* ---- Process nodes */
-		void geoNode(TiXmlNode* pParent) const;
+		void geoNode(TiXmlNode* pParent);
 
 		/* Map of functions for each root node */
-		typedef void (XmlParser::*NodeParser)(TiXmlNode* node) const;
+		typedef void (XmlParser::*NodeParser)(TiXmlNode* node);
 		std::map<std::string,NodeParser> root_map;
 
 	public:
 
 		/* Prevent creation */
-		XmlParser(Geometry& geometry);
+		XmlParser();
 
 		/* Map of attributes of a XML elements */
 		typedef std::map<std::string,std::string> AttribMap;
@@ -95,7 +95,7 @@ namespace Helios {
 		};
 
 		/* Parse a file */
-		void parseFile(const std::string& file) const;
+		void parseFile(const std::string& file);
 
 		~XmlParser() {/* */};
 	};

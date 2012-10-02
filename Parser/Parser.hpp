@@ -39,12 +39,15 @@ namespace Helios {
 
 	protected:
 
-		/* Setup geometry */
-		void setupGeometry(std::vector<Geometry::SurfaceDefinition>& sur_def, std::vector<Geometry::CellDefinition>& cell_def,
-				           std::vector<Geometry::LatticeDefinition>& lat_def) const;
-
-		/* Internal reference to the geometry of the problem */
-		Geometry& geometry;
+		/*
+		 * Geometry stuff
+		 * All the geometries definitions parsed on the input files should be
+		 * pushed here. The Geometry module is constructed after a call
+		 * to setupGeometry() with all this data.
+		 */
+		std::vector<Geometry::SurfaceDefinition> surfaceDefinition;
+		std::vector<Geometry::CellDefinition> cellDefinition;
+		std::vector<Geometry::LatticeDefinition> latticeDefinition;
 
 	public:
 
@@ -86,13 +89,18 @@ namespace Helios {
 			virtual ~ParserWarning() throw() {/* */};
 		};
 
-		Parser(Geometry& geometry) : geometry(geometry) {/* */};
+		Parser() {/* */};
 
-		/* Parse the geometry file, and set each surface and cell */
-		virtual void parseFile(const std::string& file) const = 0;
+		/* Parse the file and save the data on internal structures */
+		virtual void parseFile(const std::string& file) = 0;
+
+		/* Setup geometry */
+		void setupGeometry(Geometry& geometry) const;
 
 		virtual ~Parser() {/* */};
 	};
+
+	/* Some generic and common parsing routines, useful for reading data from input files */
 
 	/* Token */
 	void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = ",");
@@ -110,14 +118,12 @@ namespace Helios {
 		std::vector<T> coeffs;
 		while(sin.good()) {
 			T c;
-			if(!(sin >> c)){
+			if(!(sin >> c))
 					break;
-			}
 			coeffs.push_back(c);
 		}
 		return coeffs;
 	}
-
 } /* namespace Helios */
 
 #endif /* PARSER_HPP_ */

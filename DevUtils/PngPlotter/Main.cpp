@@ -40,6 +40,44 @@ static double colorFromCell(const InternalCellId& cell_id, const InternalCellId&
 	return (double)cell_id / (double)max_id;
 }
 
+static pair<string,size_t> seachKeyWords(const vector<string>& files, vector<string> search_keys) {
+
+	/* Pair of file and match */
+	pair<string,size_t> file_line;
+	/* Count matches of bad keyword on the line */
+	map<size_t,pair<string,size_t> > line_match;
+
+	for(vector<string>::const_iterator it_file = files.begin() ; it_file != files.end() ; ++it_file) {
+		string filename = (*it_file);
+		string line;
+		ifstream file (filename.c_str());
+		size_t counter = 0;
+
+		if (file.is_open()) {
+			while (file.good()) {
+				getline (file,line);
+				bool find = true;
+				size_t nfound = 0;
+				for(size_t key = 0 ; key < search_keys.size() ; key++) {
+					bool found = line.find(search_keys[key]) != string::npos;
+					find &= found;
+					if(found)
+						/* Count a match for this line */
+						nfound++;
+				}
+				if(find) return pair<string,size_t>(filename,counter);
+				else line_match[nfound] = pair<string,size_t>(filename,counter);
+
+				counter++;
+			}
+			file.close();
+		}
+	}
+
+	/* Return the better match */
+	return (*(--line_match.end())).second;
+}
+
 void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, double ymax, const std::string& filename) {
 	static int pixel = 500;
 	pngwriter png(pixel,pixel,1.0,filename.c_str());
@@ -58,12 +96,7 @@ void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, do
 			double x = xmin + (double)i * deltax;
 			double y = ymin + (double)j * deltay;
 			Coordinate point(Coordinate(x,y,0.0));
-			const Cell* check_old = find_cell->findCell(point);
-			/* Get cell ID */
-			if(check_old)
-				find_cell = check_old;
-			else
-				find_cell = geo.findCell(point);
+			find_cell = geo.findCell(point);
 			InternalCellId new_cell_id = 0;
 			if(find_cell)
 				new_cell_id = find_cell->getInternalId();
@@ -111,27 +144,40 @@ int main(int argc, char **argv) {
 	/* Geometry */
 	Geometry* geometry = new Geometry;
 	/* Parser (XML for now) */
-	Parser* parser = new XmlParser(*geometry);
+	Parser* parser = new XmlParser;
 
-	string filename = string(argv[1]);
+	/* Container of filenames */
+	vector<string> input_files;
 
 	try {
-		/* Read the input file */
-		Log::ok() << "Reading file " + filename << Log::endl;
-		parser->parseFile(filename);
+
+		while(*(++argv)) {
+			string filename = string(*(argv));
+			input_files.push_back(filename);
+			parser->parseFile(filename);
+		}
+
+		/* Setup problem */
+		parser->setupGeometry(*geometry);
+
 	} catch(Parser::ParserError& parsererror) {
-		Log::error() << "Error parsing file : " + filename + "." << Log::endl;
+
 		/* Nothing to do, just print the message and exit */
 		Log::error() << parsererror.what() << Log::endl;
 		return 1;
+
 	} catch(Parser::KeywordParserError& keyerror) {
-		Log::error() << "Error parsing file : " + filename << Log::endl;
-		/* Try to find the -bad- keyword */
-		size_t line = seachKeyWords(filename,keyerror.getKeys());
-		if(line)
-			Log::error() << "Line " << (line + 1) << " : " << keyerror.what() << Log::endl;
-		else
+
+		pair<string,size_t> file_line = seachKeyWords(input_files,keyerror.getKeys());
+
+		if(file_line.second) {
+			Log::error() << "Error parsing file : " + file_line.first << Log::endl;
+			Log::error() << "Line " << (file_line.second + 1) << " : " << keyerror.what() << Log::endl;
+		}
+		else {
 			Log::error() << keyerror.what() << Log::endl;
+		}
+
 		return 1;
 	}
 

@@ -29,22 +29,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace std;
 
-size_t Helios::seachKeyWords(const string& filename, vector<string> search_keys) {
-	string line;
-	ifstream file (filename.c_str());
-	size_t counter = 0;
-	if (file.is_open()) {
-		while (file.good()) {
-			getline (file,line);
-			bool find = true;
-			for(size_t key = 0 ; key < search_keys.size() ; key++)
-				find &= (line.find(search_keys[key]) != string::npos);
-			if(find) break;
-			counter++;
-		}
-		file.close();
-	}
-	return counter;
-}
-
 

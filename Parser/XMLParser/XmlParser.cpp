@@ -80,11 +80,11 @@ void XmlParser::XmlAttributes::checkAttributes(const XmlParser::AttribMap& attri
 	}
 }
 
-void XmlParser::rootNode(TiXmlNode* pParent) const {
+void XmlParser::rootNode(TiXmlNode* pParent, const string& filename) {
 	int t = pParent->Type();
 	TiXmlNode* pChild;
 
-	/* Loop over "childs" */
+	/* Loop over children */
 	for (pChild = pParent->FirstChild(); pChild != 0; pChild = pChild->NextSibling()) {
 
 		if (t == TiXmlNode::TINYXML_ELEMENT) {
@@ -94,6 +94,8 @@ void XmlParser::rootNode(TiXmlNode* pParent) const {
 
 			/* Check node parser map */
 			if(it_root != root_map.end()) {
+				/* File name */
+				Log::ok() << "Reading node *" + element_value + "* from file " + filename << Log::endl;
 				/* Process node */
 				NodeParser parser_function = (*it_root).second;
 				(this->*parser_function)(pParent);
@@ -101,28 +103,28 @@ void XmlParser::rootNode(TiXmlNode* pParent) const {
 			else {
 				vector<string> keywords;
 				keywords.push_back(element_value);
-				throw KeywordParserError("Unrecognized root node <" + element_value + ">",keywords);
+				throw KeywordParserError("Unrecognized root node <" + element_value + "> on file " + filename,keywords);
 			}
 
 			/* Done with this node */
 			return;
 		}
 
-		rootNode(pChild);
+		rootNode(pChild,filename);
 	}
 }
 
-void XmlParser::parseFile(const string& file) const {
+void XmlParser::parseFile(const string& file) {
 	/* Open document */
 	TiXmlDocument doc(file.c_str());
 	bool loadOkay = doc.LoadFile();
 	if (loadOkay)
-		rootNode(&doc);
+		rootNode(&doc,file);
 	else
 		throw(ParserError("File " + file + " : " + doc.ErrorDesc()));
 }
 
-XmlParser::XmlParser(Geometry& geometry) : Parser(geometry) {
+XmlParser::XmlParser() {
 	root_map["geometry"] = &XmlParser::geoNode;
 }
 
