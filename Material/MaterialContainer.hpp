@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "Material.hpp"
+#include "MacroXs.hpp"
 
 namespace Helios {
 

@@ -26,6 +26,7 @@
  */
 
 #include "Material.hpp"
+#include "MacroXs.hpp"
 
 using namespace std;
 
@@ -34,10 +35,20 @@ namespace Helios {
 MaterialFactory MaterialFactory::factory;
 
 std::ostream& operator<<(std::ostream& out, const Material& q) {
-	out << "material = " << q.getUserId() << " (internal = " << q.getInternalId() << ")" << " ; type = " << q.getType() << " : ";
+	out << "material = " << q.getUserId() << " ; internal = " << q.getInternalId() << " ; type = " << q.getType() << " : ";
 	out << endl;
 	q.print(out);
 	return out;
 }
 
+Material* MaterialFactory::createMaterial(const Material::Definition* definition) const {
+	if(definition->getType() == "macro-xs") {
+		const MacroXs::Definition* macro_definition = dynamic_cast<const MacroXs::Definition*>(definition);
+		/* Get the number of groups */
+		int nelement = macro_definition->getConstant()["sigma_a"].size();
+		return new MacroXs(definition,nelement);
+	}
+	else
+		throw Material::BadMaterialCreation(definition->getMatid(),"Material type " + definition->getType() + " is not defined");
+}
 } /* namespace Helios */

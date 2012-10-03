@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../Parser/ParserTypes.hpp"
 #include "../../Log/Log.hpp"
 #include "../../Geometry/Geometry.hpp"
+#include "../../Material/MaterialContainer.hpp"
 #include "pngwriter.hpp"
 
 using namespace std;
@@ -145,6 +146,8 @@ int main(int argc, char **argv) {
 	Geometry* geometry = new Geometry;
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
+	/* Materials */
+	MaterialContainer* materials = new MaterialContainer;
 
 	/* Container of filenames */
 	vector<string> input_files;
@@ -159,6 +162,7 @@ int main(int argc, char **argv) {
 
 		/* Setup problem */
 		parser->setupGeometry(*geometry);
+		parser->setupMaterials(*materials);
 
 	} catch(Parser::ParserError& parsererror) {
 
@@ -182,6 +186,9 @@ int main(int argc, char **argv) {
 	}
 
 	plot(*geometry,-3.6,3.6,-3.6,3.6,"test.png");
+
+	/* Print materials */
+	materials->printMaterials(cout);
 
 	delete geometry;
 	delete parser;

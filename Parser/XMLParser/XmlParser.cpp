@@ -126,6 +126,7 @@ void XmlParser::parseFile(const string& file) {
 
 XmlParser::XmlParser() {
 	root_map["geometry"] = &XmlParser::geoNode;
+	root_map["materials"] = &XmlParser::matNode;
 }
 
 } /* namespace Helios */

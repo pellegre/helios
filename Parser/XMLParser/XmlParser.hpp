@@ -48,6 +48,7 @@ namespace Helios {
 
 		/* ---- Process nodes */
 		void geoNode(TiXmlNode* pParent);
+		void matNode(TiXmlNode* pParent);
 
 		/* Map of functions for each root node */
 		typedef void (XmlParser::*NodeParser)(TiXmlNode* node);

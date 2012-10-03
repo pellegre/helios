@@ -47,7 +47,8 @@ set(MCFILES Common/Common.cpp
             Parser/XMLParser/tinyxmlerror.cpp                  
             Parser/XMLParser/tinyxmlparser.cpp  
             Parser/XMLParser/XmlParser.cpp    
-            Parser/XMLParser/XmlParserGeometry.cpp                
+            Parser/XMLParser/XmlParserGeometry.cpp
+            Parser/XMLParser/XmlParserMaterial.cpp                       
             )
             
 add_library(mc++ ${MCFILES})

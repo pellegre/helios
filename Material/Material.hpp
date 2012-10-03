@@ -121,11 +121,8 @@ namespace Helios {
 		/* Access the factory, reference to the static singleton */
 		static MaterialFactory& access() {return factory;}
 
-		/* Create a new surface */
-		Material* createMaterial(const Material::Definition* definition) const {
-			return 0;
-		}
-
+		/* Create a new material */
+		Material* createMaterial(const Material::Definition* definition) const;
 	};
 
 	/* Output surface information */

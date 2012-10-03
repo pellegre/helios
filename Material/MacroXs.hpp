@@ -68,7 +68,7 @@ public:
 		}
 	};
 
-	MacroXs(const Material::Definition* definition);
+	MacroXs(const Material::Definition* definition, int number_groups);
 
 	void print(std::ostream& out) const;
 

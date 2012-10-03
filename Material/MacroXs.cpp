@@ -47,14 +47,16 @@ static inline void copyMatrix(const vector<double>& stl_v, Matrix& m, int neleme
 			m(i,j) = stl_v[i * nelement + j];
 }
 
-MacroXs::MacroXs(const Material::Definition* definition) : Material(definition) {
+MacroXs::MacroXs(const Material::Definition* definition, int number_groups) : Material(definition),
+		sigma_a(number_groups), sigma_f(number_groups), nu_sigma_f(number_groups), chi(number_groups),
+		mat_sigma_s(number_groups,number_groups), sigma_t(number_groups), sigma_s(number_groups) {
 	/* Cast to a MacroXs definition */
 	const MacroXs::Definition* macro_definition = dynamic_cast<const MacroXs::Definition*>(definition);
 	/* Get constants */
 	map<string,vector<double> > constant = macro_definition->getConstant();
 	/* Get the number of groups and do some error checking */
 	map<string,vector<double> >::const_iterator it_xs = constant.begin();
-	int ngroup = constant["sigma_a"].size();
+	int ngroup = number_groups;
 	for(; it_xs != constant.end() ; ++it_xs) {
 		string xs_name = (*it_xs).first;
 		if(xs_name == "sigma_s") {
@@ -75,15 +77,25 @@ MacroXs::MacroXs(const Material::Definition* definition) : Material(definition) 
 	/* Now copy arrays from input */
 	copyVector(constant["sigma_a"],sigma_a);
 	copyVector(constant["sigma_f"],sigma_f);
-	copyVector(constant["nu_sigmf_a"],nu_sigma_f);
+	copyVector(constant["nu_sigma_f"],nu_sigma_f);
 	copyVector(constant["chi"],chi);
 	copyMatrix(constant["sigma_s"],mat_sigma_s,ngroup);
 	/* Calculate the total XS and the scattering XS */
-	sigma_t = sigma_a + sigma_s;
-	sigma_s = Vector(ngroup);
 	for(size_t i = 0 ; i < ngroup ; ++i) {
 		sigma_s(i) = sum(mat_sigma_s(i,Range::all()));
 	}
+	sigma_t = sigma_a + sigma_s;
+
+	/* Finally, we should modify the type of material according to the number of groups */
+	type += "_" + toString(ngroup) + "groups"; /* Decorate the type of material */
+}
+
+void MacroXs::print(std::ostream& out) const {
+	out << "+ sigma_a " << sigma_a;
+	out << "+ sigma_f " << sigma_f;
+	out << "+ nu_sigma_f " << nu_sigma_f;
+	out << "+ chi " << chi;
+	out << "+ sigma_s " << sigma_s;
 }
 
 } /* namespace Helios */
