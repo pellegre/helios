@@ -60,6 +60,10 @@ namespace Helios {
 		size_t getSurfaceNumber() const {return surfaces.size();}
 		size_t getUniverseNumber() const {return universes.size();}
 
+		const std::vector<Cell*>& getCells() const {return cells;};
+		const std::vector<Surface*>& getSurfaces() const {return surfaces;};
+		const std::vector<Universe*>& getUniverses() const {return universes;};
+
 		/* Print cell with each surface of the geometry */
 		void printGeo(std::ostream& out) const;
 

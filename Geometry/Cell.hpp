@@ -33,6 +33,7 @@
 #include <vector>
 
 #include "../Common/Common.hpp"
+#include "../Material/Material.hpp"
 
 namespace Helios {
 
@@ -82,6 +83,7 @@ namespace Helios {
 			Cell::CellInfo flags;
 			UniverseId universe;
 			UniverseId fill;
+			MaterialId matid;
 			Transformation transformation;
 
 			/* Handling surfaces */
@@ -91,9 +93,9 @@ namespace Helios {
 
 			Definition() {/* */}
 			Definition(const CellId& userCellId, const std::vector<signed int>& surfacesIds, const Cell::CellInfo flags,
-					   const UniverseId& universe, const UniverseId& fill, const Transformation& transformation) :
+					   const UniverseId& universe, const UniverseId& fill,const MaterialId& matid, const Transformation& transformation) :
 				       userCellId(userCellId), surfacesIds(surfacesIds), flags(flags),
-				       universe(universe), fill(fill), transformation(transformation) {/* */}
+				       universe(universe), fill(fill), matid(matid), transformation(transformation) {/* */}
 			Cell::CellInfo getFlags() const {
 				return flags;
 			}
@@ -105,6 +107,9 @@ namespace Helios {
 			}
 			UniverseId getFill() const {
 				return fill;
+			}
+			MaterialId getMatId() const {
+				return matid;
 			}
 			Transformation getTransformation() const {
 				return transformation;
@@ -160,6 +165,12 @@ namespace Helios {
 		/* Get the universe that is filling this cell (NULL if any) */
 		const Universe* getFill() const {return fill;}
 
+		/* Fill the cell with an universe */
+		void setMaterial(Material* cell_mat) {material = cell_mat;};
+		/* Get the universe that is filling this cell (NULL if any) */
+		const Material* getMaterial() const {return material;}
+
+
 		/* Set the parent universe of this cell */
 		void setParent(Universe* parent_universe) {parent = parent_universe;}
 		/* Get the universe where this cell is */
@@ -196,12 +207,19 @@ namespace Helios {
 		CellInfo flag;
 		/* Reference to the universe that is filling this cell, NULL if any (material cell). */
 		Universe* fill;
+		/* Material filling this cell (could be null) */
+		Material* material;
 		/*
-		 * Parent universe, which is the universe that contains this cell. NULL
-		 * if this cell is on the base universe
+		 * Material ID, this is set at construction time. If there isn't a material
+		 * filling the cell is set to "none".
+		 */
+		MaterialId matid;
+		/*
+		 * Parent universe, which is the universe that contains this cell. A cell
+		 * always has a parent (even in the base universe)
 		 */
 		Universe* parent;
-		/* Internal identification of this surface */
+		/* Internal identification of this cell */
 		InternalCellId int_cellid;
 
 	};

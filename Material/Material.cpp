@@ -33,6 +33,10 @@ using namespace std;
 namespace Helios {
 
 MaterialFactory MaterialFactory::factory;
+/* No material */
+const MaterialId Material::NONE = "none";
+/* Void */
+const MaterialId Material::VOID = "void";
 
 std::ostream& operator<<(std::ostream& out, const Material& q) {
 	out << "material = " << q.getUserId() << " ; internal = " << q.getInternalId() << " ; type = " << q.getType() << " : ";

@@ -79,14 +79,15 @@ static pair<string,size_t> seachKeyWords(const vector<string>& files, vector<str
 	return (*(--line_match.end())).second;
 }
 
-void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, double ymax, const std::string& filename) {
+void plot(const Helios::Geometry& geo, const Helios::MaterialContainer& materials,
+		  double xmin, double xmax, double ymin, double ymax, const std::string& filename) {
 	static int pixel = 500;
 	pngwriter png(pixel,pixel,1.0,filename.c_str());
 	/* Deltas */
 	double deltax = (xmax - xmin) / (double)(pixel);
 	double deltay = (ymax - ymin) / (double)(pixel);
 	/* Number of cells */
-	size_t max_id = geo.getCellNumber();
+	size_t max_id = materials.getMaterialNumber() + 20;
 	const Cell* find_cell = geo.findCell(Coordinate(0.0,0.0,0.0));
 	InternalCellId old_cell_id = 0;
 	if(find_cell)
@@ -104,7 +105,8 @@ void plot(const Helios::Geometry& geo, double xmin, double xmax, double ymin, do
 			if(new_cell_id != old_cell_id || !find_cell) {
 				png.plot(i,j,0.0,0.0,0.0);
 			} else {
-				double color = colorFromCell(new_cell_id,max_id);
+				InternalMaterialId matid = find_cell->getMaterial()->getInternalId();
+				double color = colorFromCell(matid,max_id);
 				png.plotHSV(i,j,color,1.0,1.0);
 			}
 			old_cell_id = new_cell_id;
@@ -185,10 +187,11 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	plot(*geometry,-3.6,3.6,-3.6,3.6,"test.png");
+	plot(*geometry,*materials,-3.6,3.6,-3.6,3.6,"test.png");
 
 	/* Print materials */
 	materials->printMaterials(cout);
+	geometry->printGeo(cout);
 
 	delete geometry;
 	delete parser;

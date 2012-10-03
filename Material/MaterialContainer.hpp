@@ -62,6 +62,7 @@ public:
 	/* ---- Get information */
 
 	size_t getMaterialNumber() const {return material_map.size();}
+	const std::vector<Material*>& getMaterials() {return materials;}
 
 	/* Setup the material container */
 	void setupMaterials(const std::vector<Material::Definition*>& matDefinitions);

@@ -105,6 +105,8 @@ static Cell::Definition* cellAttrib(TiXmlElement* pElement) {
 	XmlParser::AttributeValue<string> inp_fill("fill","0");
 	/* Translation */
 	XmlParser::AttributeValue<string> inp_translation("translation","0 0 0");
+	/* Material */
+	XmlParser::AttributeValue<string> inp_material("material",Material::NONE);
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
@@ -120,6 +122,7 @@ static Cell::Definition* cellAttrib(TiXmlElement* pElement) {
 	/* Get information about universes on this cell */
 	UniverseId universe = fromString<UniverseId>(inp_universe.getString(mapAttrib));
 	UniverseId fill = fromString<UniverseId>(inp_fill.getString(mapAttrib));
+	MaterialId matid = fromString<MaterialId>(inp_material.getString(mapAttrib));
 
 	/* Get the translation coefficients */
 	std::istringstream sin_trans(reduce(inp_translation.getString(mapAttrib)));
@@ -133,7 +136,7 @@ static Cell::Definition* cellAttrib(TiXmlElement* pElement) {
 	}
 
 	/* Return surface definition */
-	return new Cell::Definition(id,surfaces,flags,universe,fill,trans);
+	return new Cell::Definition(id,surfaces,flags,universe,fill,matid,trans);
 }
 
 void XmlParser::geoNode(TiXmlNode* pParent) {
