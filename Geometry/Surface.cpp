@@ -37,7 +37,7 @@ namespace Helios {
 /* Static global instance of the singleton */
 SurfaceFactory SurfaceFactory::factory;
 
-Surface::Surface(const Definition* definition) : surfid(definition->getUserSurfaceId()), flag(definition->getFlags()) {/* */};
+Surface::Surface(const Definition* definition) : surfid(definition->getUserSurfaceId()), flag(definition->getFlags()), int_surfid(0) {/* */};
 
 SurfaceFactory::SurfaceFactory() {
 	/* Surface registering */

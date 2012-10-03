@@ -28,34 +28,108 @@
 #ifndef MATERIAL_HPP_
 #define MATERIAL_HPP_
 
+#include <string>
+#include <vector>
+
 #include "../Common/Common.hpp"
 
 namespace Helios {
 
-class Material {
+	class Material {
 
-public:
+	public:
 
-	Material(const MaterialId& matid) : matid(matid) {/* */};
+		friend class MaterialFactory;
+		friend std::ostream& operator<<(std::ostream& out, const Material& q);
 
-	/* Return the material ID. */
-	const MaterialId& getUserId() const {return matid;}
+		/* Base class to define a material */
+		class Definition {
+			/* Type of material */
+			std::string type;
+			/* Material ID on this problem */
+			MaterialId matid;
+		public:
+			Definition(const std::string& type, const MaterialId& matid) : type(type), matid(matid) {/* */}
 
-	/* Set internal / unique identifier for the material */
-	void setInternalId(const InternalMaterialId& internal) {int_matid = internal;}
-	/* Return the internal ID associated with this material. */
-	const InternalMaterialId& getInternalId() const {return int_matid;}
+			MaterialId getMatid() const {
+				return matid;
+			}
+			std::string getType() const {
+				return type;
+			}
 
-	virtual ~Material() {/* */};
+			virtual ~Definition() {/* */}
+		};
 
-private:
+		/* Exception */
+		class BadMaterialCreation : public std::exception {
+			std::string reason;
+		public:
+			BadMaterialCreation(const MaterialId& matid, const std::string& msg) {
+				reason = "Cannot create material " + toString(matid) + " : " + msg;
+			}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			~BadMaterialCreation() throw() {/* */};
+		};
 
-	/* Internal identification of this surface */
-	InternalMaterialId int_matid;
-	/* Cell id choose by the user */
-	MaterialId matid;
+		/* Print internal parameters of the surface */
+		virtual void print(std::ostream& out) const = 0;
 
-};
+		/* Return the material ID. */
+		const MaterialId& getUserId() const {return matid;}
+		/* Set internal / unique identifier for the material */
+		void setInternalId(const InternalMaterialId& internal) {int_matid = internal;}
+		/* Return the internal ID associated with this material. */
+		const InternalMaterialId& getInternalId() const {return int_matid;}
+		/* Return the string that define this type of material */
+		std::string getType() const {return type;}
+
+		virtual ~Material() {/* */};
+
+	protected:
+
+		Material(const Definition* definition) : matid(definition->getMatid()), type(definition->getType()), int_matid(0) {/* */};
+
+		/* Prevent copy */
+		Material(const Material& mat);
+		Material& operator= (const Material& other);
+
+		/* Cell id choose by the user */
+		MaterialId matid;
+		/* Type of material */
+		std::string type;
+		/* Internal identification of this surface */
+		InternalMaterialId int_matid;
+
+	};
+
+	/* Material Factory */
+	class MaterialFactory {
+
+		/* Static instance of the factory */
+		static MaterialFactory factory;
+
+		/* Prevent construction or copy */
+		MaterialFactory() {/* */};
+		MaterialFactory& operator= (const MaterialFactory& other);
+		MaterialFactory(const MaterialFactory&);
+		virtual ~MaterialFactory() {/* */}
+
+	public:
+		/* Access the factory, reference to the static singleton */
+		static MaterialFactory& access() {return factory;}
+
+		/* Create a new surface */
+		Material* createMaterial(const Material::Definition* definition) const {
+			return 0;
+		}
+
+	};
+
+	/* Output surface information */
+	std::ostream& operator<<(std::ostream& out, const Material& q);
 
 } /* namespace Helios */
 #endif /* MATERIAL_HPP_ */

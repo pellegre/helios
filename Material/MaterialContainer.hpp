@@ -28,6 +28,9 @@
 #ifndef MATERIALCONTAINER_HPP_
 #define MATERIALCONTAINER_HPP_
 
+#include <map>
+#include <vector>
+
 #include "Material.hpp"
 
 namespace Helios {
@@ -42,9 +45,30 @@ class MaterialContainer {
 	/* Container of materials */
 	std::vector<Material*> materials;
 
+	/* Map internal index to user index */
+	std::map<MaterialId, InternalMaterialId> material_map;
+
+	/* Prevent copy */
+	MaterialContainer(const MaterialContainer& geo);
+	MaterialContainer& operator= (const MaterialContainer& other);
+
+	/* Add a material */
+	Material* addMaterial(const Material::Definition* definition);
+
 public:
-	MaterialContainer();
-	virtual ~MaterialContainer();
+	MaterialContainer() {/* */};
+
+	/* ---- Get information */
+
+	size_t getMaterialNumber() const {return material_map.size();}
+
+	/* Setup the material container */
+	void setupMaterials(const std::vector<Material::Definition*>& matDefinitions);
+
+	/* Print a list of materials on the container */
+	void printMaterials(std::ostream& out) const;
+
+	virtual ~MaterialContainer() {/* */};
 };
 
 } /* namespace Helios */

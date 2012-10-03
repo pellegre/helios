@@ -33,13 +33,39 @@ using namespace std;
 
 namespace Helios {
 
-void Parser::setupGeometry(Geometry& geometry) const {
+void Parser::setupGeometry(Geometry& geometry) {
 	try {
 		/* Add surface into the geometry */
 		geometry.setupGeometry(surfaceDefinition,cellDefinition,featureDefinition);
 	} catch (std::exception& exception) {
 		/* Catch exception */
 		throw ParserError(exception.what());
+	}
+}
+
+void Parser::setupMaterials(MaterialContainer& material_container) const {
+	try {
+		/* Add surface into the geometry */
+		material_container.setupMaterials(materialDefinition);
+	} catch (std::exception& exception) {
+		/* Catch exception */
+		throw ParserError(exception.what());
+	}
+}
+
+Parser::~Parser() {
+	/* Clean definitions, we don't need this anymore */
+	for(vector<Cell::Definition*>::iterator it = cellDefinition.begin(); it != cellDefinition.end() ; ++it) {
+		delete (*it);
+		(*it) = 0;
+	}
+	for(vector<Surface::Definition*>::iterator it = surfaceDefinition.begin() ; it != surfaceDefinition.end() ; ++it) {
+		delete (*it);
+		(*it) = 0;
+	}
+	for(vector<GeometricFeature::Definition*>::iterator it = featureDefinition.begin(); it != featureDefinition.end() ; ++it) {
+		delete (*it);
+		(*it) = 0;
 	}
 }
 

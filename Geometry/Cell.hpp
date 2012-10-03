@@ -188,15 +188,12 @@ namespace Helios {
 		/* Print cell information */
 		virtual void print(std::ostream& out) const;
 
-		/* A vector of surfaces and senses that define this cell */
-		std::vector<SenseSurface> surfaces;
-		/* Internal identification of this surface */
-		InternalCellId int_cellid;
 		/* Cell id choose by the user */
 		CellId cellid;
+		/* A vector of surfaces and senses that define this cell */
+		std::vector<SenseSurface> surfaces;
 		/* Other information about this cell */
 		CellInfo flag;
-
 		/* Reference to the universe that is filling this cell, NULL if any (material cell). */
 		Universe* fill;
 		/*
@@ -204,6 +201,8 @@ namespace Helios {
 		 * if this cell is on the base universe
 		 */
 		Universe* parent;
+		/* Internal identification of this surface */
+		InternalCellId int_cellid;
 
 	};
 

@@ -45,7 +45,8 @@ Cell::Cell(const Definition* definition) :
 	surfaces(definition->getSenseSurface()),
 	flag(definition->getFlags()),
 	fill(0),
-	parent(0) {
+	parent(0),
+	int_cellid(0) {
     /* Set the new cell on surfaces neighbor container */
     vector<Cell::SenseSurface>::iterator it_sur = surfaces.begin();
 	for(; it_sur != surfaces.end() ; ++it_sur)

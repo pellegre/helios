@@ -27,6 +27,17 @@
 
 #include "Material.hpp"
 
+using namespace std;
+
 namespace Helios {
+
+MaterialFactory MaterialFactory::factory;
+
+std::ostream& operator<<(std::ostream& out, const Material& q) {
+	out << "material = " << q.getUserId() << " (internal = " << q.getInternalId() << ")" << " ; type = " << q.getType() << " : ";
+	out << endl;
+	q.print(out);
+	return out;
+}
 
 } /* namespace Helios */

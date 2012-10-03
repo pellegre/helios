@@ -50,9 +50,9 @@ namespace Helios {
 		/* ---- Geometry setup */
 
 		/* This is the interface to setup the geometry of the problem */
-		void setupGeometry(std::vector<Surface::Definition*> surDefinitions,
-				           std::vector<Cell::Definition*> cellDefinitions,
-				           std::vector<GeometricFeature::Definition*> featureDefinitions);
+		void setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
+				           std::vector<Cell::Definition*>& cellDefinitions,
+				           std::vector<GeometricFeature::Definition*>& featureDefinitions);
 
 		/* ---- Get information */
 
@@ -102,8 +102,6 @@ namespace Helios {
 		Geometry(const Geometry& geo);
 		Geometry& operator= (const Geometry& other);
 
-		/* Add a surface */
-		Surface* addSurface(const Surface::Definition* surfaceDefinition);
 		/* Add cell */
 		Cell* addCell(const Cell::Definition* cellDefinition, const std::map<SurfaceId,Surface*>& user_surfaces);
 		/* Add recursively all universe that are nested */

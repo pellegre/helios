@@ -144,9 +144,9 @@ namespace Helios {
 
 	protected:
 		/* Default, used only on factory */
-		Surface() {/* */};
+		Surface() : surfid(0), flag(NONE), int_surfid(0) {/* */};
 		/* Constructor from id and flags */
-		Surface(const SurfaceId& surfid, const SurfaceInfo& flag) : surfid(surfid), flag(flag) {/* */};
+		Surface(const SurfaceId& surfid, const SurfaceInfo& flag) : surfid(surfid), flag(flag), int_surfid(0) {/* */};
 		/* Create surface from user id */
 		Surface(const Definition* definition);
 		/* Prevent copy */
@@ -162,12 +162,12 @@ namespace Helios {
 		virtual Constructor constructor() const = 0;
 
 	private:
-		/* Internal identification of this surface */
-		InternalSurfaceId int_surfid;
 		/* User's identification of this surface */
 		SurfaceId surfid;
 		/* Information about the surface */
 		SurfaceInfo flag;
+		/* Internal identification of this surface */
+		InternalSurfaceId int_surfid;
 		/* Neighbor cells */
 		std::vector<Cell*> neighbor_pos;
 		std::vector<Cell*> neighbor_neg;

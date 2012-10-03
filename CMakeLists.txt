@@ -39,7 +39,8 @@ set(MCFILES Common/Common.cpp
             Geometry/Surfaces/CylinderOnAxis.cpp    
             Geometry/Surfaces/CylinderOnAxisOrigin.cpp
             Material/Material.cpp
-            Material/MaterialContainer.cpp                                         
+            Material/MaterialContainer.cpp
+            Material/MacroXs.cpp                                                        
             Parser/Parser.cpp
             Parser/XMLParser/tinystr.cpp
             Parser/XMLParser/tinyxml.cpp                  
@@ -77,6 +78,10 @@ include_directories(${PNG_INCLUDE_DIR})
 add_executable(plottermc++ ${PNGWRITER} DevUtils/PngPlotter/Main.cpp)
                
 target_link_libraries(plottermc++ mc++ ${Blitz_LIBRARY} ${PNG_LIBRARY})
+
+# ---- Instal stuff
+
+install(TARGETS plottermc++ RUNTIME DESTINATION bin)
 
 message(STATUS "${PROJECT_NAME} version  ${${PROJECT_NAME}_VERSION}")
 message(STATUS "Build type:         ${CMAKE_BUILD_TYPE}")

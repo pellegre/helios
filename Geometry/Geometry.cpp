@@ -145,9 +145,9 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	return new_universe;
 }
 
-void Geometry::setupGeometry(std::vector<Surface::Definition*> surDefinitions,
-                             std::vector<Cell::Definition*> cellDefinitions,
-                             std::vector<GeometricFeature::Definition*> featureDefinitions) {
+void Geometry::setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
+                             std::vector<Cell::Definition*>& cellDefinitions,
+                             std::vector<GeometricFeature::Definition*>& featureDefinitions) {
 
 	if(featureDefinitions.size() != 0) {
 		/* Get max ID of user cells and surfaces */
@@ -219,20 +219,6 @@ void Geometry::setupGeometry(std::vector<Surface::Definition*> surDefinitions,
 	map<SurfaceId,Surface*>::iterator it_user = user_surfaces.begin();
 	for(; it_user != user_surfaces.end() ; ++it_user)
 		delete (*it_user).second;
-
-	/* Clean definitions, we don't need this anymore */
-	for(vector<Cell::Definition*>::iterator it = cellDefinitions.begin(); it != cellDefinitions.end() ; ++it) {
-		delete (*it);
-		(*it) = 0;
-	}
-	for(vector<Surface::Definition*>::iterator it = surDefinitions.begin() ; it != surDefinitions.end() ; ++it) {
-		delete (*it);
-		(*it) = 0;
-	}
-	for(vector<GeometricFeature::Definition*>::iterator it = featureDefinitions.begin(); it != featureDefinitions.end() ; ++it) {
-		delete (*it);
-		(*it) = 0;
-	}
 }
 
 void Geometry::printGeo(std::ostream& out) const {

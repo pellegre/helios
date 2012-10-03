@@ -25,43 +25,55 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "MaterialContainer.hpp"
+#ifndef MACROXS_HPP_
+#define MACROXS_HPP_
 
-using namespace std;
+#include <map>
+
+#include "Material.hpp"
 
 namespace Helios {
 
-void MaterialContainer::setupMaterials(const vector<Material::Definition*>& matDefinitions) {
-	for(vector<Material::Definition*>::const_iterator it = matDefinitions.begin() ; it != matDefinitions.end() ; ++it) {
-		/* Add the material */
-		addMaterial((*it));
-	}
-}
+class MacroXs: public Helios::Material {
 
-Material* MaterialContainer::addMaterial(const Material::Definition* definition) {
-	/* Check if the material is not duplicated */
-	map<MaterialId, InternalMaterialId>::const_iterator it_mat = material_map.find(definition->getMatid());
-	if(it_mat != material_map.end())
-			throw(Material::BadMaterialCreation(definition->getMatid(),"Duplicated id "));
+	/* Number of groups */
+	int ngroups;
+	/* Absorption cross section */
+	Vector sigma_a;
+	/* Total cross section */
+	Vector sigma_t;
+	/* Fission cross section */
+	Vector sigma_f;
+	/* NU-fission cross section */
+	Vector nu_sigma_f;
+	/* Fission spectrum */
+	Vector chi;
+	/* Scattering matrix and total */
+	Matrix mat_sigma_s;
+	Vector sigma_s;
 
-	/* Create the new material */
-	Material* new_material = MaterialFactory::access().createMaterial(definition);
-	/* Set internal / unique index */
-	new_material->setInternalId(materials.size());
-	/* Update material map */
-	material_map[new_material->getUserId()] = new_material->getInternalId();
-	/* Push the material into the container */
-	materials.push_back(new_material);
+public:
 
-	/* Return the new material */
-	return new_material;
-}
+	/* Definition of a macroscopic cross section */
+	class Definition : public Material::Definition {
+		/* Map of macroscopic XS name to a vector of group constant */
+		std::map<std::string,std::vector<double> > constant;
+	public:
+		Definition(const std::string& type, const MaterialId& matid,
+				   std::map<std::string,std::vector<double> >& constant) :
+				   Material::Definition(type,matid), constant(constant) {/* */}
 
-void MaterialContainer::printMaterials(std::ostream& out) const {
-	vector<Material*>::const_iterator it_mat = materials.begin();
-	for(; it_mat != materials.end() ; it_mat++) {
-		out << *(*it_mat) << endl;
-	}
-}
+		std::map<std::string, std::vector<double> > getConstant() const {
+			return constant;
+		}
+	};
+
+	MacroXs(const Material::Definition* definition);
+
+	void print(std::ostream& out) const;
+
+	virtual ~MacroXs() {/* */};
+};
 
 } /* namespace Helios */
+#endif /* MACROXS_HPP_ */

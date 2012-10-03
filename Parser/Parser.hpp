@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "../Geometry/Geometry.hpp"
+#include "../Material/MaterialContainer.hpp"
 
 namespace Helios {
 
@@ -48,6 +49,12 @@ namespace Helios {
 		std::vector<Surface::Definition*> surfaceDefinition;
 		std::vector<Cell::Definition*> cellDefinition;
 		std::vector<GeometricFeature::Definition*> featureDefinition;
+
+		/*
+		 * Material Stuff
+		 * All the materials definitions should be pushed here.
+		 */
+		std::vector<Material::Definition*> materialDefinition;
 
 	public:
 
@@ -94,10 +101,12 @@ namespace Helios {
 		/* Parse the file and save the data on internal structures */
 		virtual void parseFile(const std::string& file) = 0;
 
-		/* Setup geometry */
-		void setupGeometry(Geometry& geometry) const;
+		/* Setup geometry, is not a constant method because the Geometry can add more surfaces */
+		void setupGeometry(Geometry& geometry);
+		/* Setup a material container */
+		void setupMaterials(MaterialContainer& material_container) const;
 
-		virtual ~Parser() {/* */};
+		virtual ~Parser();
 	};
 
 	/* Some generic and common parsing routines, useful for reading data from input files */
