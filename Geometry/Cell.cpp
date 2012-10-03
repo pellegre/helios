@@ -29,6 +29,7 @@
 
 #include "Cell.hpp"
 #include "Universe.hpp"
+#include "Surface.hpp"
 
 using namespace std;
 
@@ -37,14 +38,16 @@ namespace Helios {
 /* Static global instance of the singleton */
 CellFactory CellFactory::factory;
 
-Cell::Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo& flag) :
-	cellid(cellid),
-	surfaces(surfaces),
-	flag(flag),
+Surface* Transformation::operator()(const Surface* surface) const { return surface->transformate(translation); }
+
+Cell::Cell(const Definition* definition) :
+	cellid(definition->getUserCellId()),
+	surfaces(definition->getSenseSurface()),
+	flag(definition->getFlags()),
 	fill(0),
 	parent(0) {
     /* Set the new cell on surfaces neighbor container */
-    vector<Cell::CellSurface>::iterator it_sur = surfaces.begin();
+    vector<Cell::SenseSurface>::iterator it_sur = surfaces.begin();
 	for(; it_sur != surfaces.end() ; ++it_sur)
 		(*it_sur).first->addNeighborCell((*it_sur).second,this);
 }
@@ -61,7 +64,7 @@ void Cell::setFill(Universe* universe) {
 }
 
 void Cell::print(std::ostream& out) const {
-	vector<Cell::CellSurface>::const_iterator it_sur = surfaces.begin();
+	vector<Cell::SenseSurface>::const_iterator it_sur = surfaces.begin();
 	out << "cell = " << getUserId() << " (internal = " << getInternalId() << ")" << " ; universe = ";
 
 	/* Print universe where this cell is */
@@ -92,7 +95,7 @@ void Cell::print(std::ostream& out) const {
 }
 
 const Cell* Cell::findCell(const Coordinate& position, const Surface* skip) const {
-	vector<CellSurface>::const_iterator it;
+	vector<SenseSurface>::const_iterator it;
 	for (it = surfaces.begin(); it != surfaces.end(); ++it) {
 		if (it->first != skip) {
 			if (it->first->sense(position) != it->second)
@@ -118,7 +121,7 @@ void Cell::intersect(const Coordinate& position, const Direction& direction, Sur
     }
 
     /* Loop over surfaces */
-	vector<CellSurface>::const_iterator it;
+	vector<SenseSurface>::const_iterator it;
 	for (it = surfaces.begin() ; it != surfaces.end(); ++it) {
 		/* Distance to the surface */
         double newDistance;

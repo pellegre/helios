@@ -37,28 +37,6 @@
 
 namespace Helios {
 
-	class Transformation {
-
-		/* A translation transformation */
-		Direction translation;
-		/* A rotation (degrees around each of the 3 axis) */
-		Direction rotation;
-
-	public:
-		Transformation(const Direction& translation = Direction(0,0,0), const Direction& rotation = Direction(0,0,0))
-						: translation(translation), rotation(rotation) {/* */}
-
-		/* Returns a new instance of a cloned transformed surface */
-		Surface* operator()(const Surface* surface) const { return surface->transformate(translation); }
-
-		/* Sum transformations */
-		const Transformation operator+(const Transformation& right) const {
-			return Transformation(right.translation + translation, right.rotation + rotation);
-		}
-
-		~Transformation() {/* */}
-	};
-
 	class Universe {
 
 		friend class UniverseFactory;

@@ -29,7 +29,6 @@
 #include <set>
 
 #include "Geometry.hpp"
-#include "LatticeFactory.hpp"
 
 using namespace std;
 
@@ -66,7 +65,7 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 	return new_surface;
 }
 
-Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<CellDefinition> >& u_cells,
+Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<Cell::Definition*> >& u_cells,
 		                        const map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans) {
 	/* Create universe */
 	Universe* new_universe = UniverseFactory::access().createUniverse(uni_def);
@@ -77,24 +76,23 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	/* Update universe map */
 	universe_map[new_universe->getUserId()].push_back(new_universe->getInternalId());
 
-	map<UniverseId,vector<CellDefinition> >::const_iterator it_uni_cells = u_cells.find(uni_def);
+	map<UniverseId,vector<Cell::Definition*> >::const_iterator it_uni_cells = u_cells.find(uni_def);
 	if(it_uni_cells == u_cells.end()) return 0;
 
 	/* Get the cell of this level */
-	vector<CellDefinition> cell_def = (*it_uni_cells).second;
+	vector<Cell::Definition*> cell_def = (*it_uni_cells).second;
 
 	/* Add each cell of this universe */
-	vector<CellDefinition>::const_iterator it_cell = cell_def.begin();
+	vector<Cell::Definition*>::iterator it_cell = cell_def.begin();
 
 	for(; it_cell != cell_def.end() ; ++it_cell) {
 
 		/* Cell information */
-		CellId userCellId((*it_cell).getUserCellId());
-		vector<signed int> surfacesId((*it_cell).getSurfacesId());
-		const Cell::CellInfo flags((*it_cell).getFlags());
+		CellId userCellId((*it_cell)->getUserCellId());
+		vector<signed int> surfacesId((*it_cell)->getSurfaceIds());
 
 		/* Now get the surfaces and put the references inside the cell */
-	    vector<Cell::CellSurface> boundingSurfaces;
+	    vector<Cell::SenseSurface> boundingSurfaces;
 	    vector<signed int>::const_iterator it = surfacesId.begin();
 
 	    for (;it != surfacesId.end(); ++it) {
@@ -110,14 +108,17 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    	Surface* new_surface = addSurface((*it_sur).second,trans);
 
 	    	/* Get surface with sense */
-	    	Cell::CellSurface newSurface(new_surface,getSign(*it));
+	    	Cell::SenseSurface newSurface(new_surface,getSign(*it));
 
 	    	/* Push it into the container */
 	        boundingSurfaces.push_back(newSurface);
 	    }
 
+	    /* Push the surfaces with sense into the cell definition */
+	    (*it_cell)->setSenseSurface(boundingSurfaces);
+
 	    /* Now we can construct the cell */
-	    Cell* new_cell = CellFactory::access().createCell(userCellId,boundingSurfaces,flags);
+	    Cell* new_cell = CellFactory::access().createCell((*it_cell));
 		/* Set internal / unique index */
 	    new_cell->setInternalId(cells.size());
 		/* Update cell map */
@@ -128,10 +129,10 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    new_universe->addCell(new_cell);
 
 	    /* Check if this surface is filled by another universe */
-	    UniverseId fill_universe_id = (*it_cell).getFill();
+	    UniverseId fill_universe_id = (*it_cell)->getFill();
 	    if(fill_universe_id) {
 	    	/* Create recursively the other universes and also propagate the transformation */
-	    	Universe* fill_universe = addUniverse(fill_universe_id,u_cells,user_surfaces,trans + Transformation((*it_cell).getTranslation()));
+	    	Universe* fill_universe = addUniverse(fill_universe_id,u_cells,user_surfaces,trans + (*it_cell)->getTransformation());
 	    	if(fill_universe)
 	    		new_cell->setFill(fill_universe);
 	    	else
@@ -144,43 +145,39 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	return new_universe;
 }
 
-void Geometry::addLattice(vector<SurfaceDefinition>& sur_def, vector<CellDefinition>& cell_def, vector<LatticeDefinition>& lat_def)  {
-	if(lat_def.size() == 0) return;
+void Geometry::setupGeometry(std::vector<Surface::Definition*> surDefinitions,
+                             std::vector<Cell::Definition*> cellDefinitions,
+                             std::vector<GeometricFeature::Definition*> featureDefinitions) {
 
-	/* Get max ID of user cells and surfaces */
-	maxUserSurfaceId = sur_def[0].getUserSurfaceId();
-	for(vector<SurfaceDefinition>::const_iterator it = sur_def.begin() ; it != sur_def.end() ; ++it) {
-		SurfaceId newSurfaceId = (*it).getUserSurfaceId();
-		if (newSurfaceId > maxUserSurfaceId) maxUserSurfaceId = newSurfaceId;
+	if(featureDefinitions.size() != 0) {
+		/* Get max ID of user cells and surfaces */
+		maxUserSurfaceId = surDefinitions[0]->getUserSurfaceId();
+		for(vector<Surface::Definition*>::const_iterator it = surDefinitions.begin() ; it != surDefinitions.end() ; ++it) {
+			SurfaceId newSurfaceId = (*it)->getUserSurfaceId();
+			if (newSurfaceId > maxUserSurfaceId) maxUserSurfaceId = newSurfaceId;
+		}
+		maxUserCellId = cellDefinitions[0]->getUserCellId();
+		for(vector<Cell::Definition*>::const_iterator it = cellDefinitions.begin() ; it != cellDefinitions.end() ; ++it) {
+			CellId newCellId = (*it)->getUserCellId();
+			if (newCellId > maxUserCellId) maxUserCellId = newCellId;
+		}
+
+		pair<CellId,SurfaceId> maxIds(maxUserCellId,maxUserSurfaceId);
+		/* Now lets move on into the lattices */
+		for(vector<GeometricFeature::Definition*>::const_iterator it = featureDefinitions.begin() ; it != featureDefinitions.end() ; ++it) {
+			/* Create a lattice factory */
+			GeometricFeature* feature = FeatureFactory::access().createFeature((*it),maxIds);
+			maxIds = feature->createFeature((*it),surDefinitions,cellDefinitions);
+			delete feature;
+		}
 	}
-	maxUserCellId = cell_def[0].getUserCellId();
-	for(vector<CellDefinition>::const_iterator it = cell_def.begin() ; it != cell_def.end() ; ++it) {
-		CellId newCellId = (*it).getUserCellId();
-		if (newCellId > maxUserCellId) maxUserCellId = newCellId;
-	}
-
-	/* Create a lattice factory */
-	LatticeFactory latt_factory(maxUserSurfaceId,maxUserCellId);
-
-	/* Now lets move on into the lattices */
-	for(vector<LatticeDefinition>::const_iterator it = lat_def.begin() ; it != lat_def.end() ; ++it) {
-		latt_factory.createLattice((*it),sur_def,cell_def);
-	}
-}
-
-void Geometry::setupGeometry(vector<SurfaceDefinition> sur_def, vector<CellDefinition> cell_def, vector<LatticeDefinition> lat_def) {
-	/* First handle lattices, if there is at least one, we should add more surfaces/cells to the geometry */
-	addLattice(sur_def,cell_def,lat_def);
 
 	/* First we add all the surfaces defined by the user. Ultimately, we'll have to clone and transform this ones */
 	map<SurfaceId,Surface*> user_surfaces;
-	vector<SurfaceDefinition>::const_iterator it_sur = sur_def.begin();
-	for(; it_sur != sur_def.end() ; ++it_sur) {
+	vector<Surface::Definition*>::const_iterator it_sur = surDefinitions.begin();
+	for(; it_sur != surDefinitions.end() ; ++it_sur) {
 		/* Surface information */
-		SurfaceId userSurfaceId((*it_sur).getUserSurfaceId());
-		string type((*it_sur).getType());
-		vector<double> coeffs((*it_sur).getCoeffs());
-		Surface::SurfaceInfo flags = (*it_sur).getFlags();
+		SurfaceId userSurfaceId((*it_sur)->getUserSurfaceId());
 
 		/* Check duplicated IDs */
 		map<SurfaceId,Surface*>::const_iterator it_id = user_surfaces.find(userSurfaceId);
@@ -188,42 +185,54 @@ void Geometry::setupGeometry(vector<SurfaceDefinition> sur_def, vector<CellDefin
 			throw Surface::BadSurfaceCreation(userSurfaceId,"Duplicated id");
 
 		/* Create surface */
-		Surface* new_surface = SurfaceFactory::access().createSurface(type,userSurfaceId,coeffs,flags);
+		Surface* new_surface = SurfaceFactory::access().createSurface((*it_sur));
 		/* Update surface map */
 		user_surfaces[new_surface->getUserId()] = new_surface;
 	}
 
 	/* Check for duplicated cells */
 	set<CellId> user_cell_ids;
-	vector<CellDefinition>::const_iterator it_cell = cell_def.begin();
-	for(; it_cell != cell_def.end() ; ++it_cell) {
-		CellId userCellId = (*it_cell).getUserCellId();
+	vector<Cell::Definition*>::const_iterator it_cell = cellDefinitions.begin();
+	for(; it_cell != cellDefinitions.end() ; ++it_cell) {
+		CellId userCellId = (*it_cell)->getUserCellId();
 		/* Check duplicated IDs */
 		set<CellId>::const_iterator it_id = user_cell_ids.find(userCellId);
 		if(it_id != user_cell_ids .end())
 			throw Cell::BadCellCreation(userCellId,"Duplicated id");
 		/* Check other stuff */
-		if((*it_cell).getFill() && ((*it_cell).getFill() == (*it_cell).getUniverse()))
+		if((*it_cell)->getFill() && ((*it_cell)->getFill() == (*it_cell)->getUniverse()))
 			throw Cell::BadCellCreation(userCellId,"What are you trying to do? You can't fill a cell with the same universe in which is contained");
 
 		user_cell_ids.insert(userCellId);
 	}
 
 	/* Map cell with universes */
-	map<UniverseId,vector<CellDefinition> > u_cells;  /* Universe definition */
-	for(it_cell = cell_def.begin() ; it_cell != cell_def.end() ; ++it_cell) {
-		UniverseId universe = (*it_cell).getUniverse();
+	map<UniverseId,vector<Cell::Definition*> > u_cells;  /* Universe definition */
+	for(it_cell = cellDefinitions.begin() ; it_cell != cellDefinitions.end() ; ++it_cell) {
+		UniverseId universe = (*it_cell)->getUniverse();
 		u_cells[universe].push_back(*it_cell);
 	}
 
 	addUniverse((*u_cells.begin()).first,u_cells,user_surfaces);
 
-	/* Once we got all the geometry setup, we should do additional checks to find holes between surfaces */
-
 	/* Clean surfaces */
 	map<SurfaceId,Surface*>::iterator it_user = user_surfaces.begin();
 	for(; it_user != user_surfaces.end() ; ++it_user)
 		delete (*it_user).second;
+
+	/* Clean definitions, we don't need this anymore */
+	for(vector<Cell::Definition*>::iterator it = cellDefinitions.begin(); it != cellDefinitions.end() ; ++it) {
+		delete (*it);
+		(*it) = 0;
+	}
+	for(vector<Surface::Definition*>::iterator it = surDefinitions.begin() ; it != surDefinitions.end() ; ++it) {
+		delete (*it);
+		(*it) = 0;
+	}
+	for(vector<GeometricFeature::Definition*>::iterator it = featureDefinitions.begin(); it != featureDefinitions.end() ; ++it) {
+		delete (*it);
+		(*it) = 0;
+	}
 }
 
 void Geometry::printGeo(std::ostream& out) const {

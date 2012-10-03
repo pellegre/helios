@@ -36,7 +36,7 @@ namespace Helios {
 void Parser::setupGeometry(Geometry& geometry) const {
 	try {
 		/* Add surface into the geometry */
-		geometry.setupGeometry(surfaceDefinition,cellDefinition,latticeDefinition);
+		geometry.setupGeometry(surfaceDefinition,cellDefinition,featureDefinition);
 	} catch (std::exception& exception) {
 		/* Catch exception */
 		throw ParserError(exception.what());
@@ -44,19 +44,19 @@ void Parser::setupGeometry(Geometry& geometry) const {
 }
 
 void tokenize(const string& str, vector<string>& tokens, const string& delimiters) {
-  /* Skip delimiters at beginning */
-  string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-  /* Find first non-delimiter */
-  string::size_type pos = str.find_first_of(delimiters, lastPos);
+	/* Skip delimiters at beginning */
+	string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+	/* Find first non-delimiter */
+	string::size_type pos = str.find_first_of(delimiters, lastPos);
 
-  while (string::npos != pos || string::npos != lastPos) {
-    /* Found a token, add it to the vector */
-    tokens.push_back(str.substr(lastPos, pos - lastPos));
-    /* Skip delimiters */
-    lastPos = str.find_first_not_of(delimiters, pos);
-    /* Find next non-delimiter */
-    pos = str.find_first_of(delimiters, lastPos);
-  }
+	while (string::npos != pos || string::npos != lastPos) {
+		/* Found a token, add it to the vector */
+		tokens.push_back(str.substr(lastPos, pos - lastPos));
+		/* Skip delimiters */
+		lastPos = str.find_first_not_of(delimiters, pos);
+		/* Find next non-delimiter */
+		pos = str.find_first_of(delimiters, lastPos);
+	}
 }
 
 const std::string trim(const std::string& pString,const std::string& pWhitespace) {
@@ -65,7 +65,6 @@ const std::string trim(const std::string& pString,const std::string& pWhitespace
         /* No content */
         return "";
     }
-
     const size_t endStr = pString.find_last_not_of(pWhitespace);
     const size_t range = endStr - beginStr + 1;
     return pString.substr(beginStr, range);
@@ -78,12 +77,9 @@ const std::string reduce(const std::string& pString,const std::string& pFill,con
     /* Replace sub ranges */
     size_t beginSpace = result.find_first_of(pWhitespace);
     while (beginSpace != std::string::npos) {
-        const size_t endSpace =
-                        result.find_first_not_of(pWhitespace, beginSpace);
+        const size_t endSpace = result.find_first_not_of(pWhitespace, beginSpace);
         const size_t range = endSpace - beginSpace;
-
         result.replace(beginSpace, range, pFill);
-
         const size_t newStart = beginSpace + pFill.length();
         beginSpace = result.find_first_of(pWhitespace, newStart);
     }

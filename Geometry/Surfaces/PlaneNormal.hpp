@@ -36,14 +36,14 @@ namespace Helios {
 	class PlaneNormal: public Helios::Surface {
 
 		/* Static constructor functions */
-		static Surface* xAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new PlaneNormal<xaxis>(surid,coeffs,flags);
+		static Surface* xAxisConstructor(const Definition* definition) {
+			return new PlaneNormal<xaxis>(definition);
 		}
-		static Surface* yAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new PlaneNormal<yaxis>(surid,coeffs,flags);
+		static Surface* yAxisConstructor(const Definition* definition) {
+			return new PlaneNormal<yaxis>(definition);
 		}
-		static Surface* zAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new PlaneNormal<zaxis>(surid,coeffs,flags);
+		static Surface* zAxisConstructor(const Definition* definition) {
+			return new PlaneNormal<zaxis>(definition);
 		}
 
 		/* Print surface internal data */
@@ -60,7 +60,7 @@ namespace Helios {
 		PlaneNormal(const SurfaceId& surid, const SurfaceInfo& flags, const double& coordinate)
 					   : Surface(surid,flags), coordinate(coordinate) {/* */};
 
-		PlaneNormal(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags);
+		PlaneNormal(const Definition* definition);
 
 		void normal(const Coordinate& point, Direction& vnormal) const;
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
@@ -73,8 +73,8 @@ namespace Helios {
 		/* Comparison */
 		bool compare(const Surface& sur) const {
 	        /* safe to static cast because Surface::== already confirmed the type */
-	        const PlaneNormal<axis>& cyl = static_cast<const PlaneNormal<axis>&>(sur);
-	        return compareFloating(coordinate,cyl.coordinate);
+	        const PlaneNormal<axis>& plane = static_cast<const PlaneNormal<axis>&>(sur);
+	        return compareFloating(coordinate,plane.coordinate);
 		}
 
 		virtual ~PlaneNormal() {/* */};
@@ -99,14 +99,15 @@ namespace Helios {
 
 	/* Constructor */
 	template<int axis>
-	PlaneNormal<axis>::PlaneNormal(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags)
-		: Surface(surid,flags) {
+	PlaneNormal<axis>::PlaneNormal(const Definition* definition)
+		: Surface(definition) {
 		/* Check number of parameters */
-		if(coeffs.size() == 1) {
+		if(definition->getCoeffs().size() == 1) {
 			/* Get the radius */
-			coordinate = coeffs[0];
+			coordinate = definition->getCoeffs()[0];
 		} else {
-			throw Surface::BadSurfaceCreation(surid,"Bad number of coefficients");
+			throw Surface::BadSurfaceCreation(definition->getUserSurfaceId(),
+				  "Bad number of coefficients. Expected 1 : coordinate");
 		}
 	}
 

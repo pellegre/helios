@@ -35,7 +35,7 @@ using namespace std;
 namespace Helios {
 
 /* Parse surface attributes */
-static Geometry::LatticeDefinition latticeAttrib(TiXmlElement* pElement) {
+static GeometricFeature::Definition* latticeAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[5] = {"id","type","dimension","pitch","universes"};
 	static XmlParser::XmlAttributes latAttrib(vector<string>(required, required + 5), vector<string>());
@@ -51,7 +51,7 @@ static Geometry::LatticeDefinition latticeAttrib(TiXmlElement* pElement) {
 	vector<double> width = getContainer<double>(mapAttrib["pitch"]);
 	vector<UniverseId> universes = getContainer<UniverseId>(mapAttrib["universes"]);
 	/* Return surface definition */
-	return Geometry::LatticeDefinition(id,type,dimension,width,universes);
+	return new Lattice::Definition(id,type,dimension,width,universes);
 }
 
 /* Initialization of values on the surface flag */
@@ -62,7 +62,7 @@ static map<string,Surface::SurfaceInfo> initSurfaceInfo() {
 	return values_map;
 }
 /* Parse surface attributes */
-static Geometry::SurfaceDefinition surfaceAttrib(TiXmlElement* pElement) {
+static Surface::Definition* surfaceAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[3] = {"id", "type", "coeffs"};
 	static const string optional[1] = {"boundary"};
@@ -80,7 +80,7 @@ static Geometry::SurfaceDefinition surfaceAttrib(TiXmlElement* pElement) {
 	vector<double> coeffs = getContainer<double>(mapAttrib["coeffs"]);
 	Surface::SurfaceInfo flags = sur_flags.getValue(mapAttrib);
 	/* Return surface definition */
-	return Geometry::SurfaceDefinition(id,type,coeffs,flags);
+	return new Surface::Definition(id,type,coeffs,flags);
 }
 
 /* Initialization of values on the surface flag */
@@ -91,7 +91,7 @@ static map<string,Cell::CellInfo> initCellInfo() {
 	return values_map;
 }
 /* Parse cell attributes */
-static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
+static Cell::Definition* cellAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[3] = {"id"};
 	static const string optional[6] = {"material","type","fill","universe","translation","surfaces"};
@@ -133,7 +133,7 @@ static Geometry::CellDefinition cellAttrib(TiXmlElement* pElement) {
 	}
 
 	/* Return surface definition */
-	return Geometry::CellDefinition(id,surfaces,flags,universe,fill,trans);
+	return new Cell::Definition(id,surfaces,flags,universe,fill,trans);
 }
 
 void XmlParser::geoNode(TiXmlNode* pParent) {
@@ -148,7 +148,7 @@ void XmlParser::geoNode(TiXmlNode* pParent) {
 			else if (element_value == "cell")
 				cellDefinition.push_back(cellAttrib(pChild->ToElement()));
 			else if (element_value == "lattice")
-				latticeDefinition.push_back(latticeAttrib(pChild->ToElement()));
+				featureDefinition.push_back(latticeAttrib(pChild->ToElement()));
 			else {
 				vector<string> keywords;
 				keywords.push_back(element_value);

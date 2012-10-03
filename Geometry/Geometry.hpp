@@ -35,6 +35,7 @@
 #include "Surface.hpp"
 #include "Cell.hpp"
 #include "Universe.hpp"
+#include "GeometricFeature.hpp"
 
 #include "../Common/Common.hpp"
 
@@ -46,114 +47,12 @@ namespace Helios {
 
 		Geometry();
 
-		/*
-		 * ---- Geometry classes : Encapsulate all the geometry entities information
-		 * This classes should be simple ones to make easy the construction of the geometry
-		 * by external modules. The Geometry class is never aware who is setting up the entities
-		 * (could be an user of the library or the parser).
-		 */
-
-		class SurfaceDefinition {
-			SurfaceId userSurfaceId;
-			std::string type;
-			std::vector<double> coeffs;
-			Surface::SurfaceInfo flags;
-		public:
-
-			SurfaceDefinition() {/* */}
-			SurfaceDefinition(const SurfaceId& userSurfaceId, const std::string& type, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags = Surface::NONE) :
-				userSurfaceId(userSurfaceId), type(type), coeffs(coeffs), flags(flags) {/* */}
-			std::vector<double> getCoeffs() const {
-				return coeffs;
-			}
-			std::string getType() const {
-				return type;
-			}
-			SurfaceId getUserSurfaceId() const {
-				return userSurfaceId;
-			}
-			Surface::SurfaceInfo getFlags() const {
-				return flags;
-			}
-			~SurfaceDefinition() {/* */}
-		};
-
-		class CellDefinition {
-			CellId userCellId;
-			std::vector<signed int> surfacesId;
-			Cell::CellInfo flags;
-			UniverseId universe;
-			UniverseId fill;
-			Direction translation;
-		public:
-
-			CellDefinition() {/* */}
-			CellDefinition(const CellId& userCellId, const std::vector<signed int>& surfacesId, const Cell::CellInfo flags,
-					       const UniverseId& universe, const UniverseId& fill, const Direction& translation) :
-				userCellId(userCellId), surfacesId(surfacesId), flags(flags), universe(universe), fill(fill), translation(translation) {/* */}
-			Cell::CellInfo getFlags() const {
-				return flags;
-			}
-			std::vector<signed int> getSurfacesId() const {
-				return surfacesId;
-			}
-			CellId getUserCellId() const {
-				return userCellId;
-			}
-			UniverseId getUniverse() const {
-				return universe;
-			}
-			UniverseId getFill() const {
-				return fill;
-			}
-			Direction getTranslation() const {
-				return translation;
-			}
-			~CellDefinition() {/* */}
-		};
-
-		class LatticeDefinition {
-			UniverseId userLatticeId;
-			std::string type;
-			std::vector<unsigned int> dimension;
-			std::vector<double> width;
-			std::vector<UniverseId> universes;
-		public:
-
-			LatticeDefinition() {/* */}
-			LatticeDefinition(const UniverseId& userLatticeId, const std::string& type, const std::vector<unsigned int>& dimension,
-					          const std::vector<double>& width, const std::vector<UniverseId>& universes) :
-					          userLatticeId(userLatticeId), type(type), dimension(dimension), width(width), universes(universes) {/* */}
-
-			std::vector<unsigned int> getDimension() const {
-				return dimension;
-			}
-
-			std::string getType() const {
-				return type;
-			}
-
-			std::vector<UniverseId> getUniverses() const {
-				return universes;
-			}
-
-			UniverseId getUserLatticeId() const {
-				return userLatticeId;
-			}
-
-			std::vector<double> getWidth() const {
-				return width;
-			}
-
-			~LatticeDefinition() {/* */}
-		};
-
 		/* ---- Geometry setup */
 
 		/* This is the interface to setup the geometry of the problem */
-		void setupGeometry(std::vector<SurfaceDefinition> sur_def,
-				           std::vector<CellDefinition> cell_def,
-				           std::vector<LatticeDefinition> lat_def);
+		void setupGeometry(std::vector<Surface::Definition*> surDefinitions,
+				           std::vector<Cell::Definition*> cellDefinitions,
+				           std::vector<GeometricFeature::Definition*> featureDefinitions);
 
 		/* ---- Get information */
 
@@ -194,7 +93,7 @@ namespace Helios {
 
 		/*
 		 * Max user IDs of surfaces and cells, this should be set when lattices are created (because we need to add
-		 * more gemoetry entities into the problem)
+		 * more geometry entities into the problem)
 		 */
 		SurfaceId maxUserSurfaceId;
 		CellId maxUserCellId;
@@ -204,16 +103,12 @@ namespace Helios {
 		Geometry& operator= (const Geometry& other);
 
 		/* Add a surface */
-		Surface* addSurface(const SurfaceDefinition& sur_def);
+		Surface* addSurface(const Surface::Definition* surfaceDefinition);
 		/* Add cell */
-		Cell* addCell(const CellDefinition& cell_def, const std::map<SurfaceId,Surface*>& user_surfaces);
+		Cell* addCell(const Cell::Definition* cellDefinition, const std::map<SurfaceId,Surface*>& user_surfaces);
 		/* Add recursively all universe that are nested */
-		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<CellDefinition> >& u_cells,
+		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<Cell::Definition*> >& u_cells,
 				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation());
-
-		/* Add more surfaces/cells to construct the lattice (always centered at 0.0) */
-		void addLattice(std::vector<SurfaceDefinition>& sur_def, std::vector<CellDefinition>& cell_def,
-				           std::vector<LatticeDefinition>& lat_def);
 
 		/*
 		 * Add a surface to the geometry, prior to check duplicated ones. If the surface exist (because the user

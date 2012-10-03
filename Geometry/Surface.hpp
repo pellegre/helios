@@ -51,8 +51,33 @@ namespace Helios {
 			VACUUM = 2
 		};
 
+		class Definition {
+			SurfaceId userSurfaceId;
+			std::string type;
+			std::vector<double> coeffs;
+			Surface::SurfaceInfo flags;
+		public:
+			Definition() {/* */}
+			Definition(const SurfaceId& userSurfaceId, const std::string& type,
+					   const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags = Surface::NONE) :
+				userSurfaceId(userSurfaceId), type(type), coeffs(coeffs), flags(flags) {/* */}
+			std::vector<double> getCoeffs() const {
+				return coeffs;
+			}
+			std::string getType() const {
+				return type;
+			}
+			SurfaceId getUserSurfaceId() const {
+				return userSurfaceId;
+			}
+			Surface::SurfaceInfo getFlags() const {
+				return flags;
+			}
+			~Definition() {/* */}
+		};
+
 		/* Surface constructor function */
-		typedef Surface(*(*Constructor)(const SurfaceId&, const std::vector<double>&, const Surface::SurfaceInfo&));
+		typedef Surface(*(*Constructor)(const Definition*));
 		/* Friendly factory */
 		friend class SurfaceFactory;
 		/* Friendly printer */
@@ -120,10 +145,10 @@ namespace Helios {
 	protected:
 		/* Default, used only on factory */
 		Surface() {/* */};
+		/* Constructor from id and flags */
+		Surface(const SurfaceId& surfid, const SurfaceInfo& flag) : surfid(surfid), flag(flag) {/* */};
 		/* Create surface from user id */
-		Surface(const SurfaceId& surfid);
-		/* Create surface from user id and flags */
-		Surface(const SurfaceId& surfid, SurfaceInfo flag);
+		Surface(const Definition* definition);
 		/* Prevent copy */
 		Surface(const Surface& surface);
 		Surface& operator= (const Surface& other);
@@ -196,8 +221,7 @@ namespace Helios {
 		void registerSurface(const Surface& surface);
 
 		/* Create a new surface */
-		Surface* createSurface(const std::string& type, const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) const;
-
+		Surface* createSurface(const Surface::Definition* definition) const;
 	};
 
 	/* Output surface information */

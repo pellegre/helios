@@ -37,8 +37,7 @@ namespace Helios {
 /* Static global instance of the singleton */
 SurfaceFactory SurfaceFactory::factory;
 
-Surface::Surface(const SurfaceId& surfid) : surfid(surfid), flag(NONE) {/* */};
-Surface::Surface(const SurfaceId& surfid, SurfaceInfo flag) : surfid(surfid), flag(flag) {/* */}
+Surface::Surface(const Definition* definition) : surfid(definition->getUserSurfaceId()), flag(definition->getFlags()) {/* */};
 
 SurfaceFactory::SurfaceFactory() {
 	/* Surface registering */
@@ -53,12 +52,12 @@ SurfaceFactory::SurfaceFactory() {
 	registerSurface(CylinderOnAxis<zaxis>());       /* c/z - radius x y */
 }
 
-Surface* SurfaceFactory::createSurface(const string& type, const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) const {
-	map<string,Surface::Constructor>::const_iterator it_type = constructor_table.find(type);
+Surface* SurfaceFactory::createSurface(const Surface::Definition* definition) const {
+	map<string,Surface::Constructor>::const_iterator it_type = constructor_table.find(definition->getType());
 	if(it_type != constructor_table.end())
-		return (*it_type).second(surid,coeffs,flags);
+		return (*it_type).second(definition);
 	else
-		throw Surface::BadSurfaceCreation(surid,"Surface type " + type + " is not defined");
+		throw Surface::BadSurfaceCreation(definition->getUserSurfaceId(),"Surface type " + definition->getType() + " is not defined");
 }
 
 void SurfaceFactory::registerSurface(const Surface& surface) {

@@ -45,9 +45,9 @@ namespace Helios {
 		 * pushed here. The Geometry module is constructed after a call
 		 * to setupGeometry() with all this data.
 		 */
-		std::vector<Geometry::SurfaceDefinition> surfaceDefinition;
-		std::vector<Geometry::CellDefinition> cellDefinition;
-		std::vector<Geometry::LatticeDefinition> latticeDefinition;
+		std::vector<Surface::Definition*> surfaceDefinition;
+		std::vector<Cell::Definition*> cellDefinition;
+		std::vector<GeometricFeature::Definition*> featureDefinition;
 
 	public:
 

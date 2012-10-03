@@ -38,14 +38,14 @@ namespace Helios {
 	class CylinderOnAxisOrigin: public Helios::Surface {
 
 		/* Static constructor functions */
-		static Surface* xAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new CylinderOnAxisOrigin<xaxis>(surid,coeffs,flags);
+		static Surface* xAxisConstructor(const Definition* definition) {
+			return new CylinderOnAxisOrigin<xaxis>(definition);
 		}
-		static Surface* yAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new CylinderOnAxisOrigin<yaxis>(surid,coeffs,flags);
+		static Surface* yAxisConstructor(const Definition* definition) {
+			return new CylinderOnAxisOrigin<yaxis>(definition);
 		}
-		static Surface* zAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new CylinderOnAxisOrigin<zaxis>(surid,coeffs,flags);
+		static Surface* zAxisConstructor(const Definition* definition) {
+			return new CylinderOnAxisOrigin<zaxis>(definition);
 		}
 
 		/* Print surface internal data */
@@ -62,7 +62,7 @@ namespace Helios {
 		CylinderOnAxisOrigin(const SurfaceId& surid, const SurfaceInfo& flags, const double& radius)
 					   : Surface(surid,flags), radius(radius) {/* */};
 
-		CylinderOnAxisOrigin(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags);
+		CylinderOnAxisOrigin(const Definition* definition);
 
 		void normal(const Coordinate& point, Direction& vnormal) const;
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
@@ -101,14 +101,15 @@ namespace Helios {
 
 	/* Constructor */
 	template<int axis>
-	CylinderOnAxisOrigin<axis>::CylinderOnAxisOrigin(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags)
-		: Surface(surid,flags) {
+	CylinderOnAxisOrigin<axis>::CylinderOnAxisOrigin(const Definition* definition)
+		: Surface(definition) {
 		/* Check number of parameters */
-		if(coeffs.size() == 1) {
+		if(definition->getCoeffs().size() == 1) {
 			/* Get the radius */
-			radius = coeffs[0];
+			radius = definition->getCoeffs()[0];
 		} else {
-			throw Surface::BadSurfaceCreation(surid,"Bad number of coefficients");
+			throw Surface::BadSurfaceCreation(definition->getUserSurfaceId(),
+				  "Bad number of coefficients. Expected 1 : radius");
 		}
 	}
 

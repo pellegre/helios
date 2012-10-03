@@ -39,14 +39,14 @@ namespace Helios {
 	class CylinderOnAxis: public Helios::Surface {
 
 		/* Static constructor functions */
-		static Surface* xAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new CylinderOnAxis<xaxis>(surid,coeffs,flags);
+		static Surface* xAxisConstructor(const Definition* definition) {
+			return new CylinderOnAxis<xaxis>(definition);
 		}
-		static Surface* yAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new CylinderOnAxis<yaxis>(surid,coeffs,flags);
+		static Surface* yAxisConstructor(const Definition* definition) {
+			return new CylinderOnAxis<yaxis>(definition);
 		}
-		static Surface* zAxisConstructor(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags) {
-			return new CylinderOnAxis<zaxis>(surid,coeffs,flags);
+		static Surface* zAxisConstructor(const Definition* definition) {
+			return new CylinderOnAxis<zaxis>(definition);
 		}
 
 		/* Print surface internal data */
@@ -65,7 +65,7 @@ namespace Helios {
 	    CylinderOnAxis(const SurfaceId& surid, const SurfaceInfo& flags, const double& radius, const Coordinate& point)
 	                   : Surface(surid,flags), radius(radius) , point(point) {/* */};
 
-	    CylinderOnAxis(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags);
+	    CylinderOnAxis(const Definition* definition);
 
 		void normal(const Coordinate& point, Direction& vnormal) const;
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
@@ -106,23 +106,24 @@ namespace Helios {
 
 	/* Constructor */
 	template<int axis>
-	CylinderOnAxis<axis>::CylinderOnAxis(const SurfaceId& surid, const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags)
-		: Surface(surid,flags) {
+	CylinderOnAxis<axis>::CylinderOnAxis(const Definition* definition)
+		: Surface(definition) {
 		/* Check number of parameters */
-		if(coeffs.size() == 3) {
+		if(definition->getCoeffs().size() == 3) {
 			/* Get the radius */
-			radius = coeffs[0];
+			radius = definition->getCoeffs()[0];
 			/* Get point */
 			point[axis] = 0.0;
 			size_t k = 0;
 			for(size_t i = 0 ; i < 3 ; i++) {
 				if(i != axis) {
-					point[i] = coeffs[k + 1];
+					point[i] = definition->getCoeffs()[k + 1];
 					k++;
 				}
 			}
 		} else {
-			throw Surface::BadSurfaceCreation(surid,"Bad number of coefficients");
+			throw Surface::BadSurfaceCreation(definition->getUserSurfaceId(),
+				  "Bad number of coefficients. Expected 3 values : radius pos1 pos2");
 		}
 	}
 

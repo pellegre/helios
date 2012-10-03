@@ -25,12 +25,15 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "LatticeFactory.hpp"
+#include "GeometricFeature.hpp"
+#include "Universe.hpp"
 #include "Surfaces/PlaneNormal.hpp"
 
 using namespace std;
 
 namespace Helios {
+
+FeatureFactory FeatureFactory::factory;
 
 template<int axis>
 static string getPlaneAbscissa() {
@@ -68,8 +71,8 @@ static string getPlaneOrdinate() {
 
 template<int axis>
 /* Generation of a 2D lattice in plane perpendicular to axis */
-static void gen2DLattice(const Geometry::LatticeDefinition& new_lat,std::vector<Geometry::SurfaceDefinition>& sur_def,
-		               std::vector<Geometry::CellDefinition>& cell_def,SurfaceId& maxUserSurfaceId,CellId& maxUserCellId) {
+static void gen2DLattice(const Lattice::Definition& new_lat,std::vector<Surface::Definition*>& sur_def,
+		               std::vector<Cell::Definition*>& cell_def,SurfaceId& maxUserSurfaceId,CellId& maxUserCellId) {
 
 	/* Get dimension and pitch */
 	vector<unsigned int> dimension = new_lat.getDimension();
@@ -77,7 +80,7 @@ static void gen2DLattice(const Geometry::LatticeDefinition& new_lat,std::vector<
 	/* Get universes to fill each cell */
 	vector<UniverseId> universes = new_lat.getUniverses();
 	/* Get lattice id */
-	UniverseId latt_id = new_lat.getUserLatticeId();
+	UniverseId latt_id = new_lat.getUserFeatureId();
 
 	/* Set width of lattice */
 	vector<double> width(2);
@@ -97,27 +100,27 @@ static void gen2DLattice(const Geometry::LatticeDefinition& new_lat,std::vector<
 	double y_delta = width[1] / (double) dimension[1];
 
 	/* Now create "y" surfaces from left to right */
-	vector<Geometry::SurfaceDefinition> y_surfaces;
+	vector<Surface::Definition*> y_surfaces;
 	vector<double> y_coordinates;
 	for(size_t i = 0 ; i <= dimension[1] ; i++) {
 		vector<double> coeff;
 		double sur_pos = y_min + (double)i * y_delta;
 		coeff.push_back(sur_pos);
 		if(i < dimension[1]) y_coordinates.push_back(sur_pos + y_delta/2);
-		Geometry::SurfaceDefinition new_surface = Geometry::SurfaceDefinition(++maxUserSurfaceId,getPlaneOrdinate<axis>(),coeff,Surface::NONE);
+		Surface::Definition* new_surface =  new Surface::Definition(++maxUserSurfaceId,getPlaneOrdinate<axis>(),coeff);
 		y_surfaces.push_back(new_surface);
 		sur_def.push_back(new_surface);
 	}
 
 	/* Now create "x" surfaces from bottom to top */
-	vector<Geometry::SurfaceDefinition> x_surfaces;
+	vector<Surface::Definition*> x_surfaces;
 	vector<double> x_coordinates;
 	for(size_t i = 0 ; i <= dimension[0] ; i++) {
 		vector<double> coeff;
 		double sur_pos = x_min + (double)i * x_delta;
 		coeff.push_back(sur_pos);
 		if(i < dimension[0]) x_coordinates.push_back(sur_pos + x_delta/2);
-		Geometry::SurfaceDefinition new_surface = Geometry::SurfaceDefinition(++maxUserSurfaceId,getPlaneAbscissa<axis>(),coeff,Surface::NONE);
+		Surface::Definition* new_surface = new Surface::Definition(++maxUserSurfaceId,getPlaneAbscissa<axis>(),coeff);
 		x_surfaces.push_back(new_surface);
 		sur_def.push_back(new_surface);
 	}
@@ -127,20 +130,23 @@ static void gen2DLattice(const Geometry::LatticeDefinition& new_lat,std::vector<
 	for(int i = dimension[1] - 1 ; i >= 0  ; i--) {
 		for(int j = 0 ; j < dimension[0]  ; j++) {
 			vector<signed int> surfs;
-			surfs.push_back(y_surfaces[i].getUserSurfaceId());
-			surfs.push_back(-y_surfaces[i + 1].getUserSurfaceId());
-			surfs.push_back(x_surfaces[j].getUserSurfaceId());
-			surfs.push_back(-x_surfaces[j + 1].getUserSurfaceId());
-			cell_def.push_back(Geometry::CellDefinition(++maxUserCellId,surfs,Cell::NONE,latt_id
-					           ,universes[uni_count],Direction(x_coordinates[j],y_coordinates[i],0)));
+			surfs.push_back(y_surfaces[i]->getUserSurfaceId());
+			surfs.push_back(-y_surfaces[i + 1]->getUserSurfaceId());
+			surfs.push_back(x_surfaces[j]->getUserSurfaceId());
+			surfs.push_back(-x_surfaces[j + 1]->getUserSurfaceId());
+
+			/* Translate the cell to the lattice point */
+			Transformation transf(Direction(x_coordinates[j],y_coordinates[i],0));
+			cell_def.push_back(new Cell::Definition(++maxUserCellId,surfs,Cell::NONE,latt_id,universes[uni_count],transf));
+
 			/* Get next universe */
 			uni_count++;
 		}
 	}
 }
 
-static map<string,LatticeFactory::Constructor> initLatticeConstructorTable() {
-	map<string,LatticeFactory::Constructor> m;
+static map<string,Lattice::Constructor> initLatticeConstructorTable() {
+	map<string,Lattice::Constructor> m;
 	m["x-y"] = gen2DLattice<zaxis>;
 	m["y-z"] = gen2DLattice<xaxis>;
 	m["x-z"] = gen2DLattice<yaxis>;
@@ -148,23 +154,21 @@ static map<string,LatticeFactory::Constructor> initLatticeConstructorTable() {
 }
 
 /* Initialize constructor map */
-std::map<std::string,LatticeFactory::Constructor> LatticeFactory::constructor_table = initLatticeConstructorTable();
+std::map<std::string,Lattice::Constructor> Lattice::constructor_table = initLatticeConstructorTable();
 
-void LatticeFactory::createLattice(const Geometry::LatticeDefinition& new_lat,vector<Geometry::SurfaceDefinition>& sur_def,
-		vector<Geometry::CellDefinition>& cell_def) {
+/* Constructor with current surfaces and cells on the geometry */
+Lattice::Lattice(const GeometricFeature::Definition* definition, const std::pair<CellId,SurfaceId>& maxIds) :
+	    GeometricFeature(definition,maxIds) {
+
+	/* We know the definition is a Lattice::Definition */
+	const Lattice::Definition* new_lat = dynamic_cast<const Lattice::Definition*>(definition);
+
 	/* Get dimension and pitch */
-	vector<unsigned int> dimension = new_lat.getDimension();
-	vector<double> pitch = new_lat.getWidth();
+	dimension = new_lat->getDimension();
+	pitch = new_lat->getWidth();
 	/* Get universes to fill each cell */
-	vector<UniverseId> universes = new_lat.getUniverses();
-	/* Get lattice id */
-	UniverseId latt_id = new_lat.getUserLatticeId();
-
-	/* The lattice is a universe itself, so it can't be defined with an id of an existent universe */
-	for(vector<Geometry::CellDefinition>::const_iterator it_cell = cell_def.begin() ; it_cell != cell_def.end() ; ++it_cell) {
-		if(latt_id == (*it_cell).getUniverse())
-			throw Universe::BadUniverseCreation(latt_id,"Duplicated id. You can't use the id of a existent universe to define a lattice");
-	}
+	universes = new_lat->getUniverses();
+	UniverseId latt_id = new_lat->getUserFeatureId();
 
 	/* ...and do some generic error checking */
 	if(dimension.size() > 3) throw Universe::BadUniverseCreation(latt_id,"Dimension of the lattice is bigger than 3");
@@ -174,14 +178,6 @@ void LatticeFactory::createLattice(const Geometry::LatticeDefinition& new_lat,ve
 	if(pitch.size() == 0)
 		throw Universe::BadUniverseCreation(latt_id,"You need to put at least one value on the pitch and dimension arrays of the lattice");
 
-	/* Get type of lattice */
-	string type = new_lat.getType();
-
-	/* Get lattice constructor */
-	map<string,Constructor>::const_iterator it_const = constructor_table.find(type);
-	if(it_const == constructor_table.end())
-		throw Universe::BadUniverseCreation(latt_id,"Lattice type " + type + " doesn't exist");
-
 	/* Check number of universes */
 	size_t uni_count = 1;
 	for(size_t i = 0 ; i < dimension.size() ; i++)
@@ -190,10 +186,32 @@ void LatticeFactory::createLattice(const Geometry::LatticeDefinition& new_lat,ve
 	if(uni_count != universes.size())
 		throw Universe::BadUniverseCreation(latt_id,
 		"Invalid number of universes in lattice (expected = " + toString(uni_count) + " ; input = " + toString(universes.size()) + ")");
+};
 
+std::pair<CellId,SurfaceId> Lattice::createFeature(const GeometricFeature::Definition* featureDefinition,
+                              std::vector<Surface::Definition*>& surfaceDefinition,
+		                      std::vector<Cell::Definition*>& cellDefinition) const {
+
+	const Lattice::Definition* new_lat = dynamic_cast<const Lattice::Definition*>(featureDefinition);
+
+	/* The lattice is a universe itself, so it can't be defined with an id of an existent universe */
+	for(vector<Cell::Definition*>::const_iterator it_cell = cellDefinition.begin() ; it_cell != cellDefinition.end() ; ++it_cell) {
+		if(new_lat->getUserFeatureId() == (*it_cell)->getUniverse())
+			throw Universe::BadUniverseCreation(new_lat->getUserFeatureId(),"Duplicated id. You can't use the id of a existent universe to define a lattice");
+	}
+
+	/* Get type of lattice */
+	string type = new_lat->getType();
+	/* Get lattice constructor */
+	map<string,Constructor>::const_iterator it_const = constructor_table.find(type);
+	if(it_const == constructor_table.end())
+		throw Universe::BadUniverseCreation(new_lat->getUserFeatureId(),"Lattice type " + type + " doesn't exist");
+
+	std::pair<CellId,SurfaceId> newMaxIds(maxIds);
 	/* Create lattice */
-	(*it_const).second(new_lat,sur_def,cell_def,maxUserSurfaceId,maxUserCellId);
-
+	(*it_const).second(*new_lat,surfaceDefinition,cellDefinition,newMaxIds.second,newMaxIds.first);
+	/* Return new range of values */
+	return newMaxIds;
 }
 
 } /* namespace Helios */

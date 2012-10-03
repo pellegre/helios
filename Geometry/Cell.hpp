@@ -39,11 +39,33 @@ namespace Helios {
 	class Universe;
 	class Surface;
 
+	class Transformation {
+
+		/* A translation transformation */
+		Direction translation;
+		/* A rotation (degrees around each of the 3 axis) */
+		Direction rotation;
+
+	public:
+		Transformation(const Direction& translation = Direction(0,0,0), const Direction& rotation = Direction(0,0,0))
+						: translation(translation), rotation(rotation) {/* */}
+
+		/* Returns a new instance of a cloned transformed surface */
+		Surface* operator()(const Surface* surface) const;
+
+		/* Sum transformations */
+		const Transformation operator+(const Transformation& right) const {
+			return Transformation(right.translation + translation, right.rotation + rotation);
+		}
+
+		~Transformation() {/* */}
+	};
+
 	class Cell {
 
 	public:
 		/* Pair of surface and sense */
-		typedef std::pair<Surface*, bool> CellSurface;
+		typedef std::pair<Surface*, bool> SenseSurface;
 		/* Friendly factory */
 		friend class CellFactory;
 		/* Friendly printer */
@@ -53,6 +75,55 @@ namespace Helios {
 		enum CellInfo {
 			NONE     = 0, /* No special cell attributes */
 			DEADCELL = 2  /* Particles should be killed when entering us */
+		};
+
+		class Definition {
+			CellId userCellId;
+			Cell::CellInfo flags;
+			UniverseId universe;
+			UniverseId fill;
+			Transformation transformation;
+
+			/* Handling surfaces */
+			std::vector<signed int> surfacesIds;   /* IDs of the surfaces */
+			std::vector<SenseSurface> surfacesPtrs; /* Pair of sense and pointer to a set of constructed surfaces */
+		public:
+
+			Definition() {/* */}
+			Definition(const CellId& userCellId, const std::vector<signed int>& surfacesIds, const Cell::CellInfo flags,
+					   const UniverseId& universe, const UniverseId& fill, const Transformation& transformation) :
+				       userCellId(userCellId), surfacesIds(surfacesIds), flags(flags),
+				       universe(universe), fill(fill), transformation(transformation) {/* */}
+			Cell::CellInfo getFlags() const {
+				return flags;
+			}
+			CellId getUserCellId() const {
+				return userCellId;
+			}
+			UniverseId getUniverse() const {
+				return universe;
+			}
+			UniverseId getFill() const {
+				return fill;
+			}
+			Transformation getTransformation() const {
+				return transformation;
+			}
+
+			/* Setting surfaces */
+			void setSenseSurface(const std::vector<SenseSurface>& ptrs) {
+				surfacesPtrs = ptrs;
+			}
+			std::vector<SenseSurface> getSenseSurface() const {
+				return surfacesPtrs;
+			}
+
+			/* Getting surfaces */
+			std::vector<signed int> getSurfaceIds() const {
+				return surfacesIds;
+			}
+
+			~Definition() {/* */}
 		};
 
 		/* Exception */
@@ -69,7 +140,7 @@ namespace Helios {
 		};
 
 		/* Get container of bounding surfaces. */
-		const std::vector<CellSurface>& getBoundingSurfaces() const { return surfaces;}
+		const std::vector<SenseSurface>& getBoundingSurfaces() const { return surfaces;}
 
 		/* Return the cell ID. */
 		const CellId& getUserId() const {return cellid;}
@@ -109,16 +180,16 @@ namespace Helios {
 
 	protected:
 
-		Cell(const CellId& cellid, std::vector<CellSurface>& surfaces, const CellInfo& flags);
+		Cell(const Definition* definition);
 		/* Prevent copy */
-		Cell(const Cell& surface);
+		Cell(const Cell& cell);
 		Cell& operator= (const Cell& other);
 
 		/* Print cell information */
 		virtual void print(std::ostream& out) const;
 
 		/* A vector of surfaces and senses that define this cell */
-		std::vector<CellSurface> surfaces;
+		std::vector<SenseSurface> surfaces;
 		/* Internal identification of this surface */
 		InternalCellId int_cellid;
 		/* Cell id choose by the user */
@@ -152,8 +223,8 @@ namespace Helios {
 		static CellFactory& access() {return factory;}
 
 		/* Create a new surface */
-		Cell* createCell(const CellId& cellid, std::vector<Cell::CellSurface>& surfaces,const Cell::CellInfo& flags) const {
-			return new Cell(cellid,surfaces,flags);
+		Cell* createCell(const Cell::Definition* definition) const {
+			return new Cell(definition);
 		}
 
 	};

@@ -35,7 +35,7 @@ set(MCFILES Common/Common.cpp
             Geometry/Universe.cpp               
             Geometry/Cell.cpp
             Geometry/Surface.cpp
-            Geometry/LatticeFactory.cpp
+            Geometry/GeometricFeature.cpp
             Geometry/Surfaces/CylinderOnAxis.cpp    
             Geometry/Surfaces/CylinderOnAxisOrigin.cpp
             Material/Material.cpp
