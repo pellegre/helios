@@ -165,11 +165,12 @@ namespace Helios {
 		/* Get the universe that is filling this cell (NULL if any) */
 		const Universe* getFill() const {return fill;}
 
-		/* Fill the cell with an universe */
+		/* Fill the cell with a material */
 		void setMaterial(Material* cell_mat) {material = cell_mat;};
-		/* Get the universe that is filling this cell (NULL if any) */
+		/* Get the material that is filling this cell (NULL if any) */
 		const Material* getMaterial() const {return material;}
-
+		/* Get the material ID that is filling this cell (NULL if any) */
+		MaterialId getMaterialId() const {return matid;}
 
 		/* Set the parent universe of this cell */
 		void setParent(Universe* parent_universe) {parent = parent_universe;}

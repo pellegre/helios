@@ -101,10 +101,17 @@ namespace Helios {
 		/* Parse the file and save the data on internal structures */
 		virtual void parseFile(const std::string& file) = 0;
 
-		/* Setup geometry, is not a constant method because the Geometry can add more surfaces */
-		void setupGeometry(Geometry& geometry);
+		/*
+		 * ---- Setup and return constructed objects.
+		 * Each time this functions are called, the information of the specific ocject inside the
+		 * parser is clear.
+		 */
+
+		/* Setup geometry  */
+		Geometry* getGeometry();
+
 		/* Setup a material container */
-		void setupMaterials(MaterialContainer& material_container) const;
+		MaterialContainer* getMaterials();
 
 		virtual ~Parser();
 	};

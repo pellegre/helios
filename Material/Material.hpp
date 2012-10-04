@@ -39,10 +39,8 @@ namespace Helios {
 
 	public:
 
-		/* No material */
-		static const MaterialId NONE;
-		/* Void */
-		static const MaterialId VOID;
+		static const MaterialId NONE; /* No material */
+		static const MaterialId VOID; /* Void */
 
 		friend class MaterialFactory;
 		friend std::ostream& operator<<(std::ostream& out, const Material& q);

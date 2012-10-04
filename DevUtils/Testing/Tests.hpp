@@ -69,14 +69,12 @@ protected:
 
 	void SetUp() {
 		srand(time(NULL));
-		/* Geometry */
-		geometry = new Helios::Geometry;
 		/* Parser (XML for now) */
 		parser = new Helios::XmlParser;
 		/* Parse the file */
 		parser->parseFile(InputPath::access().getPath() + filename);
-		/* Setup geometry */
-		parser->setupGeometry(*geometry);
+		/* Geometry */
+		geometry = parser->getGeometry();
 	}
 
 	void TearDown() {

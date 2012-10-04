@@ -87,7 +87,7 @@ void plot(const Helios::Geometry& geo, const Helios::MaterialContainer& material
 	double deltax = (xmax - xmin) / (double)(pixel);
 	double deltay = (ymax - ymin) / (double)(pixel);
 	/* Number of cells */
-	size_t max_id = materials.getMaterialNumber() + 20;
+	size_t max_id = materials.getMaterialNumber();
 	const Cell* find_cell = geo.findCell(Coordinate(0.0,0.0,0.0));
 	InternalCellId old_cell_id = 0;
 	if(find_cell)
@@ -105,9 +105,14 @@ void plot(const Helios::Geometry& geo, const Helios::MaterialContainer& material
 			if(new_cell_id != old_cell_id || !find_cell) {
 				png.plot(i,j,0.0,0.0,0.0);
 			} else {
-				InternalMaterialId matid = find_cell->getMaterial()->getInternalId();
-				double color = colorFromCell(matid,max_id);
-				png.plotHSV(i,j,color,1.0,1.0);
+				const Material* cell_mat = find_cell->getMaterial();
+				if(cell_mat) {
+					InternalMaterialId matid = cell_mat->getInternalId();
+					double color = colorFromCell(matid,max_id);
+					png.plotHSV(i,j,color,1.0,1.0);
+				} else {
+					png.plot(i,j,0.0,0.0,0.0);
+				}
 			}
 			old_cell_id = new_cell_id;
 		}
@@ -144,12 +149,12 @@ int main(int argc, char **argv) {
 	  exit(1);
 	}
 
-	/* Geometry */
-	Geometry* geometry = new Geometry;
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
+	/* Geometry */
+	Geometry* geometry;
 	/* Materials */
-	MaterialContainer* materials = new MaterialContainer;
+	MaterialContainer* materials;
 
 	/* Container of filenames */
 	vector<string> input_files;
@@ -163,8 +168,8 @@ int main(int argc, char **argv) {
 		}
 
 		/* Setup problem */
-		parser->setupGeometry(*geometry);
-		parser->setupMaterials(*materials);
+		geometry = parser->getGeometry();
+		materials = parser->getMaterials();
 
 	} catch(Parser::ParserError& parsererror) {
 
@@ -187,11 +192,24 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	plot(*geometry,*materials,-3.6,3.6,-3.6,3.6,"test.png");
+	/* Connect cell with materials */
+	map<MaterialId, InternalMaterialId> materialMap = materials->getMaterialMap();
+	vector<Material*> materialPtrs = materials->getMaterials();
+	vector<Cell*> cells = geometry->getCells();
+	for(vector<Cell*>::const_iterator it = cells.begin() ; it != cells.end() ; ++it) {
+		MaterialId cellMatId = (*it)->getMaterialId();
+		if(cellMatId != Material::NONE) {
+			if(!(*it)->getFill()) {
+				(*it)->setMaterial(materialPtrs[materialMap[cellMatId]]);
+			}
+			else {
+				cout << "Material " + cellMatId + " is not filled with a material or universe" << endl;
+				exit(1);
+			}
+		}
+	}
 
-	/* Print materials */
-	materials->printMaterials(cout);
-	geometry->printGeo(cout);
+	plot(*geometry,*materials,-3.6,3.6,-3.6,3.6,"test.png");
 
 	delete geometry;
 	delete parser;

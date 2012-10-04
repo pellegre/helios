@@ -87,7 +87,10 @@ MacroXs::MacroXs(const Material::Definition* definition, int number_groups) : Ma
 	sigma_t = sigma_a + sigma_s;
 
 	/* Finally, we should modify the type of material according to the number of groups */
-	type += "_" + toString(ngroup) + "groups"; /* Decorate the type of material */
+	if(ngroup == 1)
+		type += "_" + toString(ngroup) + "group"; /* Decorate the type of material */
+	else
+		type += "_" + toString(ngroup) + "groups"; /* Decorate the type of material */
 }
 
 void MacroXs::print(std::ostream& out) const {

@@ -56,7 +56,7 @@ static size_t seachKeyWords(const string& filename, vector<string> search_keys) 
 int main(int argc, char* argv[]) {
 
 	/* Geometry */
-	Geometry* geometry = new Geometry;
+	Geometry* geometry;
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
 
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 		Log::ok() << "Reading file " + filename << Log::endl;
 		parser->parseFile(filename);
 		/* Setup geometry */
-		parser->setupGeometry(*geometry);
+		geometry = parser->getGeometry();
 	} catch(Parser::ParserError& parsererror) {
 		Log::error() << "Error parsing file : " + filename + "." << Log::endl;
 		/* Nothing to do, just print the message and exit */

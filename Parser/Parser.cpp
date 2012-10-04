@@ -33,40 +33,57 @@ using namespace std;
 
 namespace Helios {
 
-void Parser::setupGeometry(Geometry& geometry) {
+Geometry* Parser::getGeometry() {
+	/* Geometry */
+	Geometry* geometry = new Geometry;
+
 	try {
 		/* Add surface into the geometry */
-		geometry.setupGeometry(surfaceDefinition,cellDefinition,featureDefinition);
+		geometry->setupGeometry(surfaceDefinition,cellDefinition,featureDefinition);
 	} catch (std::exception& exception) {
 		/* Catch exception */
 		throw ParserError(exception.what());
 	}
+
+	for(vector<Surface::Definition*>::iterator it = surfaceDefinition.begin() ; it != surfaceDefinition.end() ; ++it)
+		delete (*it);
+	/* Clean definitions, we don't need this anymore */
+	for(vector<Cell::Definition*>::iterator it = cellDefinition.begin(); it != cellDefinition.end() ; ++it)
+		delete (*it);
+	for(vector<GeometricFeature::Definition*>::iterator it = featureDefinition.begin(); it != featureDefinition.end() ; ++it)
+		delete (*it);
+
+	/* Also clear the geometries containers */
+	surfaceDefinition.clear();
+	cellDefinition.clear();
+	featureDefinition.clear();
+
+	return geometry;
 }
 
-void Parser::setupMaterials(MaterialContainer& material_container) const {
+MaterialContainer* Parser::getMaterials() {
+	/* Material container */
+	MaterialContainer* materials = new MaterialContainer;
+
 	try {
 		/* Add surface into the geometry */
-		material_container.setupMaterials(materialDefinition);
+		materials->setupMaterials(materialDefinition);
 	} catch (std::exception& exception) {
 		/* Catch exception */
 		throw ParserError(exception.what());
 	}
+
+	for(vector<Material::Definition*>::iterator it = materialDefinition.begin() ; it != materialDefinition.end() ; ++it)
+		delete (*it);
+
+	/* Clear the container */
+	materialDefinition.clear();
+
+	return materials;
 }
 
 Parser::~Parser() {
-	/* Clean definitions, we don't need this anymore */
-	for(vector<Cell::Definition*>::iterator it = cellDefinition.begin(); it != cellDefinition.end() ; ++it) {
-		delete (*it);
-		(*it) = 0;
-	}
-	for(vector<Surface::Definition*>::iterator it = surfaceDefinition.begin() ; it != surfaceDefinition.end() ; ++it) {
-		delete (*it);
-		(*it) = 0;
-	}
-	for(vector<GeometricFeature::Definition*>::iterator it = featureDefinition.begin(); it != featureDefinition.end() ; ++it) {
-		delete (*it);
-		(*it) = 0;
-	}
+
 }
 
 void tokenize(const string& str, vector<string>& tokens, const string& delimiters) {
