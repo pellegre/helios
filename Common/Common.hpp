@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <string>
 #include <blitz/array.h>
+#include <trng/lcg64.hpp>
+#include <trng/uniform01_dist.hpp>
 
 #include "../Log/Log.hpp"
 #include "FloatingGtest.hpp"
@@ -75,6 +77,11 @@ namespace Helios {
 	typedef unsigned int InternalUniverseId;
 	/* Material ID used internally */
 	typedef unsigned int InternalMaterialId;
+
+	/* Energy stuff */
+	typedef double Energy;                             /* Energy of the particle in eVs */
+	typedef unsigned int EnergyIndex;                  /* Index used to access energies grids */
+	typedef std::pair<EnergyIndex,Energy> EnergyPair;  /* Pair of energy value and the closest (lower) index on the grid */
 
 	/* Get a value from a string */
 	template<typename T>

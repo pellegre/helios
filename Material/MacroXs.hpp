@@ -48,8 +48,9 @@ class MacroXs: public Helios::Material {
 	Vector nu_sigma_f;
 	/* Fission spectrum */
 	Vector chi;
-	/* Scattering matrix and total */
+	/* Scattering matrix and total scattering cross section */
 	Matrix mat_sigma_s;
+	Matrix transf_prob;
 	Vector sigma_s;
 
 public:
@@ -69,6 +70,24 @@ public:
 	};
 
 	MacroXs(const Material::Definition* definition, int number_groups);
+
+	/*
+	 * Based on particle's energy, this functions setup the index on the energy grid with
+	 * information contained on the child class.
+	 */
+	EnergyIndex getEnergyIndex(const Energy& energy) const {return 0;};
+
+	 /* Get the total cross section (using the energy index of the particle) */
+	double getTotalXs(const EnergyIndex& index) const {return sigma_t(index);};
+
+	 /* Get absorption cross section */
+	double getAbsorptionXs(const EnergyIndex& index) const {return sigma_a(index);};
+
+	/*
+	 * Change internal state of the particle according to the internal representation
+	 * of the material
+	 */
+	void collision(Particle& particle) const;
 
 	void print(std::ostream& out) const;
 

@@ -24,7 +24,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include "Tests.hpp"
+#include "GeometryTest/GeometryTests.hpp"
 
 InputPath InputPath::inputpath;
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 
 	/* Check number of arguments */
 	if(argc < 2) {
-		Helios::Log::error() << "Usage : " << argv[0] << " path/to/test/inputs" << Helios::Log::endl;
+		Helios::Log::error() << "Usage : " << argv[0] << " path/to/test" << Helios::Log::endl;
 		exit(1);
 	}
 

@@ -47,6 +47,14 @@ static inline void copyMatrix(const vector<double>& stl_v, Matrix& m, int neleme
 			m(i,j) = stl_v[i * nelement + j];
 }
 
+static inline void setTransfProb(const Vector& prob, Vector& acum) {
+	/* Loop on each column */
+	for(size_t i = 0 ; i < prob.size() ; i++) {
+
+
+	}
+}
+
 MacroXs::MacroXs(const Material::Definition* definition, int number_groups) : Material(definition),
 		sigma_a(number_groups), sigma_f(number_groups), nu_sigma_f(number_groups), chi(number_groups),
 		mat_sigma_s(number_groups,number_groups), sigma_t(number_groups), sigma_s(number_groups) {
@@ -91,6 +99,11 @@ MacroXs::MacroXs(const Material::Definition* definition, int number_groups) : Ma
 		type += "_" + toString(ngroup) + "group"; /* Decorate the type of material */
 	else
 		type += "_" + toString(ngroup) + "groups"; /* Decorate the type of material */
+}
+
+void MacroXs::collision(Particle& particle) const {
+	/* Isotropic direction */
+	isotropicDirection(particle);
 }
 
 void MacroXs::print(std::ostream& out) const {

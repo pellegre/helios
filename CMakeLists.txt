@@ -27,10 +27,20 @@ ENDIF(BLITZ_FOUND)
 
 MARK_AS_ADVANCED(BLITZ_INCLUDE_DIR BLITZ_LIBRARY)
 
+FIND_LIBRARY(TRNG_LIBRARY NAMES trng4 )
+
+IF(TRNG_FOUND)
+  SET( TRNG_LIBRARIES ${TRNG_LIBRARY} )
+ENDIF(TRNG_FOUND)
+
+MARK_AS_ADVANCED(TRNG_INCLUDE_DIR TRNG_LIBRARY)
+
+
 # ---- Monte Carlo library
 
 set(MCFILES Common/Common.cpp
             Log/Log.cpp
+            Transport/Particle.cpp
             Geometry/Geometry.cpp
             Geometry/Universe.cpp               
             Geometry/Cell.cpp
@@ -53,7 +63,7 @@ set(MCFILES Common/Common.cpp
             
 add_library(mc++ ${MCFILES})
 
-target_link_libraries (mc++ ${BLITZ_LIBRARY})
+target_link_libraries (mc++ ${BLITZ_LIBRARY} ${TRNG_LIBRARY})
 
 # ---- Unit Test
 
@@ -63,7 +73,7 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 add_executable(testmc++ DevUtils/Utils.cpp DevUtils/Testing/Main.cpp)
                
-target_link_libraries(testmc++ mc++ ${Blitz_LIBRARY} ${PNG_LIBRARY} gtest gtest_main)
+target_link_libraries(testmc++ mc++ ${Blitz_LIBRARY} ${TRNG_LIBRARY} gtest gtest_main)
 set(cxx_use_own_tuple "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
 set_target_properties (testmc++ PROPERTIES COMPILE_FLAGS ${cxx_use_own_tuple})
 
@@ -78,11 +88,18 @@ include_directories(${PNG_INCLUDE_DIR})
 
 add_executable(plottermc++ ${PNGWRITER} DevUtils/PngPlotter/Main.cpp)
                
-target_link_libraries(plottermc++ mc++ ${Blitz_LIBRARY} ${PNG_LIBRARY})
+target_link_libraries(plottermc++ mc++ ${Blitz_LIBRARY} ${PNG_LIBRARY} ${TRNG_LIBRARY})
+
+# ---- Helios
+
+add_executable(helios++ Main.cpp)
+               
+target_link_libraries(helios++ mc++ ${Blitz_LIBRARY} ${TRNG_LIBRARY})
 
 # ---- Instal stuff
 
 install(TARGETS plottermc++ RUNTIME DESTINATION bin)
+install(TARGETS helios++ RUNTIME DESTINATION bin)
 
 message(STATUS "${PROJECT_NAME} version  ${${PROJECT_NAME}_VERSION}")
 message(STATUS "Build type:         ${CMAKE_BUILD_TYPE}")

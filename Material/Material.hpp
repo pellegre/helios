@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "../Common/Common.hpp"
+#include "../Transport/Particle.hpp"
 
 namespace Helios {
 
@@ -88,6 +89,26 @@ namespace Helios {
 		const InternalMaterialId& getInternalId() const {return int_matid;}
 		/* Return the string that define this type of material */
 		std::string getType() const {return type;}
+
+		/* ---- Interaction of the material with a particle */
+
+		/*
+		 * Based on particle's energy, this functions setup the index on the energy grid with
+		 * information contained on the child class.
+		 */
+		virtual EnergyIndex getEnergyIndex(const Energy& energy) const = 0;
+
+		 /* Get the total cross section (using the energy index of the particle) */
+		virtual double getTotalXs(const EnergyIndex& index) const = 0;
+
+		 /* Get absorption cross section */
+		virtual double getAbsorptionXs(const EnergyIndex& index) const = 0;
+
+		/*
+		 * Change internal state of the particle according to the internal representation
+		 * of the material
+		 */
+		virtual void collision(Particle& particle) const = 0;
 
 		virtual ~Material() {/* */};
 

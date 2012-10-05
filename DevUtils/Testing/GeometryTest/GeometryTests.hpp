@@ -30,10 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-#include "../../Common/Common.hpp"
-#include "../../Parser/ParserTypes.hpp"
-#include "../../Log/Log.hpp"
-#include "../Utils.hpp"
+#include "../../../Common/Common.hpp"
+#include "../../../Parser/ParserTypes.hpp"
+#include "../../../Log/Log.hpp"
+#include "../../Utils.hpp"
 
 #include "gtest/gtest.h"
 
@@ -72,7 +72,7 @@ protected:
 		/* Parser (XML for now) */
 		parser = new Helios::XmlParser;
 		/* Parse the file */
-		parser->parseFile(InputPath::access().getPath() + filename);
+		parser->parseFile(InputPath::access().getPath() + "/GeometryTest/" + filename);
 		/* Geometry */
 		geometry = parser->getGeometry();
 	}

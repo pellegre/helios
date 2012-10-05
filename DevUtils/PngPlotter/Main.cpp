@@ -200,10 +200,16 @@ int main(int argc, char **argv) {
 		MaterialId cellMatId = (*it)->getMaterialId();
 		if(cellMatId != Material::NONE) {
 			if(!(*it)->getFill()) {
-				(*it)->setMaterial(materialPtrs[materialMap[cellMatId]]);
+				map<MaterialId,InternalMaterialId>::const_iterator it_mat = materialMap.find(cellMatId);
+				if(it_mat == materialMap.end()) {
+					Log::error() << "Material *" + cellMatId + "* is not defined" << Log::endl;
+					exit(1);
+				}
+				else
+					(*it)->setMaterial(materialPtrs[(*it_mat).second]);
 			}
 			else {
-				cout << "Material " + cellMatId + " is not filled with a material or universe" << endl;
+				Log::error() << "Material " + cellMatId + " is not filled with a material or universe" << Log::endl;
 				exit(1);
 			}
 		}
