@@ -25,8 +25,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef TESTS_HPP_
-#define TESTS_HPP_
+#ifndef GEOMETRYTESTS_HPP_
+#define GEOMETRYTESTS_HPP_
 
 #include <string>
 
@@ -34,27 +34,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../../Parser/ParserTypes.hpp"
 #include "../../../Log/Log.hpp"
 #include "../../Utils.hpp"
+#include "../TestCommon.hpp"
 
 #include "gtest/gtest.h"
-
-class InputPath {
-	static InputPath inputpath;
-	std::string path;
-	InputPath() : path("./") {/* */}
-public:
-	static InputPath& access() {return inputpath;}
-	std::string getPath() const {return path;}
-	void setPath(const std::string& newpath) {path = newpath;}
-	~InputPath() {/* */}
-};
-
-static inline std::vector<unsigned int> genVector(size_t min, size_t max) {
-	std::vector<unsigned int> v;
-	for(size_t i = min ; i <= max ; i++) {
-		v.push_back(i);
-	}
-	return v;
-}
 
 /*
  * The fixture for geometry testing class. Open and parse a geometry
@@ -253,21 +235,21 @@ protected:
 	~LatticeXYConcentricTest() {/* */}
 };
 
-TEST_F(CylinderXYConcentricTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderYZConcentricTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderXZConcentricTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderXYConcentricTranslatedTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderYZConcentricTranslatedTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderXZConcentricTranslatedTest, StraightTransport) {straight(genVector(1,5),genVector(1,4));}
-TEST_F(CylinderXYConcentricUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderYZConcentricUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderXZConcentricUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderXYConcentricTransUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderYZConcentricTransUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderXZConcentricTransUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderXYConcentricTranslaUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderYZConcentricTranslaUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
-TEST_F(CylinderXZConcentricTranslaUniverseTest, StraightTransport) {straight(genVector(1,10),genVector(1,9));}
+TEST_F(CylinderXYConcentricTest, StraightTransport) {straight(genVector<Helios::CellId>(1,5),genVector<Helios::SurfaceId>(1,4));}
+TEST_F(CylinderYZConcentricTest, StraightTransport) {straight(genVector<Helios::CellId>(1,5),genVector<Helios::SurfaceId>(1,4));}
+TEST_F(CylinderXZConcentricTest, StraightTransport) {straight(genVector<Helios::CellId>(1,5),genVector<Helios::SurfaceId>(1,4));}
+TEST_F(CylinderXYConcentricTranslatedTest, StraightTransport) {straight(genVector<Helios::CellId>(1,5),genVector<Helios::SurfaceId>(1,4));}
+TEST_F(CylinderYZConcentricTranslatedTest, StraightTransport) {straight(genVector<Helios::CellId>(1,5),genVector<Helios::SurfaceId>(1,4));}
+TEST_F(CylinderXZConcentricTranslatedTest, StraightTransport) {straight(genVector<Helios::CellId>(1,5),genVector<Helios::SurfaceId>(1,4));}
+TEST_F(CylinderXYConcentricUniverseTest, StraightTransport) {straight(genVector<Helios::CellId>(1,10),genVector<Helios::SurfaceId>(1,9));}
+TEST_F(CylinderYZConcentricUniverseTest, StraightTransport) {straight(genVector<Helios::CellId>(1,10),genVector<Helios::SurfaceId>(1,9));}
+TEST_F(CylinderXZConcentricUniverseTest, StraightTransport) {straight(genVector<Helios::CellId>(1,10),genVector<Helios::SurfaceId>(1,9));}
+TEST_F(CylinderXYConcentricTransUniverseTest, StraightTransport) {straight(genVector<Helios::CellId>(1,10),genVector<Helios::SurfaceId>(1,9));}
+TEST_F(CylinderYZConcentricTransUniverseTest, StraightTransport) {straight(genVector<Helios::CellId>(1,10),genVector<Helios::SurfaceId>(1,9));}
+TEST_F(CylinderXZConcentricTransUniverseTest, StraightTransport) {straight(genVector<Helios::CellId>(1,10),genVector<Helios::SurfaceId>(1,9));}
+TEST_F(CylinderXYConcentricTranslaUniverseTest, StraightTransport) {straight(genVector<Helios::CellId>(1,10),genVector<Helios::SurfaceId>(1,9));}
+TEST_F(CylinderYZConcentricTranslaUniverseTest, StraightTransport) {straight(genVector<Helios::CellId>(1,10),genVector<Helios::SurfaceId>(1,9));}
+TEST_F(CylinderXZConcentricTranslaUniverseTest, StraightTransport) {straight(genVector<Helios::CellId>(1,10),genVector<Helios::SurfaceId>(1,9));}
 
 TEST_F(CylinderXYConcentricTest, RandomTransport) {random();}
 TEST_F(CylinderYZConcentricTest, RandomTransport) {random();}
@@ -287,4 +269,4 @@ TEST_F(CylinderXZConcentricTranslaUniverseTest, RandomTransport) {random();}
 
 TEST_F(LatticeXYConcentricTest, RandomTransport) {random();}
 
-#endif /* TESTS_HPP_ */
+#endif /* GEOMETRYTESTS_HPP_ */

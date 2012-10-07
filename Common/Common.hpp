@@ -111,6 +111,17 @@ namespace Helios {
 		return (compareFloating(a[0],b[0]) && compareFloating(a[1],b[1]) && compareFloating(a[2],b[2]));
 	}
 
+	/* Random number object (encapsulate the random number generation) */
+	class Random {
+		/* A particle contains a state of its own random number generator */
+		trng::lcg64 r;            /* Generator */
+		trng::uniform01_dist<double> u;  /* Uniform distribution */
+	public:
+		Random(const trng::lcg64& r) : r(r) {/* */}
+		double uniform() {return u(r);}
+		trng::lcg64& getEngine() {return r;}
+		~Random(){/* */}
+	};
 }
 
 #endif /* TYPES_H_ */

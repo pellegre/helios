@@ -24,24 +24,29 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include "GeometryTest/GeometryTests.hpp"
-#include "ReactionTest/ReactionTests.hpp"
 
-InputPath InputPath::inputpath;
+#ifndef TESTCOMMON_HPP_
+#define TESTCOMMON_HPP_
 
-int main(int argc, char **argv) {
-	::testing::InitGoogleTest(&argc, argv);
 
-	/* Check number of arguments */
-	if(argc < 2) {
-		Helios::Log::error() << "Usage : " << argv[0] << " path/to/test" << Helios::Log::endl;
-		exit(1);
+class InputPath {
+	static InputPath inputpath;
+	std::string path;
+	InputPath() : path("./") {/* */}
+public:
+	static InputPath& access() {return inputpath;}
+	std::string getPath() const {return path;}
+	void setPath(const std::string& newpath) {path = newpath;}
+	~InputPath() {/* */}
+};
+
+template<class T>
+static inline std::vector<T> genVector(T min, T max) {
+	std::vector<T> v;
+	for(T i = min ; i <= max ; i++) {
+		v.push_back(i);
 	}
-
-	InputPath::access().setPath(argv[1]);
-
-	return RUN_ALL_TESTS();
+	return v;
 }
 
-
-
+#endif /* TESTCOMMON_HPP_ */

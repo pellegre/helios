@@ -33,32 +33,17 @@
 namespace Helios {
 
 	class Particle {
-		/* Friendly printer */
-		friend std::ostream& operator<<(std::ostream& out, const Particle& q);
-
-		/* A particle contains a state of its own random number generator */
-		const trng::lcg64& r;            /* Generator */
-		trng::uniform01_dist<double> u;  /* Uniform distribution */
-
-		/* Position on space */
-		Coordinate position;
-
-		/* Fly direction*/
-		Direction direction;
-
-		/* Energy pair (index and value). Sometimes both are used, sometimes only one */
-		EnergyPair energy;
-
-		/* Weight of the particle */
-		double weight;
 
 	public:
-		Particle(const Coordinate& position, const Direction& direction, const EnergyPair& energy,
-				 const double& weight, const trng::lcg64& r) :
-				 position(position), direction(direction), energy(energy), weight(weight), r(r) {/* */}
 
-		/* Get an uniform random number using the internal state of the particle */
-		inline double random() {return u(r);}
+		enum State {
+			ALIVE = 0, /* The particle is alive and should be transport on next step */
+			DEAD  = 1, /* The particle is dead, the transport is done for this one */
+			BANK  = 3  /* The particle state should be banked on next step */
+		};
+
+		Particle(const Coordinate& position, const Direction& direction, const EnergyPair& energy,const double& weight) :
+				 position(position), direction(direction), energy(energy), weight(weight), state(ALIVE) {/* */}
 
 		~Particle() {/* */};
 
@@ -87,18 +72,6 @@ namespace Helios {
 			this->position = position;
 		}
 
-		const trng::lcg64& getR() const {
-			return r;
-		}
-
-		trng::uniform01_dist<double> getU() const {
-			return u;
-		}
-
-		void setU(trng::uniform01_dist<double> u) {
-			this->u = u;
-		}
-
 		double getWeight() const {
 			return weight;
 		}
@@ -107,14 +80,33 @@ namespace Helios {
 			this->weight = weight;
 		}
 
-
-
 		/* Get reference to internal data of the particle */
 		Coordinate& pos() {return position;}
 		Direction& dir() {return direction;}
 		double& wgt() {return weight;}
 		EnergyIndex& eix() {return energy.first;}
 		Energy& evs() {return energy.second;}
+		State& sta() {return state;}
+
+	private:
+
+		/* Friendly printer */
+		friend std::ostream& operator<<(std::ostream& out, const Particle& q);
+
+		/* Position on space */
+		Coordinate position;
+
+		/* Fly direction*/
+		Direction direction;
+
+		/* Energy pair (index and value). Sometimes both are used, sometimes only one */
+		EnergyPair energy;
+
+		/* Weight of the particle */
+		double weight;
+
+		/* State of the particle */
+		State state;
 
 	};
 
@@ -122,7 +114,7 @@ namespace Helios {
 	std::ostream& operator<<(std::ostream& out, const Particle& q);
 
 	/* Set an isotropic angle to the particle */
-	void isotropicDirection(Particle& particle);
+	void isotropicDirection(Direction& dir, Random& r);
 
 } /* namespace Helios */
 #endif /* PARTICLE_HPP_ */

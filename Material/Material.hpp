@@ -36,6 +36,15 @@
 
 namespace Helios {
 
+	/* A reaction is simply a functor that change the state of a particle (based on a random number generator) */
+	class Reaction {
+	public:
+		Reaction() {/* */}
+		virtual void operator() (Particle& particle, Random& r) const = 0;
+		virtual ~Reaction() {/* */}
+	};
+
+	/* Class that represents a material filling a cell */
 	class Material {
 
 	public:
@@ -101,15 +110,10 @@ namespace Helios {
 		 /* Get the total cross section (using the energy index of the particle) */
 		virtual double getTotalXs(const EnergyIndex& index) const = 0;
 
-		 /* Get absorption cross section */
-		virtual double getAbsorptionXs(const EnergyIndex& index) const = 0;
+		/* Get reaction (based on a random generator and a energy index) */
+		virtual Reaction* getReaction(const EnergyIndex& index, Random& random) const = 0;
 
-		/*
-		 * Change internal state of the particle according to the internal representation
-		 * of the material
-		 */
-		virtual void collision(Particle& particle) const = 0;
-
+		/* "Sample" the next reaction */
 		virtual ~Material() {/* */};
 
 	protected:

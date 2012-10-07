@@ -31,33 +31,8 @@ using namespace std;
 
 namespace Helios {
 
-static inline void copyVector(const vector<double>& stl_v, Vector& v) {
-	/* Number of elements */
-	int nelement = stl_v.size();
-	v = Vector(nelement);
-	for(size_t i = 0 ; i < nelement ; i++)
-		v(i) = stl_v[i];
-}
-
-static inline void copyMatrix(const vector<double>& stl_v, Matrix& m, int nelement) {
-	/* Number of elements */
-	m = Matrix(nelement,nelement);
-	for(int i = 0 ; i < nelement ; i++)
-		for(int j = 0 ; j < nelement ; j++)
-			m(i,j) = stl_v[i * nelement + j];
-}
-
-static inline void setTransfProb(const Vector& prob, Vector& acum) {
-	/* Loop on each column */
-	for(size_t i = 0 ; i < prob.size() ; i++) {
-
-
-	}
-}
-
-MacroXs::MacroXs(const Material::Definition* definition, int number_groups) : Material(definition),
-		sigma_a(number_groups), sigma_f(number_groups), nu_sigma_f(number_groups), chi(number_groups),
-		mat_sigma_s(number_groups,number_groups), sigma_t(number_groups), sigma_s(number_groups) {
+MacroXs::MacroXs(const Material::Definition* definition, int number_groups) :
+		         Material(definition), ngroups(number_groups), sigma_t(number_groups) {
 	/* Cast to a MacroXs definition */
 	const MacroXs::Definition* macro_definition = dynamic_cast<const MacroXs::Definition*>(definition);
 	/* Get constants */
@@ -82,17 +57,40 @@ MacroXs::MacroXs(const Material::Definition* definition, int number_groups) : Ma
 		}
 	}
 
-	/* Now copy arrays from input */
-	copyVector(constant["sigma_a"],sigma_a);
-	copyVector(constant["sigma_f"],sigma_f);
-	copyVector(constant["nu_sigma_f"],nu_sigma_f);
-	copyVector(constant["chi"],chi);
-	copyMatrix(constant["sigma_s"],mat_sigma_s,ngroup);
-	/* Calculate the total XS and the scattering XS */
-	for(size_t i = 0 ; i < ngroup ; ++i) {
-		sigma_s(i) = sum(mat_sigma_s(i,Range::all()));
+	/* Now set the reactions */
+	map<Reaction*,vector<double> > reaction_map;
+
+	/* ---- Capture reaction */
+	vector<double> sigma_f = constant["sigma_f"];
+	vector<double> sigma_a = constant["sigma_a"];
+	vector<double> sigma_c(ngroups);
+	for(size_t i = 0 ; i < ngroups ; ++i)
+		sigma_c[i] = sigma_a[i] - sigma_f[i];
+	reaction_map[new Absorption()] = sigma_c;
+
+	/* ---- Scattering cross section */
+	vector<double> sigma_s(ngroups);
+	vector<double> scattering_matrix = constant["sigma_s"];
+	for(size_t i = 0 ; i < ngroups ; ++i) {
+		double total_scat = 0;
+		for(size_t j = 0 ; j < ngroups ; ++j)
+			total_scat += scattering_matrix[i*ngroups + j];
+		sigma_s[i] = total_scat;
 	}
-	sigma_t = sigma_a + sigma_s;
+	reaction_map[new Scattering(scattering_matrix,ngroups)] = sigma_s;
+
+	/* ---- Fission cross section */
+	vector<double> nu(ngroups);
+	vector<double> nu_sigma_f = constant["nu_sigma_f"];
+	for(size_t i = 0 ; i < ngroups ; ++i)
+		nu[i] = nu_sigma_f[i] / sigma_f[i];
+	reaction_map[new Fission(nu,constant["chi"])] = sigma_f;
+
+	for(size_t i = 0 ; i < ngroups ; ++i)
+		sigma_t[i] = sigma_a[i] + sigma_s[i];
+
+	/* Setup the reaction sampler */
+	reaction_sampler = new Sampler<Reaction*>(reaction_map);
 
 	/* Finally, we should modify the type of material according to the number of groups */
 	if(ngroup == 1)
@@ -101,17 +99,10 @@ MacroXs::MacroXs(const Material::Definition* definition, int number_groups) : Ma
 		type += "_" + toString(ngroup) + "groups"; /* Decorate the type of material */
 }
 
-void MacroXs::collision(Particle& particle) const {
-	/* Isotropic direction */
-	isotropicDirection(particle);
-}
+void MacroXs::print(std::ostream& out) const {/* */}
 
-void MacroXs::print(std::ostream& out) const {
-	out << "+ sigma_a " << sigma_a;
-	out << "+ sigma_f " << sigma_f;
-	out << "+ nu_sigma_f " << nu_sigma_f;
-	out << "+ chi " << chi;
-	out << "+ sigma_s " << sigma_s;
-}
+MacroXs::~MacroXs() {
+	delete reaction_sampler;
+};
 
 } /* namespace Helios */

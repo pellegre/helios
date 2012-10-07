@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <string>
 #include <vector>
+#include <list>
 
 #include "Parser/ParserTypes.hpp"
 #include "Log/Log.hpp"
@@ -150,88 +151,146 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	/* Initialization - Particle */
-	trng::lcg64 r;
-	r.seed((long unsigned int)time(0));
-	Particle particle(Coordinate(0,0,0),Direction(-1.0,0,0),EnergyPair(),1.0,r);
-	/* Random initial direction */
-	isotropicDirection(particle);
+	/* Initialization - Random number */
+	trng::lcg64 random;
+	Random r(random);
+	r.getEngine().seed((long unsigned int)time(0));
+
+	/* Initialization - KEFF cycle */
+	double keff = 1.0;
+	int neutrons = 10000;
+	int skip = 200;
+	int cycles = 1000;
+	list<pair<const Cell*,Particle> > particles;
+	Coordinate initial_pos(0,0,0);
+	/* Fission bank, the particles for the next cycle are banked here */
+	list<pair<const Cell*,Particle> > fission_bank;
+	for(size_t i = 0 ; i < neutrons ; ++i) {
+		Direction initial_dir;
+		isotropicDirection(initial_dir,r);
+		Particle p = Particle(initial_pos,initial_dir,EnergyPair(),1.0);
+		const Cell* c(geometry->findCell(initial_pos));
+		particles.push_back(pair<const Cell*,Particle>(c,p));
+	}
 
 	/* Initialization - Geometry stuff */
-	const Cell* cell(geometry->findCell(particle.pos()));
 	Surface* surface(0);
 	bool sense(true);
 	double distance(0.0);
-
 	bool out = false;
 
-	while(true) {
+	double ave_keff = 0.0;
+	for(int ncycle = 0 ; ncycle < cycles ; ++ncycle) {
 
-	    /* Russian roulette */
-	    if(particle.wgt() < 0.001) {
-	    	if (particle.random() < 0.25) break;
-	    	else particle.wgt() /= 0.25;
-	    }
-
-		/* Get next surface and distance */
-		cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
-
-		/* Energy index of the particle */
-		EnergyIndex energy_index = particle.eix();
-		/* Get material */
-		const Material* material = cell->getMaterial();
-		/* Get total cross section */
-		double total_xs = material->getTotalXs(energy_index);
-
-		/* Get collision distance */
-		double collision_distance = -log(particle.random())/total_xs;
-
-		while(collision_distance > distance) {
-
-			/* Cut on a vacuum surface */
-			if(surface->getFlags() & Surface::VACUUM) {
-				out = true;
-				break;
-			}
-
-			/* Transport the particle to the surface */
-			particle.pos() = particle.pos() + distance * particle.dir();
-
-			/* Now get next cell */
-			surface->cross(particle.pos(),sense,cell);
-
-			/* Cut if the cell is dead */
-			if(cell->getFlag() & Cell::DEADCELL) {
-				out = true;
-				break;
-			}
-
-			/* Calculate new distance to the closest surface */
-			cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
-
-			/* Update material */
-			material = cell->getMaterial();
-			total_xs = material->getTotalXs(energy_index);
-
-			/* And the new collision distance */
-			collision_distance = -log(particle.random())/total_xs;
+		/* Update new particles from the fission bank */
+		while(!fission_bank.empty()) {
+			/* Get banked particle */
+			pair<const Cell*,Particle> banked_particle = fission_bank.back();
+			fission_bank.pop_back();
+			/* Split particle */
+			double amp = banked_particle.second.wgt() / keff;
+			int split = std::max(1,(int)(amp));
+			/* New weight of the particle */
+			banked_particle.second.wgt() = amp/(double)split;
+			/* Put the split particle into the "simulation" list */
+			banked_particle.second.sta() = Particle::ALIVE;
+			for(int i = 0 ; i < split ; i++)
+				particles.push_back(banked_particle);
 		}
 
-		if(out) break;
+		double w = 0;
+		for(list<pair<const Cell*,Particle> >::iterator it = particles.begin() ; it != particles.end() ; ++it) {
+			w += (*it).second.wgt();
+		}
+		cout << ncycle << ";" << w << endl;
 
-		/* If we are out, we reach some point inside a cell were a collision should occur */
-		particle.pos() = particle.pos() + collision_distance * particle.dir();
+		/* Initialize counters */
+		double pop = 0.0;
 
-		/* Modify particle weight */
-		double abs_xs = material->getAbsorptionXs(energy_index);
-		particle.wgt() *= 1.0 - (abs_xs / total_xs);
+		while(!particles.empty()) {
 
-		/* The particle collide with the material */
-		material->collision(particle);
+			pair<const Cell*,Particle> pc = particles.back();
+			particles.pop_back();
 
-		cout << particle << endl;
+			const Cell* cell = pc.first;
+			Particle particle = pc.second;
 
+			while(true) {
+
+				/* Get next surface and distance */
+				cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
+
+				/* Energy index of the particle */
+				EnergyIndex energy_index = particle.eix();
+				/* Get material */
+				const Material* material = cell->getMaterial();
+				/* Get total cross section */
+				double total_xs = material->getTotalXs(energy_index);
+
+				/* Get collision distance */
+				double collision_distance = -log(r.uniform())/total_xs;
+
+				while(collision_distance > distance) {
+
+					/* Cut on a vacuum surface */
+					if(surface->getFlags() & Surface::VACUUM) {
+						out = true;
+						break;
+					}
+
+					/* Transport the particle to the surface */
+					particle.pos() = particle.pos() + distance * particle.dir();
+
+					/* Now get next cell */
+					surface->cross(particle.pos(),sense,cell);
+					if(!cell) {
+						cout << particle << endl;
+						cout << *surface << endl;
+					}
+					/* Cut if the cell is dead */
+					if(cell->getFlag() & Cell::DEADCELL) {
+						out = true;
+						break;
+					}
+
+					/* Calculate new distance to the closest surface */
+					cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
+
+					/* Update material */
+					material = cell->getMaterial();
+					total_xs = material->getTotalXs(energy_index);
+
+					/* And the new collision distance */
+					collision_distance = -log(r.uniform())/total_xs;
+				}
+
+				if(out) break;
+
+				/* If we are out, we reach some point inside a cell were a collision should occur */
+				particle.pos() = particle.pos() + collision_distance * particle.dir();
+
+				/* get and apply reaction to the particle */
+				Reaction* reaction = material->getReaction(particle.eix(),r);
+				(*reaction)(particle,r);
+
+				if(particle.sta() == Particle::DEAD) break;
+				if(particle.sta() == Particle::BANK) {
+					pop += particle.wgt();
+					fission_bank.push_back(pair<const Cell*,Particle>(cell,particle));
+					break;
+				}
+			}
+		}
+
+		/* Calculate multiplication factor */
+		keff = pop / (double)neutrons;
+		cout << keff << endl;
+		cout << "--------------------" << endl;
+		if(ncycle > skip)
+			ave_keff += keff;
 	}
+
+	cout << "Final = " << ave_keff/ (double)(cycles - skip) << endl;
 
 	delete materials;
 	delete geometry;

@@ -31,6 +31,7 @@
 #include <map>
 
 #include "Material.hpp"
+#include "Sampler.hpp"
 
 namespace Helios {
 
@@ -38,20 +39,79 @@ class MacroXs: public Helios::Material {
 
 	/* Number of groups */
 	int ngroups;
-	/* Absorption cross section */
-	Vector sigma_a;
 	/* Total cross section */
-	Vector sigma_t;
-	/* Fission cross section */
-	Vector sigma_f;
-	/* NU-fission cross section */
-	Vector nu_sigma_f;
-	/* Fission spectrum */
-	Vector chi;
-	/* Scattering matrix and total scattering cross section */
-	Matrix mat_sigma_s;
-	Matrix transf_prob;
-	Vector sigma_s;
+	std::vector<double> sigma_t;
+
+	/* ---- Reactions related to macroscopic cross sections */
+
+	class Absorption : public Reaction {
+	public:
+		Absorption() {/* */}
+		void operator() (Particle& particle, Random& r) const {particle.sta() = Particle::DEAD;};
+		~Absorption() {/* */}
+	};
+
+	class Fission : public Reaction {
+		/* NU value for each group */
+		std::vector<double> nu;
+		/* Spectrum sampler */
+		Sampler<int>* spectrum;
+	public:
+		Fission(const std::vector<double>& nu, const std::vector<double>& chi) : nu(nu) {
+			/* Set map for the spectrum sampler */
+			std::map<int,double> m;
+			for(size_t i = 0 ; i < chi.size() ; ++i)
+				m[i] = chi[i];
+			spectrum = new Sampler<int>(m);
+		}
+		void operator() (Particle& particle, Random& r) const {
+			/* The state should be banked */
+			particle.sta() = Particle::BANK;
+			/* Get number of particles */
+			double nubar = nu[particle.eix()];
+			/* Integer part */
+			int nu = (int) nubar;
+			if (r.uniform() < nubar - (double)nu)
+				nu++;
+			particle.wgt() *= (double)nu;
+			/* New direction */
+			isotropicDirection(particle.dir(),r);
+			/* New group */
+			particle.eix() = spectrum->sample(0,r.uniform());
+		};
+		~Fission() {
+			delete spectrum;
+		}
+	};
+
+	class Scattering : public Reaction {
+		/* Spectrum sampler */
+		Sampler<int>* spectrum;
+	public:
+		Scattering(const std::vector<double>& sigma_scat, size_t ngroups) {
+			/* Set map for the spectrum sampler, we got the scattering matrix */
+			std::map<int,std::vector<double> > m;
+			std::vector<double> v(ngroups);
+			for(size_t i = 0 ; i < ngroups ; ++i) {
+				for(size_t j = 0 ; j < ngroups ; ++j)
+					v[j] = sigma_scat[j * ngroups + i];
+				m[i] = v;
+			}
+			spectrum = new Sampler<int>(m);
+		}
+		void operator() (Particle& particle, Random& r) const {
+			/* New direction */
+			isotropicDirection(particle.dir(),r);
+			/* New group */
+			particle.eix() = spectrum->sample(particle.eix(),r.uniform());
+		};
+		~Scattering() {
+			delete spectrum;
+		}
+	};
+
+	/* Reaction sampler */
+	Sampler<Reaction*>* reaction_sampler;
 
 public:
 
@@ -78,20 +138,18 @@ public:
 	EnergyIndex getEnergyIndex(const Energy& energy) const {return 0;};
 
 	 /* Get the total cross section (using the energy index of the particle) */
-	double getTotalXs(const EnergyIndex& index) const {return sigma_t(index);};
+	double getTotalXs(const EnergyIndex& index) const {return sigma_t[index];};
 
-	 /* Get absorption cross section */
-	double getAbsorptionXs(const EnergyIndex& index) const {return sigma_a(index);};
+	/* Get reaction (based on a random generator and a energy index) */
+	Reaction* getReaction(const EnergyIndex& index, Random& random) const {
+		double value = random.uniform();
+		return reaction_sampler->sample(index,value);
+	}
 
-	/*
-	 * Change internal state of the particle according to the internal representation
-	 * of the material
-	 */
-	void collision(Particle& particle) const;
-
+	/* Print material information */
 	void print(std::ostream& out) const;
 
-	virtual ~MacroXs() {/* */};
+	virtual ~MacroXs();
 };
 
 } /* namespace Helios */

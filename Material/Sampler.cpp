@@ -25,38 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Particle.hpp"
+#include "Sampler.hpp"
 
 namespace Helios {
-
-/* Set an isotropic angle to the particle */
-void isotropicDirection(Direction& dir, Random& r) {
-	double rand1, rand2, rand3, c1, c2;
-
-	/* Use the rejection method described in Lux & Koblinger, pp. 21-22. */
-	do {
-		rand1 = 2.0*r.uniform() - 1.0;
-		rand2 = 2.0*r.uniform() - 1.0;
-		c1 = rand1*rand1 + rand2*rand2;
-    }
-	while (c1 > 1.0);
-
-	rand3 = 2.0*r.uniform() - 1.0;
-
-	c2 = sqrt(1 - rand3*rand3);
-
-	dir[0] = c2*(rand1*rand1 - rand2*rand2)/c1;
-	dir[1] = c2*2.0*rand1*rand2/c1;
-	dir[2] = rand3;
-}
-
-std::ostream& operator<<(std::ostream& out, const Particle& q) {
-	out << "pos = " << q.position << " ; ";
-	out << "dir = " << q.direction << " ; ";
-	out << "energy = " << q.energy.second << " (index = " << q.energy.second << ") ; ";
-	out << "weight = " << q.weight << " ; ";
-	out << "state = " << q.state;
-	return out;
-}
 
 } /* namespace Helios */
