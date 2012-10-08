@@ -39,32 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gtest/gtest.h"
 
-template<class TypeReaction>
-class SamplerTest : public ::testing::Test {
-
-protected:
-
-	SamplerTest(const std::map<TypeReaction,std::vector<double> >& sampler_map) : sampler_map(sampler_map) {/* */}
-	virtual ~SamplerTest() {/* */}
-
-	void SetUp() {
-		srand(time(NULL));
-		std::map<TypeReaction,std::vector<double>* > ptr_sampler_map;
-		typename std::map<TypeReaction,std::vector<double> >::iterator it_rea = sampler_map.begin();
-		for(; it_rea != sampler_map.end() ; ++it_rea)
-			ptr_sampler_map[(*it_rea).first] = &((*it_rea).second);
-		sampler = new Helios::Sampler<TypeReaction>(ptr_sampler_map);
-	}
-
-	void TearDown() {
-		delete sampler;
-	}
-
-	std::map<TypeReaction,std::vector<double> > sampler_map;
-	/* Sampler to test */
-	Helios::Sampler<TypeReaction>* sampler;
-};
-
 template<class T>
 class SamplerGenerator {
 
@@ -107,81 +81,210 @@ public:
 
 };
 
+template<class TypeReaction>
+class SamplerPtrTest : public ::testing::Test {
+
+protected:
+
+	SamplerPtrTest(const std::map<TypeReaction,std::vector<double> >& sampler_map) : sampler_map(sampler_map) {/* */}
+	virtual ~SamplerPtrTest() {/* */}
+
+	void SetUp() {
+		srand(time(NULL));
+		std::map<TypeReaction,std::vector<double>* > ptr_sampler_map;
+		typename std::map<TypeReaction,std::vector<double> >::iterator it_rea = sampler_map.begin();
+		for(; it_rea != sampler_map.end() ; ++it_rea)
+			ptr_sampler_map[(*it_rea).first] = &((*it_rea).second);
+		sampler = new Helios::Sampler<TypeReaction>(ptr_sampler_map);
+	}
+
+	void TearDown() {
+		delete sampler;
+	}
+
+	std::map<TypeReaction,std::vector<double> > sampler_map;
+	/* Sampler to test */
+	Helios::Sampler<TypeReaction>* sampler;
+};
+
 /* Test for sampling integers (uniform) */
-class IntUniformSamplerTest : public SamplerTest<int> {
+class IntUniformSamplerPtrTest : public SamplerPtrTest<int> {
 	int nsamples;
 	int histories;
+	int nenergies;
 protected:
-	IntUniformSamplerTest(const int& nsamples, const int& histories) :
-		           SamplerTest<int>(SamplerGenerator<int>(genVector<int>(0,nsamples-1),1).getUniformMap()),
-		           nsamples(nsamples), histories(histories) {/* */}
+	IntUniformSamplerPtrTest(const int& nsamples, const int& nenergies, const int& histories) :
+		           SamplerPtrTest<int>(SamplerGenerator<int>(genVector<int>(0,nsamples-1),nenergies).getUniformMap()),
+		           nsamples(nsamples), histories(histories), nenergies(nenergies) {/* */}
 	void checkUniformSamples() const {
 		for(size_t h = 0 ; h < histories ; h++) {
 			double value = randomNumber();
 			int expect = (int) (value/(1.0/(double)nsamples));
-			ASSERT_EQ(sampler->sample(0,value),expect);
+			ASSERT_EQ(sampler->sample(rand()%nenergies,value),expect);
 		}
 	}
-	virtual ~IntUniformSamplerTest() {/* */}
+	virtual ~IntUniformSamplerPtrTest() {/* */}
 };
 
 /* Uniform samplers */
-class HeavyIntUniformSamplerTest : public IntUniformSamplerTest {
+class HeavyIntUniformSamplerPtrTest : public IntUniformSamplerPtrTest {
 protected:
-	HeavyIntUniformSamplerTest() : IntUniformSamplerTest(50000,1000000) {/* */}
-	virtual ~HeavyIntUniformSamplerTest() {/* */}
+	HeavyIntUniformSamplerPtrTest() : IntUniformSamplerPtrTest(50000,100,1000000) {/* */}
+	virtual ~HeavyIntUniformSamplerPtrTest() {/* */}
 };
-class MediumIntUniformSamplerTest : public IntUniformSamplerTest {
+class MediumIntUniformSamplerPtrTest : public IntUniformSamplerPtrTest {
 protected:
-	MediumIntUniformSamplerTest() : IntUniformSamplerTest(50,1000000) {/* */}
-	virtual ~MediumIntUniformSamplerTest() {/* */}
+	MediumIntUniformSamplerPtrTest() : IntUniformSamplerPtrTest(50,100,1000000) {/* */}
+	virtual ~MediumIntUniformSamplerPtrTest() {/* */}
 };
-class OneIntUniformSamplerTest : public IntUniformSamplerTest {
+class OneIntUniformSamplerPtrTest : public IntUniformSamplerPtrTest {
 protected:
-	OneIntUniformSamplerTest() : IntUniformSamplerTest(1,1000000) {/* */}
-	virtual ~OneIntUniformSamplerTest() {/* */}
+	OneIntUniformSamplerPtrTest() : IntUniformSamplerPtrTest(1,100,1000000) {/* */}
+	virtual ~OneIntUniformSamplerPtrTest() {/* */}
 };
 
-class IntOddZeroedSamplerTest : public SamplerTest<int> {
+class IntOddZeroedSamplerPtrTest : public SamplerPtrTest<int> {
 	int nsamples;
 	int histories;
+	int nenergies;
 protected:
-	IntOddZeroedSamplerTest(const int& nsamples, const int& histories) :
-		           SamplerTest<int>(SamplerGenerator<int>(genVector<int>(0,nsamples-1),1).getOddZeroedMap()),
-		           nsamples(nsamples), histories(histories) {/* */}
+	IntOddZeroedSamplerPtrTest(const int& nsamples, const int& nenergies, const int& histories) :
+		           SamplerPtrTest<int>(SamplerGenerator<int>(genVector<int>(0,nsamples-1),nenergies).getOddZeroedMap()),
+		           nsamples(nsamples), histories(histories), nenergies(nenergies) {/* */}
 	void checkZeroedSamples() const {
 		for(size_t h = 0 ; h < histories ; h++) {
 			double value = randomNumber();
 			int expect = (int) (value/(1.0/(double)(nsamples)));
 			if(expect%2 == 1) expect--;
-			ASSERT_EQ(sampler->sample(0,value),expect);
+			ASSERT_EQ(sampler->sample(rand()%nenergies,value),expect);
 		}
 	}
-	virtual ~IntOddZeroedSamplerTest() {/* */}
+	virtual ~IntOddZeroedSamplerPtrTest() {/* */}
 };
 
 /* Samplers with some zeros probabilities for some reaction */
-class HeavyIntOddZeroedSamplerTest : public IntOddZeroedSamplerTest {
+class HeavyIntOddZeroedSamplerPtrTest : public IntOddZeroedSamplerPtrTest {
 protected:
-	HeavyIntOddZeroedSamplerTest() : IntOddZeroedSamplerTest(50000,1000000) {/* */}
-	virtual ~HeavyIntOddZeroedSamplerTest() {/* */}
+	HeavyIntOddZeroedSamplerPtrTest() : IntOddZeroedSamplerPtrTest(50000,100,1000000) {/* */}
+	virtual ~HeavyIntOddZeroedSamplerPtrTest() {/* */}
 };
-class MediumIntOddZeroedSamplerTest : public IntOddZeroedSamplerTest {
+class MediumIntOddZeroedSamplerPtrTest : public IntOddZeroedSamplerPtrTest {
 protected:
-	MediumIntOddZeroedSamplerTest() : IntOddZeroedSamplerTest(50,1000000) {/* */}
-	virtual ~MediumIntOddZeroedSamplerTest() {/* */}
+	MediumIntOddZeroedSamplerPtrTest() : IntOddZeroedSamplerPtrTest(50,100,1000000) {/* */}
+	virtual ~MediumIntOddZeroedSamplerPtrTest() {/* */}
 };
-class OneIntOddZeroedSamplerTest : public IntOddZeroedSamplerTest {
+class OneIntOddZeroedSamplerPtrTest : public IntOddZeroedSamplerPtrTest {
 protected:
-	OneIntOddZeroedSamplerTest() : IntOddZeroedSamplerTest(1,1000000) {/* */}
-	virtual ~OneIntOddZeroedSamplerTest() {/* */}
+	OneIntOddZeroedSamplerPtrTest() : IntOddZeroedSamplerPtrTest(1,100,1000000) {/* */}
+	virtual ~OneIntOddZeroedSamplerPtrTest() {/* */}
 };
 
-TEST_F(HeavyIntUniformSamplerTest, SamplingIntegers) {checkUniformSamples();}
-TEST_F(MediumIntUniformSamplerTest, SamplingIntegers) {checkUniformSamples();}
-TEST_F(OneIntUniformSamplerTest, SamplingIntegers) {checkUniformSamples();}
-TEST_F(HeavyIntOddZeroedSamplerTest, SamplingIntegers) {checkZeroedSamples();}
-TEST_F(MediumIntOddZeroedSamplerTest, SamplingIntegers) {checkZeroedSamples();}
-TEST_F(OneIntOddZeroedSamplerTest, SamplingIntegers) {checkZeroedSamples();}
+TEST_F(HeavyIntUniformSamplerPtrTest, SamplingIntegers) {checkUniformSamples();}
+TEST_F(MediumIntUniformSamplerPtrTest, SamplingIntegers) {checkUniformSamples();}
+TEST_F(OneIntUniformSamplerPtrTest, SamplingIntegers) {checkUniformSamples();}
+TEST_F(HeavyIntOddZeroedSamplerPtrTest, SamplingIntegers) {checkZeroedSamples();}
+TEST_F(MediumIntOddZeroedSamplerPtrTest, SamplingIntegers) {checkZeroedSamples();}
+TEST_F(OneIntOddZeroedSamplerPtrTest, SamplingIntegers) {checkZeroedSamples();}
+
+template<class TypeReaction>
+class SamplerCpyTest : public ::testing::Test {
+
+protected:
+
+	SamplerCpyTest(const std::map<TypeReaction,std::vector<double> >& sampler_map) : sampler_map(sampler_map) {/* */}
+	virtual ~SamplerCpyTest() {/* */}
+
+	void SetUp() {
+		srand(time(NULL));
+		sampler = new Helios::Sampler<TypeReaction>(sampler_map);
+	}
+
+	void TearDown() {
+		delete sampler;
+	}
+
+	std::map<TypeReaction,std::vector<double> > sampler_map;
+	/* Sampler to test */
+	Helios::Sampler<TypeReaction>* sampler;
+};
+
+/* Test for sampling integers (uniform) */
+class IntUniformSamplerCpyTest : public SamplerCpyTest<int> {
+	int nsamples;
+	int histories;
+	int nenergies;
+protected:
+	IntUniformSamplerCpyTest(const int& nsamples, const int& nenergies, const int& histories) :
+		           SamplerCpyTest<int>(SamplerGenerator<int>(genVector<int>(0,nsamples-1),nenergies).getUniformMap()),
+		           nsamples(nsamples), histories(histories),nenergies(nenergies) {/* */}
+	void checkUniformSamples() const {
+		for(size_t h = 0 ; h < histories ; h++) {
+			double value = randomNumber();
+			int expect = (int) (value/(1.0/(double)nsamples));
+			ASSERT_EQ(sampler->sample(rand()%nenergies,value),expect);
+		}
+	}
+	virtual ~IntUniformSamplerCpyTest() {/* */}
+};
+
+/* Uniform samplers */
+class HeavyIntUniformSamplerCpyTest : public IntUniformSamplerCpyTest {
+protected:
+	HeavyIntUniformSamplerCpyTest() : IntUniformSamplerCpyTest(50000,100,1000000) {/* */}
+	virtual ~HeavyIntUniformSamplerCpyTest() {/* */}
+};
+class MediumIntUniformSamplerCpyTest : public IntUniformSamplerCpyTest {
+protected:
+	MediumIntUniformSamplerCpyTest() : IntUniformSamplerCpyTest(50,100,1000000) {/* */}
+	virtual ~MediumIntUniformSamplerCpyTest() {/* */}
+};
+class OneIntUniformSamplerCpyTest : public IntUniformSamplerCpyTest {
+protected:
+	OneIntUniformSamplerCpyTest() : IntUniformSamplerCpyTest(1,100,1000000) {/* */}
+	virtual ~OneIntUniformSamplerCpyTest() {/* */}
+};
+
+class IntOddZeroedSamplerCpyTest : public SamplerCpyTest<int> {
+	int nsamples;
+	int histories;
+	int nenergies;
+protected:
+	IntOddZeroedSamplerCpyTest(const int& nsamples, const int& nenergies, const int& histories) :
+		           SamplerCpyTest<int>(SamplerGenerator<int>(genVector<int>(0,nsamples-1),nenergies).getOddZeroedMap()),
+		           nsamples(nsamples), histories(histories), nenergies(nenergies) {/* */}
+	void checkZeroedSamples() const {
+		for(size_t h = 0 ; h < histories ; h++) {
+			double value = randomNumber();
+			int expect = (int) (value/(1.0/(double)(nsamples)));
+			if(expect%2 == 1) expect--;
+			ASSERT_EQ(sampler->sample(rand()%nenergies,value),expect);
+		}
+	}
+	virtual ~IntOddZeroedSamplerCpyTest() {/* */}
+};
+
+/* Samplers with some zeros probabilities for some reaction */
+class HeavyIntOddZeroedSamplerCpyTest : public IntOddZeroedSamplerCpyTest {
+protected:
+	HeavyIntOddZeroedSamplerCpyTest() : IntOddZeroedSamplerCpyTest(50000,100,1000000) {/* */}
+	virtual ~HeavyIntOddZeroedSamplerCpyTest() {/* */}
+};
+class MediumIntOddZeroedSamplerCpyTest : public IntOddZeroedSamplerCpyTest {
+protected:
+	MediumIntOddZeroedSamplerCpyTest() : IntOddZeroedSamplerCpyTest(50,100,1000000) {/* */}
+	virtual ~MediumIntOddZeroedSamplerCpyTest() {/* */}
+};
+class OneIntOddZeroedSamplerCpyTest : public IntOddZeroedSamplerCpyTest {
+protected:
+	OneIntOddZeroedSamplerCpyTest() : IntOddZeroedSamplerCpyTest(1,100,1000000) {/* */}
+	virtual ~OneIntOddZeroedSamplerCpyTest() {/* */}
+};
+
+TEST_F(HeavyIntUniformSamplerCpyTest, SamplingIntegers) {checkUniformSamples();}
+TEST_F(MediumIntUniformSamplerCpyTest, SamplingIntegers) {checkUniformSamples();}
+TEST_F(OneIntUniformSamplerCpyTest, SamplingIntegers) {checkUniformSamples();}
+TEST_F(HeavyIntOddZeroedSamplerCpyTest, SamplingIntegers) {checkZeroedSamples();}
+TEST_F(MediumIntOddZeroedSamplerCpyTest, SamplingIntegers) {checkZeroedSamples();}
+TEST_F(OneIntOddZeroedSamplerCpyTest, SamplingIntegers) {checkZeroedSamples();}
 
 #endif /* REACTIONTESTS_HPP_ */

@@ -59,11 +59,127 @@ namespace Helios {
 		/* Get the index of the reaction after a binary search */
 		int getIndex(const Vector& dat, double val);
 
+		/* Get value in an index from different containers types */
+		double getArrayIndex(int index,const std::vector<double> stl_array) {
+			return stl_array[index];
+		}
+		double getArrayIndex(int index,const std::vector<double>* stl_array_ptr) {
+			return stl_array_ptr->at(index);
+		}
+		/* In case is not a container (just a value) */
+		double getArrayIndex(int index,const double single_value) {
+			assert(index == 0);
+			return single_value;
+		}
+
+		/* Get size different containers types */
+		double getArraySize(const std::vector<double> stl_array) {
+			return stl_array.size();
+		}
+		double getArraySize(const std::vector<double>* stl_array_ptr) {
+			return stl_array_ptr->size();
+		}
+		/* In case is not a container (just a value) */
+		double getArraySize(const double single_value) {
+			return 1;
+		}
+
 	public:
 
-		Sampler(const std::map<TypeReaction,std::vector<double>* >& reaction_map);
-		Sampler(const std::map<TypeReaction,std::vector<double> >& reaction_map);
-		Sampler(const std::map<TypeReaction,double>& reaction_map);
+		/*
+		 * How reactions are specified in the constructor (with an energy dependent table)
+		 *
+		 * The reactions are keys on the map, and the value associated to each key is some kind
+		 * of container to the probabilities in function of the energy.
+		 *
+		 *   ---------> Cross section for each
+		 * |       [e-0] [e-1] [e-2] [e-3] .... [e-n]
+		 * | [r-0]  0.1   0.1   0.35  0.5  ....  0.2
+		 * | [r-1]  0.2   0.3   0.45  0.6  ....  0.4
+		 * | [r-2]  0.3   0.4   0.55  0.7  ....  0.6
+		 * |  ...
+		 * | [r-n]  0.4   0.5   0.65  0.8  ....  0.7
+		 *
+		 */
+
+		/*
+		 * How reactions are specified in the constructor (in case there isn't and energy dependent table)
+		 *
+		 * The reactions are keys on the map, and the value associated to each key is the
+		 * probability of that reaction
+		 *
+		 *   ---------> Cross section for each
+		 * |       [value]
+		 * | [r-0]   0.1
+		 * | [r-1]   0.2
+		 * | [r-2]   0.3
+		 * |  ...
+		 * | [r-n]   0.4
+		 *
+		 */
+
+		template<class ProbTable>
+		Sampler(const std::map<TypeReaction,ProbTable>& reaction_map) :
+            nreaction(reaction_map.size()),
+            nenergy(getArraySize(reaction_map.begin()->second)),
+            reactions(nreaction),
+            reaction_matrix(nenergy,nreaction - 1) {
+
+			/* TypeReactions */
+			typename std::map<TypeReaction,ProbTable>::const_iterator it_rea = reaction_map.begin();
+			int nrea = 0;
+			/* Cross sections */
+			std::vector<ProbTable> xs_container(nreaction);
+			for(; it_rea != reaction_map.end() ; ++it_rea) {
+				/* Save the reactions into the reaction container */
+				reactions[nrea] = (*it_rea).first;
+				/* Save the cross sections */
+				xs_container[nrea] = (*it_rea).second;
+				/* Count reaction */
+				nrea++;
+			}
+
+			/* Once we separate the reactions from the cross sections, we need to construct the reaction matrix */
+			for(int nerg = 0 ; nerg < nenergy ; ++nerg) {
+				/* First get the total cross section (of this reactions) at this energy */
+				double total_xs = 0.0;
+				for(nrea = 0 ; nrea < nreaction ; ++nrea)
+					total_xs += getArrayIndex(nerg,xs_container[nrea]);
+
+				/* Exclusive scan, to construct the accumulated probability table at this energy */
+				double partial_sum = 0;
+				for(nrea = 0 ; nrea < nreaction - 1; ++nrea) {
+					partial_sum += getArrayIndex(nerg,xs_container[nrea]);
+					reaction_matrix(nerg,nrea) = partial_sum / total_xs;
+				}
+			}
+		}
+
+		template<class ProbTable>
+		Sampler(const std::vector<TypeReaction>& reactions, const std::vector<ProbTable>& xs_container) :
+            nreaction(reactions.size()),
+            nenergy(getArraySize(*xs_container.begin())),
+            reactions(reactions),
+            reaction_matrix(nenergy,nreaction - 1) {
+
+			/* Sanity check */
+			assert(xs_container.size() == reactions.size());
+
+			/* Once we separate the reactions from the cross sections, we need to construct the reaction matrix */
+			for(int nerg = 0 ; nerg < nenergy ; ++nerg) {
+				/* First get the total cross section (of this reactions) at this energy */
+				double total_xs = 0.0;
+				for(int nrea = 0 ; nrea < nreaction ; ++nrea)
+					total_xs += getArrayIndex(nerg,xs_container[nrea]);
+
+				/* Exclusive scan, to construct the accumulated probability table at this energy */
+				double partial_sum = 0;
+				for(int nrea = 0 ; nrea < nreaction - 1; ++nrea) {
+					partial_sum += getArrayIndex(nerg,xs_container[nrea]);
+					reaction_matrix(nerg,nrea) = partial_sum / total_xs;
+				}
+			}
+		}
 
 		/*
 		 * Sample a reaction
@@ -75,113 +191,6 @@ namespace Helios {
 		Sampler() {/* */};
 
 	};
-
-	template<class TypeReaction>
-	Sampler<TypeReaction>::Sampler(const std::map<TypeReaction,std::vector<double>* >& reaction_map) :
-	                       nreaction(reaction_map.size()), nenergy(reaction_map.begin()->second->size()),
-	                       reactions(nreaction), reaction_matrix(nenergy,nreaction - 1) {
-
-		/* TypeReactions */
-		typename std::map<TypeReaction,std::vector<double>* >::const_iterator it_rea = reaction_map.begin();
-		int nrea = 0;
-		/* Cross sections */
-		std::vector<std::vector<double>* > xs_container(nreaction);
-		for(; it_rea != reaction_map.end() ; ++it_rea) {
-			/* Save the reactions into the reaction container */
-			reactions[nrea] = (*it_rea).first;
-			/* Save the cross sections */
-			xs_container[nrea] = (*it_rea).second;
-			/* Count reaction */
-			nrea++;
-		}
-
-		/* Once we separate the reactions from the cross sections, we need to construct the reaction matrix */
-		for(int nerg = 0 ; nerg < nenergy ; ++nerg) {
-			/* First get the total cross section (of this reactions) at this energy */
-			double total_xs = 0.0;
-			for(nrea = 0 ; nrea < nreaction ; ++nrea)
-				total_xs += xs_container[nrea]->at(nerg);
-
-			/* Exclusive scan, to construct the accumulated probability table at this energy */
-			double partial_sum = 0;
-			for(nrea = 0 ; nrea < nreaction - 1; ++nrea) {
-				partial_sum += xs_container[nrea]->at(nerg);
-				reaction_matrix(nerg,nrea) = partial_sum / total_xs;
-			}
-		}
-
-//		std::cout << std::endl << reaction_matrix << std::endl;
-//		double value = 0.35;
-//		std::cout <<  value << ";" << sample(0,value) << std::endl;
-	}
-
-	template<class TypeReaction>
-	Sampler<TypeReaction>::Sampler(const std::map<TypeReaction,std::vector<double> >& reaction_map) :
-	                       nreaction(reaction_map.size()), nenergy(reaction_map.begin()->second.size()),
-	                       reactions(nreaction), reaction_matrix(nenergy,nreaction - 1) {
-
-		/* TypeReactions */
-		typename std::map<TypeReaction,std::vector<double> >::const_iterator it_rea = reaction_map.begin();
-		int nrea = 0;
-		/* Cross sections */
-		std::vector<std::vector<double> > xs_container(nreaction);
-		for(; it_rea != reaction_map.end() ; ++it_rea) {
-			/* Save the reactions into the reaction container */
-			reactions[nrea] = (*it_rea).first;
-			/* Save the cross sections */
-			xs_container[nrea] = (*it_rea).second;
-			/* Count reaction */
-			nrea++;
-		}
-
-		/* Once we separate the reactions from the cross sections, we need to construct the reaction matrix */
-		for(int nerg = 0 ; nerg < nenergy ; ++nerg) {
-			/* First get the total cross section (of this reactions) at this energy */
-			double total_xs = 0.0;
-			for(nrea = 0 ; nrea < nreaction ; ++nrea)
-				total_xs += xs_container[nrea][nerg];
-
-			/* Exclusive scan, to construct the accumulated probability table at this energy */
-			double partial_sum = 0;
-			for(nrea = 0 ; nrea < nreaction - 1; ++nrea) {
-				partial_sum += xs_container[nrea][nerg];
-				reaction_matrix(nerg,nrea) = partial_sum / total_xs;
-			}
-		}
-	}
-
-	template<class TypeReaction>
-	Sampler<TypeReaction>::Sampler(const std::map<TypeReaction,double>& reaction_map) :
-	                       nreaction(reaction_map.size()), nenergy(1),
-	                       reactions(nreaction), reaction_matrix(nenergy,nreaction - 1) {
-
-		/* TypeReactions */
-		typename std::map<TypeReaction,double>::const_iterator it_rea = reaction_map.begin();
-		int nrea = 0;
-		/* Cross sections */
-		std::vector<double> xs_container(nreaction);
-		for(; it_rea != reaction_map.end() ; ++it_rea) {
-			/* Save the reactions into the reaction container */
-			reactions[nrea] = (*it_rea).first;
-			/* Save the cross sections */
-			xs_container[nrea] = (*it_rea).second;
-			/* Count reaction */
-			nrea++;
-		}
-
-		/* First get the total cross section (of this reactions) at this energy */
-		double total_xs = 0.0;
-		for(nrea = 0 ; nrea < nreaction ; ++nrea)
-			total_xs += xs_container[nrea];
-
-		/* Exclusive scan, to construct the accumulated probability table at this energy */
-		double partial_sum = 0;
-		for(nrea = 0 ; nrea < nreaction - 1; ++nrea) {
-			partial_sum += xs_container[nrea];
-			reaction_matrix(0,nrea) = partial_sum / total_xs;
-		}
-
-	}
 
 	template<class TypeReaction>
 	int Sampler<TypeReaction>::getIndex(const Vector& dat, double val) {
@@ -207,7 +216,7 @@ namespace Helios {
 
 	template<class TypeReaction>
 	TypeReaction Sampler<TypeReaction>::sample(int index, double value) {
-		if(nreaction == 1) return 0;
+		if(nreaction == 1) return reactions[0];
 		int nrea = getIndex((Vector)reaction_matrix(index,Range::all()),value);
 		return reactions[nrea];
 	}
