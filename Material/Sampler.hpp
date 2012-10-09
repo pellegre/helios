@@ -46,18 +46,18 @@ namespace Helios {
 		 *
 		 *   ---------> Accumulated probability for each reaction
 		 * |       [r-0] [r-1] [r-2] [r-3] .... [r-n]
-		 * | [e-0]  0.1   0.2   0.35  0.5  ....  1.0
-		 * | [e-1]  0.2   0.3   0.45  0.6  ....  1.0
-		 * | [e-2]  0.3   0.4   0.55  0.7  ....  1.0
+		 * | [e-0]  0.1   0.2   0.35  0.5  ....  0.98
+		 * | [e-1]  0.2   0.3   0.45  0.6  ....  0.98
+		 * | [e-2]  0.3   0.4   0.55  0.7  ....  0.98
 		 * |  ...
-		 * | [e-n]  0.4   0.5   0.65  0.8  ....  1.0
+		 * | [e-n]  0.4   0.5   0.65  0.8  ....  0.98
 		 *
 		 * e-n is the energy index of the particle (not the value)
 		 */
-		Matrix reaction_matrix;
+		double* reaction_matrix;
 
 		/* Get the index of the reaction after a binary search */
-		int getIndex(const Vector& dat, double val);
+		int getIndex(const double* dat, double val);
 
 		/* Get value in an index from different containers types */
 		double getArrayIndex(int index,const std::vector<double> stl_array) {
@@ -122,8 +122,10 @@ namespace Helios {
 		Sampler(const std::map<TypeReaction,ProbTable>& reaction_map) :
             nreaction(reaction_map.size()),
             nenergy(getArraySize(reaction_map.begin()->second)),
-            reactions(nreaction),
-            reaction_matrix(nenergy,nreaction - 1) {
+            reactions(nreaction) {
+
+			/* Allocate reaction matrix */
+			reaction_matrix = new double[(nreaction - 1) * nenergy];
 
 			/* TypeReactions */
 			typename std::map<TypeReaction,ProbTable>::const_iterator it_rea = reaction_map.begin();
@@ -150,7 +152,7 @@ namespace Helios {
 				double partial_sum = 0;
 				for(nrea = 0 ; nrea < nreaction - 1; ++nrea) {
 					partial_sum += getArrayIndex(nerg,xs_container[nrea]);
-					reaction_matrix(nerg,nrea) = partial_sum / total_xs;
+					reaction_matrix[nerg*(nreaction - 1) + nrea] = partial_sum / total_xs;
 				}
 			}
 		}
@@ -188,27 +190,27 @@ namespace Helios {
 		 */
 		TypeReaction sample(int index, double value);
 
-		Sampler() {/* */};
+		Sampler() {delete reaction_matrix;};
 
 	};
 
 	template<class TypeReaction>
-	int Sampler<TypeReaction>::getIndex(const Vector& dat, double val) {
+	int Sampler<TypeReaction>::getIndex(const double* dat, double val) {
 		/* Initial boundaries */
 		int lo = 0;
 		int hi = nreaction - 2;
-		if(val < dat(lo)) return 0;
-		if(val > dat(hi)) return nreaction - 1;
+		if(val < dat[lo]) return 0;
+		if(val > dat[hi]) return nreaction - 1;
 		while(hi - lo > 1) {
 			/* Check boundaries */
-			if ((val > dat(lo)) && (val < dat(lo + 1)))
+			if ((val > dat[lo]) && (val < dat[lo + 1]))
 				return lo + 1;
-			else if ((val > dat(hi - 1)) && (val < dat(hi)))
+			else if ((val > dat[hi - 1]) && (val < dat[hi]))
 				return hi;
 			/* New guess */
 			int n = (int)(((double)hi + (double)lo)/2.0);
 			/* New boundaries */
-			if (val < dat(n)) hi = n;
+			if (val < dat[n]) hi = n;
 			else lo = n;
 		}
 		return lo + 1;
@@ -217,7 +219,7 @@ namespace Helios {
 	template<class TypeReaction>
 	TypeReaction Sampler<TypeReaction>::sample(int index, double value) {
 		if(nreaction == 1) return reactions[0];
-		int nrea = getIndex((Vector)reaction_matrix(index,Range::all()),value);
+		int nrea = getIndex(reaction_matrix + index * (nreaction - 1),value);
 		return reactions[nrea];
 	}
 

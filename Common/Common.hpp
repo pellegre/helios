@@ -48,10 +48,6 @@ namespace Helios {
 	/* Define a direction */
 	typedef TinyVector<double,3> Direction;
 
-	/* Matrices and arrays (floating point) */
-	typedef Array<double,1> Vector;
-	typedef Array<double,2> Matrix;
-
 	/* Matrices and arrays (integers) */
 	typedef Array<int,1> IntVector;
 	typedef Array<int,2> IntMatrix;
