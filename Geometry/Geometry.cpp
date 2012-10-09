@@ -45,17 +45,17 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 	/* Create the new duplicated surface */
 	Surface* new_surface = trans(surface);
 
-//	/* Check if the surface is not duplicated */
-//	vector<Surface*>::iterator it_sur = surfaces.begin();
-//	for(; it_sur != surfaces.end() ; ++it_sur) {
-//		if(*new_surface == *(*it_sur)) {
-//			if(new_surface->getUserId() != (*it_sur)->getUserId())
-//				if(new_surface->getUserId() <= maxUserSurfaceId)
-//					Log::warn() << "Surface " << new_surface->getUserId() << " is redundant and is eliminated from the geometry" << Log::endl;
-//			delete new_surface;
-//			return (*it_sur);
-//		}
-//	}
+	/* Check if the surface is not duplicated */
+	vector<Surface*>::iterator it_sur = surfaces.begin();
+	for(; it_sur != surfaces.end() ; ++it_sur) {
+		if(*new_surface == *(*it_sur)) {
+			if(new_surface->getUserId() != (*it_sur)->getUserId())
+				if(new_surface->getUserId() <= maxUserSurfaceId)
+					Log::warn() << "Surface " << new_surface->getUserId() << " is redundant and is eliminated from the geometry" << Log::endl;
+			delete new_surface;
+			return (*it_sur);
+		}
+	}
 
 	/* Set internal / unique index */
 	new_surface->setInternalId(surfaces.size());
@@ -87,6 +87,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 
 	/* Add each cell of this universe */
 	vector<Cell::Definition*>::iterator it_cell = cell_def.begin();
+    map<SurfaceId,Surface*> temp_sur_map;
 
 	for(; it_cell != cell_def.end() ; ++it_cell) {
 
@@ -108,7 +109,17 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    		throw Cell::BadCellCreation(userCellId,"Surface number " + toString(userSurfaceId) + " doesn't exist.");
 
 	    	/* New surface for this cell */
-	    	Surface* new_surface = addSurface((*it_sur).second,trans);
+	    	Surface* new_surface = 0;
+
+	    	/* Check for already created surfaces inside this universe */
+	    	map<SurfaceId,Surface*>::const_iterator it_temp_sur = temp_sur_map.find(userSurfaceId);
+	    	if(it_temp_sur != temp_sur_map.end())
+	    		/* The surface is created */
+	    		new_surface = (*it_temp_sur).second;
+	    	else {
+	    		new_surface = addSurface((*it_sur).second,trans);
+		    	temp_sur_map[new_surface->getUserId()] = new_surface;
+	    	}
 
 	    	/* Get surface with sense */
 	    	Cell::SenseSurface newSurface(new_surface,getSign(*it));
@@ -133,7 +144,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    /* Link this cell with the new universe */
 	    new_universe->addCell(new_cell);
 
-	    /* Check if this surface is filled by another universe */
+	    /* Check if this cell is filled by another universe */
 	    UniverseId fill_universe_id = (*it_cell)->getFill();
 	    if(fill_universe_id) {
 	    	/* Create recursively the other universes and also propagate the transformation */

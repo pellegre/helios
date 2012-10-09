@@ -46,6 +46,12 @@ void transport(const Helios::Geometry& geometry, const Helios::Coordinate& start
 		pos = pos + distance * start_dir;
 		/* Now get next cell */
 		surface->cross(pos,sense,cell);
+		if(!cell) {
+				cout << pos << endl;
+				cout << *surface << endl;
+				cout << "Geometry : " << endl;
+				geometry.printGeo(std::cout);
+		}
 		/* Put user IDs */
 		cells.push_back(cell->getUserId());
 		surfaces.push_back(surface->getUserId());
@@ -71,6 +77,12 @@ double randomTransport(const Helios::Geometry& geometry, const Helios::Coordinat
 		max_eval = std::max(max_eval,surface->function(pos));
 		/* Now get next cell */
 		surface->cross(pos,sense,cell);
+		if(!cell) {
+				cout << pos << endl;
+				cout << *surface << endl;
+				cout << "Geometry : " << endl;
+				geometry.printGeo(std::cout);
+		}
 		if(cell->getFlag() & Cell::DEADCELL) break;
 	}
 	return max_eval;

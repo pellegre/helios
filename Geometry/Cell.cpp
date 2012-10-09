@@ -80,7 +80,8 @@ void Cell::print(std::ostream& out) const {
 		out << " ; fill = " << fill->getUserId();
 
 	/* Print material */
-	out << " ; material = " << material->getUserId();
+	if(material)
+		out << " ; material = " << material->getUserId();
 
 	/* Print flags */
 	out << " ; flags = " << getFlag();
