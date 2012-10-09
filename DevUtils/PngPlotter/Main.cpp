@@ -81,7 +81,7 @@ static pair<string,size_t> seachKeyWords(const vector<string>& files, vector<str
 
 void plot(const Helios::Geometry& geo, const Helios::MaterialContainer& materials,
 		  double xmin, double xmax, double ymin, double ymax, const std::string& filename) {
-	static int pixel = 500;
+	static int pixel = 5000;
 	pngwriter png(pixel,pixel,1.0,filename.c_str());
 	/* Deltas */
 	double deltax = (xmax - xmin) / (double)(pixel);
@@ -157,10 +157,13 @@ int main(int argc, char **argv) {
 
 	try {
 
+		size_t arg_count = 0;
 		while(*(++argv)) {
+			arg_count++;
 			string filename = string(*(argv));
 			input_files.push_back(filename);
 			parser->parseFile(filename);
+			if(arg_count == argc - 3) break;
 		}
 
 	} catch(Parser::ParserError& parsererror) {
@@ -195,7 +198,9 @@ int main(int argc, char **argv) {
 	/* Connect cell with materials */
 	geometry.setupMaterials(materials);
 
-	plot(geometry,materials,-3.6,3.6,-3.6,3.6,"test.png");
+	double x = fromString<double>(string(*(++argv)));
+	double y = fromString<double>(string(*(++argv)));
+	plot(geometry,materials,-x,x,-y,y,"test.png");
 
 	delete parser;
 }

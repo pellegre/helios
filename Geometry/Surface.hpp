@@ -109,7 +109,7 @@ namespace Helios {
 
 		/* Comparison operator */
 		bool operator==(const Surface& sur) {
-			if (sur.name() != name())
+			if (typeid(*this) != typeid(sur))
 				return false;
 			return compare(sur);
 		}

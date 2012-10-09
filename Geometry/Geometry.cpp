@@ -45,17 +45,17 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 	/* Create the new duplicated surface */
 	Surface* new_surface = trans(surface);
 
-	/* Check if the surface is not duplicated */
-	vector<Surface*>::iterator it_sur = surfaces.begin();
-	for(; it_sur != surfaces.end() ; ++it_sur) {
-		if(*new_surface == *(*it_sur)) {
-			if(new_surface->getUserId() != (*it_sur)->getUserId())
-				if(new_surface->getUserId() <= maxUserSurfaceId)
-					Log::warn() << "Surface " << new_surface->getUserId() << " is redundant and is eliminated from the geometry" << Log::endl;
-			delete new_surface;
-			return (*it_sur);
-		}
-	}
+//	/* Check if the surface is not duplicated */
+//	vector<Surface*>::iterator it_sur = surfaces.begin();
+//	for(; it_sur != surfaces.end() ; ++it_sur) {
+//		if(*new_surface == *(*it_sur)) {
+//			if(new_surface->getUserId() != (*it_sur)->getUserId())
+//				if(new_surface->getUserId() <= maxUserSurfaceId)
+//					Log::warn() << "Surface " << new_surface->getUserId() << " is redundant and is eliminated from the geometry" << Log::endl;
+//			delete new_surface;
+//			return (*it_sur);
+//		}
+//	}
 
 	/* Set internal / unique index */
 	new_surface->setInternalId(surfaces.size());
