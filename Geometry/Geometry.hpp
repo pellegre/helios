@@ -36,7 +36,8 @@
 #include "Cell.hpp"
 #include "Universe.hpp"
 #include "GeometricFeature.hpp"
-
+#include "GeometricDefinition.hpp"
+#include "../Material/MaterialContainer.hpp"
 #include "../Common/Common.hpp"
 
 namespace Helios {
@@ -45,20 +46,24 @@ namespace Helios {
 
 	public:
 
-		Geometry();
+		Geometry(std::vector<GeometricDefinition*>& definitions) {setupGeometry(definitions);};
 
 		/* ---- Geometry setup */
 
 		/* This is the interface to setup the geometry of the problem */
-		void setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
-				           std::vector<Cell::Definition*>& cellDefinitions,
-				           std::vector<GeometricFeature::Definition*>& featureDefinitions);
+		void setupGeometry(std::vector<GeometricDefinition*>& definitions);
+
+		/* ---- Material information */
+
+		/*
+		 * This function connect each material on the container with the corresponding cell.
+		 * The material ID for each cell was specified earlier on the constructor of the
+		 * geometry. If some cell was defined with an inexistent material ID, this method will
+		 * thrown a geometric error notifying that.
+		 */
+		void setupMaterials(const MaterialContainer& materialContainer);
 
 		/* ---- Get information */
-
-		size_t getCellNumber() const {return cells.size();}
-		size_t getSurfaceNumber() const {return surfaces.size();}
-		size_t getUniverseNumber() const {return universes.size();}
 
 		const std::vector<Cell*>& getCells() const {return cells;};
 		const std::vector<Surface*>& getSurfaces() const {return surfaces;};
@@ -94,6 +99,7 @@ namespace Helios {
 		std::map<SurfaceId, std::vector<InternalSurfaceId> > surface_map;
 		std::map<CellId, std::vector<InternalCellId> > cell_map;
 		std::map<UniverseId, std::vector<InternalUniverseId> > universe_map;
+		std::map<InternalCellId, MaterialId> mat_map;
 
 		/*
 		 * Max user IDs of surfaces and cells, this should be set when lattices are created (because we need to add
@@ -105,6 +111,13 @@ namespace Helios {
 		/* Prevent copy */
 		Geometry(const Geometry& geo);
 		Geometry& operator= (const Geometry& other);
+
+		/*
+		 * This is the interface to setup the geometry of the problem, when all definitions are dispatched to the corresponding type
+		 */
+		void setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
+				           std::vector<Cell::Definition*>& cellDefinitions,
+				           std::vector<GeometricFeature::Definition*>& featureDefinitions);
 
 		/* Add cell */
 		Cell* addCell(const Cell::Definition* cellDefinition, const std::map<SurfaceId,Surface*>& user_surfaces);

@@ -28,6 +28,11 @@
 #include <cstdlib>
 #include <set>
 
+#include "Surface.hpp"
+#include "Cell.hpp"
+#include "Universe.hpp"
+#include "GeometricFeature.hpp"
+
 #include "Geometry.hpp"
 
 using namespace std;
@@ -35,8 +40,6 @@ using namespace std;
 namespace Helios {
 
 static inline bool getSign(const signed int& value) {return (value > 0);}
-
-Geometry::Geometry() : maxUserSurfaceId(0), maxUserCellId(0) {/* */}
 
 Surface* Geometry::addSurface(const Surface* surface, const Transformation& trans) {
 	/* Create the new duplicated surface */
@@ -123,6 +126,8 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    new_cell->setInternalId(cells.size());
 		/* Update cell map */
 	    cell_map[new_cell->getUserId()].push_back(new_cell->getInternalId());
+	    /* Update material map */
+	    mat_map[new_cell->getInternalId()] = (*it_cell)->getMatId();
 	    /* Push the cell into the container */
 	    cells.push_back(new_cell);
 	    /* Link this cell with the new universe */
@@ -145,10 +150,61 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	return new_universe;
 }
 
+template<class T>
+static void pushDefinition(GeometricDefinition* geo, std::vector<T*>& definition) {
+	definition.push_back(dynamic_cast<T*>(geo));
+}
+
+void Geometry::setupGeometry(std::vector<GeometricDefinition*>& definitions) {
+	std::vector<Surface::Definition*> surDefinitions;
+	std::vector<Cell::Definition*> cellDefinitions;
+	std::vector<GeometricFeature::Definition*> featureDefinitions;
+	/* Dispatch each definition to the corresponding container */
+	vector<GeometricDefinition*>::const_iterator it_def = definitions.begin();
+
+	for(; it_def != definitions.end() ; ++it_def) {
+		switch((*it_def)->getType()) {
+		case GeometricDefinition::CELL:
+			pushDefinition(*it_def,cellDefinitions);
+			break;
+		case GeometricDefinition::SURFACE:
+			pushDefinition(*it_def,surDefinitions);
+			break;
+		case GeometricDefinition::FEATURE:
+			pushDefinition(*it_def,featureDefinitions);
+			break;
+		}
+	}
+	setupGeometry(surDefinitions,cellDefinitions,featureDefinitions);
+	definitions.clear();
+}
+
+void Geometry::setupMaterials(const MaterialContainer& materialContainer) {
+	/* Iterate over each material on the map */
+	map<InternalCellId, MaterialId>::const_iterator it_mat = mat_map.begin();
+	for(; it_mat != mat_map.end() ; ++it_mat) {
+		/* Get cell */
+		Cell* cell = cells[(*it_mat).first];
+		/* Get material ID */
+		MaterialId matId = (*it_mat).second;
+		if(matId != Material::NONE && matId != Material::VOID) {
+			try {
+				cell->setMaterial(materialContainer.getMaterial(matId));
+			} catch (std::exception& error) {
+				throw Cell::BadCellCreation(cell->getUserId(),error.what());
+			}
+
+		} else if (matId == Material::NONE) {
+			/* No material in this cell, we should check if the cell is filled with something */
+			if(!cell->getFill())
+				throw Cell::BadCellCreation(cell->getUserId(),"The cell is not filled with a material or a universe");
+		}
+	}
+}
+
 void Geometry::setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
                              std::vector<Cell::Definition*>& cellDefinitions,
                              std::vector<GeometricFeature::Definition*>& featureDefinitions) {
-
 	if(featureDefinitions.size() != 0) {
 		/* Get max ID of user cells and surfaces */
 		maxUserSurfaceId = surDefinitions[0]->getUserSurfaceId();
@@ -219,6 +275,11 @@ void Geometry::setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
 	map<SurfaceId,Surface*>::iterator it_user = user_surfaces.begin();
 	for(; it_user != user_surfaces.end() ; ++it_user)
 		delete (*it_user).second;
+
+	/* Clean definitions, we don't need this anymore */
+	purgePointers(surDefinitions);
+	purgePointers(cellDefinitions);
+	purgePointers(featureDefinitions);
 }
 
 void Geometry::printGeo(std::ostream& out) const {
@@ -230,17 +291,9 @@ void Geometry::printGeo(std::ostream& out) const {
 }
 
 Geometry::~Geometry() {
-	vector<Surface*>::iterator it_sur = surfaces.begin();
-	for(; it_sur != surfaces.end() ; ++it_sur)
-		delete (*it_sur);
-
-	vector<Cell*>::iterator it_cell = cells.begin();
-	for(; it_cell != cells.end() ; ++it_cell)
-		delete (*it_cell);
-
-	vector<Universe*>::iterator it_uni = universes.begin();
-	for(; it_uni != universes.end() ; ++it_uni)
-		delete (*it_uni);
+	purgePointers(surfaces);
+	purgePointers(cells);
+	purgePointers(universes);
 }
 
 } /* namespace Helios */

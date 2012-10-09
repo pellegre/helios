@@ -37,6 +37,7 @@
 
 #include "../Common/Common.hpp"
 #include "Cell.hpp"
+#include "GeometricDefinition.hpp"
 
 namespace Helios {
 
@@ -51,16 +52,17 @@ namespace Helios {
 			VACUUM = 2
 		};
 
-		class Definition {
+		class Definition : public GeometricDefinition {
 			SurfaceId userSurfaceId;
 			std::string type;
 			std::vector<double> coeffs;
 			Surface::SurfaceInfo flags;
 		public:
-			Definition() {/* */}
+			Definition() : GeometricDefinition(GeometricDefinition::SURFACE) {/* */}
 			Definition(const SurfaceId& userSurfaceId, const std::string& type,
 					   const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags = Surface::NONE) :
-				userSurfaceId(userSurfaceId), type(type), coeffs(coeffs), flags(flags) {/* */}
+					   GeometricDefinition(GeometricDefinition::SURFACE), userSurfaceId(userSurfaceId), type(type),
+					   coeffs(coeffs), flags(flags) {/* */}
 			std::vector<double> getCoeffs() const {
 				return coeffs;
 			}

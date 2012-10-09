@@ -57,21 +57,43 @@ class MaterialContainer {
 	Material* addMaterial(const Material::Definition* definition);
 
 public:
-	MaterialContainer() {/* */};
+	MaterialContainer(std::vector<Material::Definition*>& matDefinitions) {setupMaterials(matDefinitions);};
 
 	/* ---- Get information */
 
 	size_t getMaterialNumber() const {return material_map.size();}
-	const std::vector<Material*>& getMaterials() {return materials;}
-	const std::map<MaterialId, InternalMaterialId>& getMaterialMap() {return material_map;};
+	const std::vector<Material*>& getMaterials() const {return materials;}
+	const std::map<MaterialId, InternalMaterialId>& getMaterialMap() const {return material_map;};
+
+	/* Exception */
+	class MaterialError : public std::exception {
+		std::string reason;
+	public:
+		MaterialError(const MaterialId& matid, const std::string& msg) {
+			reason = "Cannot access to material " + toString(matid) + " : " + msg;
+		}
+		const char *what() const throw() {
+			return reason.c_str();
+		}
+		~MaterialError() throw() {/* */};
+	};
+
+	/* Get a material from the user ID */
+	Material* getMaterial(const MaterialId& materialId) const {
+		std::map<MaterialId,InternalMaterialId>::const_iterator it_mat = material_map.find(materialId);
+		if(it_mat == material_map.end())
+			throw MaterialError(materialId,"Material does not exist");
+		else
+			return materials[(*it_mat).second];
+	}
 
 	/* Setup the material container */
-	void setupMaterials(const std::vector<Material::Definition*>& matDefinitions);
+	void setupMaterials(std::vector<Material::Definition*>& matDefinitions);
 
 	/* Print a list of materials on the container */
 	void printMaterials(std::ostream& out) const;
 
-	virtual ~MaterialContainer() {/* */};
+	virtual ~MaterialContainer();
 };
 
 } /* namespace Helios */

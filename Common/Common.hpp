@@ -48,11 +48,6 @@ namespace Helios {
 	/* Define a direction */
 	typedef TinyVector<double,3> Direction;
 
-	/* Matrices and arrays (integers) */
-	typedef Array<int,1> IntVector;
-	typedef Array<int,2> IntMatrix;
-	typedef Array<int,3> IntCube;
-
 	/* Epsilon of floating point */
 	const double eps = std::numeric_limits<double>::epsilon();
 
@@ -91,6 +86,16 @@ namespace Helios {
 	const int xaxis = 0;
 	const int yaxis = 1;
 	const int zaxis = 2;
+
+	/* This piece of code appears in so many places */
+	template<class Seq>
+	void purgePointers(Seq& ptrContainer) {
+		for(typename Seq::iterator it = ptrContainer.begin() ; it != ptrContainer.end() ; ++it) {
+			delete (*it);
+			(*it) = 0;
+		}
+		ptrContainer.clear();
+	}
 
 	/* ---- Comparison function, ONLY FOR "ADMINISTRATIVE" CODE */
 

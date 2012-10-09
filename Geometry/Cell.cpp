@@ -46,7 +46,6 @@ Cell::Cell(const Definition* definition) :
 	flag(definition->getFlags()),
 	fill(0),
 	material(0),
-	matid(definition->getMatId()),
 	parent(0),
 	int_cellid(0) {
     /* Set the new cell on surfaces neighbor container */
@@ -81,7 +80,7 @@ void Cell::print(std::ostream& out) const {
 		out << " ; fill = " << fill->getUserId();
 
 	/* Print material */
-	out << " ; material = " << matid;
+	out << " ; material = " << material->getUserId();
 
 	/* Print flags */
 	out << " ; flags = " << getFlag();

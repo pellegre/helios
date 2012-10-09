@@ -40,7 +40,7 @@ class MacroXs: public Helios::Material {
 	/* Number of groups */
 	int ngroups;
 	/* Total cross section */
-	std::vector<double> sigma_t;
+	std::vector<double> mfp;
 
 	/* ---- Reactions related to macroscopic cross sections */
 
@@ -138,7 +138,7 @@ public:
 	EnergyIndex getEnergyIndex(const Energy& energy) const {return 0;};
 
 	 /* Get the total cross section (using the energy index of the particle) */
-	double getTotalXs(const EnergyIndex& index) const {return sigma_t[index];};
+	double getMeanFreePath(const EnergyIndex& index) const {return mfp[index];};
 
 	/* Get reaction (based on a random generator and a energy index) */
 	Reaction* getReaction(const EnergyIndex& index, Random& random) const {

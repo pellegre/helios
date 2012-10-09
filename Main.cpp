@@ -86,10 +86,6 @@ int main(int argc, char **argv) {
 
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
-	/* Geometry */
-	Geometry* geometry;
-	/* Materials */
-	MaterialContainer* materials;
 
 	/* Container of filenames */
 	vector<string> input_files;
@@ -101,10 +97,6 @@ int main(int argc, char **argv) {
 			input_files.push_back(filename);
 			parser->parseFile(filename);
 		}
-
-		/* Setup problem */
-		geometry = parser->getGeometry();
-		materials = parser->getMaterials();
 
 	} catch(Parser::ParserError& parsererror) {
 
@@ -127,29 +119,16 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	/* Setup problem */
+	std::vector<GeometricDefinition*> geometryDefinitions = parser->getGeometry();
+	std::vector<Material::Definition*> materialDefinitions = parser->getMaterials();
+
+	/* Geometry */
+	Geometry* geometry = new Geometry(geometryDefinitions);
+	/* Materials */
+	MaterialContainer* materials = new MaterialContainer(materialDefinitions);
 	/* Connect cell with materials */
-	map<MaterialId, InternalMaterialId> materialMap = materials->getMaterialMap();
-	vector<Material*> materialPtrs = materials->getMaterials();
-	vector<Cell*> cells = geometry->getCells();
-	for(vector<Cell*>::const_iterator it = cells.begin() ; it != cells.end() ; ++it) {
-		MaterialId cellMatId = (*it)->getMaterialId();
-		if(cellMatId != Material::NONE) {
-			if(!(*it)->getFill()) {
-				map<MaterialId,InternalMaterialId>::const_iterator it_mat = materialMap.find(cellMatId);
-				if(it_mat == materialMap.end()) {
-					Log::error() << "Material *" + cellMatId + "* is not defined" << Log::endl;
-					exit(1);
-				}
-				else {
-					(*it)->setMaterial(materialPtrs[(*it_mat).second]);
-				}
-			}
-			else {
-				Log::error() << "Material " + cellMatId + " is not filled with a material or universe" << Log::endl;
-				exit(1);
-			}
-		}
-	}
+	geometry->setupMaterials(*materials);
 
 	/* Initialization - Random number */
 	trng::lcg64 random;
@@ -225,10 +204,10 @@ int main(int argc, char **argv) {
 				/* Get material */
 				const Material* material = cell->getMaterial();
 				/* Get total cross section */
-				double total_xs = material->getTotalXs(energy_index);
+				double mfp = material->getMeanFreePath(energy_index);
 
 				/* Get collision distance */
-				double collision_distance = -log(r.uniform())/total_xs;
+				double collision_distance = -log(r.uniform())*mfp;
 
 				while(collision_distance > distance) {
 
@@ -258,10 +237,10 @@ int main(int argc, char **argv) {
 
 					/* Update material */
 					material = cell->getMaterial();
-					total_xs = material->getTotalXs(energy_index);
+					mfp = material->getMeanFreePath(energy_index);
 
 					/* And the new collision distance */
-					collision_distance = -log(r.uniform())/total_xs;
+					collision_distance = -log(r.uniform())*mfp;
 				}
 
 				if(out) break;

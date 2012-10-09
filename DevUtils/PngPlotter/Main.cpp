@@ -151,10 +151,6 @@ int main(int argc, char **argv) {
 
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
-	/* Geometry */
-	Geometry* geometry;
-	/* Materials */
-	MaterialContainer* materials;
 
 	/* Container of filenames */
 	vector<string> input_files;
@@ -166,10 +162,6 @@ int main(int argc, char **argv) {
 			input_files.push_back(filename);
 			parser->parseFile(filename);
 		}
-
-		/* Setup problem */
-		geometry = parser->getGeometry();
-		materials = parser->getMaterials();
 
 	} catch(Parser::ParserError& parsererror) {
 
@@ -192,31 +184,18 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	/* Setup problem */
+	std::vector<GeometricDefinition*> geometryDefinitions = parser->getGeometry();
+	std::vector<Material::Definition*> materialDefinitions = parser->getMaterials();
+
+	/* Geometry */
+	Geometry geometry(geometryDefinitions);
+	/* Materials */
+	MaterialContainer materials(materialDefinitions);
 	/* Connect cell with materials */
-	map<MaterialId, InternalMaterialId> materialMap = materials->getMaterialMap();
-	vector<Material*> materialPtrs = materials->getMaterials();
-	vector<Cell*> cells = geometry->getCells();
-	for(vector<Cell*>::const_iterator it = cells.begin() ; it != cells.end() ; ++it) {
-		MaterialId cellMatId = (*it)->getMaterialId();
-		if(cellMatId != Material::NONE) {
-			if(!(*it)->getFill()) {
-				map<MaterialId,InternalMaterialId>::const_iterator it_mat = materialMap.find(cellMatId);
-				if(it_mat == materialMap.end()) {
-					Log::error() << "Material *" + cellMatId + "* is not defined" << Log::endl;
-					exit(1);
-				}
-				else
-					(*it)->setMaterial(materialPtrs[(*it_mat).second]);
-			}
-			else {
-				Log::error() << "Material " + cellMatId + " is not filled with a material or universe" << Log::endl;
-				exit(1);
-			}
-		}
-	}
+	geometry.setupMaterials(materials);
 
-	plot(*geometry,*materials,-3.6,3.6,-3.6,3.6,"test.png");
+	plot(geometry,materials,-3.6,3.6,-3.6,3.6,"test.png");
 
-	delete geometry;
 	delete parser;
 }

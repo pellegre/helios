@@ -56,7 +56,8 @@ protected:
 		/* Parse the file */
 		parser->parseFile(InputPath::access().getPath() + "/GeometryTest/" + filename);
 		/* Geometry */
-		geometry = parser->getGeometry();
+		std::vector<Helios::GeometricDefinition*> geometryDefinitions = parser->getGeometry();
+		geometry = new Helios::Geometry(geometryDefinitions);
 	}
 
 	void TearDown() {

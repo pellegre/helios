@@ -32,7 +32,7 @@ using namespace std;
 namespace Helios {
 
 MacroXs::MacroXs(const Material::Definition* definition, int number_groups) :
-		         Material(definition), ngroups(number_groups), sigma_t(number_groups) {
+		         Material(definition), ngroups(number_groups), mfp(number_groups) {
 	/* Cast to a MacroXs definition */
 	const MacroXs::Definition* macro_definition = dynamic_cast<const MacroXs::Definition*>(definition);
 	/* Get constants */
@@ -87,7 +87,7 @@ MacroXs::MacroXs(const Material::Definition* definition, int number_groups) :
 	reaction_map[new Fission(nu,constant["chi"])] = sigma_f;
 
 	for(size_t i = 0 ; i < ngroups ; ++i)
-		sigma_t[i] = sigma_a[i] + sigma_s[i];
+		mfp[i] = 1.0 / (sigma_a[i] + sigma_s[i]);
 
 	/* Setup the reaction sampler */
 	reaction_sampler = new Sampler<Reaction*>(reaction_map);
@@ -102,6 +102,8 @@ MacroXs::MacroXs(const Material::Definition* definition, int number_groups) :
 void MacroXs::print(std::ostream& out) const {/* */}
 
 MacroXs::~MacroXs() {
+	vector<Reaction*> reactions = reaction_sampler->getReactions();
+	purgePointers(reactions);
 	delete reaction_sampler;
 };
 

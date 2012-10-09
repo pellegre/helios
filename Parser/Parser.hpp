@@ -46,9 +46,7 @@ namespace Helios {
 		 * pushed here. The Geometry module is constructed after a call
 		 * to setupGeometry() with all this data.
 		 */
-		std::vector<Surface::Definition*> surfaceDefinition;
-		std::vector<Cell::Definition*> cellDefinition;
-		std::vector<GeometricFeature::Definition*> featureDefinition;
+		std::vector<GeometricDefinition*> geometricDefinition;
 
 		/*
 		 * Material Stuff
@@ -108,12 +106,17 @@ namespace Helios {
 		 */
 
 		/* Setup geometry  */
-		Geometry* getGeometry();
-
+		const std::vector<GeometricDefinition*>& getGeometry() {return geometricDefinition;};
 		/* Setup a material container */
-		MaterialContainer* getMaterials();
+		const std::vector<Material::Definition*>& getMaterials() {return materialDefinition;};
 
-		virtual ~Parser();
+		/* Clear definitions inside the parser */
+		void clear() {
+			geometricDefinition.clear();
+			materialDefinition.clear();
+		}
+
+		virtual ~Parser() {/* */};
 	};
 
 	/* Some generic and common parsing routines, useful for reading data from input files */

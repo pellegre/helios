@@ -34,6 +34,7 @@
 
 #include "../Common/Common.hpp"
 #include "../Material/Material.hpp"
+#include "GeometricDefinition.hpp"
 
 namespace Helios {
 
@@ -78,7 +79,7 @@ namespace Helios {
 			DEADCELL = 2  /* Particles should be killed when entering us */
 		};
 
-		class Definition {
+		class Definition : public GeometricDefinition {
 			CellId userCellId;
 			Cell::CellInfo flags;
 			UniverseId universe;
@@ -91,10 +92,10 @@ namespace Helios {
 			std::vector<SenseSurface> surfacesPtrs; /* Pair of sense and pointer to a set of constructed surfaces */
 		public:
 
-			Definition() {/* */}
+			Definition() : GeometricDefinition(GeometricDefinition::CELL) {/* */}
 			Definition(const CellId& userCellId, const std::vector<signed int>& surfacesIds, const Cell::CellInfo flags,
 					   const UniverseId& universe, const UniverseId& fill,const MaterialId& matid, const Transformation& transformation) :
-				       userCellId(userCellId), surfacesIds(surfacesIds), flags(flags),
+					   GeometricDefinition(GeometricDefinition::CELL), userCellId(userCellId), surfacesIds(surfacesIds), flags(flags),
 				       universe(universe), fill(fill), matid(matid), transformation(transformation) {/* */}
 			Cell::CellInfo getFlags() const {
 				return flags;
@@ -169,8 +170,6 @@ namespace Helios {
 		void setMaterial(Material* cell_mat) {material = cell_mat;};
 		/* Get the material that is filling this cell (NULL if any) */
 		const Material* getMaterial() const {return material;}
-		/* Get the material ID that is filling this cell (NULL if any) */
-		MaterialId getMaterialId() const {return matid;}
 
 		/* Set the parent universe of this cell */
 		void setParent(Universe* parent_universe) {parent = parent_universe;}
@@ -208,13 +207,8 @@ namespace Helios {
 		CellInfo flag;
 		/* Reference to the universe that is filling this cell, NULL if any (material cell). */
 		Universe* fill;
-		/* Material filling this cell (could be null) */
+		/* Material filling this cell (could be null, when the material is void or the cell is filled by an universe) */
 		Material* material;
-		/*
-		 * Material ID, this is set at construction time. If there isn't a material
-		 * filling the cell is set to "none".
-		 */
-		MaterialId matid;
 		/*
 		 * Parent universe, which is the universe that contains this cell. A cell
 		 * always has a parent (even in the base universe)

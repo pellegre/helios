@@ -28,6 +28,8 @@
 #ifndef SAMPLER_HPP_
 #define SAMPLER_HPP_
 
+#include <algorithm>
+
 namespace Helios {
 
 	template<class TypeReaction>
@@ -178,7 +180,7 @@ namespace Helios {
 				double partial_sum = 0;
 				for(int nrea = 0 ; nrea < nreaction - 1; ++nrea) {
 					partial_sum += getArrayIndex(nerg,xs_container[nrea]);
-					reaction_matrix(nerg,nrea) = partial_sum / total_xs;
+					reaction_matrix[nerg*(nreaction - 1) + nrea] = partial_sum / total_xs;
 				}
 			}
 		}
@@ -190,30 +192,22 @@ namespace Helios {
 		 */
 		TypeReaction sample(int index, double value);
 
-		Sampler() {delete reaction_matrix;};
+		/* Get reaction container */
+		const std::vector<TypeReaction>& getReactions() const {return reactions;}
+
+		~Sampler() {delete [] reaction_matrix;};
 
 	};
 
 	template<class TypeReaction>
 	int Sampler<TypeReaction>::getIndex(const double* dat, double val) {
 		/* Initial boundaries */
-		int lo = 0;
-		int hi = nreaction - 2;
-		if(val < dat[lo]) return 0;
-		if(val > dat[hi]) return nreaction - 1;
-		while(hi - lo > 1) {
-			/* Check boundaries */
-			if ((val > dat[lo]) && (val < dat[lo + 1]))
-				return lo + 1;
-			else if ((val > dat[hi - 1]) && (val < dat[hi]))
-				return hi;
-			/* New guess */
-			int n = (int)(((double)hi + (double)lo)/2.0);
-			/* New boundaries */
-			if (val < dat[n]) hi = n;
-			else lo = n;
-		}
-		return lo + 1;
+		const double* lo = dat;
+		const double* hi = dat + (nreaction - 2);
+		if(val < *lo) return 0;
+		if(val > *hi) return nreaction - 1;
+		const double* value = std::lower_bound(lo,hi + 1,val);
+		return value - lo;
 	}
 
 	template<class TypeReaction>
