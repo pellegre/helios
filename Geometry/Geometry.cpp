@@ -41,19 +41,19 @@ namespace Helios {
 
 static inline bool getSign(const signed int& value) {return (value > 0);}
 
-Surface* Geometry::addSurface(const Surface* surface, const Transformation& trans) {
+Surface* Geometry::addSurface(const Surface* surface, const Transformation& trans, const vector<Cell::SenseSurface>& parent_surfaces) {
 	/* Create the new duplicated surface */
 	Surface* new_surface = trans(surface);
 
 	/* Check if the surface is not duplicated */
-	vector<Surface*>::iterator it_sur = surfaces.begin();
-	for(; it_sur != surfaces.end() ; ++it_sur) {
-		if(*new_surface == *(*it_sur)) {
-			if(new_surface->getUserId() != (*it_sur)->getUserId())
+	vector<Cell::SenseSurface>::const_iterator it_sur = parent_surfaces.begin();
+	for(; it_sur != parent_surfaces.end() ; ++it_sur) {
+		if(*new_surface == *((*it_sur).first)) {
+			if(new_surface->getUserId() != (*it_sur).first->getUserId())
 				if(new_surface->getUserId() <= maxUserSurfaceId)
 					Log::warn() << "Surface " << new_surface->getUserId() << " is redundant and is eliminated from the geometry" << Log::endl;
 			delete new_surface;
-			return (*it_sur);
+			return (*it_sur).first;
 		}
 	}
 
@@ -69,7 +69,8 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 }
 
 Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<Cell::Definition*> >& u_cells,
-		                        const map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans) {
+		                        const map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans,
+		                        const vector<Cell::SenseSurface>& parent_surfaces) {
 	/* Create universe */
 	Universe* new_universe = UniverseFactory::access().createUniverse(uni_def);
 	/* Set internal / unique index */
@@ -117,7 +118,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    		/* The surface is created */
 	    		new_surface = (*it_temp_sur).second;
 	    	else {
-	    		new_surface = addSurface((*it_sur).second,trans);
+	    		new_surface = addSurface((*it_sur).second,trans,parent_surfaces);
 		    	temp_sur_map[new_surface->getUserId()] = new_surface;
 	    	}
 
@@ -147,8 +148,12 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    /* Check if this cell is filled by another universe */
 	    UniverseId fill_universe_id = (*it_cell)->getFill();
 	    if(fill_universe_id) {
+	    	vector<Cell::SenseSurface>::const_iterator it_psur = parent_surfaces.begin();
+	    	for(; it_psur != parent_surfaces.end() ; ++it_psur)
+	    		boundingSurfaces.push_back((*it_psur));
 	    	/* Create recursively the other universes and also propagate the transformation */
-	    	Universe* fill_universe = addUniverse(fill_universe_id,u_cells,user_surfaces,trans + (*it_cell)->getTransformation());
+	    	Universe* fill_universe = addUniverse(fill_universe_id,u_cells,user_surfaces,
+	    			                  trans + (*it_cell)->getTransformation(),boundingSurfaces);
 	    	if(fill_universe)
 	    		new_cell->setFill(fill_universe);
 	    	else

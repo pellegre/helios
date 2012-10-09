@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+
+<geometry>
+
+<!-- Definition of Cells -->
+  <!-- All geometry on base universe -->
+  <cell id="1" fill="6" surfaces="1 -2 3 -4" />
+  <cell id="2" universe="21" fill="4" />
+  <cell id="3" universe="22" fill="3" />
+  <cell id="4" universe="23" fill="3" />
+
+  <!-- Fuel pin, cladding, water -->
+  <cell id="101" universe="1" material="1" surfaces="-5" />
+  <cell id="102" universe="1" material="2" surfaces="5 -6" />
+  <cell id="103" universe="1" material="3" surfaces="6" />
+
+  <!-- Instrumentation guide tube -->
+  <cell id="201" universe="2" material="1" surfaces="-7" />
+  <cell id="202" universe="2" material="2" surfaces="7 -8" />
+  <cell id="203" universe="2" material="3" surfaces="8" />
+
+  <!-- Water reflector -->
+  <cell id="301" universe="3" material="3"/>
+
+<!-- Definition of Lattices -->
+  <!-- 17 x 17 fuel assembly -->
+  <lattice id="4"
+    type="x-y"
+    dimension = "17 17"
+    pitch = "1.5 1.5"
+    universes = "
+      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+      1 1 1 1 1 2 1 1 2 1 1 2 1 1 1 1 1
+      1 1 1 2 1 1 1 1 1 1 1 1 1 2 1 1 1
+      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+      1 1 2 1 1 2 1 1 2 1 1 2 1 1 2 1 1
+      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+      1 1 2 1 1 2 1 1 2 1 1 2 1 1 2 1 1
+      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+      1 1 2 1 1 2 1 1 2 1 1 2 1 1 2 1 1
+      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+      1 1 1 2 1 1 1 1 1 1 1 1 1 2 1 1 1
+      1 1 1 1 1 2 1 1 2 1 1 2 1 1 1 1 1
+      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1"
+  />
+    
+  <!-- 21 x 21 core -->
+  <lattice id="6"
+    type="x-y"
+    dimension = "21 21"
+    pitch = "25.5 25.5"
+    universes = "
+      22 22 22 22 22 23 23 23 23 23 23 23 23 23 23 23 22 22 22 22 22
+      22 22 22 23 23 23 23 23 23 23 23 23 23 23 23 23 23 23 22 22 22
+      22 22 23 23 23 23 23 21 21 21 21 21 21 21 23 23 23 23 22 22 22
+      22 22 23 23 23 21 21 21 21 21 21 21 21 21 21 21 23 23 23 22 22
+      22 23 23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23 23 22
+      22 23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23 22
+      23 23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23 23
+      23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23
+      23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23
+      23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23
+      23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23
+      23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23
+      23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23
+      23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23
+      23 23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23 22
+      22 23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23 22
+      22 23 23 23 21 21 21 21 21 21 21 21 21 21 21 21 21 23 23 23 22
+      22 22 23 23 23 21 21 21 21 21 21 21 21 21 21 21 23 23 23 22 22
+      22 22 23 23 23 23 23 21 21 21 21 21 21 21 23 23 23 23 22 22 22
+      22 22 22 23 23 23 23 23 23 23 23 23 23 23 23 23 23 23 22 22 22
+      22 22 22 22 22 23 23 23 23 23 23 23 23 23 23 23 22 22 22 22 22"
+  />
+
+
+<!-- Definition of Surfaces -->
+  <!-- Core outer boundaries -->
+  <surface id="1" type="px" coeffs="-267.75" boundary="vacuum" />
+  <surface id="2" type="px" coeffs="267.75" boundary="vacuum" />
+  <surface id="3" type="py" coeffs="-267.75" boundary="vacuum" />
+  <surface id="4" type="py" coeffs="267.75" boundary="vacuum"/>
+
+  <!-- Fuel and cladding -->
+  <surface id="5" type="cz" coeffs="0.41" />
+  <surface id="6" type="cz" coeffs="0.475" />
+
+  <!-- Instrumentation guide tube -->
+  <surface id="7" type="cz" coeffs="0.56" />
+  <surface id="8" type="cz" coeffs="0.62" />
+
+</geometry>

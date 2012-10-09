@@ -236,6 +236,13 @@ protected:
 	~LatticeXYConcentricTest() {/* */}
 };
 
+/* Simple x-y lattice with *a lot* of pins. To checkout the random transport on heavy lattices */
+class HugeLatticeXYConcentricTest : public ConcentricTest {
+protected:
+	HugeLatticeXYConcentricTest() : ConcentricTest("cyl-xy-latt-huge.xml",Helios::Coordinate(0,0,0),50000) {/* */};
+	~HugeLatticeXYConcentricTest() {/* */}
+};
+
 TEST_F(CylinderXYConcentricTest, StraightTransport) {straight(genVector<Helios::CellId>(1,5),genVector<Helios::SurfaceId>(1,4));}
 TEST_F(CylinderYZConcentricTest, StraightTransport) {straight(genVector<Helios::CellId>(1,5),genVector<Helios::SurfaceId>(1,4));}
 TEST_F(CylinderXZConcentricTest, StraightTransport) {straight(genVector<Helios::CellId>(1,5),genVector<Helios::SurfaceId>(1,4));}
@@ -269,5 +276,6 @@ TEST_F(CylinderYZConcentricTranslaUniverseTest, RandomTransport) {random();}
 TEST_F(CylinderXZConcentricTranslaUniverseTest, RandomTransport) {random();}
 
 TEST_F(LatticeXYConcentricTest, RandomTransport) {random();}
+TEST_F(HugeLatticeXYConcentricTest, RandomTransport) {random();}
 
 #endif /* GEOMETRYTESTS_HPP_ */

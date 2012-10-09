@@ -81,7 +81,7 @@ static pair<string,size_t> seachKeyWords(const vector<string>& files, vector<str
 
 void plot(const Helios::Geometry& geo, const Helios::MaterialContainer& materials,
 		  double xmin, double xmax, double ymin, double ymax, const std::string& filename) {
-	static int pixel = 500;
+	static int pixel = 5000;
 	pngwriter png(pixel,pixel,1.0,filename.c_str());
 	/* Deltas */
 	double deltax = (xmax - xmin) / (double)(pixel);

@@ -123,13 +123,14 @@ namespace Helios {
 		Cell* addCell(const Cell::Definition* cellDefinition, const std::map<SurfaceId,Surface*>& user_surfaces);
 		/* Add recursively all universe that are nested */
 		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<Cell::Definition*> >& u_cells,
-				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation());
+				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation(),
+				              const std::vector<Cell::SenseSurface>& parent_surfaces = std::vector<Cell::SenseSurface>());
 
 		/*
 		 * Add a surface to the geometry, prior to check duplicated ones. If the surface exist (because the user
 		 * set the same one but with different IDs) is silently discarded.
 		 */
-		Surface* addSurface(const Surface* surface, const Transformation& trans);
+		Surface* addSurface(const Surface* surface, const Transformation& trans,const std::vector<Cell::SenseSurface>& parent_surfaces);
 	};
 
 } /* namespace Helios */

@@ -65,7 +65,8 @@ void SurfaceFactory::registerSurface(const Surface& surface) {
 }
 
 std::ostream& operator<<(std::ostream& out, const Surface& q) {
-	out << "surface = " << q.getUserId() << " (internal = " << q.getInternalId() << ")" << " ; type = " << q.name() << " : ";
+	out << "surface = " << q.getUserId() << " (internal = " << q.getInternalId() << ")"
+	    << " ; type = " << q.name() << " ; flags = " << q.getFlags() << " : ";
 	q.print(out);
 	return out;
 }

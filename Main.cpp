@@ -137,11 +137,11 @@ int main(int argc, char **argv) {
 
 	/* Initialization - KEFF cycle */
 	double keff = 1.0;
-	int neutrons = 10000;
-	int skip = 200;
+	int neutrons = 2500;
+	int skip = 50;
 	int cycles = 1000;
 	list<pair<const Cell*,Particle> > particles;
-	Coordinate initial_pos(0,0,0);
+	Coordinate initial_pos(0.0,0.0,0.0);
 	/* Fission bank, the particles for the next cycle are banked here */
 	list<pair<const Cell*,Particle> > fission_bank;
 	for(size_t i = 0 ; i < neutrons ; ++i) {
@@ -220,16 +220,27 @@ int main(int argc, char **argv) {
 					/* Transport the particle to the surface */
 					particle.pos() = particle.pos() + distance * particle.dir();
 
-					/* Now get next cell */
-					surface->cross(particle.pos(),sense,cell);
-					if(!cell) {
-						cout << particle << endl;
-						cout << *surface << endl;
-					}
-					/* Cut if the cell is dead */
-					if(cell->getFlag() & Cell::DEADCELL) {
-						out = true;
-						break;
+					if(surface->getFlags() & Surface::REFLECTING) {
+						/* Get normal */
+						Direction normal;
+						surface->normal(particle.pos(),normal);
+						/* Reverse if necessary */
+						if(sense == false) normal = -normal;
+						/* Calculate the new direction */
+						double projection = 2 * dot(particle.dir(), normal);
+						particle.dir() = particle.dir() - projection * normal;
+					} else {
+						/* Now get next cell */
+						surface->cross(particle.pos(),sense,cell);
+						if(!cell) {
+							cout << particle << endl;
+							cout << *surface << endl;
+						}
+						/* Cut if the cell is dead */
+						if(cell->getFlag() & Cell::DEADCELL) {
+							out = true;
+							break;
+						}
 					}
 
 					/* Calculate new distance to the closest surface */
