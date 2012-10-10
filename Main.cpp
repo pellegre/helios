@@ -136,18 +136,20 @@ int main(int argc, char **argv) {
 	r.getEngine().seed((long unsigned int)time(0));
 
 	/* Initialization - KEFF cycle */
-	double keff = 1.0;
-	int neutrons = 2500;
+	double keff = 1.2;
+	int neutrons = 60000;
 	int skip = 50;
-	int cycles = 1000;
+	int cycles = 250;
+	double a = -10.0;
+	double b =  10.0;
 	list<pair<const Cell*,Particle> > particles;
-	Coordinate initial_pos(0.0,0.0,0.0);
+	Coordinate initial_pos((b - a)*r.uniform() + a,(b - a)*r.uniform() + a,0.0);
 	/* Fission bank, the particles for the next cycle are banked here */
 	list<pair<const Cell*,Particle> > fission_bank;
 	for(size_t i = 0 ; i < neutrons ; ++i) {
 		Direction initial_dir;
 		isotropicDirection(initial_dir,r);
-		Particle p = Particle(initial_pos,initial_dir,EnergyPair(),1.0);
+		Particle p = Particle(initial_pos,initial_dir,EnergyPair(6,0.0),1.0);
 		const Cell* c(geometry->findCell(initial_pos));
 		particles.push_back(pair<const Cell*,Particle>(c,p));
 	}
@@ -156,7 +158,6 @@ int main(int argc, char **argv) {
 	Surface* surface(0);
 	bool sense(true);
 	double distance(0.0);
-	bool out = false;
 
 	double ave_keff = 0.0;
 	for(int ncycle = 0 ; ncycle < cycles ; ++ncycle) {
@@ -177,12 +178,6 @@ int main(int argc, char **argv) {
 				particles.push_back(banked_particle);
 		}
 
-		double w = 0;
-		for(list<pair<const Cell*,Particle> >::iterator it = particles.begin() ; it != particles.end() ; ++it) {
-			w += (*it).second.wgt();
-		}
-		cout << ncycle << ";" << w << endl;
-
 		/* Initialize counters */
 		double pop = 0.0;
 
@@ -193,6 +188,8 @@ int main(int argc, char **argv) {
 
 			const Cell* cell = pc.first;
 			Particle particle = pc.second;
+
+			bool out = false;
 
 			while(true) {
 
@@ -210,7 +207,6 @@ int main(int argc, char **argv) {
 				double collision_distance = -log(r.uniform())*mfp;
 
 				while(collision_distance > distance) {
-
 					/* Cut on a vacuum surface */
 					if(surface->getFlags() & Surface::VACUUM) {
 						out = true;
@@ -274,13 +270,15 @@ int main(int argc, char **argv) {
 
 		/* Calculate multiplication factor */
 		keff = pop / (double)neutrons;
-		cout << keff << endl;
-		cout << "--------------------" << endl;
-		if(ncycle > skip)
+		if(ncycle > skip) {
+			Log::ok() << "Cycle = " << ncycle << " - keff = " << keff << Log::endl;
 			ave_keff += keff;
+		} else {
+			Log::ok() << " Cycle (Inactive) = " << ncycle << " - keff = " << keff << Log::endl;
+		}
 	}
 
-	cout << "Final = " << ave_keff/ (double)(cycles - skip) << endl;
+	Log::ok() << " Final keff = "<< ave_keff/ (double)(cycles - skip) << Log::endl;
 
 	delete materials;
 	delete geometry;
