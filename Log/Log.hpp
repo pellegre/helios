@@ -37,20 +37,6 @@
 namespace Helios {
 
 class Log {
-	/* There is only one logger in the program */
-	static Log logger;
-	Log();
-	Log(const Log& log);
-	Log& operator=(const Log& log);
-
-	/* ---- Stream channels */
-
-	/* General messages - this writes to the "console" */
-	std::ostream& messages;
-	/* Error channel, to standard error */
-	std::ostream& oerror;
-	/* Output file */
-	std::ofstream output;
 
 public:
 
@@ -96,9 +82,6 @@ public:
 		COLOR_BOLDWHITE=18
 	};
 
-	/* Map of colors */
-	static std::map<Log::Color,const char*> color_map;
-
 	/* Set output file */
 	static void setOutput(const std::string& out_file);
 
@@ -110,10 +93,12 @@ public:
 
 	/* A lot of cool stuff to print on the screen / output */
 
-	static std::string ident(size_t n = 0);      /* Indentation */
-	static const std::string endl;               /* End of line */
-	static const std::string crst;               /* Reset color on output stream */
-
+	/* Indentation */
+	static std::string ident(size_t n = 0);
+	/* End of line */
+	static const std::string endl;
+	/* Reset color on output stream */
+	static const std::string crst;
 	 /* Print date */
 	static std::string date();
 	/* Print program header */
@@ -125,6 +110,27 @@ public:
 	}
 
 	~Log();
+
+private:
+
+	/* There is only one logger in the program */
+	static Log logger;
+	Log();
+	Log(const Log& log);
+	Log& operator=(const Log& log);
+
+	/* ---- Stream channels */
+
+	/* General messages - this writes to the "console" */
+	std::ostream& messages;
+	/* Error channel, to standard error */
+	std::ostream& oerror;
+	/* Output file */
+	std::ofstream output;
+
+	/* Map of colors */
+	static std::map<Log::Color,const char*> color_map;
+
 };
 
 } /* namespace Helios */

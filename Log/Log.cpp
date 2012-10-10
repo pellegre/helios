@@ -136,9 +136,9 @@ std::string Log::date()  {
 void Log::header(std::ostream& out) {
 	logger.messages << endl;
 	/* Print header */
-	logger.messages << BOLDBLUE << ident(0) <<   "   / / / /__  / (_)___  _____  __    __"  << endl;
-	logger.messages << BOLDBLUE << ident(0) <<  "  / /_/ / _ \\/ / / __ \\/ ___/_/ /___/ /_" << endl;
-	logger.messages << BOLDBLUE << ident(0) << " / __  /  __/ / / /_/ (__  )_  __/_  __/" << endl;
+	logger.messages << BOLDBLUE << ident(0) <<"   / / / /__  / (_)___  _____  __    __"    << endl;
+	logger.messages << BOLDBLUE << ident(0) <<"  / /_/ / _ \\/ / / __ \\/ ___/_/ /___/ /_" << endl;
+	logger.messages << BOLDBLUE << ident(0) <<" / __  /  __/ / / /_/ (__  )_  __/_  __/"   << endl;
 	logger.messages << BOLDBLUE << ident(0) <<"/_/ /_/\\___/_/_/\\____/____/ /_/   /_/"    << crst << endl << endl;
 	/* General information */
 	logger.messages << ident(0) << BOLDWHITE << "A Continuous-energy Monte Carlo Reactor Physics Code" << endl << endl;
@@ -149,7 +149,7 @@ void Log::header(std::ostream& out) {
 	logger.messages << ident(0) << " - Build type : " << BUILD_TYPE << " (flags = " << COMPILER_FLAGS << ")" << endl;
 	logger.messages << ident(0) << " - Build date : " << COMPILATION_DATE << " (commit " << GIT_SHA1 << ")" << endl;
 	/* Print when the calculation began */
-	logger.messages << endl << BOLDWHITE << ident(0) << "Begin calculation on " << date() << endl << endl;
+	logger.messages << endl << BOLDWHITE << ident(0) << "Begin calculation on " << date() << endl;
 }
 
 Log::~Log() {

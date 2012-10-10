@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
 
 	/* Initialization - KEFF cycle */
 	double keff = 1.186;
-	int neutrons = 60000;
+	int neutrons = 5000;
 	int skip = 50;
 	int cycles = 250;
 	double ax = -32.13;
