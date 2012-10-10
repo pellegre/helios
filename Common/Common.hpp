@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <trng/lcg64.hpp>
 #include <trng/uniform01_dist.hpp>
 
+#include "../config.h"
 #include "../Log/Log.hpp"
 #include "FloatingGtest.hpp"
 

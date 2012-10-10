@@ -84,6 +84,9 @@ int main(int argc, char **argv) {
 	  exit(1);
 	}
 
+	/* Print header */
+	Log::header();
+
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
 
@@ -133,23 +136,25 @@ int main(int argc, char **argv) {
 	/* Initialization - Random number */
 	trng::lcg64 random;
 	Random r(random);
-	r.getEngine().seed((long unsigned int)time(0));
+	r.getEngine().seed((long unsigned int)1);
 
 	/* Initialization - KEFF cycle */
-	double keff = 1.2;
+	double keff = 1.186;
 	int neutrons = 60000;
 	int skip = 50;
 	int cycles = 250;
-	double a = -10.0;
-	double b =  10.0;
+	double ax = -32.13;
+	double bx =  10.71;
+	double ay = -10.71;
+	double by =  32.13;
 	list<pair<const Cell*,Particle> > particles;
-	Coordinate initial_pos((b - a)*r.uniform() + a,(b - a)*r.uniform() + a,0.0);
 	/* Fission bank, the particles for the next cycle are banked here */
 	list<pair<const Cell*,Particle> > fission_bank;
 	for(size_t i = 0 ; i < neutrons ; ++i) {
 		Direction initial_dir;
+		Coordinate initial_pos((bx - ax)*r.uniform() + ax,(by - ay)*r.uniform() + ay,0.0);
 		isotropicDirection(initial_dir,r);
-		Particle p = Particle(initial_pos,initial_dir,EnergyPair(6,0.0),1.0);
+		Particle p = Particle(initial_pos,initial_dir,EnergyPair(0,0.0),1.0);
 		const Cell* c(geometry->findCell(initial_pos));
 		particles.push_back(pair<const Cell*,Particle>(c,p));
 	}
@@ -158,9 +163,9 @@ int main(int argc, char **argv) {
 	Surface* surface(0);
 	bool sense(true);
 	double distance(0.0);
-
 	double ave_keff = 0.0;
-	for(int ncycle = 0 ; ncycle < cycles ; ++ncycle) {
+
+	for(int ncycle = 0 ; ncycle <= cycles ; ++ncycle) {
 
 		/* Update new particles from the fission bank */
 		while(!fission_bank.empty()) {

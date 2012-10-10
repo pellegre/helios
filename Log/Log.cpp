@@ -28,27 +28,10 @@
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
+#include <ctime>
 
 #include "Log.hpp"
-
-#define RESET   "\033[0m"
-#define RESETN  "\033[0m\n"
-#define BLACK   "\033[30m"      /* Black */
-#define RED     "\033[31m"      /* Red */
-#define GREEN   "\033[32m"      /* Green */
-#define YELLOW  "\033[33m"      /* Yellow */
-#define BLUE    "\033[34m"      /* Blue */
-#define MAGENTA "\033[35m"      /* Magenta */
-#define CYAN    "\033[36m"      /* Cyan */
-#define WHITE   "\033[37m"      /* White */
-#define BOLDBLACK   "\033[1m\033[30m"      /* Bold Black */
-#define BOLDRED     "\033[1m\033[31m"      /* Bold Red */
-#define BOLDGREEN   "\033[1m\033[32m"      /* Bold Green */
-#define BOLDYELLOW  "\033[1m\033[33m"      /* Bold Yellow */
-#define BOLDBLUE    "\033[1m\033[34m"      /* Bold Blue */
-#define BOLDMAGENTA "\033[1m\033[35m"      /* Bold Magenta */
-#define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
-#define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
+#include "../Common/Common.hpp"
 
 using namespace std;
 
@@ -56,7 +39,53 @@ namespace Helios {
 
 Log Log::logger;
 
+const char* Log::RESET = "\033[0m";
+const char* Log::RESETN = "\033[0m\n";
+const char* Log::BLACK = "\033[30m";
+const char* Log::RED = "\033[31m";
+const char* Log::GREEN = "\033[32m";
+const char* Log::YELLOW = "\033[33m";
+const char* Log::BLUE = "\033[34m";
+const char* Log::MAGENTA = "\033[35m";
+const char* Log::CYAN = "\033[36m";
+const char* Log::WHITE = "\033[37m";
+const char* Log::BOLDBLACK = "\033[1m\033[30m";
+const char* Log::BOLDRED = "\033[1m\033[31m";
+const char* Log::BOLDGREEN = "\033[1m\033[32m";
+const char* Log::BOLDYELLOW = "\033[1m\033[33m";
+const char* Log::BOLDBLUE = "\033[1m\033[34m";
+const char* Log::BOLDMAGENTA = "\033[1m\033[35m";
+const char* Log::BOLDCYAN = "\033[1m\033[36m";
+const char* Log::BOLDWHITE = "\033[1m\033[37m";
+
 const std::string Log::endl = RESETN;
+const std::string Log::crst = RESET;
+
+/* Initialize color map */
+map<Log::Color,const char*> initColorMap() {
+	map<Log::Color,const char*> m;
+	m[Log::COLOR_RESET] = Log::RESET;
+	m[Log::COLOR_RESETN] = Log::RESETN;
+	m[Log::COLOR_BLACK] = Log::BLACK;
+	m[Log::COLOR_RED] = Log::RED;
+	m[Log::COLOR_GREEN] = Log::GREEN;
+	m[Log::COLOR_YELLOW] = Log::YELLOW;
+	m[Log::COLOR_BLUE] = Log::BLUE;
+	m[Log::COLOR_MAGENTA] = Log::MAGENTA;
+	m[Log::COLOR_CYAN] = Log::CYAN;
+	m[Log::COLOR_WHITE] = Log::WHITE;
+	m[Log::COLOR_BOLDBLACK] = Log::BOLDBLACK;
+	m[Log::COLOR_BOLDRED] = Log::BOLDRED;
+	m[Log::COLOR_BOLDGREEN] = Log::BOLDGREEN;
+	m[Log::COLOR_BOLDYELLOW] = Log::BOLDYELLOW;
+	m[Log::COLOR_BOLDBLUE] = Log::BOLDBLUE;
+	m[Log::COLOR_BOLDMAGENTA] = Log::BOLDMAGENTA;
+	m[Log::COLOR_BOLDCYAN] = Log::BOLDCYAN;
+	m[Log::COLOR_BOLDWHITE] = Log::BOLDWHITE;
+	return m;
+}
+
+map<Log::Color,const char*> Log::color_map = initColorMap();
 
 Log::Log() : messages(cout), oerror(cerr) {/* */}
 
@@ -94,6 +123,33 @@ std::ostream& Log::error() {
 std::ostream& Log::ok() {
 	logger.messages << BOLDCYAN << "[@] " << RESET << CYAN;
 	return logger.messages;
+}
+
+std::string Log::date()  {
+	time_t rawtime;
+	struct tm * timeinfo;
+	time ( &rawtime );
+	timeinfo = localtime (&rawtime);
+	return string(asctime(timeinfo));
+}
+
+void Log::header(std::ostream& out) {
+	logger.messages << endl;
+	/* Print header */
+	logger.messages << BOLDBLUE << ident(0) <<   "   / / / /__  / (_)___  _____  __    __"  << endl;
+	logger.messages << BOLDBLUE << ident(0) <<  "  / /_/ / _ \\/ / / __ \\/ ___/_/ /___/ /_" << endl;
+	logger.messages << BOLDBLUE << ident(0) << " / __  /  __/ / / /_/ (__  )_  __/_  __/" << endl;
+	logger.messages << BOLDBLUE << ident(0) <<"/_/ /_/\\___/_/_/\\____/____/ /_/   /_/"    << crst << endl << endl;
+	/* General information */
+	logger.messages << ident(0) << BOLDWHITE << "A Continuous-energy Monte Carlo Reactor Physics Code" << endl << endl;
+	logger.messages << ident(0) << " - Version    : " << PROJECT_VERSION << endl;
+	logger.messages << ident(0) << " - Contact    : Esteban Pellegrino (pellegre@gmail.com) " << endl;
+	/* Build related stuff */
+	logger.messages << ident(0) << " - Compiler   : " << COMPILER_NAME << endl;
+	logger.messages << ident(0) << " - Build type : " << BUILD_TYPE << " (flags = " << COMPILER_FLAGS << ")" << endl;
+	logger.messages << ident(0) << " - Build date : " << COMPILATION_DATE << " (commit " << GIT_SHA1 << ")" << endl;
+	/* Print when the calculation began */
+	logger.messages << endl << BOLDWHITE << ident(0) << "Begin calculation on " << date() << endl << endl;
 }
 
 Log::~Log() {

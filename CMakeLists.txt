@@ -4,7 +4,7 @@
 # ---- Project stuff
 
 cmake_minimum_required(VERSION 2.6.0 FATAL_ERROR)
-project(MC++)
+project(Helios++)
 
 # ---- Version Information
 
@@ -12,9 +12,44 @@ set( ${PROJECT_NAME}_MAJOR_VERSION 0 )
 set( ${PROJECT_NAME}_MINOR_VERSION 1 ) 
 
 # ---- Compiler settings for different builds
+
 set(CMAKE_AR xiar)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -xHOST -O3 -ipo -no-prec-div -static-intel") 
+set(CMAKE_CXX_FLAGS_RELEASE "-xHOST -O3 -ipo -no-prec-div -static-intel") 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall")
+
+if(CMAKE_BUILD_TYPE STREQUAL "release")
+  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+else(CMAKE_BUILD_TYPE STREQUAL "debug")
+  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+endif()
+
+# ---- Configuration stuff
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake/")
+
+# Version
+set(PROJECT_VERSION "${${PROJECT_NAME}_MAJOR_VERSION}.${${PROJECT_NAME}_MINOR_VERSION}")
+
+# Git stuff
+include(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+
+# Compilation date
+macro (TODAY RESULT)
+  if (WIN32)
+    execute_process(COMMAND "date" "/T" OUTPUT_VARIABLE ${RESULT})
+    string(REGEX REPLACE "(..)/(..)/(....).*" "\\3/\\1/\\2" ${RESULT} ${${RESULT}})
+  elseif (UNIX)
+    execute_process(COMMAND "date" "+%m/%d/%Y-%r" OUTPUT_VARIABLE ${RESULT})
+    string(REGEX REPLACE "(..)/(..)/(....)-(...........).*" "\\1/\\2/\\3 - \\4" ${RESULT} ${${RESULT}})
+  else ()
+    message(SEND_ERROR "date not implemented")
+    set (${RESULT} 000000)
+  endif ()
+endmacro ()
+today(COMPILATION_DATE)
+
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_SOURCE_DIR}/config.h)
 
 # ---- External dependencies
 
@@ -34,7 +69,6 @@ IF(TRNG_FOUND)
 ENDIF(TRNG_FOUND)
 
 MARK_AS_ADVANCED(TRNG_INCLUDE_DIR TRNG_LIBRARY)
-
 
 # ---- Monte Carlo library
 

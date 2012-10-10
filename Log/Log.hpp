@@ -29,6 +29,7 @@
 #define LOG_HPP_
 
 #include <iostream>
+#include <map>
 #include <fstream>
 #include <ostream>
 #include <string>
@@ -44,7 +45,7 @@ class Log {
 
 	/* ---- Stream channels */
 
-	/* General messages - this does to the "console" */
+	/* General messages - this writes to the "console" */
 	std::ostream& messages;
 	/* Error channel, to standard error */
 	std::ostream& oerror;
@@ -52,6 +53,51 @@ class Log {
 	std::ofstream output;
 
 public:
+
+	/* Colors */
+	static const char* RESET;
+	static const char* RESETN;
+	static const char* BLACK;
+	static const char* RED;
+	static const char* GREEN;
+	static const char* YELLOW;
+	static const char* BLUE;
+	static const char* MAGENTA;
+	static const char* CYAN;
+	static const char* WHITE;
+	static const char* BOLDBLACK;
+	static const char* BOLDRED;
+	static const char* BOLDGREEN;
+	static const char* BOLDYELLOW;
+	static const char* BOLDBLUE;
+	static const char* BOLDMAGENTA;
+	static const char* BOLDCYAN;
+	static const char* BOLDWHITE;
+
+	/* Enumeration of colors */
+	enum Color {
+		COLOR_RESET=1,
+		COLOR_RESETN=2,
+		COLOR_BLACK=3,
+		COLOR_RED=4,
+		COLOR_GREEN=5,
+		COLOR_YELLOW=6,
+		COLOR_BLUE=7,
+		COLOR_MAGENTA=8,
+		COLOR_CYAN=9,
+		COLOR_WHITE=10,
+		COLOR_BOLDBLACK=11,
+		COLOR_BOLDRED=12,
+		COLOR_BOLDGREEN=13,
+		COLOR_BOLDYELLOW=14,
+		COLOR_BOLDBLUE=15,
+		COLOR_BOLDMAGENTA=16,
+		COLOR_BOLDCYAN=17,
+		COLOR_BOLDWHITE=18
+	};
+
+	/* Map of colors */
+	static std::map<Log::Color,const char*> color_map;
 
 	/* Set output file */
 	static void setOutput(const std::string& out_file);
@@ -66,6 +112,17 @@ public:
 
 	static std::string ident(size_t n = 0);      /* Indentation */
 	static const std::string endl;               /* End of line */
+	static const std::string crst;               /* Reset color on output stream */
+
+	 /* Print date */
+	static std::string date();
+	/* Print program header */
+	static void header(std::ostream& out = std::cout);
+	/* Get a color out stream (to standard output) */
+	template<Color color> static std::ostream& color() {
+		logger.messages << color_map[color];
+		return logger.messages;
+	}
 
 	~Log();
 };
