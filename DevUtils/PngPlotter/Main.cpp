@@ -79,9 +79,25 @@ static pair<string,size_t> seachKeyWords(const vector<string>& files, vector<str
 	return (*(--line_match.end())).second;
 }
 
+template<int axis>
+static Coordinate setCoordinate(const double&x, const double&y) {
+	switch(axis) {
+	case xaxis :
+		return Coordinate(0.0,x,y);
+		break;
+	case yaxis :
+		return Coordinate(y,0.0,x);
+		break;
+	case zaxis :
+		return Coordinate(x,y,0.0);
+		break;
+	}
+	return Coordinate();
+}
+
+template<int axis>
 void plot(const Helios::Geometry& geo, const Helios::MaterialContainer& materials,
-		  double xmin, double xmax, double ymin, double ymax, const std::string& filename) {
-	static int pixel = 2500;
+		  double xmin, double xmax, double ymin, double ymax, const int pixel, const std::string& filename) {
 	pngwriter png(pixel,pixel,1.0,filename.c_str());
 	/* Deltas */
 	double deltax = (xmax - xmin) / (double)(pixel);
@@ -97,7 +113,7 @@ void plot(const Helios::Geometry& geo, const Helios::MaterialContainer& material
 		for(int j = 0 ; j < pixel ; ++j) {
 			double x = xmin + (double)i * deltax;
 			double y = ymin + (double)j * deltay;
-			Coordinate point(Coordinate(x,y,0.0));
+			Coordinate point(setCoordinate<axis>(x,y));
 			find_cell = geo.findCell(point);
 			InternalCellId new_cell_id = 0;
 			if(find_cell)
@@ -130,7 +146,7 @@ void plot(const Helios::Geometry& geo, const Helios::MaterialContainer& material
 			double x = xmin + (double)i * deltax;
 			double y = ymin + (double)j * deltay;
 			/* Get cell ID */
-			find_cell = geo.findCell(Coordinate(x,y,0.0));
+			find_cell = geo.findCell(setCoordinate<axis>(x,y));
 			InternalCellId new_cell_id = 0;
 			if(find_cell)
 				new_cell_id = find_cell->getInternalId();
@@ -204,7 +220,7 @@ int main(int argc, char **argv) {
 
 	double x = fromString<double>(string(*(++argv)));
 	double y = fromString<double>(string(*(++argv)));
-	plot(geometry,materials,-x,x,-y,y,"test.png");
+	plot<zaxis>(geometry,materials,-x,x,-y,y,2500,"test.png");
 
 	delete parser;
 }

@@ -8,10 +8,10 @@
 
 #define PROJECT "Helios++"
 #define PROJECT_VERSION "0.1"
-#define BUILD_TYPE "release"
+#define BUILD_TYPE "debug"
 #define COMPILER_NAME "/opt/intel/composerxe-2011.4.191/bin/intel64/icpc"
-#define COMPILER_FLAGS "-xHOST -O3 -ipo -no-prec-div -static-intel"
-#define GIT_SHA1 "9cf6b9a19d01e62bb630d747c4871b3c4402c9d2"
-#define COMPILATION_DATE "10/10/2012 - 04:26:07 PM"
+#define COMPILER_FLAGS "-g -O0 -Wall"
+#define GIT_SHA1 "010f9f4c425f5042bf436493a28913bfdc1b0def"
+#define COMPILATION_DATE "10/11/2012 - 04:29:28 PM"
 
 #endif // CONFIG_H

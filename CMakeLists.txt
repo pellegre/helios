@@ -49,7 +49,7 @@ macro (TODAY RESULT)
 endmacro ()
 today(COMPILATION_DATE)
 
-CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_SOURCE_DIR}/config.h)
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/CMake/Config.hpp.cmake ${CMAKE_SOURCE_DIR}/Common/Config.hpp)
 
 # ---- External dependencies
 
