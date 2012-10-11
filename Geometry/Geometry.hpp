@@ -77,6 +77,16 @@ namespace Helios {
 			/* Start with the base universe */
 			return universes[0]->findCell(position);
 		}
+
+		/* Find a cell given an arbitrary point in the problem (with a pair position-cell known) */
+		const Cell* findCell(const Cell* start, const Coordinate& position) const {
+			const Cell* findCell = start->findCell(position);
+			if(findCell)
+				return findCell;
+			else
+				return universes[0]->findCell(position);
+		}
+
 		/* Using a universe identifier as a starting point */
 		const Cell* findCell(const Coordinate& position, const InternalUniverseId& univid) const {
 			/* Start with the universe provided */
