@@ -29,9 +29,11 @@
 #include <cstring>
 #include <sstream>
 #include <ctime>
+#include <tbb/tbb_stddef.h>
+#include <boost/version.hpp>
 
 #include "Log.hpp"
-#include "../Common/Common.hpp"
+#include "../Config.hpp"
 
 using namespace std;
 
@@ -106,22 +108,32 @@ std::string Log::ident(size_t n) {
 }
 
 std::ostream& Log::msg() {
-	logger.messages << ident(1);
+	logger.messages << ident(0);
+	return logger.messages;
+}
+
+std::ostream& Log::bmsg() {
+	logger.messages << BOLDWHITE << ident(0);
 	return logger.messages;
 }
 
 std::ostream& Log::warn() {
-	logger.oerror << BOLDYELLOW << "[W] " << RESET << YELLOW;
+	logger.oerror << BOLDYELLOW << ident(0) << "[W] " << RESET << YELLOW;
 	return logger.oerror;
 }
 
 std::ostream& Log::error() {
-	logger.oerror << BOLDRED << "[E] " << RESET << RED;
+	logger.oerror << BOLDRED << ident(0) << "[E] " << RESET << RED;
 	return logger.oerror;
 }
 
 std::ostream& Log::ok() {
-	logger.messages << BOLDCYAN << "[@] " << RESET << CYAN;
+	logger.messages << ident(0) << RESET << CYAN;
+	return logger.messages;
+}
+
+std::ostream& Log::bok() {
+	logger.messages << ident(0) << RESET << BOLDCYAN;
 	return logger.messages;
 }
 
@@ -148,6 +160,8 @@ void Log::header(std::ostream& out) {
 	logger.messages << ident(0) << " - Compiler   : " << COMPILER_NAME << endl;
 	logger.messages << ident(0) << " - Build type : " << BUILD_TYPE << " (flags = " << COMPILER_FLAGS << ")" << endl;
 	logger.messages << ident(0) << " - Build date : " << COMPILATION_DATE << " (commit " << GIT_SHA1 << ")" << endl;
+	logger.messages << ident(0) << " - Boost      : Version " << BOOST_LIB_VERSION << endl;
+	logger.messages << ident(0) << " - Intel TBB  : Version " << TBB_VERSION_MAJOR << "." << TBB_VERSION_MINOR << endl;
 	/* Print when the calculation began */
 	logger.messages << endl << BOLDWHITE << ident(0) << "Begin calculation on " << date() << endl;
 }

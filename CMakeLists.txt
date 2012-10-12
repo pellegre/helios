@@ -18,9 +18,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "-xHOST -O3 -ipo -no-prec-div -static-intel")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall")
 
 if(CMAKE_BUILD_TYPE STREQUAL "release")
-  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
 else(CMAKE_BUILD_TYPE STREQUAL "debug")
-  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
 endif()
 
 # ---- Configuration stuff
@@ -84,7 +84,7 @@ link_directories(${Boost_LIBRARIES_DIRS})
 # ---- Monte Carlo library
 
 set(MCFILES Common/Common.cpp
-            Log/Log.cpp
+            Common/Log/Log.cpp
             Transport/Particle.cpp
             Geometry/Geometry.cpp
             Geometry/Universe.cpp               

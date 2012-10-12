@@ -31,10 +31,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <list>
 
 #include "Parser/ParserTypes.hpp"
-#include "Log/Log.hpp"
 #include "Geometry/Geometry.hpp"
 #include "Material/MaterialContainer.hpp"
 #include "Transport/Particle.hpp"
+#include "Common/Common.hpp"
 
 using namespace std;
 using namespace Helios;

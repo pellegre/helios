@@ -56,7 +56,6 @@ namespace Helios {
 
 	public:
 
-		/* Prevent creation */
 		XmlParser();
 
 		/* Map of attributes of a XML elements */

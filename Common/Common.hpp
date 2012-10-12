@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <trng/uniform01_dist.hpp>
 
 #include "Config.hpp"
-#include "../Log/Log.hpp"
+#include "Log/Log.hpp"
 #include "FloatingGtest.hpp"
 
 /* Some types used in the program */
@@ -48,6 +48,8 @@ namespace Helios {
 	typedef TinyVector<double,3> Coordinate;
 	/* Define a direction */
 	typedef TinyVector<double,3> Direction;
+	/* Matrix of integers */
+	typedef Array<int,2> IntMatrix;
 
 	/* Epsilon of floating point */
 	const double eps = std::numeric_limits<double>::epsilon();

@@ -87,9 +87,11 @@ public:
 
 	/* Write stuff */
 	static std::ostream& msg();   /* This is a ordinary message printed into the screen */
+	static std::ostream& bmsg();   /* This is a ordinary message printed into the screen */
 	static std::ostream& warn();  /* A warning printed in the error channel */
 	static std::ostream& error(); /* Error message */
 	static std::ostream& ok();    /* O.K. message, printed on the screen */
+	static std::ostream& bok();   /* O.K. message, printed on the screen (bold) */
 
 	/* A lot of cool stuff to print on the screen / output */
 

@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/program_options.hpp>
 
 #include "../../Parser/ParserTypes.hpp"
-#include "../../Log/Log.hpp"
+#include "../../Common/Common.hpp"
 #include "../../Geometry/Geometry.hpp"
 #include "../../Material/MaterialContainer.hpp"
 #include "pngwriter.hpp"
@@ -80,58 +80,64 @@ static pair<string,size_t> seachKeyWords(const vector<string>& files, vector<str
 
 int main(int argc, char **argv) {
 
+	/* Print header, always */
+	Log::header();
+
 	/* Map of command line values */
     po::variables_map vm;
 
 	/* Parse command line options */
-    try {
-    	double optFloat;
-    	int optInt;
-        /* Generic options */
-        po::options_description generic("Generic options");
-        generic.add_options()
-            ("version,v", "print version string")
-            ("help", "produce help message")
-            ;
+	double optFloat;
+	int optInt;
+	/* Generic options */
+	po::options_description generic("Generic options");
+	generic.add_options()
+		("version,v", "print version string")
+		("help,h", "produce help message")
+		;
 
-        /* Declare a group of options that configure the plotter */
-        po::options_description config("Configuration");
-        config.add_options()
-			("width,w", po::value<double>(&optFloat)->default_value(50.0),
-				  "width of the plot")
-			("height,h", po::value<double>(&optFloat)->default_value(50.0),
-				   "height of the plot")
-			("pixel,p", po::value<int>(&optInt)->default_value(1000),
-				   "pixel of the plot")
-            ;
+	/* Declare a group of options that configure the plotter */
+	po::options_description config("Configuration");
+	config.add_options()
+		("width,w", po::value<double>(&optFloat)->default_value(50.0),
+			  "width of the plot")
+		("height,h", po::value<double>(&optFloat)->default_value(50.0),
+			   "height of the plot")
+		("pixel,p", po::value<int>(&optInt)->default_value(1000),
+			   "pixel of the plot")
+		("axis,a", po::value<int>(&optInt)->default_value(2),
+			    "view (2 = xy ; 1 = xz ; 0 = yz)")
+		("output,o", po::value<string>(),
+		        "name of the output PNG file ")
+		;
 
-        /* Hidden options (input files) */
-        po::options_description hidden("Hidden options");
-        hidden.add_options()
-            ("input-file", po::value< vector<string> >(), "input file")
-            ;
+	/* Hidden options (input files) */
+	po::options_description hidden("Hidden options");
+	hidden.add_options()
+		("input-file", po::value< vector<string> >(), "input file")
+		;
 
-        po::options_description cmdline_options;
-        cmdline_options.add(generic).add(config).add(hidden);
+	po::options_description cmdline_options;
+	cmdline_options.add(generic).add(config).add(hidden);
 
-        po::options_description visible("Allowed options");
-        visible.add(generic).add(config);
+	po::options_description visible("Allowed options");
+	visible.add(generic).add(config);
 
-        po::positional_options_description p;
-        p.add("input-file", -1);
+	po::positional_options_description p;
+	p.add("input-file", -1);
 
-        store(po::command_line_parser(argc, argv).
-              options(cmdline_options).positional(p).run(), vm);
+	try {
+
+        store(po::command_line_parser(argc, argv).options(cmdline_options).positional(p).run(), vm);
+        po::notify(vm);
 
         if (vm.count("help")) {
-            cout << visible << endl;
+        	Log::msg() << visible << endl;
             return 0;
         }
 
-        if (vm.count("version")) {
-        	Log::header();
+        if (vm.count("version"))
         	return 0;
-        }
 
     }
     catch(exception& e)
@@ -141,7 +147,14 @@ int main(int argc, char **argv) {
     }
 
 	/* Container of filenames */
-    vector<string> input_files = vm["input-file"].as< vector<string> >();
+    vector<string> input_files;
+    if(vm.count("input-file"))
+    	input_files = vm["input-file"].as< vector<string> >();
+    else {
+    	Log::msg() << visible << endl;
+    	return 1;
+    }
+
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
 	try {
@@ -181,14 +194,43 @@ int main(int argc, char **argv) {
 	/* Connect cell with materials */
 	geometry.setupMaterials(materials);
 
+	/* Dimensions of the graph */
 	double x = vm["width"].as<double>();
 	double y = vm["height"].as<double>();
+	/* Pixel on the graph */
 	int pixel = vm["pixel"].as<int>();
+	/* View */
+	int view = vm["axis"].as<int>();
+	if (view < 0 || view > 2) {
+    	Log::error() << "Invalid axis" << endl;
+    	return 1;
+	}
 
-	Log::ok() << "Plotting..." << Log::endl;
-
+	/* Initialize plotter */
 	PngPlotter pngPlotter(x,y,pixel);
-	pngPlotter.plotCell<zaxis>("test.png",&geometry);
+
+	if(view == 0) {
+		string output;
+	    if(vm.count("output"))
+	    	output = vm["output"].as<string>();
+	    else
+	    	output = "view-" + PngPlotter::getViewName<0>() + ".png";
+		pngPlotter.plotCell<0>(&geometry,output);
+	} else if (view == 1) {
+		string output;
+	    if(vm.count("output"))
+	    	output = vm["output"].as<string>();
+	    else
+	    	output = "view-" + PngPlotter::getViewName<1>() + ".png";
+		pngPlotter.plotCell<1>(&geometry,output);
+	} else if(view == 2) {
+		string output;
+	    if(vm.count("output"))
+	    	output = vm["output"].as<string>();
+	    else
+	    	output = "view-" + PngPlotter::getViewName<2>() + ".png";
+		pngPlotter.plotCell<2>(&geometry,output);
+	}
 
 	delete parser;
 }

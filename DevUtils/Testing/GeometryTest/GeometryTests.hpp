@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../../../Common/Common.hpp"
 #include "../../../Parser/ParserTypes.hpp"
-#include "../../../Log/Log.hpp"
 #include "../../Utils.hpp"
 #include "../TestCommon.hpp"
 

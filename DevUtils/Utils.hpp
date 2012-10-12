@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-#include "../Log/Log.hpp"
+#include "../Common/Common.hpp"
 #include "../Geometry/Geometry.hpp"
 
 /* ---- Debugging and testing functions */

@@ -24,9 +24,17 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#include <iomanip>
 #include "PngPlotter.hpp"
 
-namespace Helios {
+using namespace std;
+using namespace Helios;
 
-} /* namespace Helios */
+PngPlotter::PngPlotter(const double& width, const double& height, const int& pixel) :
+	width(width), height(height), pixel(pixel), colorMatrix(pixel,pixel) {
+
+	Log::bok() << "Initializing PNG Plotter " << Log::endl;
+	Log::msg() << Log::ident(1) << " - Size   = " << width << " x " << height << Log::endl;
+	Log::msg() << Log::ident(1) << " - Pixels = " << pixel << " x " << pixel  << Log::endl ;
+};
+
