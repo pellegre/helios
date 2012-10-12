@@ -62,6 +62,8 @@ namespace Helios {
 	typedef unsigned int UniverseId;
 	/* Material ID defined by the user, usually a string */
 	typedef std::string MaterialId;
+	/* Distribution ID defined by the user */
+	typedef std::string DistributionId;
 
 	/* Surface ID used internally */
 	typedef unsigned int InternalSurfaceId;
