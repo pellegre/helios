@@ -77,7 +77,7 @@ include_directories(${TBB_INCLUDE_DIRS})
 link_directories(${TBB_LIBRARY_DIRS})
 
 # Boost
-find_package(Boost REQUIRED)
+find_package( Boost REQUIRED COMPONENTS program_options )
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARIES_DIRS})
 
@@ -136,8 +136,8 @@ add_executable(plottermc++ ${PNGWRITER}
                            DevUtils/PngPlotter/Main.cpp
                            DevUtils/PngPlotter/PngPlotter.cpp
                            )
-SET(liblist boost_program_options)               
-target_link_libraries(plottermc++ mc++ ${Boost_LIBRARIES} ${Blitz_LIBRARY} ${PNG_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
+
+target_link_libraries(plottermc++ mc++ ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Blitz_LIBRARY} ${PNG_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
 
 # ---- Helios
 

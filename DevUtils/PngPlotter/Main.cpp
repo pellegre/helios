@@ -79,18 +79,14 @@ static pair<string,size_t> seachKeyWords(const vector<string>& files, vector<str
 }
 
 int main(int argc, char **argv) {
-	/* Input files */
-	vector<string> input_files;
-	/* Width of the graph */
-	double x;
-	/* Height of the graph */
-	double y;
-	/* Number of pixels */
-	int pixel;
+
+	/* Map of command line values */
+    po::variables_map vm;
 
 	/* Parse command line options */
     try {
-
+    	double optFloat;
+    	int optInt;
         /* Generic options */
         po::options_description generic("Generic options");
         generic.add_options()
@@ -101,11 +97,11 @@ int main(int argc, char **argv) {
         /* Declare a group of options that configure the plotter */
         po::options_description config("Configuration");
         config.add_options()
-			("width,w", po::value<double>(&x)->default_value(50.0),
+			("width,w", po::value<double>(&optFloat)->default_value(50.0),
 				  "width of the plot")
-			("height,h", po::value<double>(&y)->default_value(50.0),
+			("height,h", po::value<double>(&optFloat)->default_value(50.0),
 				   "height of the plot")
-			("pixel,p", po::value<int>(&pixel)->default_value(1000),
+			("pixel,p", po::value<int>(&optInt)->default_value(1000),
 				   "pixel of the plot")
             ;
 
@@ -124,7 +120,6 @@ int main(int argc, char **argv) {
         po::positional_options_description p;
         p.add("input-file", -1);
 
-        po::variables_map vm;
         store(po::command_line_parser(argc, argv).
               options(cmdline_options).positional(p).run(), vm);
 
@@ -138,8 +133,6 @@ int main(int argc, char **argv) {
         	return 0;
         }
 
-    	/* Container of filenames */
-        input_files = vm["input-file"].as< vector<string> >();
     }
     catch(exception& e)
     {
@@ -147,7 +140,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-
+	/* Container of filenames */
+    vector<string> input_files = vm["input-file"].as< vector<string> >();
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
 	try {
@@ -186,7 +180,10 @@ int main(int argc, char **argv) {
 	MaterialContainer materials(materialDefinitions);
 	/* Connect cell with materials */
 	geometry.setupMaterials(materials);
-	InternalMaterialId maxId = materials.getMaterialNumber() + 1;
+
+	double x = vm["width"].as<double>();
+	double y = vm["height"].as<double>();
+	int pixel = vm["pixel"].as<int>();
 
 	Log::ok() << "Plotting..." << Log::endl;
 
