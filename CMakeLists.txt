@@ -70,6 +70,17 @@ ENDIF(TRNG_FOUND)
 
 MARK_AS_ADVANCED(TRNG_INCLUDE_DIR TRNG_LIBRARY)
 
+# Intel TBB
+find_package(TBB REQUIRED)
+# Here goes the actual project
+include_directories(${TBB_INCLUDE_DIRS})
+link_directories(${TBB_LIBRARY_DIRS})
+
+# Boost
+find_package(Boost REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARIES_DIRS})
+
 # ---- Monte Carlo library
 
 set(MCFILES Common/Common.cpp
@@ -116,13 +127,17 @@ set_target_properties (testmc++ PROPERTIES COMPILE_FLAGS ${cxx_use_own_tuple})
 set(PNGWRITER DevUtils/PngPlotter/pngwriter.cpp)
 set_source_files_properties(${PNGWRITER} PROPERTIES COMPILE_DEFINITIONS NO_FREETYPE)
 set_source_files_properties(DevUtils/PngPlotter/Main.cpp PROPERTIES COMPILE_DEFINITIONS NO_FREETYPE)
+set_source_files_properties(DevUtils/PngPlotter/PngPlotter.cpp PROPERTIES COMPILE_DEFINITIONS NO_FREETYPE)
 
 find_package(PNG REQUIRED)
 include_directories(${PNG_INCLUDE_DIR})
 
-add_executable(plottermc++ ${PNGWRITER} DevUtils/PngPlotter/Main.cpp)
-               
-target_link_libraries(plottermc++ mc++ ${Blitz_LIBRARY} ${PNG_LIBRARY} ${TRNG_LIBRARY})
+add_executable(plottermc++ ${PNGWRITER} 
+                           DevUtils/PngPlotter/Main.cpp
+                           DevUtils/PngPlotter/PngPlotter.cpp
+                           )
+SET(liblist boost_program_options)               
+target_link_libraries(plottermc++ mc++ ${Boost_LIBRARIES} ${Blitz_LIBRARY} ${PNG_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
 
 # ---- Helios
 

@@ -27,19 +27,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <string>
 #include <vector>
+#include <boost/program_options.hpp>
 
 #include "../../Parser/ParserTypes.hpp"
 #include "../../Log/Log.hpp"
 #include "../../Geometry/Geometry.hpp"
 #include "../../Material/MaterialContainer.hpp"
 #include "pngwriter.hpp"
+#include "PngPlotter.hpp"
 
 using namespace std;
 using namespace Helios;
-
-static double colorFromCell(const InternalCellId& cell_id, const InternalCellId& max_id) {
-	return (double)cell_id / (double)max_id;
-}
+namespace po = boost::program_options;
 
 static pair<string,size_t> seachKeyWords(const vector<string>& files, vector<string> search_keys) {
 
@@ -79,110 +78,82 @@ static pair<string,size_t> seachKeyWords(const vector<string>& files, vector<str
 	return (*(--line_match.end())).second;
 }
 
-template<int axis>
-static Coordinate setCoordinate(const double&x, const double&y) {
-	switch(axis) {
-	case xaxis :
-		return Coordinate(0.0,x,y);
-		break;
-	case yaxis :
-		return Coordinate(y,0.0,x);
-		break;
-	case zaxis :
-		return Coordinate(x,y,0.0);
-		break;
-	}
-	return Coordinate();
-}
-
-template<int axis>
-void plot(const Helios::Geometry& geo, const Helios::MaterialContainer& materials,
-		  double xmin, double xmax, double ymin, double ymax, const int pixel, const std::string& filename) {
-	pngwriter png(pixel,pixel,1.0,filename.c_str());
-	/* Deltas */
-	double deltax = (xmax - xmin) / (double)(pixel);
-	double deltay = (ymax - ymin) / (double)(pixel);
-	/* Number of cells */
-	size_t max_id = materials.getMaterialNumber();
-	const Cell* find_cell = geo.findCell(Coordinate(0.0,0.0,0.0));
-	InternalCellId old_cell_id = 0;
-	if(find_cell)
-		old_cell_id= find_cell->getInternalId();
-	/* Loop over pixels */
-	for(int i = 0 ; i < pixel ; ++i) {
-		for(int j = 0 ; j < pixel ; ++j) {
-			double x = xmin + (double)i * deltax;
-			double y = ymin + (double)j * deltay;
-			Coordinate point(setCoordinate<axis>(x,y));
-			find_cell = geo.findCell(point);
-			InternalCellId new_cell_id = 0;
-			if(find_cell)
-				new_cell_id = find_cell->getInternalId();
-			else
-				continue;
-			if(new_cell_id != old_cell_id) {
-				png.plot(i,j,0.0,0.0,0.0);
-			} else {
-				const Material* cell_mat = find_cell->getMaterial();
-				if(cell_mat) {
-					InternalMaterialId matid = cell_mat->getInternalId();
-					double color = colorFromCell(matid,max_id);
-					png.plotHSV(i,j,color,1.0,1.0);
-				}
-			}
-			old_cell_id = new_cell_id;
-		}
-	}
-
-	/* Mark the "black" line on the other direction */
-	find_cell = geo.findCell(Coordinate(0.0,0.0,0.0));
-	if(find_cell)
-		old_cell_id = find_cell->getInternalId();
-	else
-		old_cell_id = 0;
-
-	for(int j = 0 ; j < pixel ; ++j) {
-		for(int i = 0 ; i < pixel ; ++i) {
-			double x = xmin + (double)i * deltax;
-			double y = ymin + (double)j * deltay;
-			/* Get cell ID */
-			find_cell = geo.findCell(setCoordinate<axis>(x,y));
-			InternalCellId new_cell_id = 0;
-			if(find_cell)
-				new_cell_id = find_cell->getInternalId();
-			else
-				continue;
-			if(new_cell_id != old_cell_id || !find_cell)
-				png.plot(i,j,0.0,0.0,0.0);
-			old_cell_id = new_cell_id;
-		}
-	}
-
-	png.close();
-}
 int main(int argc, char **argv) {
-	/* Check number of arguments */
-	if(argc < 2) {
-	  Helios::Log::error() << "Usage : " << argv[0] << " <filename>" << Helios::Log::endl;
-	  exit(1);
-	}
+	/* Input files */
+	vector<string> input_files;
+	/* Width of the graph */
+	double x;
+	/* Height of the graph */
+	double y;
+	/* Number of pixels */
+	int pixel;
+
+	/* Parse command line options */
+    try {
+
+        /* Generic options */
+        po::options_description generic("Generic options");
+        generic.add_options()
+            ("version,v", "print version string")
+            ("help", "produce help message")
+            ;
+
+        /* Declare a group of options that configure the plotter */
+        po::options_description config("Configuration");
+        config.add_options()
+			("width,w", po::value<double>(&x)->default_value(50.0),
+				  "width of the plot")
+			("height,h", po::value<double>(&y)->default_value(50.0),
+				   "height of the plot")
+			("pixel,p", po::value<int>(&pixel)->default_value(1000),
+				   "pixel of the plot")
+            ;
+
+        /* Hidden options (input files) */
+        po::options_description hidden("Hidden options");
+        hidden.add_options()
+            ("input-file", po::value< vector<string> >(), "input file")
+            ;
+
+        po::options_description cmdline_options;
+        cmdline_options.add(generic).add(config).add(hidden);
+
+        po::options_description visible("Allowed options");
+        visible.add(generic).add(config);
+
+        po::positional_options_description p;
+        p.add("input-file", -1);
+
+        po::variables_map vm;
+        store(po::command_line_parser(argc, argv).
+              options(cmdline_options).positional(p).run(), vm);
+
+        if (vm.count("help")) {
+            cout << visible << endl;
+            return 0;
+        }
+
+        if (vm.count("version")) {
+        	Log::header();
+        	return 0;
+        }
+
+    	/* Container of filenames */
+        input_files = vm["input-file"].as< vector<string> >();
+    }
+    catch(exception& e)
+    {
+        cout << e.what() << endl;
+        return 1;
+    }
+
 
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
-
-	/* Container of filenames */
-	vector<string> input_files;
-
 	try {
 
-		size_t arg_count = 0;
-		while(*(++argv)) {
-			arg_count++;
-			string filename = string(*(argv));
-			input_files.push_back(filename);
-			parser->parseFile(filename);
-			if(arg_count == argc - 3) break;
-		}
+		for(vector<string>::const_iterator it = input_files.begin() ; it != input_files.end() ; ++it)
+			parser->parseFile((*it));
 
 	} catch(Parser::ParserError& parsererror) {
 
@@ -215,12 +186,12 @@ int main(int argc, char **argv) {
 	MaterialContainer materials(materialDefinitions);
 	/* Connect cell with materials */
 	geometry.setupMaterials(materials);
+	InternalMaterialId maxId = materials.getMaterialNumber() + 1;
 
 	Log::ok() << "Plotting..." << Log::endl;
 
-	double x = fromString<double>(string(*(++argv)));
-	double y = fromString<double>(string(*(++argv)));
-	plot<zaxis>(geometry,materials,-x,x,-y,y,2500,"test.png");
+	PngPlotter pngPlotter(x,y,pixel);
+	pngPlotter.plotCell<zaxis>("test.png",&geometry);
 
 	delete parser;
 }
