@@ -43,14 +43,19 @@ namespace Helios {
 			std::string type;
 			/* Distribution ID on this problem */
 			DistributionId distid;
+			/* Coefficients for each child */
+			std::vector<double> coeffs;
 		public:
-			Definition(const std::string& type, const DistributionId& distid) : type(type), distid(distid) {/* */}
-
+			Definition(const std::string& type, const DistributionId& distid, const std::vector<double>& coeffs) :
+				type(type), distid(distid), coeffs(coeffs) {/* */}
 			DistributionId getUserId() const {
 				return distid;
 			}
 			std::string getType() const {
 				return type;
+			}
+			std::vector<double> getCoeffs() const {
+				return coeffs;
 			}
 			virtual ~Definition() {/* */}
 		};
@@ -60,7 +65,7 @@ namespace Helios {
 			std::string reason;
 		public:
 			BadDistributionCreation(const DistributionId& distid, const std::string& msg) {
-				reason = "Cannot create cell " + toString(distid) + " : " + msg;
+				reason = "Cannot create distribution " + toString(distid) + " : " + msg;
 			}
 			const char *what() const throw() {
 				return reason.c_str();
@@ -75,11 +80,11 @@ namespace Helios {
 
 		/* Constructor from definition */
 		DistributionBase(const Definition* definition) : distid(definition->getUserId()) {/* */};
+		/* Only used by the factory */
+		DistributionBase() : distid() {/* */};
 
-		/* Sample a real value */
-		virtual void operator() (double& value, Random& r) const {/* */};
 		/* Sample a coordinate */
-		virtual void operator() (Coordinate& position, Random& r) const {/* */};
+		virtual void operator() (Particle& particle, Random& r) const = 0;
 
 		virtual ~DistributionBase() {/* */};
 
@@ -87,72 +92,152 @@ namespace Helios {
 			return distid;
 		}
 
+	protected:
+		/* Get name of the distribution */
 		virtual std::string getName() const  = 0;
-
-		protected:
-			/* Get constructor */
-			virtual Constructor constructor() const = 0;
-		private:
-			/* Distribution ID defined by the user */
-			DistributionId distid;
+		/* Get constructor */
+		virtual Constructor constructor() const = 0;
+	private:
+		/* Distribution ID defined by the user */
+		DistributionId distid;
 	};
 
-	template<int axis>
-	class Uniform : public DistributionBase {
-		/* Points defining the box */
-		double umax,umin;
+	class Uniform {
+	protected:
+		/* Points defining the interval */
+		double umin,umax;
 	public:
-		Uniform() {/* */}
-		virtual void operator() (Coordinate& position, Random& r) const {
-			position[axis] += (umax - umin)*r.uniform() + umin;
+		Uniform() : umin(0), umax(0) {/* */}
+		Uniform(const double& umin, const double& umax) : umin(umin), umax(umax) {/* */}
+		void operator() (double& value, Random& r) const {
+			value += (umax - umin)*r.uniform() + umin;
 		};
 		~Uniform() {/* */}
 	};
 
 	template<int axis>
 	class Box1D : public DistributionBase {
-		Uniform<axis> uniform;
+		Uniform uniform;
 	public:
 		Box1D() {/* */}
-		virtual void operator() (Coordinate& position, Random& r) const {
-			uniform(position,r);
+		Box1D(const Definition* definition) : DistributionBase(definition) {/* */}
+		virtual void operator() (Particle& particle, Random& r) const {
+			uniform(particle.pos()[axis],r);
 		};
 		~Box1D() {/* */}
 	};
 
-	template<int axis1, int axis2>
+	template<int axis>
 	class Box2D : public DistributionBase {
-		Uniform<axis1> uniform1;
-		Uniform<axis2> uniform2;
+		/* Uniform distributions */
+		Uniform uniform1,uniform2;
+		/* Static constructor functions */
+		static DistributionBase* xAxisConstructor(const Definition* definition) {
+			return new Box2D<xaxis>(definition);
+		}
+		static DistributionBase* yAxisConstructor(const Definition* definition) {
+			return new Box2D<yaxis>(definition);
+		}
+		static DistributionBase* zAxisConstructor(const Definition* definition) {
+			return new Box2D<zaxis>(definition);
+		}
+		Constructor constructor() const {
+			switch(axis) {
+			case xaxis :
+				return xAxisConstructor;
+				break;
+			case yaxis :
+				return yAxisConstructor;
+				break;
+			case zaxis :
+				return zAxisConstructor;
+				break;
+			}
+			return 0;
+		}
+		/* Name of the distribution */
+		std::string getName() const {
+			return "box2d-" + getPlaneName<axis>();
+		}
 	public:
 		Box2D() {/* */}
-		virtual void operator() (Coordinate& position, Random& r) const {
-			uniform1(position,r);
-			uniform2(position,r);
+		Box2D(const Definition* definition) : DistributionBase(definition) {
+			std::vector<double> coeffs = definition->getCoeffs();
+			if(coeffs.size() != 4)
+				throw BadDistributionCreation(definition->getUserId(),
+						"Bad number of coefficients. Expected 4 : umin umax vmin vmax");
+			uniform1 = Uniform(coeffs[0],coeffs[1]);
+			uniform2 = Uniform(coeffs[2],coeffs[3]);
+		}
+		virtual void operator() (Particle& particle, Random& r) const {
+			Coordinate& position = particle.pos();
+			switch(axis) {
+			case xaxis :
+				uniform1(position[yaxis],r);
+				uniform2(position[zaxis],r);
+				break;
+			case yaxis :
+				uniform1(position[xaxis],r);
+				uniform2(position[zaxis],r);
+				break;
+			case zaxis :
+				uniform1(position[xaxis],r);
+				uniform2(position[yaxis],r);
+				break;
+			}
 		};
 		~Box2D() {/* */}
 	};
 
-	template<int axis1, int axis2, int axis3>
 	class Box3D : public DistributionBase {
-		Uniform<axis1> uniform1;
-		Uniform<axis2> uniform2;
-		Uniform<axis2> uniform3;
+		Uniform uniformx;
+		Uniform uniformy;
+		Uniform uniformz;
+		static DistributionBase* Box3DConstructor(const Definition* definition) {
+			return new Box3D(definition);
+		}
+		Constructor constructor() const {
+			return Box3DConstructor;
+		}
+		/* Name of the distribution */
+		std::string getName() const {
+			return "box3d";
+		}
 	public:
 		Box3D() {/* */}
-		virtual void operator() (Coordinate& position, Random& r) const {
-			uniform1(position,r);
-			uniform2(position,r);
-			uniform3(position,r);
+		Box3D(const Definition* definition) : DistributionBase(definition) {
+			std::vector<double> coeffs = definition->getCoeffs();
+			if(coeffs.size() != 6)
+				throw BadDistributionCreation(definition->getUserId(),
+						"Bad number of coefficients. Expected 6 : xmin xmax ymin ymax zmin zmax");
+			uniformx = Uniform(coeffs[0],coeffs[1]);
+			uniformy = Uniform(coeffs[2],coeffs[3]);
+			uniformz = Uniform(coeffs[4],coeffs[5]);
+		}
+		virtual void operator() (Particle& particle, Random& r) const {
+			uniformx(particle.pos()[xaxis],r);
+			uniformy(particle.pos()[yaxis],r);
+			uniformz(particle.pos()[zaxis],r);
 		};
 		~Box3D() {/* */}
 	};
 
 	class Isotropic : public DistributionBase {
+		static DistributionBase* IsotropicConstructor(const Definition* definition) {
+			return new Isotropic(definition);
+		}
+		Constructor constructor() const {
+			return IsotropicConstructor;
+		}
+		/* Name of the distribution */
+		std::string getName() const {
+			return "isotropic";
+		}
 	public:
 		Isotropic() {/* */}
-		virtual void operator() (Direction& direction, Random& r) const {
-			isotropicDirection(direction,r);
+		Isotropic(const Definition* definition) : DistributionBase(definition) {/* */}
+		virtual void operator() (Particle& particle, Random& r) const {
+			isotropicDirection(particle.dir(),r);
 		};
 		~Isotropic() {/* */}
 	};

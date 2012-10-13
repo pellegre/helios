@@ -85,18 +85,7 @@ namespace Helios {
 	/* Name of the surface */
 	template<int axis>
 	std::string CylinderOnAxisOrigin<axis>::name() const {
-		switch(axis) {
-		case xaxis :
-			return "cx";
-			break;
-		case yaxis :
-			return "cy";
-			break;
-		case zaxis :
-			return "cz";
-			break;
-		}
-		return "";
+		return "c" + getAxisName<axis>();
 	}
 
 	/* Constructor */

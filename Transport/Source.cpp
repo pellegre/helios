@@ -25,8 +25,23 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Sampler.hpp"
+#include "Source.hpp"
 
 namespace Helios {
+
+Source::Source(const Source::Definition* definition) {
+	/* Get samplers */
+	std::vector<ParticleSampler*> samplers = definition->getSamplers();
+	/* Get weight of each sampler */
+	std::vector<double> weights = definition->getWeights();
+
+	/* Create a sampler */
+	source_sampler = new Sampler<ParticleSampler*>(samplers,weights);
+}
+
+ParticleSampler::ParticleSampler(const ParticleSampler::Definition* definition) :
+		samplerid(definition->getSamplerid()), position(definition->getPosition()),
+		direction(definition->getDirection()), distributions(definition->getDistributions())
+		{/* */}
 
 } /* namespace Helios */

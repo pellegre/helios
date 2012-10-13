@@ -64,6 +64,8 @@ namespace Helios {
 	typedef std::string MaterialId;
 	/* Distribution ID defined by the user */
 	typedef std::string DistributionId;
+	/* Sampler ID defined by the user */
+	typedef unsigned int SamplerId;
 
 	/* Surface ID used internally */
 	typedef unsigned int InternalSurfaceId;
@@ -92,6 +94,41 @@ namespace Helios {
 	const int yaxis = 1;
 	const int zaxis = 2;
 
+	/* Get the name of an axis */
+	template<int axis>
+	std::string getAxisName() {
+		switch(axis) {
+		case xaxis :
+			return "x";
+			break;
+		case yaxis :
+			return "y";
+			break;
+		case zaxis :
+			return "z";
+			break;
+		}
+		return "";
+	}
+
+	/* Return the plane perpendicular to an axis */
+	/* Get view name */
+	template<int axis>
+	static std::string getPlaneName() {
+		switch(axis) {
+		case xaxis :
+			return "yz";
+			break;
+		case yaxis :
+			return "xz";
+			break;
+		case zaxis :
+			return "xy";
+			break;
+		}
+		return "--";
+	}
+
 	/* This piece of code appears in so many places */
 	template<class Seq>
 	void purgePointers(Seq& ptrContainer) {
@@ -102,7 +139,7 @@ namespace Helios {
 		ptrContainer.clear();
 	}
 
-	/* ---- Comparison function, ONLY FOR "ADMINISTRATIVE" CODE */
+	/* ---- Comparison function, ONLY FOR "ADMINISTRATIVE" CODE, this is inefficient */
 
 	/* Compare two floating point numbers */
 	template<class T>
@@ -117,10 +154,11 @@ namespace Helios {
 		return (compareFloating(a[0],b[0]) && compareFloating(a[1],b[1]) && compareFloating(a[2],b[2]));
 	}
 
+	/* ---- Random number */
+
 	/* Random number object (encapsulate the random number generation) */
 	class Random {
-		/* A particle contains a state of its own random number generator */
-		trng::lcg64 r;            /* Generator */
+		trng::lcg64 r;                   /* Generator */
 		trng::uniform01_dist<double> u;  /* Uniform distribution */
 	public:
 		Random(const trng::lcg64& r) : r(r) {/* */}

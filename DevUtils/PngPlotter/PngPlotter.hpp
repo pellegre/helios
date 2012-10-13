@@ -227,23 +227,6 @@ class PngPlotter {
 public:
 	PngPlotter(const double& width, const double& height, const int& pixel);
 
-	/* Get view name */
-	template<int uaxis>
-	static std::string getViewName() {
-		switch(uaxis) {
-		case Helios::xaxis :
-			return "yz";
-			break;
-		case Helios::yaxis :
-			return "xz";
-			break;
-		case Helios::zaxis :
-			return "xy";
-			break;
-		}
-		return "--";
-	}
-
 	double getHeight() const {
 		return height;
 	}

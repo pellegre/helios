@@ -31,7 +31,7 @@
 #include <map>
 
 #include "Material.hpp"
-#include "Sampler.hpp"
+#include "../Common/Sampler.hpp"
 
 namespace Helios {
 

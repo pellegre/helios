@@ -163,8 +163,10 @@ namespace Helios {
 		Sampler(const std::vector<TypeReaction>& reactions, const std::vector<ProbTable>& xs_container) :
             nreaction(reactions.size()),
             nenergy(getArraySize(*xs_container.begin())),
-            reactions(reactions),
-            reaction_matrix(nenergy,nreaction - 1) {
+            reactions(reactions) {
+
+			/* Allocate reaction matrix */
+			reaction_matrix = new double[(nreaction - 1) * nenergy];
 
 			/* Sanity check */
 			assert(xs_container.size() == reactions.size());

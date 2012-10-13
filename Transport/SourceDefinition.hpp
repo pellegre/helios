@@ -25,32 +25,31 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Distribution.hpp"
-
-using namespace std;
+#ifndef SOURCEDEFINITION_HPP_
+#define SOURCEDEFINITION_HPP_
 
 namespace Helios {
 
-DistributionFactory DistributionFactory::factory;
+	/* Generic and base class to define all source related objects */
+	class SourceDefinition {
+	public:
 
-DistributionFactory::DistributionFactory() {
-	/* Distribution registering */
-	registerDistribution(Box2D<xaxis>());
-	registerDistribution(Box2D<yaxis>());
-	registerDistribution(Box2D<zaxis>());
-	registerDistribution(Box3D());
-	registerDistribution(Isotropic());
-}
+		enum SourceType {
+			SAMPLER = 1,
+			DIST    = 2,
+			SOURCE  = 3
+		};
 
-DistributionBase* DistributionFactory::createDistribution(const DistributionBase::Definition* definition) const {
-	map<string,DistributionBase::Constructor>::const_iterator it_type = constructor_table.find(definition->getType());
-	if(it_type != constructor_table.end())
-		return (*it_type).second(definition);
-	else
-		throw DistributionBase::BadDistributionCreation(definition->getUserId(),"Distribution type " + definition->getType() + " is not defined");
-}
+		/* Different type of geometric entities */
+		SourceDefinition(const SourceType& type) : type(type) {/* */};
+		/* Get the type */
+		SourceType getType() const {return type;}
+		virtual ~SourceDefinition(){/* */};
 
-void DistributionFactory::registerDistribution(const DistributionBase& distribution) {
-	constructor_table[distribution.getName()] = distribution.constructor();
-}
+	private:
+		SourceType type;
+	};
+
 } /* namespace Helios */
+
+#endif /* SOURCEDEFINITION_HPP_ */

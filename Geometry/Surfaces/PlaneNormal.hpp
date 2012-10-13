@@ -83,18 +83,8 @@ namespace Helios {
 	/* Name of the surface */
 	template<int axis>
 	std::string PlaneNormal<axis>::name() const {
-		switch(axis) {
-		case xaxis :
-			return "px";
-			break;
-		case yaxis :
-			return "py";
-			break;
-		case zaxis :
-			return "pz";
-			break;
-		}
-		return "";
+		return "p" + getAxisName<axis>();
+
 	}
 
 	/* Constructor */

@@ -86,6 +86,8 @@ link_directories(${Boost_LIBRARIES_DIRS})
 set(MCFILES Common/Common.cpp
             Common/Log/Log.cpp
             Transport/Particle.cpp
+            Transport/Distribution.cpp
+            Transport/Source.cpp           
             Geometry/Geometry.cpp
             Geometry/Universe.cpp               
             Geometry/Cell.cpp

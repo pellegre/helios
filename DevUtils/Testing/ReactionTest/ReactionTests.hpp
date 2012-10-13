@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../../../Common/Common.hpp"
 #include "../../../Parser/ParserTypes.hpp"
-#include "../../../Material/Sampler.hpp"
+#include "../../../Common/Sampler.hpp"
 #include "../../Utils.hpp"
 #include "../TestCommon.hpp"
 

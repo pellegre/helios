@@ -214,21 +214,21 @@ int main(int argc, char **argv) {
 	    if(vm.count("output"))
 	    	output = vm["output"].as<string>();
 	    else
-	    	output = "view-" + PngPlotter::getViewName<0>() + ".png";
+	    	output = "view-" + Helios::getPlaneName<0>() + ".png";
 		pngPlotter.plotCell<0>(&geometry,output);
 	} else if (view == 1) {
 		string output;
 	    if(vm.count("output"))
 	    	output = vm["output"].as<string>();
 	    else
-	    	output = "view-" + PngPlotter::getViewName<1>() + ".png";
+	    	output = "view-" + Helios::getPlaneName<1>() + ".png";
 		pngPlotter.plotCell<1>(&geometry,output);
 	} else if(view == 2) {
 		string output;
 	    if(vm.count("output"))
 	    	output = vm["output"].as<string>();
 	    else
-	    	output = "view-" + PngPlotter::getViewName<2>() + ".png";
+	    	output = "view-" + Helios::getPlaneName<2>() + ".png";
 		pngPlotter.plotCell<2>(&geometry,output);
 	}
 
