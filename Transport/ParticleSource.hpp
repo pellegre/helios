@@ -33,7 +33,7 @@
 #include "../Common/Common.hpp"
 #include "../Common/Sampler.hpp"
 #include "SourceDefinition.hpp"
-#include "Distribution.hpp"
+#include "Distribution/Distribution.hpp"
 
 namespace Helios {
 

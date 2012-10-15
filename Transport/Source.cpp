@@ -61,18 +61,50 @@ void Source::setupSource(vector<SourceDefinition*>& definitions) {
 	definitions.clear();
 }
 
-void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition, vector<ParticleSampler::Definition*>& samplerDefinition,
+void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition,
+		                 vector<ParticleSampler::Definition*>& samplerDefinition,
 		                 vector<ParticleSource::Definition*>& sourceDefinition) {
+
+	/* Container of custom distributions */
+	vector<DistributionCustom::Definition*> customDefinition;
+
 	/* Create the distributions */
 	vector<DistributionBase::Definition*>::const_iterator itDist = distDefinition.begin();
 	for(; itDist != distDefinition.end() ; ++itDist) {
 		DistributionId id = (*itDist)->getUserId();
 		if(distribution_map.find(id) != distribution_map.end())
 			throw(DistributionBase::BadDistributionCreation(id,"Duplicated id"));
+		if((*itDist)->getType() != "custom") {
+			/* Update distribution map */
+			distribution_map[id] = distributions.size();
+			/* Create the distribution */
+			DistributionBase* distPtr = DistributionFactory::access().createDistribution((*itDist));
+			/* Push it into the container */
+			distributions.push_back(distPtr);
+		} else
+			customDefinition.push_back(static_cast<DistributionCustom::Definition*>(*itDist));
+	}
+
+	/* Create custom definitions */
+	vector<DistributionCustom::Definition*>::const_iterator itCustom = customDefinition.begin();
+	for(; itCustom != customDefinition.end() ; ++itCustom) {
+		/* Get distributions */
+		vector<DistributionId> distIds = (*itCustom)->getDistributionIds();
+		vector<DistributionBase*> distPtrs;
+		for(vector<DistributionId>::iterator it = distIds.begin() ; it != distIds.end() ; ++it) {
+			map<DistributionId,InternalDistributionId>::iterator itId = distribution_map.find((*it));
+			if(itId == distribution_map.end())
+				throw(DistributionBase::BadDistributionCreation((*itCustom)->getUserId(),
+					  "Distribution id " + toString((*it)) + " does not exist"));
+			else
+				distPtrs.push_back(distributions[(*itId).second]);
+		}
+		/* Put the distribution container into the definition */
+		(*itCustom)->setDistributions(distPtrs);
 		/* Update distribution map */
-		distribution_map[id] = distributions.size();
+		distribution_map[(*itCustom)->getUserId()] = distributions.size();
 		/* Create the distribution */
-		DistributionBase* distPtr = DistributionFactory::access().createDistribution((*itDist));
+		DistributionBase* distPtr = DistributionFactory::access().createDistribution((*itCustom));
 		/* Push it into the container */
 		distributions.push_back(distPtr);
 	}
@@ -128,6 +160,9 @@ void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition, 
 }
 
 Source::~Source() {
+	purgePointers(distributions);
+	purgePointers(particle_samplers);
+	purgePointers(sources);
 	delete source_sampler;
 }
 } /* namespace Helios */

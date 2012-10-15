@@ -93,77 +93,6 @@ namespace Helios {
 	template<typename T>
 	static inline std::string toString(const T& t) {std::ostringstream s;s << t;return s.str();}
 
-	/* Axis */
-	const int xaxis = 0;
-	const int yaxis = 1;
-	const int zaxis = 2;
-
-	/* Get the name of an axis */
-	template<int axis>
-	std::string getAxisName() {
-		switch(axis) {
-		case xaxis :
-			return "x";
-			break;
-		case yaxis :
-			return "y";
-			break;
-		case zaxis :
-			return "z";
-			break;
-		}
-		return "";
-	}
-
-	/* Return the plane perpendicular to an axis */
-	template<int axis>
-	static std::string getPlaneName() {
-		switch(axis) {
-		case xaxis :
-			return "yz";
-			break;
-		case yaxis :
-			return "xz";
-			break;
-		case zaxis :
-			return "xy";
-			break;
-		}
-		return "--";
-	}
-
-	template<int axis>
-	static double getAbscissa(const Coordinate& value) {
-		switch(axis) {
-		case xaxis :
-			return value[yaxis];
-			break;
-		case yaxis :
-			return value[zaxis];
-			break;
-		case zaxis :
-			return value[xaxis];
-			break;
-		}
-		return 0;
-	}
-
-	template<int axis>
-	static double getOrdinate(const Coordinate& value) {
-		switch(axis) {
-		case xaxis :
-			return value[zaxis];
-			break;
-		case yaxis :
-			return value[xaxis];
-			break;
-		case zaxis :
-			return value[yaxis];
-			break;
-		}
-		return 0;
-	}
-
 	/* This piece of code appears in so many places */
 	template<class Seq>
 	void purgePointers(Seq& ptrContainer) {
@@ -203,5 +132,8 @@ namespace Helios {
 		~Random(){/* */}
 	};
 }
+
+/* Name of axis */
+#include "AxisName.hpp"
 
 #endif /* TYPES_H_ */

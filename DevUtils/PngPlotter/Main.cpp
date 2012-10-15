@@ -266,7 +266,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* Dump the plot */
-    pngPlotter.dumpPngNoColor(output);
+    pngPlotter.dumpPng(output);
 
 	delete parser;
 }

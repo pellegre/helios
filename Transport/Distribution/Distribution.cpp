@@ -26,6 +26,8 @@
  */
 
 #include "Distribution.hpp"
+#include "Spatial.hpp"
+#include "Angular.hpp"
 
 using namespace std;
 
@@ -35,11 +37,15 @@ DistributionFactory DistributionFactory::factory;
 
 DistributionFactory::DistributionFactory() {
 	/* Distribution registering */
+	registerDistribution(Box1D<xaxis>());
+	registerDistribution(Box1D<yaxis>());
+	registerDistribution(Box1D<zaxis>());
 	registerDistribution(Box2D<xaxis>());
 	registerDistribution(Box2D<yaxis>());
 	registerDistribution(Box2D<zaxis>());
 	registerDistribution(Box3D());
 	registerDistribution(Isotropic());
+	registerDistribution(DistributionCustom());
 }
 
 DistributionBase* DistributionFactory::createDistribution(const DistributionBase::Definition* definition) const {

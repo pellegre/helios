@@ -38,7 +38,7 @@ namespace Helios {
 
 	/*
 	 * The source contains all the distributions, samplers and particle-sources on the problem.
-	 * When the source is eliminated, all this resources are liberated. This class is the equivalent
+	 * When the source is eliminated, all this resources are deallocated. This class is the equivalent
 	 * to the Geometry class for cells and surfaces.
 	 */
 	class Source {

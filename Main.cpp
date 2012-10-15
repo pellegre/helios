@@ -34,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Geometry/Geometry.hpp"
 #include "Material/MaterialContainer.hpp"
 #include "Transport/Particle.hpp"
-#include "Transport/Distribution.hpp"
 #include "Transport/Source.hpp"
 #include "Common/Common.hpp"
 
@@ -127,6 +126,7 @@ int main(int argc, char **argv) {
 	/* Setup problem */
 	std::vector<GeometricDefinition*> geometryDefinitions = parser->getGeometry();
 	std::vector<Material::Definition*> materialDefinitions = parser->getMaterials();
+	std::vector<SourceDefinition*> sourceDefinitions = parser->getSource();
 
 	/* Geometry */
 	Geometry* geometry = new Geometry(geometryDefinitions);
@@ -134,6 +134,8 @@ int main(int argc, char **argv) {
 	MaterialContainer* materials = new MaterialContainer(materialDefinitions);
 	/* Connect cell with materials */
 	geometry->setupMaterials(*materials);
+	/* Get the source */
+	Source* source = new Source(sourceDefinitions);
 
 	/* Initialization - Random number */
 	trng::lcg64 random;
@@ -142,25 +144,16 @@ int main(int argc, char **argv) {
 
 	/* Initialization - KEFF cycle */
 	double keff = 1.186;
-	int neutrons = 5000;
-	int skip = 50;
-	int cycles = 250;
-	double ax = -32.13;
-	double bx =  10.71;
-	double ay = -10.71;
-	double by =  32.13;
+	int neutrons = 10;
+	int skip = 5;
+	int cycles = 10;
 	list<pair<const Cell*,Particle> > particles;
-	/* Fission bank, the particles for the next cycle are banked here */
+	/* Particle bank, the particles for the next cycle are banked here */
 	list<pair<const Cell*,Particle> > fission_bank;
 
 	for(size_t i = 0 ; i < neutrons ; ++i) {
-		Direction initial_dir(0.0,0.0,0.0);
-		double x = (bx - ax)*r.uniform() + ax;
-		double y = (by - ay)*r.uniform() + ay;
-		Coordinate initial_pos(x,y,0.0);
-		isotropicDirection(initial_dir,r);
-
-        Particle p = Particle(initial_pos,initial_dir,EnergyPair(0,0.0),1.0);
+		/* Sample particle */
+        Particle p = source->sample(r);
 		const Cell* c(geometry->findCell(p.pos()));
 		particles.push_back(pair<const Cell*,Particle>(c,p));
 	}
@@ -291,6 +284,7 @@ int main(int argc, char **argv) {
 
 	Log::ok() << " Final keff = "<< ave_keff/ (double)(cycles - skip) << Log::endl;
 
+	delete source;
 	delete materials;
 	delete geometry;
 	delete parser;
