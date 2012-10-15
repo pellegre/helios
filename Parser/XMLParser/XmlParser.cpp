@@ -130,6 +130,7 @@ XmlParser::XmlParser() {
 	Log::bok() << "Initializing XML Parser " << Log::endl;
 	root_map["geometry"] = &XmlParser::geoNode;
 	root_map["materials"] = &XmlParser::matNode;
+	root_map["sources"] = &XmlParser::srcNode;
 }
 
 } /* namespace Helios */

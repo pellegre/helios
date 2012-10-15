@@ -29,6 +29,8 @@
 #define SAMPLER_HPP_
 
 #include <algorithm>
+#include <vector>
+#include <cassert>
 
 namespace Helios {
 

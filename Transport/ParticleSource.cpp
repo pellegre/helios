@@ -25,38 +25,25 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Particle.hpp"
+#include "ParticleSource.hpp"
+
+using namespace std;
 
 namespace Helios {
 
-/* Set an isotropic angle to the particle */
-void isotropicDirection(Direction& dir, Random& r) {
-	double rand1, rand2, rand3, c1, c2;
 
-	/* Use the rejection method described in Lux & Koblinger, pp. 21-22. */
-	do {
-		rand1 = 2.0*r.uniform() - 1.0;
-		rand2 = 2.0*r.uniform() - 1.0;
-		c1 = rand1*rand1 + rand2*rand2;
-    }
-	while (c1 > 1.0);
-
-	rand3 = 2.0*r.uniform() - 1.0;
-
-	c2 = sqrt(1 - rand3*rand3);
-
-	dir[0] = c2*(rand1*rand1 - rand2*rand2)/c1;
-	dir[1] = c2*2.0*rand1*rand2/c1;
-	dir[2] = rand3;
+ParticleSource::ParticleSource(const ParticleSource::Definition* definition) : strength(definition->getStrength()) {
+	/* Get samplers */
+	std::vector<ParticleSampler*> samplers = definition->getSamplers();
+	/* Get weight of each sampler */
+	std::vector<double> weights = definition->getWeights();
+	/* Create a sampler */
+	source_sampler = new Sampler<ParticleSampler*>(samplers,weights);
 }
 
-std::ostream& operator<<(std::ostream& out, const Particle& q) {
-	out << "pos = " << q.position << " ; ";
-	out << "dir = " << q.direction << " ; ";
-	out << "energy = " << q.energy.second << " (index = " << q.energy.first << ") ; ";
-	out << "weight = " << q.weight << " ; ";
-	out << "state = " << q.state;
-	return out;
-}
-
+ParticleSampler::ParticleSampler(const ParticleSampler::Definition* definition) :
+		samplerid(definition->getSamplerid()), position(definition->getPosition()),
+		direction(definition->getDirection()), energy(1.0), weight(1.0), state(Particle::ALIVE),
+		distributions(definition->getDistributions())
+		{/* */}
 } /* namespace Helios */

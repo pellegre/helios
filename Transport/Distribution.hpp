@@ -29,6 +29,7 @@
 #define DISTRIBUTION_HPP_
 
 #include "../Common/Common.hpp"
+#include "SourceDefinition.hpp"
 #include "Particle.hpp"
 
 namespace Helios {
@@ -38,7 +39,7 @@ namespace Helios {
 
 	public:
 		/* Base class to define a distribution */
-		class Definition {
+		class Definition : public SourceDefinition {
 			/* Type of distribution */
 			std::string type;
 			/* Distribution ID on this problem */
@@ -47,7 +48,7 @@ namespace Helios {
 			std::vector<double> coeffs;
 		public:
 			Definition(const std::string& type, const DistributionId& distid, const std::vector<double>& coeffs) :
-				type(type), distid(distid), coeffs(coeffs) {/* */}
+				SourceDefinition(SourceDefinition::DIST), type(type), distid(distid), coeffs(coeffs) {/* */}
 			DistributionId getUserId() const {
 				return distid;
 			}

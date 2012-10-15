@@ -39,7 +39,7 @@ namespace Helios {
 		enum State {
 			ALIVE = 0, /* The particle is alive and should be transport on next step */
 			DEAD  = 1, /* The particle is dead, the transport is done for this one */
-			BANK  = 3  /* The particle state should be banked on next step */
+			BANK  = 2  /* The particle state should be banked on next step */
 		};
 
 		Particle() {/* */}

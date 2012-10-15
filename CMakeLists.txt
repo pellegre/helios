@@ -87,6 +87,7 @@ set(MCFILES Common/Common.cpp
             Common/Log/Log.cpp
             Transport/Particle.cpp
             Transport/Distribution.cpp
+            Transport/ParticleSource.cpp                       
             Transport/Source.cpp           
             Geometry/Geometry.cpp
             Geometry/Universe.cpp               
@@ -105,7 +106,8 @@ set(MCFILES Common/Common.cpp
             Parser/XMLParser/tinyxmlparser.cpp  
             Parser/XMLParser/XmlParser.cpp    
             Parser/XMLParser/XmlParserGeometry.cpp
-            Parser/XMLParser/XmlParserMaterial.cpp                       
+            Parser/XMLParser/XmlParserMaterial.cpp 
+            Parser/XMLParser/XmlParserSource.cpp                                        
             )
             
 add_library(mc++ ${MCFILES})

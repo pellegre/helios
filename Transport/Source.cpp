@@ -27,21 +27,107 @@
 
 #include "Source.hpp"
 
+using namespace std;
+
 namespace Helios {
 
-Source::Source(const Source::Definition* definition) {
-	/* Get samplers */
-	std::vector<ParticleSampler*> samplers = definition->getSamplers();
-	/* Get weight of each sampler */
-	std::vector<double> weights = definition->getWeights();
-
-	/* Create a sampler */
-	source_sampler = new Sampler<ParticleSampler*>(samplers,weights);
+template<class T>
+static void pushDefinition(SourceDefinition* src, vector<T*>& definition) {
+	definition.push_back(dynamic_cast<T*>(src));
 }
 
-ParticleSampler::ParticleSampler(const ParticleSampler::Definition* definition) :
-		samplerid(definition->getSamplerid()), position(definition->getPosition()),
-		direction(definition->getDirection()), distributions(definition->getDistributions())
-		{/* */}
+void Source::setupSource(vector<SourceDefinition*>& definitions) {
+	vector<DistributionBase::Definition*> distDefinition;
+	vector<ParticleSampler::Definition*> samplerDefinition;
+	vector<ParticleSource::Definition*> sourceDefinition;
+	/* Dispatch each definition to the corresponding container */
+	vector<SourceDefinition*>::const_iterator it_def = definitions.begin();
 
+	for(; it_def != definitions.end() ; ++it_def) {
+		switch((*it_def)->getType()) {
+		case SourceDefinition::DIST:
+			pushDefinition(*it_def,distDefinition);
+			break;
+		case SourceDefinition::SAMPLER:
+			pushDefinition(*it_def,samplerDefinition);
+			break;
+		case SourceDefinition::SOURCE:
+			pushDefinition(*it_def,sourceDefinition);
+			break;
+		}
+	}
+
+	setupSource(distDefinition,samplerDefinition,sourceDefinition);
+	definitions.clear();
+}
+
+void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition, vector<ParticleSampler::Definition*>& samplerDefinition,
+		                 vector<ParticleSource::Definition*>& sourceDefinition) {
+	/* Create the distributions */
+	vector<DistributionBase::Definition*>::const_iterator itDist = distDefinition.begin();
+	for(; itDist != distDefinition.end() ; ++itDist) {
+		DistributionId id = (*itDist)->getUserId();
+		if(distribution_map.find(id) != distribution_map.end())
+			throw(DistributionBase::BadDistributionCreation(id,"Duplicated id"));
+		/* Update distribution map */
+		distribution_map[id] = distributions.size();
+		/* Create the distribution */
+		DistributionBase* distPtr = DistributionFactory::access().createDistribution((*itDist));
+		/* Push it into the container */
+		distributions.push_back(distPtr);
+	}
+
+	/* Create samplers */
+	vector<ParticleSampler::Definition*>::const_iterator itSampler = samplerDefinition.begin();
+	for(; itSampler != samplerDefinition.end() ; ++itSampler) {
+		/* Get distributions */
+		vector<DistributionId> distIds = (*itSampler)->getDistributionIds();
+		vector<DistributionBase*> distPtrs;
+		for(vector<DistributionId>::iterator it = distIds.begin() ; it != distIds.end() ; ++it) {
+			map<DistributionId,InternalDistributionId>::iterator itId = distribution_map.find((*it));
+			if(itId == distribution_map.end())
+				throw(ParticleSampler::BadSamplerCreation((*itSampler)->getSamplerid(),
+					  "Distribution id " + toString((*it)) + " does not exist"));
+			else
+				distPtrs.push_back(distributions[(*itId).second]);
+		}
+		/* Put the distribution container into the definition */
+		(*itSampler)->setDistributions(distPtrs);
+		ParticleSampler* sampler = new ParticleSampler((*itSampler));
+		sampler_map[(*itSampler)->getSamplerid()] = particle_samplers.size();
+		particle_samplers.push_back(sampler);
+	}
+
+	/* Finally, create the source with each samplers */
+	vector<double> strengths;
+	vector<ParticleSource::Definition*>::const_iterator itSource = sourceDefinition.begin();
+	for(; itSource != sourceDefinition.end() ; ++itSource) {
+		/* Get distributions */
+		vector<SamplerId> samplerIds = (*itSource)->getSamplersIds();
+		vector<ParticleSampler*> samplerPtrs;
+		for(vector<SamplerId>::iterator it = samplerIds.begin() ; it != samplerIds.end() ; ++it) {
+			map<SamplerId,InternalSamplerId>::iterator itId = sampler_map.find((*it));
+			if(itId == sampler_map.end())
+				throw(ParticleSource::BadSourceCreation("Sampler id " + toString((*it)) + " does not exist"));
+			else
+				samplerPtrs.push_back(particle_samplers[(*itId).second]);
+		}
+		/* Put the distribution container into the definition */
+		(*itSource)->setSamplers(samplerPtrs);
+		ParticleSource* source = new ParticleSource((*itSource));
+		sources.push_back(source);
+		strengths.push_back(source->getStrength());
+	}
+
+	purgePointers(distDefinition);
+	purgePointers(samplerDefinition);
+	purgePointers(sourceDefinition);
+
+	/* Once we got all the sources, we should create the sampler */
+	source_sampler = new Sampler<ParticleSource*>(sources,strengths);
+}
+
+Source::~Source() {
+	delete source_sampler;
+}
 } /* namespace Helios */

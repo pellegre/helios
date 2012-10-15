@@ -153,45 +153,14 @@ int main(int argc, char **argv) {
 	/* Fission bank, the particles for the next cycle are banked here */
 	list<pair<const Cell*,Particle> > fission_bank;
 
-	vector<double> coeffs;
-	coeffs.push_back(ax);
-	coeffs.push_back(bx);
-	coeffs.push_back(ay);
-	coeffs.push_back(by);
-	DistributionBase* box
-	   = DistributionFactory::access().createDistribution(new DistributionBase::Definition("box2d-xy","0",coeffs));
-	DistributionBase* iso
-	   = DistributionFactory::access().createDistribution(new DistributionBase::Definition("isotropic","1",vector<double>()));
-	SamplerId id = 0;
-	ParticleSampler::Definition defSampler(id,Coordinate(0,0,0),Direction(0,0,0),vector<DistributionId>());
-	vector<DistributionBase*> distCont;
-	distCont.push_back(box);
-	distCont.push_back(iso);
-	defSampler.setDistributions(distCont);
-	ParticleSampler* partSampler = new ParticleSampler(&defSampler);
-
-	vector<SamplerId> samplerIds(1);
-	vector<double> weight(1);
-	Source::Definition defSource(samplerIds,weight);
-	vector<ParticleSampler*> samplers;
-	samplers.push_back(partSampler);
-	defSource.setSamplers(samplers);
-
-	Source* source = new Source(&defSource);
-
 	for(size_t i = 0 ; i < neutrons ; ++i) {
-		Coordinate initial_pos(0.0,0.0,0.0);
 		Direction initial_dir(0.0,0.0,0.0);
-
-//		double x = (bx - ax)*r.uniform() + ax;
-//		double y = (by - ay)*r.uniform() + ay;
-//		Coordinate initial_pos(x,y,0.0);
-//		isotropicDirection(initial_dir,r);
+		double x = (bx - ax)*r.uniform() + ax;
+		double y = (by - ay)*r.uniform() + ay;
+		Coordinate initial_pos(x,y,0.0);
+		isotropicDirection(initial_dir,r);
 
         Particle p = Particle(initial_pos,initial_dir,EnergyPair(0,0.0),1.0);
-//        (*box)(p,r);
-//		(*iso)(p,r);
-		source->sample(p,r);
 		const Cell* c(geometry->findCell(p.pos()));
 		particles.push_back(pair<const Cell*,Particle>(c,p));
 	}

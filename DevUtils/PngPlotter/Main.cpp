@@ -78,9 +78,37 @@ static pair<string,size_t> seachKeyWords(const vector<string>& files, vector<str
 	return (*(--line_match.end())).second;
 }
 
+/* Type of plotting */
+static const int CELL = 1;
+static const int MATERIAL = 2;
+
+template<int axis, int type>
+static void plotPng(PngPlotter& pngPlotter, const po::variables_map& vm, const Geometry* geometry) {
+	string output;
+    if(vm.count("output"))
+    	output = vm["output"].as<string>();
+    else
+    	output = "view-" + Helios::getPlaneName<axis>() + ".png";
+    if(type == CELL)
+    	pngPlotter.plotCell<axis>(geometry);
+    else if(type == MATERIAL)
+    	pngPlotter.plotMaterial<axis>(geometry);
+}
+
+template<int axis>
+static string outputFile(const po::variables_map& vm) {
+	string output;
+    if(vm.count("output"))
+    	output = vm["output"].as<string>();
+    else
+    	output = "view-" + Helios::getPlaneName<axis>() + ".png";
+    return output;
+}
+
 int main(int argc, char **argv) {
 
 	/* Print header, always */
+	cout << endl;
 	Log::header();
 
 	/* Map of command line values */
@@ -206,31 +234,39 @@ int main(int argc, char **argv) {
     	return 1;
 	}
 
+	/* Output file name */
+	string output = "";
+
 	/* Initialize plotter */
 	PngPlotter pngPlotter(x,y,pixel);
 
+	/* Initialization - Random number */
+	trng::lcg64 random;
+	Random r(random);
+	r.getEngine().seed((long unsigned int)1);
+
+	/* Set the source of the problem */
+	std::vector<SourceDefinition*> sourceDefinitions = parser->getSource();
+	Source source(sourceDefinitions);
+	int nparticles = 100000;
+
+	/* Dump a PNG file */
 	if(view == 0) {
-		string output;
-	    if(vm.count("output"))
-	    	output = vm["output"].as<string>();
-	    else
-	    	output = "view-" + Helios::getPlaneName<0>() + ".png";
-		pngPlotter.plotCell<0>(&geometry,output);
+		plotPng<0,CELL>(pngPlotter,vm,&geometry);
+    	pngPlotter.plotSource<0>(&geometry,&source,r,nparticles);
+		output = outputFile<0>(vm);
 	} else if (view == 1) {
-		string output;
-	    if(vm.count("output"))
-	    	output = vm["output"].as<string>();
-	    else
-	    	output = "view-" + Helios::getPlaneName<1>() + ".png";
-		pngPlotter.plotCell<1>(&geometry,output);
+		plotPng<1,CELL>(pngPlotter,vm,&geometry);
+    	pngPlotter.plotSource<1>(&geometry,&source,r,nparticles);
+		output = outputFile<1>(vm);
 	} else if(view == 2) {
-		string output;
-	    if(vm.count("output"))
-	    	output = vm["output"].as<string>();
-	    else
-	    	output = "view-" + Helios::getPlaneName<2>() + ".png";
-		pngPlotter.plotCell<2>(&geometry,output);
+		plotPng<2,CELL>(pngPlotter,vm,&geometry);
+    	pngPlotter.plotSource<2>(&geometry,&source,r,nparticles);
+		output = outputFile<2>(vm);
 	}
+
+	/* Dump the plot */
+    pngPlotter.dumpPngNoColor(output);
 
 	delete parser;
 }

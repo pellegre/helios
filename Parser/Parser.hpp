@@ -33,6 +33,7 @@
 
 #include "../Geometry/Geometry.hpp"
 #include "../Material/MaterialContainer.hpp"
+#include "../Transport/Source.hpp"
 
 namespace Helios {
 
@@ -53,6 +54,12 @@ namespace Helios {
 		 * All the materials definitions should be pushed here.
 		 */
 		std::vector<Material::Definition*> materialDefinition;
+
+		/*
+		 * Source Stuff
+		 * All the materials definitions should be pushed here.
+		 */
+		std::vector<SourceDefinition*> sourceDefinition;
 
 	public:
 
@@ -109,6 +116,8 @@ namespace Helios {
 		const std::vector<GeometricDefinition*>& getGeometry() {return geometricDefinition;};
 		/* Setup a material container */
 		const std::vector<Material::Definition*>& getMaterials() {return materialDefinition;};
+		/* Get the source definitions */
+		const std::vector<SourceDefinition*>& getSource() {return sourceDefinition;};
 
 		/* Clear definitions inside the parser */
 		void clear() {
@@ -142,6 +151,24 @@ namespace Helios {
 			coeffs.push_back(c);
 		}
 		return coeffs;
+	}
+
+	/* Get a blitz tiny vector (3 components) from a string stream */
+	template<class T>
+	TinyVector<T,3> getBlitzArray(const std::string& str) {
+		std::istringstream sin(reduce(str));
+		std::vector<T> coeffs;
+		while(sin.good()) {
+			T c;
+			if(!(sin >> c))
+					break;
+			coeffs.push_back(c);
+		}
+		TinyVector<T,3> array(0,0,0);
+		for(int i = 0 ; i < coeffs.size() && i < 3 ; ++i)
+			array[i] = coeffs[i];
+
+		return array;
 	}
 } /* namespace Helios */
 

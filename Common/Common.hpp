@@ -65,7 +65,7 @@ namespace Helios {
 	/* Distribution ID defined by the user */
 	typedef std::string DistributionId;
 	/* Sampler ID defined by the user */
-	typedef unsigned int SamplerId;
+	typedef std::string SamplerId;
 
 	/* Surface ID used internally */
 	typedef unsigned int InternalSurfaceId;
@@ -75,6 +75,10 @@ namespace Helios {
 	typedef unsigned int InternalUniverseId;
 	/* Material ID used internally */
 	typedef unsigned int InternalMaterialId;
+	/* Distribution ID used internally */
+	typedef unsigned int InternalDistributionId;
+	/* Sampler ID defined used internally */
+	typedef unsigned int InternalSamplerId;
 
 	/* Energy stuff */
 	typedef double Energy;                             /* Energy of the particle in eVs */
@@ -112,7 +116,6 @@ namespace Helios {
 	}
 
 	/* Return the plane perpendicular to an axis */
-	/* Get view name */
 	template<int axis>
 	static std::string getPlaneName() {
 		switch(axis) {
@@ -127,6 +130,38 @@ namespace Helios {
 			break;
 		}
 		return "--";
+	}
+
+	template<int axis>
+	static double getAbscissa(const Coordinate& value) {
+		switch(axis) {
+		case xaxis :
+			return value[yaxis];
+			break;
+		case yaxis :
+			return value[zaxis];
+			break;
+		case zaxis :
+			return value[xaxis];
+			break;
+		}
+		return 0;
+	}
+
+	template<int axis>
+	static double getOrdinate(const Coordinate& value) {
+		switch(axis) {
+		case xaxis :
+			return value[zaxis];
+			break;
+		case yaxis :
+			return value[xaxis];
+			break;
+		case zaxis :
+			return value[yaxis];
+			break;
+		}
+		return 0;
 	}
 
 	/* This piece of code appears in so many places */
@@ -162,6 +197,7 @@ namespace Helios {
 		trng::uniform01_dist<double> u;  /* Uniform distribution */
 	public:
 		Random(const trng::lcg64& r) : r(r) {/* */}
+		Random(const Random& other) : r(other.r), u(other.u) {/* */}
 		double uniform() {return u(r);}
 		trng::lcg64& getEngine() {return r;}
 		~Random(){/* */}

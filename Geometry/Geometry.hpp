@@ -46,12 +46,9 @@ namespace Helios {
 
 	public:
 
-		Geometry(std::vector<GeometricDefinition*>& definitions) {setupGeometry(definitions);};
-
-		/* ---- Geometry setup */
-
-		/* This is the interface to setup the geometry of the problem */
-		void setupGeometry(std::vector<GeometricDefinition*>& definitions);
+		Geometry(std::vector<GeometricDefinition*>& definitions) {
+			setupGeometry(definitions);
+		};
 
 		/* ---- Material information */
 
@@ -121,6 +118,11 @@ namespace Helios {
 		/* Prevent copy */
 		Geometry(const Geometry& geo);
 		Geometry& operator= (const Geometry& other);
+
+		/* ---- Geometry setup */
+
+		/* This is the interface to setup the geometry of the problem */
+		void setupGeometry(std::vector<GeometricDefinition*>& definitions);
 
 		/*
 		 * This is the interface to setup the geometry of the problem, when all definitions are dispatched to the corresponding type

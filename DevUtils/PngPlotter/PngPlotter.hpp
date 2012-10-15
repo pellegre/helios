@@ -56,8 +56,12 @@ class PngPlotter {
 	Color colorFromCell(const int& cellId, const int& maxId) const {
 		return Color((double)cellId / (double)maxId , 1.0, 1.0);
 	}
-	Color white() const {return Color(0.0,0.0,1.0);}
-	Color black() const {return Color(0.0,0.0,0.0);}
+	Color white(const int& cellId = 0, const int& maxId = 0) const {return Color(0.0,0.0,1.0);}
+	Color black(const int& cellId = 0, const int& maxId = 0) const {return Color(0.0,0.0,0.0);}
+	Color red(const int& cellId = 0, const int& maxId = 0) const {return Color(1.0,1.0,1.0);}
+
+	/* Function to select a color for the pixel */
+	typedef Color (PngPlotter::*PixelColor)(const int&, const int&) const;
 
 	/* Find materials in cells */
 	template<int axis>
@@ -114,7 +118,7 @@ class PngPlotter {
 						/* Get material */
 						const Helios::Material* material = findCell->getMaterial();
 						if(material) {
-							matId = material->getInternalId();
+							matId = material->getInternalId() + 1;
 							if(matId != oldId) colorMatrix(i,j) = -1;
 							else colorMatrix(i,j) = matId;
 							oldId = matId;
@@ -196,33 +200,60 @@ class PngPlotter {
 		~CellFinder() {/* */}
 	};
 
-	/* Dump to PNG file */
-	void dump(const std::string& filename, const int& maxId) {
-		/* Now go backwards to set the black lines on the other side */
-		int matId = 0, oldId = 0;
-		for(int j = 0 ; j < pixel ; ++j)
-			for(int i = 0 ; i < pixel ; ++i) {
-				matId = colorMatrix(i,j);
-				if(matId != oldId) colorMatrix(i,j) = -1;
-				oldId = matId;
-			}
+	/* Find materials in cells */
+	template<int axis>
+	class SourceSimulator {
 
-		Helios::Log::msg() << "Dumping file " << Helios::Log::BOLDWHITE << filename << Helios::Log::endl;
+		/* General information */
+		const int pixel;
+		const Helios::Source* source;
+		ColorMatrix& colorMatrix;
+		Helios::Random r;
 
-		/* Write the geometry on a PNG file */
-		pngwriter png(pixel,pixel,1.0,filename.c_str());
-		Color color;
-		for(int i = 0 ; i < pixel ; ++i) {
-			for(int j = 0 ; j < pixel ; ++j) {
-				matId = colorMatrix(i,j);
-				if(matId == 0) color = white();
-				else if(matId == -1) color = black();
-				else color = colorFromCell(matId,maxId);
-				png.plotHSV(i,j,color[0],color[1],color[2]);
+		/* Step to look for cells */
+		const double xmin;
+		const double xmax;
+		const double ymin;
+		const double ymax;
+		const double deltax;
+		const double deltay;
+
+	public:
+		SourceSimulator(const double& width, const double& height, const int& pixel,
+				   const Helios::Source* source, const Helios::Random &r,  ColorMatrix& colorMatrix) :
+				   pixel(pixel), source(source), r(r), colorMatrix(colorMatrix),
+				   xmin(-width), xmax(width), ymin(-height), ymax(height),
+				   deltax((xmax - xmin) / (double)(pixel)),
+				   deltay((ymax - ymin) / (double)(pixel)) {/* */}
+
+		void operator() (const tbb::blocked_range<int>& range) const {
+			/* Jump random number generator */
+			Helios::Random r_local(r);
+			r_local.getEngine().jump(100*range.begin());
+			/* Sample particles and set the color matrix */
+			for(int i = range.begin() ; i < range.end() ; ++i) {
+				Helios::Particle sampleParticle = source->sample(r_local);
+				/* Get coordinates */
+				Helios::Coordinate position = sampleParticle.pos();
+				/* Get coordinates */
+				double x = Helios::getAbscissa<axis>(position);
+				double y = Helios::getOrdinate<axis>(position);
+				/* Get pair of values on the color matrix */
+				int i = (x - xmin) / deltax;
+				int j = (y - ymin) / deltay;
+				/* Do some sanity check and set the pixel */
+				if ((i >= 0 && i < pixel) && (j >= 0 && j < pixel))
+					colorMatrix(i,j) = -2;
+				else
+					Helios::Log::warn() << "Source particle out of bounds" << Helios::Log::endl;
 			}
 		}
-		png.close();
-	}
+
+		~SourceSimulator() {/* */}
+	};
+
+	/* Dump to PNG file */
+	void dump(const std::string& filename, const int& maxId, PixelColor pixelColor);
 
 public:
 	PngPlotter(const double& width, const double& height, const int& pixel);
@@ -253,32 +284,35 @@ public:
 
 	/* Function to plot a geometry */
 	template<int axis>
-	void plotMaterial(const Helios::Geometry* geometry, const std::string& filename);
+	void plotMaterial(const Helios::Geometry* geometry);
 	template<int axis>
-	void plotCell(const Helios::Geometry* geometry, const std::string& filename);
+	void plotCell(const Helios::Geometry* geometry);
+	template<int axis>
+	void plotSource(const Helios::Geometry* geometry, const Helios::Source* source, const Helios::Random& r, const int& npart = 1000);
 
+	/* Dump PNG file */
+	void dumpPng(const std::string& filename);
+	void dumpPngNoColor(const std::string& filename);
 	virtual ~PngPlotter(){/* */};
 
 };
 
 template<int axis>
-void PngPlotter::plotMaterial(const Helios::Geometry* geometry,const std::string& filename) {
+void PngPlotter::plotMaterial(const Helios::Geometry* geometry) {
 	/* Get the color matrix */
 	tbb::parallel_for(tbb::blocked_range<int>(0,pixel),MaterialFinder<axis>(width,height,pixel,geometry,colorMatrix));
-	/* Get max value */
-	ColorMatrix::iterator itMax = std::max_element(colorMatrix.begin(), colorMatrix.end());
-	/* Dump to file */
-	dump(filename,*itMax + 2);
 }
 
 template<int axis>
-void PngPlotter::plotCell(const Helios::Geometry* geometry,const std::string& filename) {
+void PngPlotter::plotCell(const Helios::Geometry* geometry) {
 	/* Get the color matrix */
 	tbb::parallel_for(tbb::blocked_range<int>(0,pixel),CellFinder<axis>(width,height,pixel,geometry,colorMatrix));
-	/* Get max value */
-	ColorMatrix::iterator itMax = std::max_element(colorMatrix.begin(), colorMatrix.end());
-	/* Dump to file */
-	dump(filename,*itMax + 2);
+}
+
+template<int axis>
+void PngPlotter::plotSource(const Helios::Geometry* geometry, const Helios::Source* source, const Helios::Random& r, const int& npart) {
+	/* Get the color matrix */
+	tbb::parallel_for(tbb::blocked_range<int>(0,npart),SourceSimulator<axis>(width,height,pixel,source,r,colorMatrix));
 }
 
 #endif /* PNGPLOTTER_HPP_ */

@@ -38,3 +38,44 @@ PngPlotter::PngPlotter(const double& width, const double& height, const int& pix
 	Log::msg() << Log::ident(1) << " - Pixels = " << pixel << " x " << pixel  << Log::endl ;
 };
 
+void PngPlotter::dump(const std::string& filename, const int& maxId, PixelColor pixelColor) {
+	/* Now go backwards to set the black lines on the other side */
+	int matId = 0, oldId = 0;
+	for(int j = 0 ; j < pixel ; ++j)
+		for(int i = 0 ; i < pixel ; ++i) {
+			matId = colorMatrix(i,j);
+			if(matId != oldId && matId >= 0) colorMatrix(i,j) = -1;
+			oldId = matId;
+		}
+
+	Helios::Log::msg() << "Dumping file " << Helios::Log::BOLDWHITE << filename << Helios::Log::endl;
+
+	/* Write the geometry on a PNG file */
+	pngwriter png(pixel,pixel,1.0,filename.c_str());
+	Color color;
+	for(int i = 0 ; i < pixel ; ++i) {
+		for(int j = 0 ; j < pixel ; ++j) {
+			matId = colorMatrix(i,j);
+			if(matId == 0) color = white();
+			else if(matId == -1) color = black();
+			else if(matId == -2) color = red();
+			else color = (this->*pixelColor)(matId,maxId);
+			png.plotHSV(i,j,color[0],color[1],color[2]);
+		}
+	}
+	png.close();
+}
+
+void PngPlotter::dumpPng(const std::string& filename) {
+	/* Get max value */
+	ColorMatrix::iterator itMax = std::max_element(colorMatrix.begin(), colorMatrix.end());
+	/* Dump to file */
+	dump(filename,*itMax + 2,&PngPlotter::colorFromCell);
+}
+
+void PngPlotter::dumpPngNoColor(const std::string& filename) {
+	/* Get max value */
+	ColorMatrix::iterator itMax = std::max_element(colorMatrix.begin(), colorMatrix.end());
+	/* Dump to file */
+	dump(filename,*itMax + 2,&PngPlotter::white);
+}
