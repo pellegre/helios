@@ -234,6 +234,16 @@ protected:
 	LatticeXYConcentricTest() : ConcentricTest("cyl-xy-latt.xml",Helios::Coordinate(0,0,0),50000) {/* */};
 	~LatticeXYConcentricTest() {/* */}
 };
+class LatticeXZConcentricTest : public ConcentricTest {
+protected:
+	LatticeXZConcentricTest() : ConcentricTest("cyl-xz-latt.xml",Helios::Coordinate(0,0,0),50000) {/* */};
+	~LatticeXZConcentricTest() {/* */}
+};
+class LatticeYZConcentricTest : public ConcentricTest {
+protected:
+	LatticeYZConcentricTest() : ConcentricTest("cyl-yz-latt.xml",Helios::Coordinate(0,0,0),50000) {/* */};
+	~LatticeYZConcentricTest() {/* */}
+};
 
 /* Simple x-y lattice with *a lot* of pins. To checkout the random transport on heavy lattices */
 class HugeLatticeXYConcentricTest : public ConcentricTest {

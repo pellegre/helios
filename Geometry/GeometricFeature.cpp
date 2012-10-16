@@ -67,6 +67,22 @@ static string getPlaneOrdinate() {
 	return "";
 }
 
+template<int axis>
+static Direction getTranslation(const double& x, const double& y) {
+	switch(axis) {
+	case xaxis :
+		return Direction(0,x,y);
+		break;
+	case yaxis :
+		return Direction(y,0,x);
+		break;
+	case zaxis :
+		return Direction(x,y,0);
+		break;
+	}
+	return Direction();
+}
+
 /* ---- Lattice Factory stuff */
 
 template<int axis>
@@ -136,7 +152,7 @@ static void gen2DLattice(const Lattice::Definition& new_lat,std::vector<Surface:
 			surfs.push_back(-x_surfaces[j + 1]->getUserSurfaceId());
 
 			/* Translate the cell to the lattice point */
-			Transformation transf(Direction(x_coordinates[j],y_coordinates[i],0));
+			Transformation transf(getTranslation<axis>(x_coordinates[j],y_coordinates[i]));
 			cell_def.push_back(new Cell::Definition(++maxUserCellId,surfs,Cell::NONE,latt_id,universes[uni_count],Material::NONE,transf));
 
 			/* Get next universe */

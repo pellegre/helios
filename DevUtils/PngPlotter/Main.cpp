@@ -214,13 +214,47 @@ int main(int argc, char **argv) {
 	/* Setup problem */
 	std::vector<GeometricDefinition*> geometryDefinitions = parser->getGeometry();
 	std::vector<Material::Definition*> materialDefinitions = parser->getMaterials();
+	std::vector<SourceDefinition*> sourceDefinitions = parser->getSource();
 
 	/* Geometry */
-	Geometry geometry(geometryDefinitions);
+	Geometry* geometry = 0;
+	if(geometryDefinitions.size()) {
+		try {
+			geometry = new Geometry(geometryDefinitions);
+		} catch(std::exception& error) {
+			Log::error() << error.what() << Log::endl;
+			return 1;
+		}
+	} else {
+		Log::error() << "No geometry read from input file" << Log::endl;
+		return 1;
+	}
+
 	/* Materials */
-	MaterialContainer materials(materialDefinitions);
-	/* Connect cell with materials */
-	geometry.setupMaterials(materials);
+	MaterialContainer* materials = 0;
+	if(materialDefinitions.size()) {
+		try {
+			materials = new MaterialContainer(materialDefinitions);
+			/* Connect cell with materials */
+			geometry->setupMaterials(*materials);
+		} catch(std::exception& error) {
+			Log::error() << error.what() << Log::endl;
+			return 1;
+		}
+	} else {
+		Log::warn() << "No materials read from input file" << Log::endl;
+	}
+
+	/* Source of the problem */
+	Source* source = 0;
+	if(sourceDefinitions.size()) {
+		try {
+			source = new Source(sourceDefinitions);
+		} catch(std::exception& error) {
+			Log::error() << error.what() << Log::endl;
+			return 1;
+		}
+	}
 
 	/* Dimensions of the graph */
 	double x = vm["width"].as<double>();
@@ -244,29 +278,41 @@ int main(int argc, char **argv) {
 	trng::lcg64 random;
 	Random r(random);
 	r.getEngine().seed((long unsigned int)1);
-
 	/* Set the source of the problem */
-	std::vector<SourceDefinition*> sourceDefinitions = parser->getSource();
-	Source source(sourceDefinitions);
 	int nparticles = 100000;
 
 	/* Dump a PNG file */
 	if(view == 0) {
-		plotPng<0,CELL>(pngPlotter,vm,&geometry);
-    	pngPlotter.plotSource<0>(&geometry,&source,r,nparticles);
+		if(materials)
+			plotPng<0,MATERIAL>(pngPlotter,vm,geometry);
+		else
+			plotPng<0,CELL>(pngPlotter,vm,geometry);
+		if(source)
+			pngPlotter.plotSource<0>(geometry,source,r,nparticles);
 		output = outputFile<0>(vm);
 	} else if (view == 1) {
-		plotPng<1,CELL>(pngPlotter,vm,&geometry);
-    	pngPlotter.plotSource<1>(&geometry,&source,r,nparticles);
+		if(materials)
+			plotPng<1,MATERIAL>(pngPlotter,vm,geometry);
+		else
+			plotPng<1,CELL>(pngPlotter,vm,geometry);
+		if(source)
+			pngPlotter.plotSource<1>(geometry,source,r,nparticles);
 		output = outputFile<1>(vm);
 	} else if(view == 2) {
-		plotPng<2,CELL>(pngPlotter,vm,&geometry);
-    	pngPlotter.plotSource<2>(&geometry,&source,r,nparticles);
+		if(materials)
+			plotPng<2,MATERIAL>(pngPlotter,vm,geometry);
+		else
+			plotPng<2,CELL>(pngPlotter,vm,geometry);
+		if(source)
+			pngPlotter.plotSource<2>(geometry,source,r,nparticles);
 		output = outputFile<2>(vm);
 	}
 
 	/* Dump the plot */
     pngPlotter.dumpPng(output);
 
+    delete geometry;
+    delete materials;
+    delete source;
 	delete parser;
 }
