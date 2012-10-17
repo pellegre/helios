@@ -146,7 +146,7 @@ namespace Helios {
 
 	protected:
 		/* Default, used only on factory */
-		Surface() : surfid(0), flag(NONE), int_surfid(0) {/* */};
+		Surface() : surfid(), flag(NONE), int_surfid(0) {/* */};
 		/* Constructor from id and flags */
 		Surface(const SurfaceId& surfid, const SurfaceInfo& flag) : surfid(surfid), flag(flag), int_surfid(0) {/* */};
 		/* Create surface from user id */

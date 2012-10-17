@@ -55,7 +55,7 @@ namespace Helios {
 	const double eps = std::numeric_limits<double>::epsilon();
 
 	/* Surface ID defined by the user */
-	typedef unsigned int SurfaceId;
+	typedef std::string SurfaceId;
 	/* Cell ID defined by the user */
 	typedef std::string CellId;
 	/* Universe ID defined by the user */

@@ -114,7 +114,7 @@ static Cell::Definition* cellAttrib(TiXmlElement* pElement) {
 
 	/* Get attributes */
 	CellId id = fromString<CellId>(mapAttrib["id"]);
-	vector<signed int> surfaces = getContainer<signed int>(mapAttrib["surfaces"]);
+	vector<SurfaceId> surfaces = getContainer<SurfaceId>(mapAttrib["surfaces"]);
 
 	/* Flags of the cell */
 	Cell::CellInfo flags = cell_flags.getValue(mapAttrib);

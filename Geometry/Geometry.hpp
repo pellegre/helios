@@ -69,7 +69,13 @@ namespace Helios {
 		/* Get full path of a cell */
 		CellId getPath(const Cell* cell) const;
 
+		/* Get container of surfaces */
 		const std::vector<Surface*>& getSurfaces() const {return surfaces;};
+		/* Get user ID of a cell */
+		SurfaceId getUserId(const Surface* surf) const;
+		/* Get full path of a cell */
+		SurfaceId getPath(const Surface* surf) const;
+
 		const std::vector<Universe*>& getUniverses() const {return universes;};
 
 		/* Print cell with each surface of the geometry */
@@ -109,7 +115,10 @@ namespace Helios {
 		std::vector<Universe*> universes;
 
 		/* Map internal index to user index */
-		std::map<InternalSurfaceId,SurfaceId> surface_map;
+		/* This map an internal ID with the full path of a cell */
+		std::map<InternalSurfaceId,SurfaceId> surface_path_map;
+		/* This map the original cell ID with all the internal cells IDs */
+		std::map<SurfaceId, std::vector<InternalSurfaceId> > surface_internal_map;
 
 		/* ----- Map cells */
 
@@ -156,7 +165,8 @@ namespace Helios {
 		 * Add a surface to the geometry, prior to check duplicated ones. If the surface exist (because the user
 		 * set the same one but with different IDs) is silently discarded.
 		 */
-		Surface* addSurface(const Surface* surface, const Transformation& trans,const std::vector<Cell::SenseSurface>& parent_surfaces);
+		Surface* addSurface(const Surface* surface, const Transformation& trans,const std::vector<Cell::SenseSurface>& parent_surfaces,
+				            const std::string& parent_id, const std::string& surf_id);
 	};
 
 } /* namespace Helios */

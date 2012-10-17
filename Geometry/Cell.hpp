@@ -88,12 +88,12 @@ namespace Helios {
 			Transformation transformation;
 
 			/* Handling surfaces */
-			std::vector<signed int> surfacesIds;   /* IDs of the surfaces */
+			std::vector<SurfaceId> surfacesIds;   /* IDs of the surfaces */
 			std::vector<SenseSurface> surfacesPtrs; /* Pair of sense and pointer to a set of constructed surfaces */
 		public:
 
 			Definition() : GeometricDefinition(GeometricDefinition::CELL) {/* */}
-			Definition(const CellId& userCellId, const std::vector<signed int>& surfacesIds, const Cell::CellInfo flags,
+			Definition(const CellId& userCellId, const std::vector<SurfaceId>& surfacesIds, const Cell::CellInfo flags,
 					   const UniverseId& universe, const UniverseId& fill,const MaterialId& matid, const Transformation& transformation) :
 					   GeometricDefinition(GeometricDefinition::CELL), userCellId(userCellId), surfacesIds(surfacesIds), flags(flags),
 				       universe(universe), fill(fill), matid(matid), transformation(transformation) {/* */}
@@ -125,7 +125,7 @@ namespace Helios {
 			}
 
 			/* Getting surfaces */
-			std::vector<signed int> getSurfaceIds() const {
+			std::vector<SurfaceId> getSurfaceIds() const {
 				return surfacesIds;
 			}
 

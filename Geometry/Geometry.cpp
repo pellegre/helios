@@ -41,7 +41,12 @@ using namespace boost;
 
 namespace Helios {
 
-static inline bool getSign(const signed int& value) {return (value > 0);}
+static inline bool getSign(const SurfaceId& value) {
+	if(value.find("-") != string::npos)
+		return false;
+	else
+		return true;
+}
 
 CellId Geometry::getPath(const Cell* cell) const {
 	/* Get the internal ID */
@@ -60,7 +65,25 @@ CellId Geometry::getUserId(const Cell* cell) const {
 	return *tok.begin();
 }
 
-Surface* Geometry::addSurface(const Surface* surface, const Transformation& trans, const vector<Cell::SenseSurface>& parent_surfaces) {
+SurfaceId Geometry::getPath(const Surface* surf) const {
+	/* Get the internal ID */
+	InternalSurfaceId internal = surf->getInternalId();
+	map<InternalSurfaceId,SurfaceId>::const_iterator it = surface_path_map.find(internal);
+	/* This is the full path of this cell */
+	return (*it).second;
+}
+
+SurfaceId Geometry::getUserId(const Surface* surf) const {
+	/* This is the full path of this cell */
+	SurfaceId full_path = getPath(surf);
+	/* Get the original ID of the cell */
+	char_separator<char> sep("< ");
+	tokenizer<char_separator<char> > tok(full_path,sep);
+	return *tok.begin();
+}
+
+Surface* Geometry::addSurface(const Surface* surface, const Transformation& trans,const vector<Cell::SenseSurface>& parent_surfaces,
+		                      const std::string& parent_id, const std::string& surf_id) {
 	/* Create the new duplicated surface */
 	Surface* new_surface = trans(surface);
 
@@ -79,7 +102,8 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 	/* Set internal / unique index */
 	new_surface->setInternalId(surfaces.size());
 	/* Update surface map */
-	surface_map[new_surface->getInternalId()] = new_surface->getUserId();
+    surface_path_map[new_surface->getInternalId()] = parent_id + surf_id;
+    surface_internal_map[surf_id].push_back(new_surface->getInternalId());
 	/* Push the surface into the container */
 	surfaces.push_back(new_surface);
 
@@ -109,19 +133,23 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	vector<Cell::Definition*>::iterator it_cell = cell_def.begin();
     map<SurfaceId,Surface*> temp_sur_map;
 
+    /* Separator to get user ID */
+	char_separator<char> sep("- ");
+
 	for(; it_cell != cell_def.end() ; ++it_cell) {
 
 		/* Cell information */
 		CellId userCellId((*it_cell)->getUserCellId());
-		vector<signed int> surfacesId((*it_cell)->getSurfaceIds());
+		vector<SurfaceId> surfacesId((*it_cell)->getSurfaceIds());
 
 		/* Now get the surfaces and put the references inside the cell */
 	    vector<Cell::SenseSurface> boundingSurfaces;
-	    vector<signed int>::const_iterator it = surfacesId.begin();
+	    vector<SurfaceId>::const_iterator it = surfacesId.begin();
 
 	    for (;it != surfacesId.end(); ++it) {
 	    	/* Get user ID */
-	    	SurfaceId userSurfaceId(abs(*it));
+	    	tokenizer<char_separator<char> > tok((*it),sep);
+	    	SurfaceId userSurfaceId(*tok.begin());
 
 	    	/* Get internal index */
 	    	map<SurfaceId,Surface*>::const_iterator it_sur = user_surfaces.find(userSurfaceId);
@@ -137,7 +165,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    		/* The surface is created */
 	    		new_surface = (*it_temp_sur).second;
 	    	else {
-	    		new_surface = addSurface((*it_sur).second,trans,parent_surfaces);
+	    		new_surface = addSurface((*it_sur).second,trans,parent_surfaces,parent_id,userSurfaceId);
 		    	temp_sur_map[new_surface->getUserId()] = new_surface;
 	    	}
 
@@ -275,7 +303,7 @@ void Geometry::setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
 	for(; it_sur != surDefinitions.end() ; ++it_sur) {
 		/* Surface information */
 		SurfaceId userSurfaceId((*it_sur)->getUserSurfaceId());
-
+		cout << userSurfaceId << endl;
 		/* Check duplicated IDs */
 		map<SurfaceId,Surface*>::const_iterator it_id = user_surfaces.find(userSurfaceId);
 		if(it_id != user_surfaces.end())

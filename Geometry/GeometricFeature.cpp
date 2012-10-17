@@ -52,6 +52,22 @@ static string getPlaneAbscissa() {
 }
 
 template<int axis>
+static string getAbscissaSurface(const int& v) {
+	switch(axis) {
+	case xaxis :
+		return "(," + toString(v) + ",)";
+		break;
+	case yaxis :
+		return "(,," + toString(v) + ")";
+		break;
+	case zaxis :
+		return "(" + toString(v) + ",,)";
+		break;
+	}
+	return "";
+}
+
+template<int axis>
 static string getPlaneOrdinate() {
 	switch(axis) {
 	case xaxis :
@@ -62,6 +78,22 @@ static string getPlaneOrdinate() {
 		break;
 	case zaxis :
 		return PlaneNormal<yaxis>().name();
+		break;
+	}
+	return "";
+}
+
+template<int axis>
+static string getOrdinateSurface(const int& v) {
+	switch(axis) {
+	case xaxis :
+		return "(,," + toString(v) + ")";
+		break;
+	case yaxis :
+		return "(" + toString(v) + ",,)";
+		break;
+	case zaxis :
+		return "(," + toString(v) + ",)";
 		break;
 	}
 	return "";
@@ -139,7 +171,8 @@ static void gen2DLattice(const Lattice::Definition& new_lat,std::vector<Surface:
 		double sur_pos = y_min + (double)i * y_delta;
 		coeff.push_back(sur_pos);
 		if(i < dimension[1]) y_coordinates.push_back(sur_pos + y_delta/2);
-		Surface::Definition* new_surface =  new Surface::Definition(++maxUserSurfaceId,getPlaneOrdinate<axis>(),coeff);
+		SurfaceId lattice_id = toString(latt_id)+getOrdinateSurface<axis>(i);
+		Surface::Definition* new_surface =  new Surface::Definition(lattice_id,getPlaneOrdinate<axis>(),coeff);
 		y_surfaces.push_back(new_surface);
 		sur_def.push_back(new_surface);
 	}
@@ -152,7 +185,8 @@ static void gen2DLattice(const Lattice::Definition& new_lat,std::vector<Surface:
 		double sur_pos = x_min + (double)i * x_delta;
 		coeff.push_back(sur_pos);
 		if(i < dimension[0]) x_coordinates.push_back(sur_pos + x_delta/2);
-		Surface::Definition* new_surface = new Surface::Definition(++maxUserSurfaceId,getPlaneAbscissa<axis>(),coeff);
+		SurfaceId lattice_id = toString(latt_id)+getAbscissaSurface<axis>(i);
+		Surface::Definition* new_surface = new Surface::Definition(lattice_id,getPlaneAbscissa<axis>(),coeff);
 		x_surfaces.push_back(new_surface);
 		sur_def.push_back(new_surface);
 	}
@@ -161,11 +195,11 @@ static void gen2DLattice(const Lattice::Definition& new_lat,std::vector<Surface:
 	/* Now create each cell of the lattice, on the universe defined by the user (left to right, bottom to top) */
 	for(int i = dimension[1] - 1 ; i >= 0  ; i--) {
 		for(int j = 0 ; j < dimension[0]  ; j++) {
-			vector<signed int> surfs;
+			vector<SurfaceId> surfs;
 			surfs.push_back(y_surfaces[i]->getUserSurfaceId());
-			surfs.push_back(-y_surfaces[i + 1]->getUserSurfaceId());
+			surfs.push_back("-" + y_surfaces[i + 1]->getUserSurfaceId());
 			surfs.push_back(x_surfaces[j]->getUserSurfaceId());
-			surfs.push_back(-x_surfaces[j + 1]->getUserSurfaceId());
+			surfs.push_back("-"+x_surfaces[j + 1]->getUserSurfaceId());
 
 			/* Translate the cell to the lattice point */
 			Transformation transf(getTranslation<axis>(x_coordinates[j],y_coordinates[i]));
