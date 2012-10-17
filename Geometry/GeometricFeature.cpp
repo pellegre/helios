@@ -83,6 +83,22 @@ static Direction getTranslation(const double& x, const double& y) {
 	return Direction();
 }
 
+template<int axis>
+static string getLatticePosition(const int& x, const int& y) {
+	switch(axis) {
+	case xaxis :
+		return "(0," + toString(x) + "," + toString(y) + ")";
+		break;
+	case yaxis :
+		return "(" + toString(y) + "," + toString(x) + ",0)";
+		break;
+	case zaxis :
+		return "(" + toString(x) + "," + toString(y) + ",0)";
+		break;
+	}
+	return "";
+}
+
 /* ---- Lattice Factory stuff */
 
 template<int axis>
@@ -153,7 +169,7 @@ static void gen2DLattice(const Lattice::Definition& new_lat,std::vector<Surface:
 
 			/* Translate the cell to the lattice point */
 			Transformation transf(getTranslation<axis>(x_coordinates[j],y_coordinates[i]));
-			CellId lattice_id = toString(latt_id)+"(" + toString(i) + "," + toString(j) + ",0)";
+			CellId lattice_id = toString(latt_id)+getLatticePosition<axis>(j,i);
 			cell_def.push_back(new Cell::Definition(lattice_id,surfs,Cell::NONE,latt_id,universes[uni_count],Material::NONE,transf));
 
 			/* Get next universe */
