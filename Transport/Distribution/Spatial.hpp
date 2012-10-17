@@ -176,6 +176,71 @@ namespace Helios {
 		~Box3D() {/* */}
 	};
 
+	template<int axis>
+	class Cyl2D : public Distribution {
+		double rmin,rmax;
+		/* Static constructor functions */
+		static DistributionBase* xAxisConstructor(const DistributionBase::Definition* definition) {
+			return new Cyl2D<xaxis>(definition);
+		}
+		static DistributionBase* yAxisConstructor(const DistributionBase::Definition* definition) {
+			return new Cyl2D<yaxis>(definition);
+		}
+		static DistributionBase* zAxisConstructor(const DistributionBase::Definition* definition) {
+			return new Cyl2D<zaxis>(definition);
+		}
+		Constructor constructor() const {
+			switch(axis) {
+			case xaxis :
+				return xAxisConstructor;
+				break;
+			case yaxis :
+				return yAxisConstructor;
+				break;
+			case zaxis :
+				return zAxisConstructor;
+				break;
+			}
+			return 0;
+		}
+		/* Name of the distribution */
+		std::string getName() const {
+			return "cyl-" + getAxisName<axis>();
+		}
+	public:
+		Cyl2D() {/* */}
+		Cyl2D(const DistributionBase::Definition* definition) : Distribution(definition) {
+			const Distribution::Definition* distDefinition = static_cast<const Distribution::Definition*>(definition);
+			std::vector<double> coeffs = distDefinition->getCoeffs();
+			if(coeffs.size() != 2)
+				throw BadDistributionCreation(definition->getUserId(),
+						"Bad number of coefficients. Expected 2 : rmin rmax");
+			rmin = coeffs[0];
+			rmax = coeffs[1];
+		}
+		virtual void operator() (Particle& particle, Random& r) const {
+			Coordinate& position = particle.pos();
+			/* Get angle */
+			double value = r.uniform();
+			/* Get radius */
+			double radius =  sqrt( rmin * rmin + (rmax * rmax - rmin * rmin) * r.uniform());
+			switch(axis) {
+			case xaxis :
+				position[yaxis] += radius * cos(2 * M_PI * value);
+				position[zaxis] += radius * sin(2 * M_PI * value);
+				break;
+			case yaxis :
+				position[xaxis] += radius * cos(2 * M_PI * value);
+				position[zaxis] += radius * sin(2 * M_PI * value);
+				break;
+			case zaxis :
+				position[xaxis] += radius * cos(2 * M_PI * value);
+				position[yaxis] += radius * sin(2 * M_PI * value);
+				break;
+			}
+		};
+		~Cyl2D() {/* */}
+	};
 }
 
 

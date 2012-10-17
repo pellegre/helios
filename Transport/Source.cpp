@@ -119,7 +119,7 @@ void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition,
 			map<DistributionId,InternalDistributionId>::iterator itId = distribution_map.find((*it));
 			if(itId == distribution_map.end())
 				throw(ParticleSampler::BadSamplerCreation((*itSampler)->getSamplerid(),
-					  "Distribution id " + toString((*it)) + " does not exist"));
+					  "Distribution id <" + toString((*it)) + "> does not exist"));
 			else
 				distPtrs.push_back(distributions[(*itId).second]);
 		}
@@ -129,6 +129,9 @@ void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition,
 		sampler_map[(*itSampler)->getSamplerid()] = particle_samplers.size();
 		particle_samplers.push_back(sampler);
 	}
+
+	if(sourceDefinition.size() == 0)
+		throw(ParticleSource::BadSourceCreation("You didn't put any source on the <sources> node in the input file"));
 
 	/* Finally, create the source with each samplers */
 	vector<double> strengths;
@@ -140,7 +143,7 @@ void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition,
 		for(vector<SamplerId>::iterator it = samplerIds.begin() ; it != samplerIds.end() ; ++it) {
 			map<SamplerId,InternalSamplerId>::iterator itId = sampler_map.find((*it));
 			if(itId == sampler_map.end())
-				throw(ParticleSource::BadSourceCreation("Sampler id " + toString((*it)) + " does not exist"));
+				throw(ParticleSource::BadSourceCreation("Sampler id <" + toString((*it)) + "> does not exist"));
 			else
 				samplerPtrs.push_back(particle_samplers[(*itId).second]);
 		}

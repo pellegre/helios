@@ -44,6 +44,9 @@ DistributionFactory::DistributionFactory() {
 	registerDistribution(Box2D<yaxis>());
 	registerDistribution(Box2D<zaxis>());
 	registerDistribution(Box3D());
+	registerDistribution(Cyl2D<xaxis>());
+	registerDistribution(Cyl2D<yaxis>());
+	registerDistribution(Cyl2D<zaxis>());
 	registerDistribution(Isotropic());
 	registerDistribution(DistributionCustom());
 }

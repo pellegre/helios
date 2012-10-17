@@ -66,6 +66,25 @@ static SourceDefinition* boxAttrib(TiXmlElement* pElement) {
 }
 
 /* Isotropic distribution */
+static SourceDefinition* cylAttrib(TiXmlElement* pElement) {
+	/* Initialize XML attribute checker */
+	static const string required[3] = {"id", "type", "r"};
+	static XmlParser::XmlAttributes surAttrib(vector<string>(required, required + 3), vector<string>());
+
+	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
+	/* Check user input */
+	surAttrib.checkAttributes(mapAttrib);
+
+	/* Get attributes */
+	DistributionId id = fromString<DistributionId>(mapAttrib["id"]);
+	string type = mapAttrib["type"];
+	vector<double> coeffs = getContainer<double>(mapAttrib["r"]);
+
+	/* Return surface definition */
+	return new Distribution::Definition(type,id,coeffs);
+}
+
+/* Isotropic distribution */
 static SourceDefinition* isoAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[2] = {"id", "type"};
@@ -105,6 +124,7 @@ static SourceDefinition* customAttrib(TiXmlElement* pElement) {
 static map<string,SourceDefinition(*(*)(TiXmlElement*))> initMap() {
 	map<string,SourceDefinition(*(*)(TiXmlElement*))> m;
 	m["box"] = boxAttrib;
+	m["cyl"] = cylAttrib;
 	m["isotropic"] = isoAttrib;
 	m["custom"] = customAttrib;
 	return m;
@@ -116,6 +136,9 @@ static map<string,string> initTypeDist() {
 	values_map["box"] = "box";
 	values_map["isotropic"] = "isotropic";
 	values_map["custom"] = "custom";
+	values_map["cyl-x"] = "cyl";
+	values_map["cyl-y"] = "cyl";
+	values_map["cyl-z"] = "cyl";
 	return values_map;
 }
 
