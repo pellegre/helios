@@ -30,6 +30,7 @@
 #include "Cell.hpp"
 #include "Universe.hpp"
 #include "Surface.hpp"
+#include "Geometry.hpp"
 
 using namespace std;
 
@@ -53,18 +54,13 @@ Cell::Cell(const Definition* definition) :
 		(*it_sur).first->addNeighborCell((*it_sur).second,this);
 }
 
-std::ostream& operator<<(std::ostream& out, const Cell& q) {
-	q.print(out);
-	return out;
-}
-
 void Cell::setFill(Universe* universe) {
 	/* Link the universe filling this cell */
 	fill = universe;
 	fill->setParent(this);
 }
 
-void Cell::print(std::ostream& out) const {
+void Cell::print(std::ostream& out, const Geometry* geometry) const {
 	vector<Cell::SenseSurface>::const_iterator it_sur = surfaces.begin();
 	out << "cell = (internal = " << getInternalId() << ")" << " ; universe = ";
 
@@ -91,9 +87,9 @@ void Cell::print(std::ostream& out) const {
 	while(it_sur != surfaces.end()) {
 		out << "    ";
 		if((*it_sur).second)
-			out << "(+) " << (*(*it_sur).first);
+			out << "(+) path = " << geometry->getPath((*it_sur).first) << " - " << (*(*it_sur).first);
 		else
-			out << "(-) " << (*(*it_sur).first);
+			out << "(-) path = " << geometry->getPath((*it_sur).first) << " - " << (*(*it_sur).first);
 		out << endl;
 		++it_sur;
 	}

@@ -102,7 +102,10 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 	/* Set internal / unique index */
 	new_surface->setInternalId(surfaces.size());
 	/* Update surface map */
-    surface_path_map[new_surface->getInternalId()] = parent_id + surf_id;
+    SurfaceId new_surf_id;
+    if(parent_id.size() == 0) new_surf_id = surf_id;
+    else new_surf_id = surf_id + "<" + parent_id;
+    surface_path_map[new_surface->getInternalId()] = new_surf_id;
     surface_internal_map[surf_id].push_back(new_surface->getInternalId());
 	/* Push the surface into the container */
 	surfaces.push_back(new_surface);
@@ -303,7 +306,6 @@ void Geometry::setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
 	for(; it_sur != surDefinitions.end() ; ++it_sur) {
 		/* Surface information */
 		SurfaceId userSurfaceId((*it_sur)->getUserSurfaceId());
-		cout << userSurfaceId << endl;
 		/* Check duplicated IDs */
 		map<SurfaceId,Surface*>::const_iterator it_id = user_surfaces.find(userSurfaceId);
 		if(it_id != user_surfaces.end())

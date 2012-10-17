@@ -40,6 +40,7 @@ namespace Helios {
 
 	class Universe;
 	class Surface;
+	class Geometry;
 
 	class Transformation {
 
@@ -70,8 +71,6 @@ namespace Helios {
 		typedef std::pair<Surface*, bool> SenseSurface;
 		/* Friendly factory */
 		friend class CellFactory;
-		/* Friendly printer */
-		friend std::ostream& operator<<(std::ostream& out, const Cell& q);
 
 		/* Hold extra information about the cell */
 		enum CellInfo {
@@ -184,6 +183,9 @@ namespace Helios {
 		/* Get the nearest surface to a point in a given direction */
 		void intersect(const Coordinate& position, const Direction& direction, Surface*& surface, bool& sense, double& distance) const;
 
+		/* Print a cell */
+		void print(std::ostream& out, const Geometry* geometry) const;
+
 		virtual ~Cell() {/* */};
 
 	protected:
@@ -192,9 +194,6 @@ namespace Helios {
 		/* Prevent copy */
 		Cell(const Cell& cell);
 		Cell& operator= (const Cell& other);
-
-		/* Print cell information */
-		virtual void print(std::ostream& out) const;
 
 		/* A vector of surfaces and senses that define this cell */
 		std::vector<SenseSurface> surfaces;
@@ -235,8 +234,6 @@ namespace Helios {
 		}
 
 	};
-
-	std::ostream& operator<<(std::ostream& out, const Cell& q);
 
 } /* namespace Helios */
 #endif /* CELL_HPP_ */
