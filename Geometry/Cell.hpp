@@ -148,9 +148,6 @@ namespace Helios {
 		/* Get container of bounding surfaces. */
 		const std::vector<SenseSurface>& getBoundingSurfaces() const { return surfaces;}
 
-		/* Return the cell ID. */
-		const CellId& getUserId() const {return cellid;}
-
 		/* Set internal / unique identifier for the cell */
 		void setInternalId(const InternalCellId& internal) {int_cellid = internal;}
 		/* Return the internal ID associated with this cell. */
@@ -199,8 +196,6 @@ namespace Helios {
 		/* Print cell information */
 		virtual void print(std::ostream& out) const;
 
-		/* Cell id choose by the user */
-		CellId cellid;
 		/* A vector of surfaces and senses that define this cell */
 		std::vector<SenseSurface> surfaces;
 		/* Other information about this cell */

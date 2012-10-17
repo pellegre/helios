@@ -35,7 +35,7 @@ void transport(const Helios::Geometry& geometry, const Helios::Coordinate& start
 	Helios::Coordinate pos(start_pos);
 	/* Geometry stuff */
 	const Cell* cell(geometry.findCell(pos));
-	cells.push_back(cell->getUserId());
+	cells.push_back(geometry.getUserId(cell));
 	Surface* surface(0);
 	bool sense(true);
 	double distance(0.0);
@@ -53,7 +53,7 @@ void transport(const Helios::Geometry& geometry, const Helios::Coordinate& start
 				geometry.printGeo(std::cout);
 		}
 		/* Put user IDs */
-		cells.push_back(cell->getUserId());
+		cells.push_back(geometry.getUserId(cell));
 		surfaces.push_back(surface->getUserId());
 		if(cell->getFlag() & Cell::DEADCELL) break;
 	}

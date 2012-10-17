@@ -62,7 +62,11 @@ namespace Helios {
 
 		/* ---- Get information */
 
+		/* Get container of cells */
 		const std::vector<Cell*>& getCells() const {return cells;};
+		/* Get cell mapping */
+		CellId getUserId(const Cell* cell) const;
+
 		const std::vector<Surface*>& getSurfaces() const {return surfaces;};
 		const std::vector<Universe*>& getUniverses() const {return universes;};
 
@@ -103,8 +107,8 @@ namespace Helios {
 		std::vector<Universe*> universes;
 
 		/* Map internal index to user index */
-		std::map<SurfaceId, std::vector<InternalSurfaceId> > surface_map;
-		std::map<CellId, std::vector<InternalCellId> > cell_map;
+		std::map<InternalSurfaceId,SurfaceId> surface_map;
+		std::map<InternalCellId,CellId> cell_map;
 		std::map<UniverseId, std::vector<InternalUniverseId> > universe_map;
 		std::map<InternalCellId, MaterialId> mat_map;
 
@@ -136,7 +140,8 @@ namespace Helios {
 		/* Add recursively all universe that are nested */
 		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<Cell::Definition*> >& u_cells,
 				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation(),
-				              const std::vector<Cell::SenseSurface>& parent_surfaces = std::vector<Cell::SenseSurface>());
+				              const std::vector<Cell::SenseSurface>& parent_surfaces = std::vector<Cell::SenseSurface>(),
+				              const std::string& parent_id = "");
 
 		/*
 		 * Add a surface to the geometry, prior to check duplicated ones. If the surface exist (because the user

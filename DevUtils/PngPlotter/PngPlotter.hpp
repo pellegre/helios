@@ -189,7 +189,7 @@ class PngPlotter {
 					/* Find cell */
 					const Helios::Cell* findCell = geometry->findCell(point);
 					if(findCell) {
-						cellId = findCell->getUserId();
+						cellId = findCell->getInternalId();
 						if(cellId != oldId) colorMatrix(i,j) = -1;
 						else colorMatrix(i,j) = cellId;
 						oldId = cellId;

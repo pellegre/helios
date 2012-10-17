@@ -41,7 +41,6 @@ CellFactory CellFactory::factory;
 Surface* Transformation::operator()(const Surface* surface) const { return surface->transformate(translation); }
 
 Cell::Cell(const Definition* definition) :
-	cellid(definition->getUserCellId()),
 	surfaces(definition->getSenseSurface()),
 	flag(definition->getFlags()),
 	fill(0),
@@ -67,7 +66,7 @@ void Cell::setFill(Universe* universe) {
 
 void Cell::print(std::ostream& out) const {
 	vector<Cell::SenseSurface>::const_iterator it_sur = surfaces.begin();
-	out << "cell = " << getUserId() << " (internal = " << getInternalId() << ")" << " ; universe = ";
+	out << "cell = (internal = " << getInternalId() << ")" << " ; universe = ";
 
 	/* Print universe where this cell is */
 	if(parent)

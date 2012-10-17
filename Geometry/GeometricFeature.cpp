@@ -153,7 +153,8 @@ static void gen2DLattice(const Lattice::Definition& new_lat,std::vector<Surface:
 
 			/* Translate the cell to the lattice point */
 			Transformation transf(getTranslation<axis>(x_coordinates[j],y_coordinates[i]));
-			cell_def.push_back(new Cell::Definition(++maxUserCellId,surfs,Cell::NONE,latt_id,universes[uni_count],Material::NONE,transf));
+			CellId lattice_id = toString(latt_id)+"(" + toString(i) + "," + toString(j) + ",0)";
+			cell_def.push_back(new Cell::Definition(lattice_id,surfs,Cell::NONE,latt_id,universes[uni_count],Material::NONE,transf));
 
 			/* Get next universe */
 			uni_count++;

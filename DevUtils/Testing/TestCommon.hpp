@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TESTCOMMON_HPP_
 #define TESTCOMMON_HPP_
 
+#include "../../Common/Common.hpp"
 
 class InputPath {
 	static InputPath inputpath;
@@ -49,4 +50,12 @@ static inline std::vector<T> genVector(T min, T max) {
 	return v;
 }
 
+template<>
+static inline std::vector<std::string> genVector(std::string min, std::string max) {
+	std::vector<std::string> v;
+	for(int i = Helios::fromString<int>(min) ; i <= Helios::fromString<int>(max) ; i++) {
+		v.push_back(Helios::toString(i));
+	}
+	return v;
+}
 #endif /* TESTCOMMON_HPP_ */

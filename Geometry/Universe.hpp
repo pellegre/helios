@@ -37,11 +37,11 @@
 
 namespace Helios {
 
+	class Geometry;
+
 	class Universe {
 
 		friend class UniverseFactory;
-		/* Friendly printer */
-		friend std::ostream& operator<<(std::ostream& out, const Universe& q);
 
 		/* Internal identification of this universe */
 		InternalUniverseId int_univid;
@@ -107,6 +107,9 @@ namespace Helios {
 		/* Get number of cells */
 		size_t getCellCount() const {return cells.size();}
 
+		/* Print cells on this universe */
+		void print(std::ostream& out, const Geometry* geometry) const;
+
 		virtual ~Universe() {/* */};
 	};
 
@@ -132,7 +135,6 @@ namespace Helios {
 
 	};
 
-	std::ostream& operator<<(std::ostream& out, const Universe& q);
 
 } /* namespace Helios */
 #endif /* UNIVERSE_HPP_ */

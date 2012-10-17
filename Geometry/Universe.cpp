@@ -26,6 +26,7 @@
  */
 
 #include "Universe.hpp"
+#include "Geometry.hpp"
 
 using namespace std;
 
@@ -42,11 +43,10 @@ void Universe::addCell(Cell* cell) {
 	cells.push_back(cell);
 }
 
-std::ostream& operator<<(std::ostream& out, const Universe& q) {
-	vector<Cell*>::const_iterator it_cell = q.cells.begin();
-	for(; it_cell != q.cells.end() ; it_cell++)
-		out << *(*it_cell);
-	return out;
+void Universe::print(std::ostream& out, const Geometry* geometry) const {
+	vector<Cell*>::const_iterator it_cell = cells.begin();
+	for(; it_cell != cells.end() ; it_cell++)
+		out << "path = " << geometry->getUserId((*it_cell)) << " " << *(*it_cell);
 }
 
 } /* namespace Helios */

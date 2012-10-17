@@ -41,6 +41,13 @@ namespace Helios {
 
 static inline bool getSign(const signed int& value) {return (value > 0);}
 
+CellId Geometry::getUserId(const Cell* cell) const {
+	/* Get the internal ID */
+	InternalCellId internal = cell->getInternalId();
+	map<InternalCellId,CellId>::const_iterator it = cell_map.find(internal);
+	return (*it).second;
+}
+
 Surface* Geometry::addSurface(const Surface* surface, const Transformation& trans, const vector<Cell::SenseSurface>& parent_surfaces) {
 	/* Create the new duplicated surface */
 	Surface* new_surface = trans(surface);
@@ -60,7 +67,7 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 	/* Set internal / unique index */
 	new_surface->setInternalId(surfaces.size());
 	/* Update surface map */
-	surface_map[new_surface->getUserId()].push_back(new_surface->getInternalId());
+	surface_map[new_surface->getInternalId()] = new_surface->getUserId();
 	/* Push the surface into the container */
 	surfaces.push_back(new_surface);
 
@@ -70,7 +77,7 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 
 Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<Cell::Definition*> >& u_cells,
 		                        const map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans,
-		                        const vector<Cell::SenseSurface>& parent_surfaces) {
+		                        const vector<Cell::SenseSurface>& parent_surfaces, const std::string& parent_id) {
 	/* Create universe */
 	Universe* new_universe = UniverseFactory::access().createUniverse(uni_def);
 	/* Set internal / unique index */
@@ -134,10 +141,14 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 
 	    /* Now we can construct the cell */
 	    Cell* new_cell = CellFactory::access().createCell((*it_cell));
+	    /* Get new cell ID based on the parent cell */
+	    CellId cell_id;
+	    if(parent_id.size() == 0) cell_id = (*it_cell)->getUserCellId();
+	    else cell_id = (*it_cell)->getUserCellId() + "<" + parent_id;
 		/* Set internal / unique index */
 	    new_cell->setInternalId(cells.size());
 		/* Update cell map */
-	    cell_map[new_cell->getUserId()].push_back(new_cell->getInternalId());
+	    cell_map[new_cell->getInternalId()] = cell_id;
 	    /* Update material map */
 	    mat_map[new_cell->getInternalId()] = (*it_cell)->getMatId();
 	    /* Push the cell into the container */
@@ -153,11 +164,11 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    		boundingSurfaces.push_back((*it_psur));
 	    	/* Create recursively the other universes and also propagate the transformation */
 	    	Universe* fill_universe = addUniverse(fill_universe_id,u_cells,user_surfaces,
-	    			                  trans + (*it_cell)->getTransformation(),boundingSurfaces);
+	    			                  trans + (*it_cell)->getTransformation(),boundingSurfaces,cell_id);
 	    	if(fill_universe)
 	    		new_cell->setFill(fill_universe);
 	    	else
-	    		throw Cell::BadCellCreation(new_cell->getUserId(),
+	    		throw Cell::BadCellCreation((*it_cell)->getUserCellId(),
 	    				"Attempting to fill with an empty universe (fill = " + toString(fill_universe_id) + ") " );
 	    }
 	}
@@ -207,13 +218,14 @@ void Geometry::setupMaterials(const MaterialContainer& materialContainer) {
 			try {
 				cell->setMaterial(materialContainer.getMaterial(matId));
 			} catch (std::exception& error) {
-				throw Cell::BadCellCreation(cell->getUserId(),error.what());
+				throw Cell::BadCellCreation(cell_map[cell->getInternalId()],error.what());
 			}
 
 		} else if (matId == Material::NONE) {
 			/* No material in this cell, we should check if the cell is filled with something */
 			if(!cell->getFill())
-				throw Cell::BadCellCreation(cell->getUserId(),"The cell is not filled with a material or a universe");
+				throw Cell::BadCellCreation(cell_map[cell->getInternalId()],
+						"The cell is not filled with a material or a universe");
 		}
 	}
 }
@@ -302,7 +314,7 @@ void Geometry::printGeo(std::ostream& out) const {
 	vector<Universe*>::const_iterator it_uni = universes.begin();
 	for(; it_uni != universes.end() ; it_uni++) {
 		out << "---- universe = " << (*it_uni)->getUserId() << endl;
-		out << *(*it_uni);
+		(*it_uni)->print(out,this);
 	}
 }
 

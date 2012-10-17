@@ -57,7 +57,7 @@ namespace Helios {
 	/* Surface ID defined by the user */
 	typedef unsigned int SurfaceId;
 	/* Cell ID defined by the user */
-	typedef unsigned int CellId;
+	typedef std::string CellId;
 	/* Universe ID defined by the user */
 	typedef unsigned int UniverseId;
 	/* Material ID defined by the user, usually a string */

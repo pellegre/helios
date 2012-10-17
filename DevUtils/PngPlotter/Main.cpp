@@ -230,6 +230,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	geometry->printGeo(cout);
+
 	/* Materials */
 	MaterialContainer* materials = 0;
 	if(materialDefinitions.size()) {
