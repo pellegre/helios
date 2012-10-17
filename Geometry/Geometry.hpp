@@ -64,8 +64,10 @@ namespace Helios {
 
 		/* Get container of cells */
 		const std::vector<Cell*>& getCells() const {return cells;};
-		/* Get cell mapping */
+		/* Get user ID of a cell */
 		CellId getUserId(const Cell* cell) const;
+		/* Get full path of a cell */
+		CellId getPath(const Cell* cell) const;
 
 		const std::vector<Surface*>& getSurfaces() const {return surfaces;};
 		const std::vector<Universe*>& getUniverses() const {return universes;};
@@ -108,7 +110,14 @@ namespace Helios {
 
 		/* Map internal index to user index */
 		std::map<InternalSurfaceId,SurfaceId> surface_map;
-		std::map<InternalCellId,CellId> cell_map;
+
+		/* ----- Map cells */
+
+		/* This map an internal ID with the full path of a cell */
+		std::map<InternalCellId,CellId> cell_path_map;
+		/* This map the original cell ID with all the internal cells IDs */
+		std::map<CellId, std::vector<InternalCellId> > cell_internal_map;
+
 		std::map<UniverseId, std::vector<InternalUniverseId> > universe_map;
 		std::map<InternalCellId, MaterialId> mat_map;
 

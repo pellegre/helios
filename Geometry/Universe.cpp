@@ -46,7 +46,7 @@ void Universe::addCell(Cell* cell) {
 void Universe::print(std::ostream& out, const Geometry* geometry) const {
 	vector<Cell*>::const_iterator it_cell = cells.begin();
 	for(; it_cell != cells.end() ; it_cell++)
-		out << "path = " << geometry->getUserId((*it_cell)) << " " << *(*it_cell);
+		out << "path = " << geometry->getPath((*it_cell)) << " " << *(*it_cell);
 }
 
 } /* namespace Helios */

@@ -11,7 +11,7 @@
 #define BUILD_TYPE "release"
 #define COMPILER_NAME "/opt/intel/composerxe-2011.4.191/bin/intel64/icpc"
 #define COMPILER_FLAGS "-xHOST -O3 -ipo -no-prec-div -static-intel"
-#define GIT_SHA1 "cb308d07011029eb5513c26d7261a6b21f6c199e"
-#define COMPILATION_DATE "10/16/2012 - 10:47:00 PM"
+#define GIT_SHA1 "7896d2d36ad7eb9da6c581b43ae1236f39a60de4"
+#define COMPILATION_DATE "10/17/2012 - 01:42:22 AM"
 
 #endif // CONFIG_H

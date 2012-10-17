@@ -27,6 +27,7 @@
 
 #include <cstdlib>
 #include <set>
+#include<boost/tokenizer.hpp>
 
 #include "Surface.hpp"
 #include "Cell.hpp"
@@ -36,16 +37,27 @@
 #include "Geometry.hpp"
 
 using namespace std;
+using namespace boost;
 
 namespace Helios {
 
 static inline bool getSign(const signed int& value) {return (value > 0);}
 
-CellId Geometry::getUserId(const Cell* cell) const {
+CellId Geometry::getPath(const Cell* cell) const {
 	/* Get the internal ID */
 	InternalCellId internal = cell->getInternalId();
-	map<InternalCellId,CellId>::const_iterator it = cell_map.find(internal);
+	map<InternalCellId,CellId>::const_iterator it = cell_path_map.find(internal);
+	/* This is the full path of this cell */
 	return (*it).second;
+}
+
+CellId Geometry::getUserId(const Cell* cell) const {
+	/* This is the full path of this cell */
+	CellId full_path = getPath(cell);
+	/* Get the original ID of the cell */
+	char_separator<char> sep("< ");
+	tokenizer<char_separator<char> > tok(full_path,sep);
+	return *tok.begin();
 }
 
 Surface* Geometry::addSurface(const Surface* surface, const Transformation& trans, const vector<Cell::SenseSurface>& parent_surfaces) {
@@ -148,7 +160,8 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 		/* Set internal / unique index */
 	    new_cell->setInternalId(cells.size());
 		/* Update cell map */
-	    cell_map[new_cell->getInternalId()] = cell_id;
+	    cell_path_map[new_cell->getInternalId()] = cell_id;
+	    cell_internal_map[(*it_cell)->getUserCellId()].push_back(new_cell->getInternalId());
 	    /* Update material map */
 	    mat_map[new_cell->getInternalId()] = (*it_cell)->getMatId();
 	    /* Push the cell into the container */
@@ -218,13 +231,13 @@ void Geometry::setupMaterials(const MaterialContainer& materialContainer) {
 			try {
 				cell->setMaterial(materialContainer.getMaterial(matId));
 			} catch (std::exception& error) {
-				throw Cell::BadCellCreation(cell_map[cell->getInternalId()],error.what());
+				throw Cell::BadCellCreation(getUserId(cell),error.what());
 			}
 
 		} else if (matId == Material::NONE) {
 			/* No material in this cell, we should check if the cell is filled with something */
 			if(!cell->getFill())
-				throw Cell::BadCellCreation(cell_map[cell->getInternalId()],
+				throw Cell::BadCellCreation(getUserId(cell),
 						"The cell is not filled with a material or a universe");
 		}
 	}
