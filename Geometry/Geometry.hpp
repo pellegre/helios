@@ -130,13 +130,6 @@ namespace Helios {
 		std::map<UniverseId, std::vector<InternalUniverseId> > universe_map;
 		std::map<InternalCellId, MaterialId> mat_map;
 
-		/*
-		 * Max user IDs of surfaces and cells, this should be set when lattices are created (because we need to add
-		 * more geometry entities into the problem)
-		 */
-		SurfaceId maxUserSurfaceId;
-		CellId maxUserCellId;
-
 		/* Prevent copy */
 		Geometry(const Geometry& geo);
 		Geometry& operator= (const Geometry& other);
@@ -147,7 +140,8 @@ namespace Helios {
 		void setupGeometry(std::vector<GeometricDefinition*>& definitions);
 
 		/*
-		 * This is the interface to setup the geometry of the problem, when all definitions are dispatched to the corresponding type
+		 * This is the interface to setup the geometry of the problem, when all definitions
+		 * are dispatched to the corresponding type
 		 */
 		void setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
 				           std::vector<Cell::Definition*>& cellDefinitions,
@@ -160,11 +154,7 @@ namespace Helios {
 				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation(),
 				              const std::vector<Cell::SenseSurface>& parent_surfaces = std::vector<Cell::SenseSurface>(),
 				              const std::string& parent_id = "");
-
-		/*
-		 * Add a surface to the geometry, prior to check duplicated ones. If the surface exist (because the user
-		 * set the same one but with different IDs) is silently discarded.
-		 */
+		/* Add a surface to the geometry, prior to check duplicated ones. */
 		Surface* addSurface(const Surface* surface, const Transformation& trans,const std::vector<Cell::SenseSurface>& parent_surfaces,
 				            const std::string& parent_id, const std::string& surf_id);
 	};

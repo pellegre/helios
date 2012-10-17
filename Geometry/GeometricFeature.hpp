@@ -49,8 +49,6 @@ namespace Helios {
 
 		/* Name of the feature */
 		std::string feature;
-		/* A pair of values that define the start ID that the feature should use to safely create new cells and surfaces */
-		std::pair<CellId,SurfaceId> maxIds;
 
 	public:
 
@@ -73,16 +71,16 @@ namespace Helios {
 			virtual ~Definition() {/* */}
 		};
 
-		GeometricFeature(const Definition* definition, const std::pair<CellId,SurfaceId>& maxIds) :
-						feature(definition->getFeature()), maxIds(maxIds) {/* */};
+		GeometricFeature(const Definition* definition) :
+						feature(definition->getFeature()) {/* */};
 
 		/*
 		 * Create the the feature and add new cells/surfaces into the containers.
 		 * Returns the number of the new range of max user IDs.
 		 */
-		virtual std::pair<CellId,SurfaceId> createFeature(const Definition* featureDefinition,
-										 std::vector<Surface::Definition*>& surfaceDefinition,
-										 std::vector<Cell::Definition*>& cellDefinition) const = 0;
+		virtual void createFeature(const Definition* featureDefinition,
+								   std::vector<Surface::Definition*>& surfaceDefinition,
+								   std::vector<Cell::Definition*>& cellDefinition) const = 0;
 
 		virtual ~GeometricFeature() {/* */};
 	};
@@ -125,16 +123,14 @@ namespace Helios {
 
 		typedef void(*Constructor)(const Lattice::Definition& new_lat,
 								   std::vector<Surface::Definition*>& sur_def,
-								   std::vector<Cell::Definition*>& cell_def,
-								   SurfaceId& maxUserSurfaceId,
-								   CellId& maxUserCellId);
+								   std::vector<Cell::Definition*>& cell_def);
 
 		/* Constructor with current surfaces and cells on the geometry */
-		Lattice(const GeometricFeature::Definition* definition, const std::pair<CellId,SurfaceId>& maxIds);
+		Lattice(const GeometricFeature::Definition* definition);
 
-		std::pair<CellId,SurfaceId> createFeature(const GeometricFeature::Definition* featureDefinition,
-									  std::vector<Surface::Definition*>& surfaceDefinition,
-									  std::vector<Cell::Definition*>& cellDefinition) const;
+		void createFeature(const GeometricFeature::Definition* featureDefinition,
+						   std::vector<Surface::Definition*>& surfaceDefinition,
+						   std::vector<Cell::Definition*>& cellDefinition) const;
 
 		virtual ~Lattice() {/* */}
 
@@ -166,9 +162,9 @@ namespace Helios {
 		static FeatureFactory& access() {return factory;}
 
 		/* Create a new surface */
-		GeometricFeature* createFeature(const GeometricFeature::Definition* definition, const std::pair<CellId,SurfaceId>& maxIds) const {
+		GeometricFeature* createFeature(const GeometricFeature::Definition* definition) const {
 			if(definition->getFeature() == "lattice")
-				return new Lattice(definition,maxIds);
+				return new Lattice(definition);
 			return 0;
 		}
 

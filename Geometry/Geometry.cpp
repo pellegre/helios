@@ -91,9 +91,6 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 	vector<Cell::SenseSurface>::const_iterator it_sur = parent_surfaces.begin();
 	for(; it_sur != parent_surfaces.end() ; ++it_sur) {
 		if(*new_surface == *((*it_sur).first)) {
-			if(new_surface->getUserId() != (*it_sur).first->getUserId())
-				if(new_surface->getUserId() <= maxUserSurfaceId)
-					Log::warn() << "Surface " << new_surface->getUserId() << " is redundant and is eliminated from the geometry" << Log::endl;
 			delete new_surface;
 			return (*it_sur).first;
 		}
@@ -277,25 +274,14 @@ void Geometry::setupMaterials(const MaterialContainer& materialContainer) {
 void Geometry::setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
                              std::vector<Cell::Definition*>& cellDefinitions,
                              std::vector<GeometricFeature::Definition*>& featureDefinitions) {
-	if(featureDefinitions.size() != 0) {
-		/* Get max ID of user cells and surfaces */
-		maxUserSurfaceId = surDefinitions[0]->getUserSurfaceId();
-		for(vector<Surface::Definition*>::const_iterator it = surDefinitions.begin() ; it != surDefinitions.end() ; ++it) {
-			SurfaceId newSurfaceId = (*it)->getUserSurfaceId();
-			if (newSurfaceId > maxUserSurfaceId) maxUserSurfaceId = newSurfaceId;
-		}
-		maxUserCellId = cellDefinitions[0]->getUserCellId();
-		for(vector<Cell::Definition*>::const_iterator it = cellDefinitions.begin() ; it != cellDefinitions.end() ; ++it) {
-			CellId newCellId = (*it)->getUserCellId();
-			if (newCellId > maxUserCellId) maxUserCellId = newCellId;
-		}
 
-		pair<CellId,SurfaceId> maxIds(maxUserCellId,maxUserSurfaceId);
+	/* Create geometric features */
+	if(featureDefinitions.size() != 0) {
 		/* Now lets move on into the lattices */
 		for(vector<GeometricFeature::Definition*>::const_iterator it = featureDefinitions.begin() ; it != featureDefinitions.end() ; ++it) {
 			/* Create a lattice factory */
-			GeometricFeature* feature = FeatureFactory::access().createFeature((*it),maxIds);
-			maxIds = feature->createFeature((*it),surDefinitions,cellDefinitions);
+			GeometricFeature* feature = FeatureFactory::access().createFeature(*it);
+			feature->createFeature((*it),surDefinitions,cellDefinitions);
 			delete feature;
 		}
 	}

@@ -136,7 +136,7 @@ static string getLatticePosition(const int& x, const int& y) {
 template<int axis>
 /* Generation of a 2D lattice in plane perpendicular to axis */
 static void gen2DLattice(const Lattice::Definition& new_lat,std::vector<Surface::Definition*>& sur_def,
-		               std::vector<Cell::Definition*>& cell_def,SurfaceId& maxUserSurfaceId,CellId& maxUserCellId) {
+		                 std::vector<Cell::Definition*>& cell_def) {
 
 	/* Get dimension and pitch */
 	vector<unsigned int> dimension = new_lat.getDimension();
@@ -224,8 +224,7 @@ static map<string,Lattice::Constructor> initLatticeConstructorTable() {
 std::map<std::string,Lattice::Constructor> Lattice::constructor_table = initLatticeConstructorTable();
 
 /* Constructor with current surfaces and cells on the geometry */
-Lattice::Lattice(const GeometricFeature::Definition* definition, const std::pair<CellId,SurfaceId>& maxIds) :
-	    GeometricFeature(definition,maxIds) {
+Lattice::Lattice(const GeometricFeature::Definition* definition) : GeometricFeature(definition) {
 
 	/* We know the definition is a Lattice::Definition */
 	const Lattice::Definition* new_lat = dynamic_cast<const Lattice::Definition*>(definition);
@@ -255,7 +254,7 @@ Lattice::Lattice(const GeometricFeature::Definition* definition, const std::pair
 		"Invalid number of universes in lattice (expected = " + toString(uni_count) + " ; input = " + toString(universes.size()) + ")");
 };
 
-std::pair<CellId,SurfaceId> Lattice::createFeature(const GeometricFeature::Definition* featureDefinition,
+void Lattice::createFeature(const GeometricFeature::Definition* featureDefinition,
                               std::vector<Surface::Definition*>& surfaceDefinition,
 		                      std::vector<Cell::Definition*>& cellDefinition) const {
 
@@ -274,11 +273,8 @@ std::pair<CellId,SurfaceId> Lattice::createFeature(const GeometricFeature::Defin
 	if(it_const == constructor_table.end())
 		throw Universe::BadUniverseCreation(new_lat->getUserFeatureId(),"Lattice type " + type + " doesn't exist");
 
-	std::pair<CellId,SurfaceId> newMaxIds(maxIds);
 	/* Create lattice */
-	(*it_const).second(*new_lat,surfaceDefinition,cellDefinition,newMaxIds.second,newMaxIds.first);
-	/* Return new range of values */
-	return newMaxIds;
+	(*it_const).second(*new_lat,surfaceDefinition,cellDefinition);
 }
 
 } /* namespace Helios */
