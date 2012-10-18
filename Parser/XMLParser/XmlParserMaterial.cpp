@@ -35,7 +35,7 @@ using namespace std;
 namespace Helios {
 
 /* Parse cell attributes */
-static Material::Definition* matAttrib(TiXmlElement* pElement) {
+static Material::Definition* macroAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[6] = {"id","sigma_a","sigma_f","nu_sigma_f","chi","sigma_s"};
 	static XmlParser::XmlAttributes matAttrib(vector<string>(required, required + 6), vector<string>());
@@ -55,7 +55,7 @@ static Material::Definition* matAttrib(TiXmlElement* pElement) {
 	MaterialId mat_id = fromString<MaterialId>(mapAttrib["id"]);
 
 	/* Return surface definition */
-	return new MacroXs::Definition("macro-xs",mat_id,constant);
+	return new MacroXs::Definition(mat_id,constant);
 }
 
 void XmlParser::matNode(TiXmlNode* pParent) {
@@ -66,7 +66,7 @@ void XmlParser::matNode(TiXmlNode* pParent) {
 		if (t == TiXmlNode::TINYXML_ELEMENT) {
 			string element_value(pChild->Value());
 			if (element_value == "macro-xs")
-				materialDefinition.push_back(matAttrib(pChild->ToElement()));
+				materialDefinition.push_back(macroAttrib(pChild->ToElement()));
 			else {
 				vector<string> keywords;
 				keywords.push_back(element_value);

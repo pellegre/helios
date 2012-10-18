@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 
+#include "MaterialDefinition.hpp"
 #include "../Common/Common.hpp"
 #include "../Transport/Particle.hpp"
 
@@ -56,21 +57,14 @@ namespace Helios {
 		friend std::ostream& operator<<(std::ostream& out, const Material& q);
 
 		/* Base class to define a material */
-		class Definition {
-			/* Type of material */
-			std::string type;
+		class Definition : public MaterialDefinition {
 			/* Material ID on this problem */
 			MaterialId matid;
 		public:
-			Definition(const std::string& type, const MaterialId& matid) : type(type), matid(matid) {/* */}
-
+			Definition(const std::string& type, const MaterialId& matid) : MaterialDefinition(type), matid(matid) {/* */}
 			MaterialId getMatid() const {
 				return matid;
 			}
-			std::string getType() const {
-				return type;
-			}
-
 			virtual ~Definition() {/* */}
 		};
 
@@ -96,8 +90,6 @@ namespace Helios {
 		void setInternalId(const InternalMaterialId& internal) {int_matid = internal;}
 		/* Return the internal ID associated with this material. */
 		const InternalMaterialId& getInternalId() const {return int_matid;}
-		/* Return the string that define this type of material */
-		std::string getType() const {return type;}
 
 		/* ---- Interaction of the material with a particle */
 
@@ -118,7 +110,7 @@ namespace Helios {
 
 	protected:
 
-		Material(const Definition* definition) : matid(definition->getMatid()), type(definition->getType()), int_matid(0) {/* */};
+		Material(const Definition* definition) : matid(definition->getMatid()), int_matid(0) {/* */};
 
 		/* Prevent copy */
 		Material(const Material& mat);
@@ -126,8 +118,6 @@ namespace Helios {
 
 		/* Cell id choose by the user */
 		MaterialId matid;
-		/* Type of material */
-		std::string type;
 		/* Internal identification of this surface */
 		InternalMaterialId int_matid;
 

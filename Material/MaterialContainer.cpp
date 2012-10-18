@@ -32,16 +32,9 @@ using namespace std;
 namespace Helios {
 
 void MaterialContainer::setupMaterials(vector<Material::Definition*>& matDefinitions) {
-	string new_type, old_type;
-	for(vector<Material::Definition*>::const_iterator it = matDefinitions.begin() ; it != matDefinitions.end() ; ++it) {
+	for(vector<Material::Definition*>::const_iterator it = matDefinitions.begin() ; it != matDefinitions.end() ; ++it)
 		/* Add the material */
 		Material* new_mat = addMaterial((*it));
-		new_type = new_mat->getType();
-		if(it != matDefinitions.begin() && new_type != old_type)
-			throw Material::BadMaterialCreation(new_mat->getUserId(),
-					"You can't mix different types of material representations. " + old_type + " is different from " + new_type);
-		old_type = new_type;
-	}
 	/* Delete all the definitions */
 	purgePointers(matDefinitions);
 	matDefinitions.clear();

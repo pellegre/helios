@@ -120,9 +120,8 @@ public:
 		/* Map of macroscopic XS name to a vector of group constant */
 		std::map<std::string,std::vector<double> > constant;
 	public:
-		Definition(const std::string& type, const MaterialId& matid,
-				   std::map<std::string,std::vector<double> >& constant) :
-				   Material::Definition(type,matid), constant(constant) {/* */}
+		Definition(const MaterialId& matid, std::map<std::string,std::vector<double> >& constant) :
+				   Material::Definition("macro-xs",matid), constant(constant) {/* */}
 
 		std::map<std::string, std::vector<double> > getConstant() const {
 			return constant;

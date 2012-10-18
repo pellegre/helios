@@ -39,7 +39,7 @@ const MaterialId Material::NONE = "none";
 const MaterialId Material::VOID = "void";
 
 std::ostream& operator<<(std::ostream& out, const Material& q) {
-	out << "material = " << q.getUserId() << " ; internal = " << q.getInternalId() << " ; type = " << q.getType() << " : ";
+	out << "material = " << q.getUserId() << " ; internal = " << q.getInternalId() << " : ";
 	out << endl;
 	q.print(out);
 	return out;
