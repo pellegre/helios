@@ -118,6 +118,21 @@ namespace Helios {
 		return (compareFloating(a[0],b[0]) && compareFloating(a[1],b[1]) && compareFloating(a[2],b[2]));
 	}
 
+	/* ---- General exception common to all the program */
+
+	class GeneralError : public std::exception {
+		std::string reason;
+	public:
+		GeneralError(const std::string& msg) {
+			reason = msg;
+		}
+		const char *what() const throw() {
+			return reason.c_str();
+		}
+		~GeneralError() throw() {/* */};
+	};
+
+
 	/* ---- Random number */
 
 	/* Random number object (encapsulate the random number generation) */
@@ -131,6 +146,7 @@ namespace Helios {
 		trng::lcg64& getEngine() {return r;}
 		~Random(){/* */}
 	};
+
 }
 
 /* Name of axis */

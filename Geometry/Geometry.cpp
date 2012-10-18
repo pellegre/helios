@@ -311,7 +311,7 @@ void Geometry::setupGeometry(std::vector<GeometricDefinition*>& definitions) {
 	definitions.clear();
 }
 
-void Geometry::setupMaterials(const MaterialContainer& materialContainer) {
+void Geometry::setupMaterials(const Medium& materialContainer) {
 	/* Iterate over each material on the map */
 	map<InternalCellId, MaterialId>::const_iterator it_mat = mat_map.begin();
 	for(; it_mat != mat_map.end() ; ++it_mat) {

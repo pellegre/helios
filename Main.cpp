@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Parser/ParserTypes.hpp"
 #include "Geometry/Geometry.hpp"
-#include "Material/MaterialContainer.hpp"
+#include "Material/Medium.hpp"
 #include "Transport/Particle.hpp"
 #include "Transport/Source.hpp"
 #include "Common/Common.hpp"
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
 	/* Geometry */
 	Geometry* geometry = new Geometry(geometryDefinitions);
 	/* Materials */
-	MaterialContainer* materials = new MaterialContainer(materialDefinitions);
+	Medium* materials = new Medium(materialDefinitions);
 	/* Connect cell with materials */
 	geometry->setupMaterials(*materials);
 	/* Get the source */

@@ -25,8 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MATERIALCONTAINER_HPP_
-#define MATERIALCONTAINER_HPP_
+#ifndef MEDIUM_HPP_
+#define MEDIUM_HPP_
 
 #include <map>
 #include <vector>
@@ -41,7 +41,7 @@ namespace Helios {
  * The main function is to collect all the materials in the problem and provide
  * a centralized place to look for them.
  */
-class MaterialContainer {
+class Medium {
 
 	/* Container of materials */
 	std::vector<Material*> materials;
@@ -50,14 +50,14 @@ class MaterialContainer {
 	std::map<MaterialId, InternalMaterialId> material_map;
 
 	/* Prevent copy */
-	MaterialContainer(const MaterialContainer& geo);
-	MaterialContainer& operator= (const MaterialContainer& other);
+	Medium(const Medium& geo);
+	Medium& operator= (const Medium& other);
 
 	/* Add a material */
 	Material* addMaterial(const Material::Definition* definition);
 
 public:
-	MaterialContainer(std::vector<Material::Definition*>& matDefinitions) {setupMaterials(matDefinitions);};
+	Medium(std::vector<Material::Definition*>& matDefinitions) {setupMaterials(matDefinitions);};
 
 	/* ---- Get information */
 
@@ -93,8 +93,8 @@ public:
 	/* Print a list of materials on the container */
 	void printMaterials(std::ostream& out) const;
 
-	virtual ~MaterialContainer();
+	virtual ~Medium();
 };
 
 } /* namespace Helios */
-#endif /* MATERIALCONTAINER_HPP_ */
+#endif /* MEDIUM_HPP_ */

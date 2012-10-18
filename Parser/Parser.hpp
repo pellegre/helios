@@ -32,7 +32,7 @@
 #include <vector>
 
 #include "../Geometry/Geometry.hpp"
-#include "../Material/MaterialContainer.hpp"
+#include "../Material/Medium.hpp"
 #include "../Transport/Source.hpp"
 
 namespace Helios {

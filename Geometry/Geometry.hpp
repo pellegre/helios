@@ -37,7 +37,7 @@
 #include "Universe.hpp"
 #include "GeometricFeature.hpp"
 #include "GeometricDefinition.hpp"
-#include "../Material/MaterialContainer.hpp"
+#include "../Material/Medium.hpp"
 #include "../Common/Common.hpp"
 
 namespace Helios {
@@ -71,7 +71,7 @@ namespace Helios {
 		 * geometry. If some cell was defined with an inexistent material ID, this method will
 		 * thrown a geometric error notifying that.
 		 */
-		void setupMaterials(const MaterialContainer& materialContainer);
+		void setupMaterials(const Medium& materialContainer);
 
 		/* ---- Get Cell information */
 

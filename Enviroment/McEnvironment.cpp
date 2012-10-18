@@ -25,49 +25,17 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "MaterialContainer.hpp"
-
-using namespace std;
+#include "McEnvironment.hpp"
 
 namespace Helios {
 
-void MaterialContainer::setupMaterials(vector<Material::Definition*>& matDefinitions) {
-	for(vector<Material::Definition*>::const_iterator it = matDefinitions.begin() ; it != matDefinitions.end() ; ++it)
-		/* Add the material */
-		Material* new_mat = addMaterial((*it));
-	/* Delete all the definitions */
-	purgePointers(matDefinitions);
-	matDefinitions.clear();
+McEnvironment::McEnvironment() {
+	// TODO Auto-generated constructor stub
+
 }
 
-Material* MaterialContainer::addMaterial(const Material::Definition* definition) {
-	/* Check if the material is not duplicated */
-	map<MaterialId, InternalMaterialId>::const_iterator it_mat = material_map.find(definition->getMatid());
-	if(it_mat != material_map.end())
-			throw(Material::BadMaterialCreation(definition->getMatid(),"Duplicated id "));
-
-	/* Create the new material */
-	Material* new_material = MaterialFactory::access().createMaterial(definition);
-	/* Set internal / unique index */
-	new_material->setInternalId(materials.size());
-	/* Update material map */
-	material_map[new_material->getUserId()] = new_material->getInternalId();
-	/* Push the material into the container */
-	materials.push_back(new_material);
-
-	/* Return the new material */
-	return new_material;
+McEnvironment::~McEnvironment() {
+	// TODO Auto-generated destructor stub
 }
-
-void MaterialContainer::printMaterials(std::ostream& out) const {
-	vector<Material*>::const_iterator it_mat = materials.begin();
-	for(; it_mat != materials.end() ; it_mat++) {
-		out << *(*it_mat) << endl;
-	}
-}
-
-MaterialContainer::~MaterialContainer() {
-	purgePointers(materials);
-};
 
 } /* namespace Helios */

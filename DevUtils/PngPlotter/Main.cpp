@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../Parser/ParserTypes.hpp"
 #include "../../Common/Common.hpp"
 #include "../../Geometry/Geometry.hpp"
-#include "../../Material/MaterialContainer.hpp"
+#include "../../Material/Medium.hpp"
 #include "pngwriter.hpp"
 #include "PngPlotter.hpp"
 
@@ -233,10 +233,10 @@ int main(int argc, char **argv) {
 	geometry->printGeo(cout);
 
 	/* Materials */
-	MaterialContainer* materials = 0;
+	Medium* materials = 0;
 	if(materialDefinitions.size()) {
 		try {
-			materials = new MaterialContainer(materialDefinitions);
+			materials = new Medium(materialDefinitions);
 			/* Connect cell with materials */
 			geometry->setupMaterials(*materials);
 		} catch(std::exception& error) {
