@@ -65,6 +65,59 @@ CellId Geometry::getUserId(const Cell* cell) const {
 	return *tok.begin();
 }
 
+std::vector<Cell*> Geometry::getCells(const std::string& pathOrig) {
+	/* Erase spaces */
+	string path(pathOrig);
+	path.erase(std::remove_if(path.begin(), path.end(),::isspace), path.end());
+	/* Detect if is a full path (only one cell) or a group of cells */
+	if(path.find("<") != string::npos) {
+		/* One specific cell */
+		map<CellId,InternalCellId>::iterator it = cell_reverse_map.find(path);
+		if(it != cell_reverse_map.end()) {
+			std::vector<Cell*> ptr;
+			ptr.push_back(cells[(*it).second]);
+			return ptr;
+		} else
+			throw GeometryError("Could not find any cell on path " + path);
+	} else {
+		/* Group of cells (or a cell on top level) */
+		map<CellId,vector<InternalCellId> >::iterator it = cell_internal_map.find(path);
+		if(it != cell_internal_map.end()) {
+			std::vector<Cell*> ptrs;
+			vector<InternalCellId> internal = (*it).second;
+			for(vector<InternalCellId>::const_iterator it_internal = internal.begin() ; it_internal != internal.end() ; ++it_internal)
+				ptrs.push_back(cells[*it_internal]);
+			return ptrs;
+		} else
+			throw GeometryError("Cell " + path + " does not exist");
+	}
+}
+
+std::vector<Surface*> Geometry::getSurfaces(const std::string& path) {
+	/* Detect if is a full path (only one surface) or a group of surfaces */
+	if(path.find("<") != string::npos) {
+		/* One specific cell */
+		map<SurfaceId,InternalSurfaceId>::iterator it = surface_reverse_map.find(path);
+		if(it != surface_reverse_map.end()) {
+			std::vector<Surface*> ptr;
+			ptr.push_back(surfaces[(*it).second]);
+			return ptr;
+		} else
+			throw GeometryError("Could not find any surface on path " + path);
+	} else {
+		/* Group of surfaces (or a surface on top level) */
+		map<SurfaceId,vector<InternalSurfaceId> >::iterator it = surface_internal_map.find(path);
+		if(it != surface_internal_map.end()) {
+			std::vector<Surface*> ptrs;
+			vector<InternalSurfaceId> internal = (*it).second;
+			for(vector<InternalSurfaceId>::const_iterator it_internal = internal.begin() ; it_internal != internal.end() ; ++it_internal)
+				ptrs.push_back(surfaces[*it_internal]);
+			return ptrs;
+		} else
+			throw GeometryError("Surface " + path + " does not exist");
+	}
+}
+
 SurfaceId Geometry::getPath(const Surface* surf) const {
 	/* Get the internal ID */
 	InternalSurfaceId internal = surf->getInternalId();
@@ -102,8 +155,14 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
     SurfaceId new_surf_id;
     if(parent_id.size() == 0) new_surf_id = surf_id;
     else new_surf_id = surf_id + "<" + parent_id;
+
+    /* Update path map */
     surface_path_map[new_surface->getInternalId()] = new_surf_id;
+    /* Update internal map */
     surface_internal_map[surf_id].push_back(new_surface->getInternalId());
+    /* Update reverse map */
+    surface_reverse_map[new_surf_id] = new_surface->getInternalId();
+
 	/* Push the surface into the container */
 	surfaces.push_back(new_surface);
 
@@ -187,9 +246,14 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    else cell_id = (*it_cell)->getUserCellId() + "<" + parent_id;
 		/* Set internal / unique index */
 	    new_cell->setInternalId(cells.size());
-		/* Update cell map */
+
+	    /* Update cell map */
 	    cell_path_map[new_cell->getInternalId()] = cell_id;
+	    /* Update internal map */
 	    cell_internal_map[(*it_cell)->getUserCellId()].push_back(new_cell->getInternalId());
+	    /* Update reverse map */
+	    cell_reverse_map[(*it_cell)->getUserCellId()] = new_cell->getInternalId();
+
 	    /* Update material map */
 	    mat_map[new_cell->getInternalId()] = (*it_cell)->getMatId();
 	    /* Push the cell into the container */

@@ -123,6 +123,7 @@ namespace Helios {
 		void clear() {
 			geometricDefinition.clear();
 			materialDefinition.clear();
+			sourceDefinition.clear();
 		}
 
 		virtual ~Parser() {/* */};

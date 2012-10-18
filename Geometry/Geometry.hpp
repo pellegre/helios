@@ -50,6 +50,19 @@ namespace Helios {
 			setupGeometry(definitions);
 		};
 
+		/* Exception */
+		class GeometryError : public std::exception {
+			std::string reason;
+		public:
+			GeometryError(const std::string& msg) {
+				reason = msg;
+			}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			~GeometryError() throw() {/* */};
+		};
+
 		/* ---- Material information */
 
 		/*
@@ -60,21 +73,27 @@ namespace Helios {
 		 */
 		void setupMaterials(const MaterialContainer& materialContainer);
 
-		/* ---- Get information */
+		/* ---- Get Cell information */
 
-		/* Get container of cells */
-		const std::vector<Cell*>& getCells() const {return cells;};
 		/* Get user ID of a cell */
 		CellId getUserId(const Cell* cell) const;
 		/* Get full path of a cell */
 		CellId getPath(const Cell* cell) const;
+		/* Get all cells */
+		const std::vector<Cell*>& getCells() const {return cells;};
+		/* Get references to cells from a path expression */
+		std::vector<Cell*> getCells(const std::string& path);
 
-		/* Get container of surfaces */
-		const std::vector<Surface*>& getSurfaces() const {return surfaces;};
+		/* ---- Get Surface information */
+
 		/* Get user ID of a cell */
 		SurfaceId getUserId(const Surface* surf) const;
 		/* Get full path of a cell */
 		SurfaceId getPath(const Surface* surf) const;
+		/* Get container of surfaces */
+		const std::vector<Surface*>& getSurfaces() const {return surfaces;};
+		/* Get references to cells from a path expression */
+		std::vector<Surface*> getSurfaces(const std::string& path);
 
 		const std::vector<Universe*>& getUniverses() const {return universes;};
 
@@ -114,16 +133,21 @@ namespace Helios {
 		/* Container of universes */
 		std::vector<Universe*> universes;
 
-		/* Map internal index to user index */
-		/* This map an internal ID with the full path of a cell */
+		/* ----- Map surfaces */
+
+		/* This map an internal ID with the full path of a surface */
 		std::map<InternalSurfaceId,SurfaceId> surface_path_map;
-		/* This map the original cell ID with all the internal cells IDs */
+		/* This map the full path of a surface with the internal ID */
+		std::map<SurfaceId, InternalSurfaceId> surface_reverse_map;
+		/* This map the original cell ID with all the internal surfaces IDs */
 		std::map<SurfaceId, std::vector<InternalSurfaceId> > surface_internal_map;
 
 		/* ----- Map cells */
 
 		/* This map an internal ID with the full path of a cell */
 		std::map<InternalCellId,CellId> cell_path_map;
+		/* This map the full path of a surface with the internal ID */
+		std::map<CellId, InternalCellId> cell_reverse_map;
 		/* This map the original cell ID with all the internal cells IDs */
 		std::map<CellId, std::vector<InternalCellId> > cell_internal_map;
 
