@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<sources>
+
+<!-- Define distributions -->
+  <dist    type="isotropic" id="iso" />
+  <dist    type="cyl-z" id="pin"  r="0.30 0.60" />
+  <dist    type="box"   id="box"  z="0.00 4.00" />
+
+<!-- Define particle samplers -->
+  <sampler id="pin" pos="1.0 1.0 -2.0" 
+           dist="iso pin box" />
+
+<!-- Definition of the source -->
+  <source  samplers="pin"/>
+
+</sources>

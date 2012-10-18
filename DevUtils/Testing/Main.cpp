@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "GeometryTest/GeometryTests.hpp"
 #include "ReactionTest/ReactionTests.hpp"
+#include "SourceTest/SourceTest.hpp"
 
 InputPath InputPath::inputpath;
 
