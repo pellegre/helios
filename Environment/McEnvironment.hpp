@@ -71,9 +71,13 @@ namespace Helios {
 			factory_map[factory->getName()] = factory;
 		}
 
-		/* Get a module */
+		/* Get a module that should be loaded on the map */
 		template<class Module>
 		Module* getModule() const;
+
+		/* Get a collection of objects managed by some module (referenced with an user id) */
+		template<class Module, class Object>
+		std::vector<Object*> getObject(const UserId& id) const;
 
 		/*
 		 * Method to setup the environment. This should be called when there aren't more definitions
@@ -130,7 +134,23 @@ namespace Helios {
 			module_map[module] = mod;
 		}
 		else
-			throw(GeneralError("Cannot create module *" + module + "* because the factory is not registered"));
+			throw(GeneralError("Cannot create module *" + module + "* (no factory is registered) "));
+	}
+
+	template<class Module, class Object>
+	std::vector<Object*> McEnvironment::getObject(const UserId& id) const {
+		/* Get the module name (all modules should have this static function) */
+		std::string module = Module::name();
+		/* Find on map */
+		std::map<std::string,McModule*>::const_iterator it = module_map.find(module);
+		/* Module pointer */
+		Module* modPtr = 0;
+		if(it != module_map.end())
+			modPtr = dynamic_cast<Module*>(it->second);
+		else
+			throw(GeneralError("The module *" + module + "* is not loaded on the environment"));
+		/* Now try to access the object on that module */
+		return modPtr->getObject<Object>(id);
 	}
 
 } /* namespace Helios */

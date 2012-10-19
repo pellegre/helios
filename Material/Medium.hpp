@@ -55,9 +55,6 @@ namespace Helios {
 		Medium(const Medium& geo);
 		Medium& operator= (const Medium& other);
 
-		/* Add a material */
-		Material* addMaterial(const MaterialObject* definition);
-
 	public:
 		/* Name of this module */
 		static std::string name() {return "medium"; }
@@ -91,9 +88,6 @@ namespace Helios {
 			else
 				return materials[(*it_mat).second];
 		}
-
-		/* Setup the material container */
-		void setupMaterials(const std::vector<McObject*>& matDefinitions);
 
 		/* Print a list of materials on the container */
 		void printMaterials(std::ostream& out) const;

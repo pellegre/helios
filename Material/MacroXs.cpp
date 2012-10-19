@@ -43,13 +43,13 @@ MacroXs::MacroXs(const MacroXsObject* definition, int number_groups) :
 		if(xs_name == "sigma_s") {
 			int size = (*it_xs).second.size();
 			if(size != ngroup * ngroup) {
-				throw Material::BadMaterialCreation(matid,
+				throw Material::BadMaterialCreation(getUserId(),
 						"Inconsistent number of groups in constant *" + xs_name + "*");
 			}
 		} else {
 			int size = (*it_xs).second.size();
 			if(size != ngroup) {
-				throw Material::BadMaterialCreation(matid,
+				throw Material::BadMaterialCreation(getUserId(),
 						"Inconsistent number of groups in constant *" + xs_name + "*");
 			}
 		}
@@ -99,11 +99,28 @@ MacroXs::~MacroXs() {
 	delete reaction_sampler;
 };
 
-Material* MacroXsFactory::createMaterial(const MaterialObject* definition) const {
-	const MacroXsObject* macro_definition = static_cast<const MacroXsObject*>(definition);
-	/* Get the number of groups */
+vector<Material*> MacroXsFactory::createMaterials(const vector<MaterialObject*>& definitions) const {
+	/* Cast macro object */
+	const MacroXsObject* macro_definition = static_cast<const MacroXsObject*>(*definitions.begin());
+	/* Get the number of groups (just checking a particular XS)*/
 	int nelement = macro_definition->getConstant()["sigma_a"].size();
-	return new MacroXs(macro_definition,nelement);
+
+	/* Container of new materials */
+	vector<Material*> materials;
+
+	/* Push materials, and check the number of groups */
+	for(vector<MaterialObject*>::const_iterator it = definitions.begin() ;  it != definitions.end() ; ++it) {
+		const MacroXsObject* new_macro = static_cast<const MacroXsObject*>((*it));
+		/* Check number of groups */
+		int ngroups = new_macro->getConstant()["sigma_a"].size();
+		if(ngroups != nelement)
+			throw(Material::BadMaterialCreation((*it)->getMatid(),"You can't mix materials with different number of groups"));
+		MacroXs* newMaterial = new MacroXs(new_macro,nelement);
+		materials.push_back(newMaterial);
+	}
+
+	/* Return container */
+	return materials;
 }
 
 } /* namespace Helios */

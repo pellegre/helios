@@ -115,6 +115,9 @@ namespace Helios {
 
 	public:
 
+		/* Name of this object */
+		static std::string name() {return "macro-xs";}
+
 		MacroXs(const MacroXsObject* definition, int number_groups);
 
 		/*
@@ -135,6 +138,9 @@ namespace Helios {
 		/* Print material information */
 		void print(std::ostream& out) const;
 
+		/* Get number of groups */
+		int getGroups() const {return ngroups;}
+
 		virtual ~MacroXs();
 	};
 
@@ -143,8 +149,8 @@ namespace Helios {
 	public:
 		/* Prevent construction or copy */
 		MacroXsFactory() {/* */};
-		/* Create a new material */
-		Material* createMaterial(const MaterialObject* definition) const;
+		/* Create a new materials */
+		virtual std::vector<Material*> createMaterials(const std::vector<MaterialObject*>& definitions) const;
 		virtual ~MacroXsFactory() {/* */}
 	};
 

@@ -73,11 +73,11 @@ namespace Helios {
 		virtual void print(std::ostream& out) const = 0;
 
 		/* Return the material ID. */
-		const MaterialId& getUserId() const {return matid;}
+		const MaterialId& getUserId() const {return user_id;}
 		/* Set internal / unique identifier for the material */
-		void setInternalId(const InternalMaterialId& internal) {int_matid = internal;}
+		void setInternalId(const InternalMaterialId& internal) {internal_id = internal;}
 		/* Return the internal ID associated with this material. */
-		const InternalMaterialId& getInternalId() const {return int_matid;}
+		const InternalMaterialId& getInternalId() const {return internal_id;}
 
 		/* ---- Interaction of the material with a particle */
 
@@ -98,16 +98,16 @@ namespace Helios {
 
 	protected:
 
-		Material(const MaterialObject* definition) : matid(definition->getMatid()), int_matid(0) {/* */};
+		Material(const MaterialObject* definition) : user_id(definition->getMatid()), internal_id(0) {/* */};
 
 		/* Prevent copy */
 		Material(const Material& mat);
 		Material& operator= (const Material& other);
 
 		/* Cell id choose by the user */
-		MaterialId matid;
+		MaterialId user_id;
 		/* Internal identification of this surface */
-		InternalMaterialId int_matid;
+		InternalMaterialId internal_id;
 
 	};
 
@@ -117,7 +117,7 @@ namespace Helios {
 		/* Prevent construction or copy */
 		MaterialFactory() {/* */};
 		/* Create a new material */
-		virtual Material* createMaterial(const MaterialObject* definition) const = 0;
+		virtual std::vector<Material*> createMaterials(const std::vector<MaterialObject*>& definitions) const = 0;
 		virtual ~MaterialFactory() {/* */}
 	};
 

@@ -33,39 +33,44 @@ using namespace std;
 namespace Helios {
 
 Medium::Medium(const vector<McObject*>& matDefinitions) : McModule(name()) {
+	/* Check number of definitions */
+	if(matDefinitions.size() == 0)
+		throw GeneralError("No information available for materials object");
+
 	McObject* definition = matDefinitions[0];
+	/* Get name of the first object */
+	string name = definition->getObjectName();
+
+	/* Container of material objects */
+	vector<MaterialObject*> objects;
+
+	for(vector<McObject*>::const_iterator it = matDefinitions.begin() ; it != matDefinitions.end() ; ++it) {
+		/* Add the material */
+		MaterialObject* newObject = static_cast<MaterialObject*>(*it);
+		if(newObject->getObjectName() != name)
+			throw Material::BadMaterialCreation(newObject->getMatid(),
+					"You can't mix different types of materials. Choose " + name + " or " + newObject->getObjectName());
+		objects.push_back(newObject);
+	}
+
 	/* Detect the type of materials on the medium. We can't have a mix of materials on a problem */
-	if(definition->getObjectName() == "macro-xs")
+	if(name == MacroXs::name())
+		/* Macroscopic cross section factory */
 		factory = new MacroXsFactory;
 	else
 		throw Material::BadMaterialCreation(static_cast<MaterialObject*>(definition)->getMatid(),
 				"Material type " + definition->getObjectName() + " is not defined");
-	setupMaterials(matDefinitions);
-}
 
-void Medium::setupMaterials(const vector<McObject*>& matDefinitions) {
-	for(vector<McObject*>::const_iterator it = matDefinitions.begin() ; it != matDefinitions.end() ; ++it)
-		/* Add the material */
-		Material* new_mat = addMaterial(static_cast<MaterialObject*>(*it));
-}
+	/* Create the materials */
+	materials = factory->createMaterials(objects);
 
-Material* Medium::addMaterial(const MaterialObject* definition) {
-	/* Check if the material is not duplicated */
-	map<MaterialId, InternalMaterialId>::const_iterator it_mat = material_map.find(definition->getMatid());
-	if(it_mat != material_map.end())
-			throw(Material::BadMaterialCreation(definition->getMatid(),"Duplicated id "));
-
-	/* Create the new material */
-	Material* new_material = factory->createMaterial(definition);
-	/* Set internal / unique index */
-	new_material->setInternalId(materials.size());
-	/* Update material map */
-	material_map[new_material->getUserId()] = new_material->getInternalId();
-	/* Push the material into the container */
-	materials.push_back(new_material);
-
-	/* Return the new material */
-	return new_material;
+	/* Update maps */
+	for(size_t i = 0; i < materials.size() ; ++i) {
+		/* Set internal / unique index */
+		materials[i]->setInternalId(i);
+		/* Update material map */
+		material_map[materials[i]->getUserId()] = materials[i]->getInternalId();
+	}
 }
 
 void Medium::printMaterials(std::ostream& out) const {
