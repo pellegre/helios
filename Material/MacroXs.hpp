@@ -35,121 +35,118 @@
 
 namespace Helios {
 
-class MacroXs: public Helios::Material {
+	class MacroXs: public Helios::Material {
 
-	/* Number of groups */
-	int ngroups;
-	/* Total cross section */
-	std::vector<double> mfp;
+		/* Number of groups */
+		int ngroups;
+		/* Total cross section */
+		std::vector<double> mfp;
 
-	/* ---- Reactions related to macroscopic cross sections */
+		/* ---- Reactions related to macroscopic cross sections */
 
-	class Absorption : public Reaction {
-	public:
-		Absorption() {/* */}
-		void operator() (Particle& particle, Random& r) const {particle.sta() = Particle::DEAD;};
-		~Absorption() {/* */}
-	};
-
-	class Fission : public Reaction {
-		/* NU value for each group */
-		std::vector<double> nu;
-		/* Spectrum sampler */
-		Sampler<int>* spectrum;
-	public:
-		Fission(const std::vector<double>& nu, const std::vector<double>& chi) : nu(nu) {
-			/* Set map for the spectrum sampler */
-			std::map<int,double> m;
-			for(size_t i = 0 ; i < chi.size() ; ++i)
-				m[i] = chi[i];
-			spectrum = new Sampler<int>(m);
-		}
-		void operator() (Particle& particle, Random& r) const {
-			/* The state should be banked */
-			particle.sta() = Particle::BANK;
-			/* Get number of particles */
-			double nubar = nu[particle.eix()];
-			/* Integer part */
-			int nu = (int) nubar;
-			if (r.uniform() < nubar - (double)nu)
-				nu++;
-			particle.wgt() *= (double)nu;
-			/* New direction */
-			isotropicDirection(particle.dir(),r);
-			/* New group */
-			particle.eix() = spectrum->sample(0,r.uniform());
+		class Absorption : public Reaction {
+		public:
+			Absorption() {/* */}
+			void operator() (Particle& particle, Random& r) const {particle.sta() = Particle::DEAD;};
+			~Absorption() {/* */}
 		};
-		~Fission() {
-			delete spectrum;
-		}
-	};
 
-	class Scattering : public Reaction {
-		/* Spectrum sampler */
-		Sampler<int>* spectrum;
-	public:
-		Scattering(const std::vector<double>& sigma_scat, size_t ngroups) {
-			/* Set map for the spectrum sampler, we got the scattering matrix */
-			std::map<int,std::vector<double> > m;
-			std::vector<double> v(ngroups);
-			for(size_t i = 0 ; i < ngroups ; ++i) {
-				for(size_t j = 0 ; j < ngroups ; ++j)
-					v[j] = sigma_scat[j * ngroups + i];
-				m[i] = v;
+		class Fission : public Reaction {
+			/* NU value for each group */
+			std::vector<double> nu;
+			/* Spectrum sampler */
+			Sampler<int>* spectrum;
+		public:
+			Fission(const std::vector<double>& nu, const std::vector<double>& chi) : nu(nu) {
+				/* Set map for the spectrum sampler */
+				std::map<int,double> m;
+				for(size_t i = 0 ; i < chi.size() ; ++i)
+					m[i] = chi[i];
+				spectrum = new Sampler<int>(m);
 			}
-			spectrum = new Sampler<int>(m);
-		}
-		void operator() (Particle& particle, Random& r) const {
-			/* New direction */
-			isotropicDirection(particle.dir(),r);
-			/* New group */
-			particle.eix() = spectrum->sample(particle.eix(),r.uniform());
+			void operator() (Particle& particle, Random& r) const {
+				/* The state should be banked */
+				particle.sta() = Particle::BANK;
+				/* Get number of particles */
+				double nubar = nu[particle.eix()];
+				/* Integer part */
+				int nu = (int) nubar;
+				if (r.uniform() < nubar - (double)nu)
+					nu++;
+				particle.wgt() *= (double)nu;
+				/* New direction */
+				isotropicDirection(particle.dir(),r);
+				/* New group */
+				particle.eix() = spectrum->sample(0,r.uniform());
+			};
+			~Fission() {
+				delete spectrum;
+			}
 		};
-		~Scattering() {
-			delete spectrum;
-		}
-	};
 
-	/* Reaction sampler */
-	Sampler<Reaction*>* reaction_sampler;
+		class Scattering : public Reaction {
+			/* Spectrum sampler */
+			Sampler<int>* spectrum;
+		public:
+			Scattering(const std::vector<double>& sigma_scat, size_t ngroups) {
+				/* Set map for the spectrum sampler, we got the scattering matrix */
+				std::map<int,std::vector<double> > m;
+				std::vector<double> v(ngroups);
+				for(size_t i = 0 ; i < ngroups ; ++i) {
+					for(size_t j = 0 ; j < ngroups ; ++j)
+						v[j] = sigma_scat[j * ngroups + i];
+					m[i] = v;
+				}
+				spectrum = new Sampler<int>(m);
+			}
+			void operator() (Particle& particle, Random& r) const {
+				/* New direction */
+				isotropicDirection(particle.dir(),r);
+				/* New group */
+				particle.eix() = spectrum->sample(particle.eix(),r.uniform());
+			};
+			~Scattering() {
+				delete spectrum;
+			}
+		};
 
-public:
+		/* Reaction sampler */
+		Sampler<Reaction*>* reaction_sampler;
 
-	/* Definition of a macroscopic cross section */
-	class Definition : public Material::Definition {
-		/* Map of macroscopic XS name to a vector of group constant */
-		std::map<std::string,std::vector<double> > constant;
 	public:
-		Definition(const MaterialId& matid, std::map<std::string,std::vector<double> >& constant) :
-				   Material::Definition("macro-xs",matid), constant(constant) {/* */}
 
-		std::map<std::string, std::vector<double> > getConstant() const {
-			return constant;
+		MacroXs(const MacroXsObject* definition, int number_groups);
+
+		/*
+		 * Based on particle's energy, this functions setup the index on the energy grid with
+		 * information contained on the child class.
+		 */
+		EnergyIndex getEnergyIndex(const Energy& energy) const {return 0;};
+
+		 /* Get the total cross section (using the energy index of the particle) */
+		double getMeanFreePath(const EnergyIndex& index) const {return mfp[index];};
+
+		/* Get reaction (based on a random generator and a energy index) */
+		Reaction* getReaction(const EnergyIndex& index, Random& random) const {
+			double value = random.uniform();
+			return reaction_sampler->sample(index,value);
 		}
+
+		/* Print material information */
+		void print(std::ostream& out) const;
+
+		virtual ~MacroXs();
 	};
 
-	MacroXs(const Material::Definition* definition, int number_groups);
-
-	/*
-	 * Based on particle's energy, this functions setup the index on the energy grid with
-	 * information contained on the child class.
-	 */
-	EnergyIndex getEnergyIndex(const Energy& energy) const {return 0;};
-
-	 /* Get the total cross section (using the energy index of the particle) */
-	double getMeanFreePath(const EnergyIndex& index) const {return mfp[index];};
-
-	/* Get reaction (based on a random generator and a energy index) */
-	Reaction* getReaction(const EnergyIndex& index, Random& random) const {
-		double value = random.uniform();
-		return reaction_sampler->sample(index,value);
-	}
-
-	/* Print material information */
-	void print(std::ostream& out) const;
-
-	virtual ~MacroXs();
-};
+	/* Material Factory */
+	class MacroXsFactory : public MaterialFactory {
+	public:
+		/* Prevent construction or copy */
+		MacroXsFactory() {/* */};
+		/* Create a new material */
+		Material* createMaterial(const MaterialObject* definition) const;
+		virtual ~MacroXsFactory() {/* */}
+	};
 
 } /* namespace Helios */
 #endif /* MACROXS_HPP_ */

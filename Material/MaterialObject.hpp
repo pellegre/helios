@@ -25,26 +25,42 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef MATERIALDEFINITION_HPP_
-#define MATERIALDEFINITION_HPP_
+#ifndef MATERIALOBJECT_HPP_
+#define MATERIALOBJECT_HPP_
 
 #include <string>
+
+#include "../Environment/McModule.hpp"
+#include "../Common/Common.hpp"
 
 namespace Helios {
 
 	/* Generic and base class to define all source related objects */
-	class MaterialDefinition {
+	class MaterialObject : public McObject {
+		/* Material ID on this problem */
+		MaterialId matid;
 	public:
 		/* Different type of geometric entities */
-		MaterialDefinition(const std::string& type) : type(type) {/* */};
-		/* Get the type */
-		std::string getType() const {return type;}
-		virtual ~MaterialDefinition(){/* */};
-
-	private:
-		std::string type;
+		MaterialObject(const std::string& type, const MaterialId& matid) : McObject("medium",type), matid(matid) {/* */};
+		MaterialId getMatid() const {
+			return matid;
+		}
+		virtual ~MaterialObject(){/* */};
 	};
 
+	/* Definition of a macroscopic cross section */
+	class MacroXsObject : public MaterialObject {
+		/* Map of macroscopic XS name to a vector of group constant */
+		std::map<std::string,std::vector<double> > constant;
+	public:
+		MacroXsObject(const MaterialId& matid, std::map<std::string,std::vector<double> >& constant) :
+			MaterialObject("macro-xs",matid), constant(constant) {/* */}
+
+		std::map<std::string, std::vector<double> > getConstant() const {
+			return constant;
+		}
+		~MacroXsObject() {/* */}
+	};
 }
 
-#endif /* MATERIALDEFINITION_HPP_ */
+#endif /* MATERIALOBJECT_HPP_ */

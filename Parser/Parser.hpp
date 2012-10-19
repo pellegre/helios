@@ -32,14 +32,18 @@
 #include <vector>
 
 #include "../Geometry/Geometry.hpp"
-#include "../Material/Medium.hpp"
 #include "../Transport/Source.hpp"
+
+#include "../Environment/McModule.hpp"
 
 namespace Helios {
 
 	class Parser {
 
 	protected:
+
+		/* Definitions of different types of objects */
+		std::vector<McObject*> objects;
 
 		/*
 		 * Geometry stuff
@@ -48,12 +52,6 @@ namespace Helios {
 		 * to setupGeometry() with all this data.
 		 */
 		std::vector<GeometricDefinition*> geometricDefinition;
-
-		/*
-		 * Material Stuff
-		 * All the materials definitions should be pushed here.
-		 */
-		std::vector<Material::Definition*> materialDefinition;
 
 		/*
 		 * Source Stuff
@@ -114,15 +112,15 @@ namespace Helios {
 
 		/* Setup geometry  */
 		const std::vector<GeometricDefinition*>& getGeometry() {return geometricDefinition;};
-		/* Setup a material container */
-		const std::vector<Material::Definition*>& getMaterials() {return materialDefinition;};
 		/* Get the source definitions */
 		const std::vector<SourceDefinition*>& getSource() {return sourceDefinition;};
+
+		/* Get objects */
+		const std::vector<McObject*>& getObjects() {return objects;};
 
 		/* Clear definitions inside the parser */
 		void clear() {
 			geometricDefinition.clear();
-			materialDefinition.clear();
 			sourceDefinition.clear();
 		}
 

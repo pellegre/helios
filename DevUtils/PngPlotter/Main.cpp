@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
 
 	/* Setup problem */
 	std::vector<GeometricDefinition*> geometryDefinitions = parser->getGeometry();
-	std::vector<Material::Definition*> materialDefinitions = parser->getMaterials();
+	//std::vector<Material::Definition*> materialDefinitions = parser->getMaterials();
 	std::vector<SourceDefinition*> sourceDefinitions = parser->getSource();
 
 	/* Geometry */
@@ -234,18 +234,18 @@ int main(int argc, char **argv) {
 
 	/* Materials */
 	Medium* materials = 0;
-	if(materialDefinitions.size()) {
-		try {
-			materials = new Medium(materialDefinitions);
-			/* Connect cell with materials */
-			geometry->setupMaterials(*materials);
-		} catch(std::exception& error) {
-			Log::error() << error.what() << Log::endl;
-			return 1;
-		}
-	} else {
-		Log::warn() << "No materials read from input file" << Log::endl;
-	}
+//	if(materialDefinitions.size()) {
+//		try {
+//			materials = new Medium(materialDefinitions);
+//			/* Connect cell with materials */
+//			geometry->setupMaterials(*materials);
+//		} catch(std::exception& error) {
+//			Log::error() << error.what() << Log::endl;
+//			return 1;
+//		}
+//	} else {
+//		Log::warn() << "No materials read from input file" << Log::endl;
+//	}
 
 	/* Source of the problem */
 	Source* source = 0;
@@ -314,7 +314,7 @@ int main(int argc, char **argv) {
     pngPlotter.dumpPng(output);
 
     delete geometry;
-    delete materials;
+    //delete materials;
     delete source;
 	delete parser;
 }

@@ -46,9 +46,7 @@ namespace Helios {
 
 	public:
 
-		Geometry(std::vector<GeometricDefinition*>& definitions) {
-			setupGeometry(definitions);
-		};
+		Geometry(std::vector<GeometricDefinition*>& definitions);
 
 		/* Exception */
 		class GeometryError : public std::exception {

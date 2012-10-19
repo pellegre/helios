@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Transport/Particle.hpp"
 #include "Transport/Source.hpp"
 #include "Common/Common.hpp"
+#include "Environment/McEnvironment.hpp"
 
 using namespace std;
 using namespace Helios;
@@ -99,7 +100,6 @@ int main(int argc, char **argv) {
 		while(*(++argv)) {
 			string filename = string(*(argv));
 			input_files.push_back(filename);
-			parser->parseFile(filename);
 		}
 
 	} catch(Parser::ParserError& parsererror) {
@@ -123,16 +123,21 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	/* Environment */
+	McEnvironment environment(parser);
+	/* Parse files, to get the information to create the environment */
+	environment.parseFiles(input_files);
+	/* Setup the problem */
+	environment.setup();
+
 	/* Setup problem */
 	std::vector<GeometricDefinition*> geometryDefinitions = parser->getGeometry();
-	std::vector<Material::Definition*> materialDefinitions = parser->getMaterials();
 	std::vector<SourceDefinition*> sourceDefinitions = parser->getSource();
 
 	/* Geometry */
 	Geometry* geometry = new Geometry(geometryDefinitions);
-	/* Materials */
-	Medium* materials = new Medium(materialDefinitions);
-	/* Connect cell with materials */
+	/* Get materials */
+	Medium* materials = environment.getModule<Medium>();
 	geometry->setupMaterials(*materials);
 	/* Get the source */
 	Source* source = new Source(sourceDefinitions);
@@ -285,7 +290,6 @@ int main(int argc, char **argv) {
 	Log::ok() << " Final keff = "<< ave_keff/ (double)(cycles - skip) << Log::endl;
 
 	delete source;
-	delete materials;
 	delete geometry;
 	delete parser;
 }

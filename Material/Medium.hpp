@@ -32,69 +32,88 @@
 #include <vector>
 
 #include "Material.hpp"
-#include "MacroXs.hpp"
+#include "MaterialObject.hpp"
 
 namespace Helios {
 
-/*
- * This class is the analogous as the "Geometry" class but for materials
- * The main function is to collect all the materials in the problem and provide
- * a centralized place to look for them.
- */
-class Medium {
+	/*
+	 * This class is the analogous as the "Geometry" class but for materials
+	 * The main function is to collect all the materials in the problem and provide
+	 * a centralized place to look for them.
+	 */
+	class Medium : public McModule {
+		/* Material Factory */
+		MaterialFactory* factory;
 
-	/* Container of materials */
-	std::vector<Material*> materials;
+		/* Container of materials */
+		std::vector<Material*> materials;
 
-	/* Map internal index to user index */
-	std::map<MaterialId, InternalMaterialId> material_map;
+		/* Map internal index to user index */
+		std::map<MaterialId, InternalMaterialId> material_map;
 
-	/* Prevent copy */
-	Medium(const Medium& geo);
-	Medium& operator= (const Medium& other);
+		/* Prevent copy */
+		Medium(const Medium& geo);
+		Medium& operator= (const Medium& other);
 
-	/* Add a material */
-	Material* addMaterial(const Material::Definition* definition);
+		/* Add a material */
+		Material* addMaterial(const MaterialObject* definition);
 
-public:
-	Medium(std::vector<Material::Definition*>& matDefinitions) {setupMaterials(matDefinitions);};
-
-	/* ---- Get information */
-
-	size_t getMaterialNumber() const {return material_map.size();}
-	const std::vector<Material*>& getMaterials() const {return materials;}
-	const std::map<MaterialId, InternalMaterialId>& getMaterialMap() const {return material_map;};
-
-	/* Exception */
-	class MaterialError : public std::exception {
-		std::string reason;
 	public:
-		MaterialError(const MaterialId& matid, const std::string& msg) {
-			reason = "Cannot access to material " + toString(matid) + " : " + msg;
+		/* Name of this module */
+		static std::string name() {return "medium"; }
+
+		Medium(const std::vector<McObject*>& matDefinitions);
+
+		/* ---- Get information */
+
+		size_t getMaterialNumber() const {return material_map.size();}
+		const std::vector<Material*>& getMaterials() const {return materials;}
+		const std::map<MaterialId, InternalMaterialId>& getMaterialMap() const {return material_map;};
+
+		/* Exception */
+		class MaterialError : public std::exception {
+			std::string reason;
+		public:
+			MaterialError(const MaterialId& matid, const std::string& msg) {
+				reason = "Cannot access to material " + toString(matid) + " : " + msg;
+			}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			~MaterialError() throw() {/* */};
+		};
+
+		/* Get a material from the user ID */
+		Material* getMaterial(const MaterialId& materialId) const {
+			std::map<MaterialId,InternalMaterialId>::const_iterator it_mat = material_map.find(materialId);
+			if(it_mat == material_map.end())
+				throw MaterialError(materialId,"Material does not exist");
+			else
+				return materials[(*it_mat).second];
 		}
-		const char *what() const throw() {
-			return reason.c_str();
-		}
-		~MaterialError() throw() {/* */};
+
+		/* Setup the material container */
+		void setupMaterials(const std::vector<McObject*>& matDefinitions);
+
+		/* Print a list of materials on the container */
+		void printMaterials(std::ostream& out) const;
+
+		virtual ~Medium();
 	};
 
-	/* Get a material from the user ID */
-	Material* getMaterial(const MaterialId& materialId) const {
-		std::map<MaterialId,InternalMaterialId>::const_iterator it_mat = material_map.find(materialId);
-		if(it_mat == material_map.end())
-			throw MaterialError(materialId,"Material does not exist");
-		else
-			return materials[(*it_mat).second];
-	}
+	class McEnvironment;
 
-	/* Setup the material container */
-	void setupMaterials(std::vector<Material::Definition*>& matDefinitions);
-
-	/* Print a list of materials on the container */
-	void printMaterials(std::ostream& out) const;
-
-	virtual ~Medium();
-};
+	/* Material Factory */
+	class MediumFactory : public ModuleFactory {
+	public:
+		/* Prevent construction or copy */
+		MediumFactory(McEnvironment* environment) : ModuleFactory(Medium::name(),environment) {/* */};
+		/* Create a new material */
+		McModule* create(const std::vector<McObject*>& objects) const {
+			return new Medium(objects);
+		}
+		virtual ~MediumFactory() {/* */}
+	};
 
 } /* namespace Helios */
 #endif /* MEDIUM_HPP_ */

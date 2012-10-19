@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-#include "MaterialDefinition.hpp"
+#include "MaterialObject.hpp"
 #include "../Common/Common.hpp"
 #include "../Transport/Particle.hpp"
 
@@ -55,18 +55,6 @@ namespace Helios {
 
 		friend class MaterialFactory;
 		friend std::ostream& operator<<(std::ostream& out, const Material& q);
-
-		/* Base class to define a material */
-		class Definition : public MaterialDefinition {
-			/* Material ID on this problem */
-			MaterialId matid;
-		public:
-			Definition(const std::string& type, const MaterialId& matid) : MaterialDefinition(type), matid(matid) {/* */}
-			MaterialId getMatid() const {
-				return matid;
-			}
-			virtual ~Definition() {/* */}
-		};
 
 		/* Exception */
 		class BadMaterialCreation : public std::exception {
@@ -110,7 +98,7 @@ namespace Helios {
 
 	protected:
 
-		Material(const Definition* definition) : matid(definition->getMatid()), int_matid(0) {/* */};
+		Material(const MaterialObject* definition) : matid(definition->getMatid()), int_matid(0) {/* */};
 
 		/* Prevent copy */
 		Material(const Material& mat);
@@ -125,22 +113,12 @@ namespace Helios {
 
 	/* Material Factory */
 	class MaterialFactory {
-
-		/* Static instance of the factory */
-		static MaterialFactory factory;
-
+	public:
 		/* Prevent construction or copy */
 		MaterialFactory() {/* */};
-		MaterialFactory& operator= (const MaterialFactory& other);
-		MaterialFactory(const MaterialFactory&);
-		virtual ~MaterialFactory() {/* */}
-
-	public:
-		/* Access the factory, reference to the static singleton */
-		static MaterialFactory& access() {return factory;}
-
 		/* Create a new material */
-		Material* createMaterial(const Material::Definition* definition) const;
+		virtual Material* createMaterial(const MaterialObject* definition) const = 0;
+		virtual ~MaterialFactory() {/* */}
 	};
 
 	/* Output surface information */

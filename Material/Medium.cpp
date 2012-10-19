@@ -26,28 +26,37 @@
  */
 
 #include "Medium.hpp"
+#include "MacroXs.hpp"
 
 using namespace std;
 
 namespace Helios {
 
-void Medium::setupMaterials(vector<Material::Definition*>& matDefinitions) {
-	for(vector<Material::Definition*>::const_iterator it = matDefinitions.begin() ; it != matDefinitions.end() ; ++it)
-		/* Add the material */
-		Material* new_mat = addMaterial((*it));
-	/* Delete all the definitions */
-	purgePointers(matDefinitions);
-	matDefinitions.clear();
+Medium::Medium(const vector<McObject*>& matDefinitions) : McModule(name()) {
+	McObject* definition = matDefinitions[0];
+	/* Detect the type of materials on the medium. We can't have a mix of materials on a problem */
+	if(definition->getObjectName() == "macro-xs")
+		factory = new MacroXsFactory;
+	else
+		throw Material::BadMaterialCreation(static_cast<MaterialObject*>(definition)->getMatid(),
+				"Material type " + definition->getObjectName() + " is not defined");
+	setupMaterials(matDefinitions);
 }
 
-Material* Medium::addMaterial(const Material::Definition* definition) {
+void Medium::setupMaterials(const vector<McObject*>& matDefinitions) {
+	for(vector<McObject*>::const_iterator it = matDefinitions.begin() ; it != matDefinitions.end() ; ++it)
+		/* Add the material */
+		Material* new_mat = addMaterial(static_cast<MaterialObject*>(*it));
+}
+
+Material* Medium::addMaterial(const MaterialObject* definition) {
 	/* Check if the material is not duplicated */
 	map<MaterialId, InternalMaterialId>::const_iterator it_mat = material_map.find(definition->getMatid());
 	if(it_mat != material_map.end())
 			throw(Material::BadMaterialCreation(definition->getMatid(),"Duplicated id "));
 
 	/* Create the new material */
-	Material* new_material = MaterialFactory::access().createMaterial(definition);
+	Material* new_material = factory->createMaterial(definition);
 	/* Set internal / unique index */
 	new_material->setInternalId(materials.size());
 	/* Update material map */
@@ -67,7 +76,10 @@ void Medium::printMaterials(std::ostream& out) const {
 }
 
 Medium::~Medium() {
+	/* Delete materials */
 	purgePointers(materials);
+	/* Delete factory */
+	delete factory;
 };
 
 } /* namespace Helios */

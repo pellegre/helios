@@ -54,31 +54,37 @@ namespace Helios {
 	/* Epsilon of floating point */
 	const double eps = std::numeric_limits<double>::epsilon();
 
+	/* User IDs are ALWAYS a string */
+	typedef std::string UserId;
+
 	/* Surface ID defined by the user */
-	typedef std::string SurfaceId;
+	typedef UserId SurfaceId;
 	/* Cell ID defined by the user */
-	typedef std::string CellId;
+	typedef UserId CellId;
 	/* Universe ID defined by the user */
-	typedef unsigned int UniverseId;
+	typedef UserId UniverseId;
 	/* Material ID defined by the user, usually a string */
-	typedef std::string MaterialId;
+	typedef UserId MaterialId;
 	/* Distribution ID defined by the user */
-	typedef std::string DistributionId;
+	typedef UserId DistributionId;
 	/* Sampler ID defined by the user */
-	typedef std::string SamplerId;
+	typedef UserId SamplerId;
+
+	/* Internal IDs are ALWAYS a unsigned integers */
+	typedef unsigned int InternalId;
 
 	/* Surface ID used internally */
-	typedef unsigned int InternalSurfaceId;
+	typedef InternalId InternalSurfaceId;
 	/* Cell ID used internally */
-	typedef unsigned int InternalCellId;
+	typedef InternalId InternalCellId;
 	/* Universe ID used internally */
-	typedef unsigned int InternalUniverseId;
+	typedef InternalId InternalUniverseId;
 	/* Material ID used internally */
-	typedef unsigned int InternalMaterialId;
+	typedef InternalId InternalMaterialId;
 	/* Distribution ID used internally */
-	typedef unsigned int InternalDistributionId;
+	typedef InternalId InternalDistributionId;
 	/* Sampler ID defined used internally */
-	typedef unsigned int InternalSamplerId;
+	typedef InternalId InternalSamplerId;
 
 	/* Energy stuff */
 	typedef double Energy;                             /* Energy of the particle in eVs */

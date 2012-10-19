@@ -27,15 +27,47 @@
 
 #include "McEnvironment.hpp"
 
+using namespace std;
+
 namespace Helios {
 
-McEnvironment::McEnvironment() {
-	// TODO Auto-generated constructor stub
+McEnvironment::McEnvironment(Parser* parser) : parser(parser) {
+	/* Register the module factories */
+	registerFactory(new MediumFactory(this));
+}
 
+void McEnvironment::parseFile(const std::string& filename) {
+	vector<string> input;
+	input.push_back(filename);
+	parseFiles(input);
+}
+
+void McEnvironment::parseFiles(const std::vector<std::string>& input_files) {
+	/* Parse information */
+	for(vector<string>::const_iterator it = input_files.begin() ; it != input_files.end() ; ++it)
+		parser->parseFile((*it));
+	/* Get parsed objects */
+	vector<McObject*> objects = parser->getObjects();
+	/* Put the on the map */
+	for(vector<McObject*>::iterator it = objects.begin() ; it != objects.end() ; ++it)
+		object_map[(*it)->getModuleName()].push_back((*it));
 }
 
 McEnvironment::~McEnvironment() {
-	// TODO Auto-generated destructor stub
+	/* Clear factories and modules */
+	for(map<string,ModuleFactory*>::iterator it = factory_map.begin() ; it != factory_map.end() ; ++it)
+		delete (*it).second;
+	for(map<std::string,McModule*>::iterator it = module_map.begin() ; it != module_map.end() ; ++it)
+		delete (*it).second;
+}
+
+void McEnvironment::setup() {
+	/* First, we need to setup the materials (i.e. medium) */
+	setupModule<Medium>();
+
+	/* Clean all definitions */
+	for(map<string,vector<McObject*> >::iterator it = object_map.begin() ; it != object_map.end() ; ++it)
+		purgePointers((*it).second);
 }
 
 } /* namespace Helios */

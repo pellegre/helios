@@ -100,7 +100,7 @@ static Cell::Definition* cellAttrib(TiXmlElement* pElement) {
 	/* Cell flags values */
 	XmlParser::AttributeValue<Cell::CellInfo> cell_flags("type",Cell::NONE,initCellInfo());
 	/* Universe */
-	XmlParser::AttributeValue<string> inp_universe("universe","0");
+	XmlParser::AttributeValue<string> inp_universe("universe",Universe::BASE);
 	/* Universe filling this cell */
 	XmlParser::AttributeValue<string> inp_fill("fill","0");
 	/* Translation */

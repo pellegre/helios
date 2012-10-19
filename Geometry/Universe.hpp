@@ -65,6 +65,9 @@ namespace Helios {
 
 	public:
 
+		/* Constant to reference the base universe */
+		static const UniverseId BASE;
+
 		/* Exception */
 		class BadUniverseCreation : public std::exception {
 			std::string reason;

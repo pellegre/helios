@@ -41,6 +41,9 @@
 /* Parser class */
 #include "../Parser/Parser.hpp"
 
+/* Medium */
+#include "../Material/Medium.hpp"
+
 namespace Helios {
 
 	/* Environment class, contains all the modules that conforms the MC problem */
@@ -55,13 +58,13 @@ namespace Helios {
 		 * Parse file (thrown an exception if there isn't a parser) and push the definitions
 		 * parsed. Thrown an exception if the parser fails.
 		 */
-		void parseFile(const std::string& filename);
+		void parseFile(const std::string& input_file);
 
 		/*
 		 * Parse files (thrown an exception if there isn't a parser) and push the definitions
 		 * parsed. Thrown an exception if the parser fails.
 		 */
-		void parseFiles(const std::vector<std::string>& filename);
+		void parseFiles(const std::vector<std::string>& input_files);
 
 		/* Register a module factory */
 		void registerFactory(ModuleFactory* factory) {
@@ -72,17 +75,29 @@ namespace Helios {
 		template<class Module>
 		Module* getModule() const;
 
-		/* Method to setup the environment */
+		/*
+		 * Method to setup the environment. This should be called when there aren't more definitions
+		 * to add into the system. The definitions will be eliminated from the environment and the modules
+		 * will be created. Also, this method will thrown an exception if the connections between the modules
+		 * fail in some way.
+		 */
 		void setup();
 
 		virtual ~McEnvironment();
 
 	private:
+		/* Setup a module */
+		template<class Module>
+		void setupModule();
+
 		/* Map between modules names and factories */
 		std::map<std::string,ModuleFactory*> factory_map;
 
 		/* Map of modules on the environment */
 		std::map<std::string,McModule*> module_map;
+
+		/* Map of modules with definitions */
+		std::map<std::string,std::vector<McObject*> > object_map;
 
 		/* Parser pointer */
 		Parser* parser;
@@ -98,7 +113,24 @@ namespace Helios {
 		if(it != module_map.end())
 			return dynamic_cast<Module*>(it->second);
 		else
-			throw(GeneralError("Module " + module + " is not registered"));
+			throw(GeneralError("The definition of the module *" + module + "* is missing on the input"));
+	}
+
+	template<class Module>
+	void McEnvironment::setupModule() {
+		/* Get the module name (all modules should have this static function) */
+		std::string module = Module::name();
+		/* Find factory on map */
+		std::map<std::string,ModuleFactory*>::const_iterator it = factory_map.find(module);
+		/* Return module */
+		if(it != factory_map.end()) {
+			std::vector<McObject*> definitions = object_map[module];
+			Module* mod = dynamic_cast<Module*>(it->second->create(definitions));
+			/* Update the map of modules */
+			module_map[module] = mod;
+		}
+		else
+			throw(GeneralError("Cannot create module *" + module + "* because the factory is not registered"));
 	}
 
 } /* namespace Helios */

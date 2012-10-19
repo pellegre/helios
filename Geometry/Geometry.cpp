@@ -48,6 +48,10 @@ static inline bool getSign(const SurfaceId& value) {
 		return true;
 }
 
+Geometry::Geometry(std::vector<GeometricDefinition*>& definitions) {
+	setupGeometry(definitions);
+};
+
 CellId Geometry::getPath(const Cell* cell) const {
 	/* Get the internal ID */
 	InternalCellId internal = cell->getInternalId();
@@ -93,7 +97,10 @@ std::vector<Cell*> Geometry::getCells(const std::string& pathOrig) {
 	}
 }
 
-std::vector<Surface*> Geometry::getSurfaces(const std::string& path) {
+std::vector<Surface*> Geometry::getSurfaces(const std::string& pathOrig) {
+	/* Erase spaces */
+	string path(pathOrig);
+	path.erase(std::remove_if(path.begin(), path.end(),::isspace), path.end());
 	/* Detect if is a full path (only one surface) or a group of surfaces */
 	if(path.find("<") != string::npos) {
 		/* One specific cell */
@@ -263,7 +270,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 
 	    /* Check if this cell is filled by another universe */
 	    UniverseId fill_universe_id = (*it_cell)->getFill();
-	    if(fill_universe_id) {
+	    if(fill_universe_id != Universe::BASE) {
 	    	vector<Cell::SenseSurface>::const_iterator it_psur = parent_surfaces.begin();
 	    	for(; it_psur != parent_surfaces.end() ; ++it_psur)
 	    		boundingSurfaces.push_back((*it_psur));
@@ -377,7 +384,7 @@ void Geometry::setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
 		if(it_id != user_cell_ids .end())
 			throw Cell::BadCellCreation(userCellId,"Duplicated id");
 		/* Check other stuff */
-		if((*it_cell)->getFill() && ((*it_cell)->getFill() == (*it_cell)->getUniverse()))
+		if((*it_cell)->getFill() != Universe::BASE && ((*it_cell)->getFill() == (*it_cell)->getUniverse()))
 			throw Cell::BadCellCreation(userCellId,"What are you trying to do? You can't fill a cell with the same universe in which is contained");
 
 		user_cell_ids.insert(userCellId);

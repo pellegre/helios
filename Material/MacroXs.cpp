@@ -31,12 +31,10 @@ using namespace std;
 
 namespace Helios {
 
-MacroXs::MacroXs(const Material::Definition* definition, int number_groups) :
+MacroXs::MacroXs(const MacroXsObject* definition, int number_groups) :
 		         Material(definition), ngroups(number_groups), mfp(number_groups) {
-	/* Cast to a MacroXs definition */
-	const MacroXs::Definition* macro_definition = dynamic_cast<const MacroXs::Definition*>(definition);
 	/* Get constants */
-	map<string,vector<double> > constant = macro_definition->getConstant();
+	map<string,vector<double> > constant = definition->getConstant();
 	/* Get the number of groups and do some error checking */
 	map<string,vector<double> >::const_iterator it_xs = constant.begin();
 	int ngroup = number_groups;
@@ -100,5 +98,12 @@ MacroXs::~MacroXs() {
 	purgePointers(reactions);
 	delete reaction_sampler;
 };
+
+Material* MacroXsFactory::createMaterial(const MaterialObject* definition) const {
+	const MacroXsObject* macro_definition = static_cast<const MacroXsObject*>(definition);
+	/* Get the number of groups */
+	int nelement = macro_definition->getConstant()["sigma_a"].size();
+	return new MacroXs(macro_definition,nelement);
+}
 
 } /* namespace Helios */

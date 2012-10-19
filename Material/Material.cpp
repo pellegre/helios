@@ -32,7 +32,6 @@ using namespace std;
 
 namespace Helios {
 
-MaterialFactory MaterialFactory::factory;
 /* No material */
 const MaterialId Material::NONE = "none";
 /* Void */
@@ -45,14 +44,4 @@ std::ostream& operator<<(std::ostream& out, const Material& q) {
 	return out;
 }
 
-Material* MaterialFactory::createMaterial(const Material::Definition* definition) const {
-	if(definition->getType() == "macro-xs") {
-		const MacroXs::Definition* macro_definition = dynamic_cast<const MacroXs::Definition*>(definition);
-		/* Get the number of groups */
-		int nelement = macro_definition->getConstant()["sigma_a"].size();
-		return new MacroXs(definition,nelement);
-	}
-	else
-		throw Material::BadMaterialCreation(definition->getMatid(),"Material type " + definition->getType() + " is not defined");
-}
 } /* namespace Helios */

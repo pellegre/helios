@@ -32,6 +32,8 @@
 
 namespace Helios {
 
+	class McEnvironment;
+
 	/*
 	 * Generic McObject definition
 	 * All definitions on each module should be derived from this class
@@ -64,7 +66,7 @@ namespace Helios {
 	public:
 		McModule(const std::string& name) : name(name) {/* */};
 		/* Get module name */
-		std::string& getName() const {return name;}
+		std::string getName() const {return name;}
 		virtual ~McModule() {/* */};
 	};
 
@@ -72,8 +74,12 @@ namespace Helios {
 	class ModuleFactory {
 		/* Name of the modules this factory creates */
 		std::string name;
+		/* Pointer to the parent environment */
+		McEnvironment* environment;
+	protected:
+		McEnvironment* getEnvironment() {return environment;}
 	public:
-		ModuleFactory(const std::string& name) : name(name) {/* */}
+		ModuleFactory(const std::string& name, McEnvironment* environment) : name(name), environment(environment) {/* */}
 		/* Create an instance of an object from a group of objects definition */
 		virtual McModule* create(const std::vector<McObject*>& objects) const = 0;
 		/* Get name */
