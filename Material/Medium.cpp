@@ -61,6 +61,9 @@ Medium::Medium(const vector<McObject*>& matDefinitions) : McModule(name()) {
 		throw Material::BadMaterialCreation(static_cast<MaterialObject*>(definition)->getMatid(),
 				"Material type " + definition->getObjectName() + " is not defined");
 
+	/* Set name of the type of material */
+	material_type = name;
+
 	/* Create the materials */
 	materials = factory->createMaterials(objects);
 

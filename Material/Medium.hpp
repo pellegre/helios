@@ -47,6 +47,8 @@ namespace Helios {
 
 		/* Container of materials */
 		std::vector<Material*> materials;
+		/* Material type  */
+		std::string material_type;
 
 		/* Map internal index to user index */
 		std::map<MaterialId, InternalMaterialId> material_map;
@@ -56,8 +58,14 @@ namespace Helios {
 		Medium& operator= (const Medium& other);
 
 	public:
+		/* ---- Module stuff */
+
 		/* Name of this module */
 		static std::string name() {return "medium"; }
+
+		/* Get object */
+		template<class Object>
+		std::vector<Object*> getObject(const UserId& id) const;
 
 		Medium(const std::vector<McObject*>& matDefinitions);
 
@@ -94,6 +102,24 @@ namespace Helios {
 
 		virtual ~Medium();
 	};
+
+	template<class Object>
+	std::vector<Object*> Medium::getObject(const UserId& id) const {
+		/* Check if we are dealing with this kind of material */
+		if(Object::name() != material_type)
+			throw(MaterialError(id,"Material type *" + Object::name() + "* is not loaded into the system"));
+
+		/* Internal ID */
+		std::map<MaterialId, InternalMaterialId>::const_iterator it = material_map.find(id);
+		InternalMaterialId internalId = it->second;
+		/* Get pointer */
+		Object* object = dynamic_cast<Object*>(materials[internalId]);
+		/* Construct container */
+		std::vector<Object*> objContainer;
+		objContainer.push_back(object);
+		/* Return object */
+		return objContainer;
+	}
 
 	class McEnvironment;
 

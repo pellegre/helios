@@ -146,6 +146,7 @@ namespace Helios {
 		trng::lcg64 r;                   /* Generator */
 		trng::uniform01_dist<double> u;  /* Uniform distribution */
 	public:
+		Random() : r(trng::lcg64()) {/* */}
 		Random(const trng::lcg64& r) : r(r) {/* */}
 		Random(const Random& other) : r(other.r), u(other.u) {/* */}
 		double uniform() {return u(r);}

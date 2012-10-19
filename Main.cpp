@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Parser/ParserTypes.hpp"
 #include "Geometry/Geometry.hpp"
 #include "Material/Medium.hpp"
+#include "Material/MacroXs.hpp"
 #include "Transport/Particle.hpp"
 #include "Transport/Source.hpp"
 #include "Common/Common.hpp"
@@ -143,8 +144,7 @@ int main(int argc, char **argv) {
 	Source* source = new Source(sourceDefinitions);
 
 	/* Initialization - Random number */
-	trng::lcg64 random;
-	Random r(random);
+	Random r;
 	r.getEngine().seed((long unsigned int)1);
 
 	/* Initialization - KEFF cycle */
