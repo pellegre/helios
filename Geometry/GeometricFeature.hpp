@@ -35,7 +35,7 @@
 #include "Cell.hpp"
 #include "Surface.hpp"
 #include "../Common/Common.hpp"
-#include "GeometricDefinition.hpp"
+#include "GeometryObject.hpp"
 
 namespace Helios {
 
@@ -52,7 +52,9 @@ namespace Helios {
 
 	public:
 
-		class Definition : public GeometricDefinition {
+		static std::string name() {return "feature";}
+
+		class Definition : public GeometryObject {
 
 		protected:
 			/* The universe where this feature will be constructed */
@@ -61,7 +63,7 @@ namespace Helios {
 			std::string feature;
 		public:
 			Definition(const std::string& feature, const UniverseId& userFeatureId) :
-				GeometricDefinition(GeometricDefinition::FEATURE), feature(feature), userFeatureId(userFeatureId) {/* */}
+				GeometryObject(GeometricFeature::name()), feature(feature), userFeatureId(userFeatureId) {/* */}
 			std::string getFeature() const {
 				return feature;
 			}

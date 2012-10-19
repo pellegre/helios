@@ -48,7 +48,7 @@ static inline bool getSign(const SurfaceId& value) {
 		return true;
 }
 
-Geometry::Geometry(std::vector<GeometricDefinition*>& definitions) {
+Geometry::Geometry(std::vector<GeometryObject*>& definitions) {
 	setupGeometry(definitions);
 };
 
@@ -290,29 +290,25 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 }
 
 template<class T>
-static void pushDefinition(GeometricDefinition* geo, std::vector<T*>& definition) {
+static void pushDefinition(GeometryObject* geo, std::vector<T*>& definition) {
 	definition.push_back(dynamic_cast<T*>(geo));
 }
 
-void Geometry::setupGeometry(std::vector<GeometricDefinition*>& definitions) {
+void Geometry::setupGeometry(std::vector<GeometryObject*>& definitions) {
 	std::vector<Surface::Definition*> surDefinitions;
 	std::vector<Cell::Definition*> cellDefinitions;
 	std::vector<GeometricFeature::Definition*> featureDefinitions;
 	/* Dispatch each definition to the corresponding container */
-	vector<GeometricDefinition*>::const_iterator it_def = definitions.begin();
+	vector<GeometryObject*>::const_iterator it_def = definitions.begin();
 
 	for(; it_def != definitions.end() ; ++it_def) {
-		switch((*it_def)->getType()) {
-		case GeometricDefinition::CELL:
+		string type = (*it_def)->getObjectName();
+		if (type == Cell::name())
 			pushDefinition(*it_def,cellDefinitions);
-			break;
-		case GeometricDefinition::SURFACE:
+		else if (type == Surface::name())
 			pushDefinition(*it_def,surDefinitions);
-			break;
-		case GeometricDefinition::FEATURE:
+		else if (type == GeometricFeature::name())
 			pushDefinition(*it_def,featureDefinitions);
-			break;
-		}
 	}
 	setupGeometry(surDefinitions,cellDefinitions,featureDefinitions);
 	definitions.clear();

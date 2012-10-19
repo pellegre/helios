@@ -57,7 +57,7 @@ protected:
 		/* Parse the file */
 		parser->parseFile(InputPath::access().getPath() + "/SourceTest/" + geo_file);
 		/* Geometry */
-		std::vector<Helios::GeometricDefinition*> geometryDefinitions = parser->getGeometry();
+		std::vector<Helios::GeometryObject*> geometryDefinitions = parser->getGeometry();
 		geometry = new Helios::Geometry(geometryDefinitions);
 	}
 

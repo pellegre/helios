@@ -66,7 +66,7 @@ namespace Helios {
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
 		Surface* transformate(const Direction& trans) const;
 		/* Name of the surface */
-		std::string name() const;
+		std::string getName() const;
 		/* Evaluate function */
 		double function(const Coordinate& pos) const;
 
@@ -82,7 +82,7 @@ namespace Helios {
 
 	/* Name of the surface */
 	template<int axis>
-	std::string PlaneNormal<axis>::name() const {
+	std::string PlaneNormal<axis>::getName() const {
 		return "p" + getAxisName<axis>();
 
 	}

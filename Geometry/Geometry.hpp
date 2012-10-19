@@ -36,7 +36,7 @@
 #include "Cell.hpp"
 #include "Universe.hpp"
 #include "GeometricFeature.hpp"
-#include "GeometricDefinition.hpp"
+#include "GeometryObject.hpp"
 #include "../Material/Medium.hpp"
 #include "../Common/Common.hpp"
 
@@ -46,7 +46,7 @@ namespace Helios {
 
 	public:
 
-		Geometry(std::vector<GeometricDefinition*>& definitions);
+		Geometry(std::vector<GeometryObject*>& definitions);
 
 		/* Exception */
 		class GeometryError : public std::exception {
@@ -159,7 +159,7 @@ namespace Helios {
 		/* ---- Geometry setup */
 
 		/* This is the interface to setup the geometry of the problem */
-		void setupGeometry(std::vector<GeometricDefinition*>& definitions);
+		void setupGeometry(std::vector<GeometryObject*>& definitions);
 
 		/*
 		 * This is the interface to setup the geometry of the problem, when all definitions

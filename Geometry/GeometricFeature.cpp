@@ -39,13 +39,13 @@ template<int axis>
 static string getPlaneAbscissa() {
 	switch(axis) {
 	case xaxis :
-		return PlaneNormal<yaxis>().name();
+		return PlaneNormal<yaxis>().getName();
 		break;
 	case yaxis :
-		return PlaneNormal<zaxis>().name();
+		return PlaneNormal<zaxis>().getName();
 		break;
 	case zaxis :
-		return PlaneNormal<xaxis>().name();
+		return PlaneNormal<xaxis>().getName();
 		break;
 	}
 	return "";
@@ -71,13 +71,13 @@ template<int axis>
 static string getPlaneOrdinate() {
 	switch(axis) {
 	case xaxis :
-		return PlaneNormal<zaxis>().name();
+		return PlaneNormal<zaxis>().getName();
 		break;
 	case yaxis :
-		return PlaneNormal<xaxis>().name();
+		return PlaneNormal<xaxis>().getName();
 		break;
 	case zaxis :
-		return PlaneNormal<yaxis>().name();
+		return PlaneNormal<yaxis>().getName();
 		break;
 	}
 	return "";

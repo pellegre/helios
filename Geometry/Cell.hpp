@@ -34,7 +34,7 @@
 
 #include "../Common/Common.hpp"
 #include "../Material/Material.hpp"
-#include "GeometricDefinition.hpp"
+#include "GeometryObject.hpp"
 
 namespace Helios {
 
@@ -67,6 +67,9 @@ namespace Helios {
 	class Cell {
 
 	public:
+		/* Object name */
+		static std::string name() {return "cell";}
+
 		/* Pair of surface and sense */
 		typedef std::pair<Surface*, bool> SenseSurface;
 		/* Friendly factory */
@@ -78,7 +81,7 @@ namespace Helios {
 			DEADCELL = 2  /* Particles should be killed when entering us */
 		};
 
-		class Definition : public GeometricDefinition {
+		class Definition : public GeometryObject {
 			CellId userCellId;
 			Cell::CellInfo flags;
 			UniverseId universe;
@@ -91,10 +94,10 @@ namespace Helios {
 			std::vector<SenseSurface> surfacesPtrs; /* Pair of sense and pointer to a set of constructed surfaces */
 		public:
 
-			Definition() : GeometricDefinition(GeometricDefinition::CELL) {/* */}
+			Definition() : GeometryObject(Cell::name()) {/* */}
 			Definition(const CellId& userCellId, const std::vector<SurfaceId>& surfacesIds, const Cell::CellInfo flags,
 					   const UniverseId& universe, const UniverseId& fill,const MaterialId& matid, const Transformation& transformation) :
-					   GeometricDefinition(GeometricDefinition::CELL), userCellId(userCellId), surfacesIds(surfacesIds), flags(flags),
+					   GeometryObject(Cell::name()), userCellId(userCellId), surfacesIds(surfacesIds), flags(flags),
 				       universe(universe), fill(fill), matid(matid), transformation(transformation) {/* */}
 			Cell::CellInfo getFlags() const {
 				return flags;

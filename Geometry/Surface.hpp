@@ -37,13 +37,16 @@
 
 #include "../Common/Common.hpp"
 #include "Cell.hpp"
-#include "GeometricDefinition.hpp"
+#include "GeometryObject.hpp"
 
 namespace Helios {
 
 	class Surface {
 
 	public:
+
+		/* Name of this object */
+		static std::string name() {return "surface";}
 
 		/* Information about the surfaces */
 		enum SurfaceInfo {
@@ -52,16 +55,16 @@ namespace Helios {
 			VACUUM = 2
 		};
 
-		class Definition : public GeometricDefinition {
+		class Definition : public GeometryObject {
 			SurfaceId userSurfaceId;
 			std::string type;
 			std::vector<double> coeffs;
 			Surface::SurfaceInfo flags;
 		public:
-			Definition() : GeometricDefinition(GeometricDefinition::SURFACE) {/* */}
+			Definition() : GeometryObject(Surface::name()) {/* */}
 			Definition(const SurfaceId& userSurfaceId, const std::string& type,
 					   const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags = Surface::NONE) :
-					   GeometricDefinition(GeometricDefinition::SURFACE), userSurfaceId(userSurfaceId), type(type),
+					   GeometryObject(Surface::name()), userSurfaceId(userSurfaceId), type(type),
 					   coeffs(coeffs), flags(flags) {/* */}
 			std::vector<double> getCoeffs() const {
 				return coeffs;
@@ -105,7 +108,7 @@ namespace Helios {
 		/* Determine distance to intersection with the surface. Returns whether it hits and pass back what the distance is. */
 		virtual bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const  = 0;
 		/* Get the name of this surface */
-		virtual std::string name() const = 0;
+		virtual std::string getName() const = 0;
 
 		/* Comparison operator */
 		bool operator==(const Surface& sur) {

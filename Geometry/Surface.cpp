@@ -61,12 +61,12 @@ Surface* SurfaceFactory::createSurface(const Surface::Definition* definition) co
 }
 
 void SurfaceFactory::registerSurface(const Surface& surface) {
-	constructor_table[surface.name()] = surface.constructor();
+	constructor_table[surface.getName()] = surface.constructor();
 }
 
 std::ostream& operator<<(std::ostream& out, const Surface& q) {
 	out << "surface = " << q.getUserId() << " (internal = " << q.getInternalId() << ")"
-	    << " ; type = " << q.name() << " ; flags = " << q.getFlags() << " : ";
+	    << " ; type = " << q.getName() << " ; flags = " << q.getFlags() << " : ";
 	q.print(out);
 	return out;
 }

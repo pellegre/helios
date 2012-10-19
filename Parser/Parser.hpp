@@ -51,7 +51,7 @@ namespace Helios {
 		 * pushed here. The Geometry module is constructed after a call
 		 * to setupGeometry() with all this data.
 		 */
-		std::vector<GeometricDefinition*> geometricDefinition;
+		std::vector<GeometryObject*> geometricDefinition;
 
 		/*
 		 * Source Stuff
@@ -111,7 +111,7 @@ namespace Helios {
 		 */
 
 		/* Setup geometry  */
-		const std::vector<GeometricDefinition*>& getGeometry() {return geometricDefinition;};
+		const std::vector<GeometryObject*>& getGeometry() {return geometricDefinition;};
 		/* Get the source definitions */
 		const std::vector<SourceDefinition*>& getSource() {return sourceDefinition;};
 

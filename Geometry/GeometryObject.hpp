@@ -25,30 +25,18 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef GEOMETRICDEFINITION_HPP_
-#define GEOMETRICDEFINITION_HPP_
+#ifndef GEOMETRYOBJECT_HPP_
+#define GEOMETRYOBJECT_HPP_
 
 namespace Helios {
 
 	/* Generic and base class to define all geometric entities */
-	class GeometricDefinition {
+	class GeometryObject : public McObject {
 	public:
-
-		enum GeometricType {
-			SURFACE = 1,
-			CELL    = 2,
-			FEATURE = 3
-		};
-
 		/* Different type of geometric entities */
-		GeometricDefinition(const GeometricType& type) : type(type) {/* */};
-		/* Get the type */
-		GeometricType getType() const {return type;}
-		virtual ~GeometricDefinition(){/* */};
-
-	private:
-		GeometricType type;
+		GeometryObject(const std::string& type) : McObject("geometry",type) {/* */};
+		virtual ~GeometryObject(){/* */};
 	};
 
 } /* namespace Helios */
-#endif /* GEOMETRICDEFINITION_HPP_ */
+#endif /* GEOMETRYOBJECT_HPP_ */

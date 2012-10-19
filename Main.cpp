@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
 	environment.setup();
 
 	/* Setup problem */
-	std::vector<GeometricDefinition*> geometryDefinitions = parser->getGeometry();
+	std::vector<GeometryObject*> geometryDefinitions = parser->getGeometry();
 	std::vector<SourceDefinition*> sourceDefinitions = parser->getSource();
 
 	/* Geometry */

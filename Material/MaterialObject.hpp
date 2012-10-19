@@ -47,20 +47,6 @@ namespace Helios {
 		}
 		virtual ~MaterialObject(){/* */};
 	};
-
-	/* Definition of a macroscopic cross section */
-	class MacroXsObject : public MaterialObject {
-		/* Map of macroscopic XS name to a vector of group constant */
-		std::map<std::string,std::vector<double> > constant;
-	public:
-		MacroXsObject(const MaterialId& matid, std::map<std::string,std::vector<double> >& constant) :
-			MaterialObject("macro-xs",matid), constant(constant) {/* */}
-
-		std::map<std::string, std::vector<double> > getConstant() const {
-			return constant;
-		}
-		~MacroXsObject() {/* */}
-	};
 }
 
 #endif /* MATERIALOBJECT_HPP_ */

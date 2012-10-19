@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* Setup problem */
-	std::vector<GeometricDefinition*> geometryDefinitions = parser->getGeometry();
+	std::vector<GeometryObject*> geometryDefinitions = parser->getGeometry();
 	//std::vector<Material::Definition*> materialDefinitions = parser->getMaterials();
 	std::vector<SourceDefinition*> sourceDefinitions = parser->getSource();
 
