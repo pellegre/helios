@@ -261,14 +261,14 @@ Lattice::Lattice(const FeatureObject* definition) : GeometricFeature(definition)
 		"Invalid number of universes in lattice (expected = " + toString(uni_count) + " ; input = " + toString(universes.size()) + ")");
 };
 
-void Lattice::createFeature(const FeatureObject* featureDefinition,
-                              std::vector<SurfaceObject*>& surfaceDefinition,
-		                      std::vector<CellObject*>& cellDefinition) const {
+void Lattice::createFeature(const FeatureObject* featureObject,
+                              std::vector<SurfaceObject*>& surfaceObject,
+		                      std::vector<CellObject*>& cellObject) const {
 
-	const LatticeObject* new_lat = dynamic_cast<const LatticeObject*>(featureDefinition);
+	const LatticeObject* new_lat = dynamic_cast<const LatticeObject*>(featureObject);
 
 	/* The lattice is a universe itself, so it can't be defined with an id of an existent universe */
-	for(vector<CellObject*>::const_iterator it_cell = cellDefinition.begin() ; it_cell != cellDefinition.end() ; ++it_cell) {
+	for(vector<CellObject*>::const_iterator it_cell = cellObject.begin() ; it_cell != cellObject.end() ; ++it_cell) {
 		if(new_lat->getUserFeatureId() == (*it_cell)->getUniverse())
 			throw Universe::BadUniverseCreation(new_lat->getUserFeatureId(),"Duplicated id. You can't use the id of a existent universe to define a lattice");
 	}
@@ -281,7 +281,7 @@ void Lattice::createFeature(const FeatureObject* featureDefinition,
 		throw Universe::BadUniverseCreation(new_lat->getUserFeatureId(),"Lattice type " + type + " doesn't exist");
 
 	/* Create lattice */
-	(*it_const).second(*new_lat,surfaceDefinition,cellDefinition);
+	(*it_const).second(*new_lat,surfaceObject,cellObject);
 }
 
 } /* namespace Helios */

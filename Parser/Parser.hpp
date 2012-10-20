@@ -46,14 +46,6 @@ namespace Helios {
 		std::vector<McObject*> objects;
 
 		/*
-		 * Geometry stuff
-		 * All the geometries definitions parsed on the input files should be
-		 * pushed here. The Geometry module is constructed after a call
-		 * to setupGeometry() with all this data.
-		 */
-		std::vector<GeometryObject*> geometricDefinition;
-
-		/*
 		 * Source Stuff
 		 * All the materials definitions should be pushed here.
 		 */
@@ -106,12 +98,7 @@ namespace Helios {
 
 		/*
 		 * ---- Setup and return constructed objects.
-		 * Each time this functions are called, the information of the specific ocject inside the
-		 * parser is clear.
 		 */
-
-		/* Setup geometry  */
-		const std::vector<GeometryObject*>& getGeometry() {return geometricDefinition;};
 		/* Get the source definitions */
 		const std::vector<SourceDefinition*>& getSource() {return sourceDefinition;};
 
@@ -120,7 +107,6 @@ namespace Helios {
 
 		/* Clear definitions inside the parser */
 		void clear() {
-			geometricDefinition.clear();
 			sourceDefinition.clear();
 		}
 

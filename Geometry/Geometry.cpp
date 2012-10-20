@@ -33,7 +33,7 @@
 #include "Cell.hpp"
 #include "Universe.hpp"
 #include "GeometricFeature.hpp"
-
+#include "../Environment/McEnvironment.hpp"
 #include "Geometry.hpp"
 
 using namespace std;
@@ -48,8 +48,118 @@ static inline bool getSign(const SurfaceId& value) {
 		return true;
 }
 
-Geometry::Geometry(std::vector<GeometryObject*>& definitions) {
-	setupGeometry(definitions);
+McModule* GeometryFactory::create(const std::vector<McObject*>& objects) const  {
+	/* Try to get the materials */
+	const Materials* materials = 0;
+	try {
+		materials = getEnvironment()->getModule<Materials>();
+	} catch (exception& error) {
+		Log::warn() << error.what() << endl;
+	}
+	return new Geometry(objects,materials);
+}
+
+template<class T>
+static void pushObject(McObject* geo, std::vector<T*>& definition) {
+	definition.push_back(dynamic_cast<T*>(geo));
+}
+
+Geometry::Geometry(const std::vector<McObject*>& definitions, const Materials* materials) : McModule(name()) {
+	/* Objects */
+	vector<SurfaceObject*> surObjects;
+	vector<CellObject*> cellObjects;
+	vector<FeatureObject*> featureObjects;
+
+	/* Dispatch each definition to the corresponding container */
+	vector<McObject*>::const_iterator it_def = definitions.begin();
+
+	/* Get the type and put the object on the correct container */
+	for(; it_def != definitions.end() ; ++it_def) {
+		string type = (*it_def)->getObjectName();
+		if (type == Cell::name())
+			pushObject(*it_def,cellObjects);
+		else if (type == Surface::name())
+			pushObject(*it_def,surObjects);
+		else if (type == GeometricFeature::name())
+			pushObject(*it_def,featureObjects);
+	}
+
+	/* Keep the new objects added by the features */
+	vector<CellObject*> cellFeatureObject;
+	vector<SurfaceObject*> surFeatureObject;
+
+	/* Create geometric features */
+	if(featureObjects.size() != 0) {
+		/* Now lets move on into the lattices */
+		for(vector<FeatureObject*>::const_iterator it = featureObjects.begin() ; it != featureObjects.end() ; ++it) {
+			/* Create a lattice factory */
+			GeometricFeature* feature = feature_factory.createFeature(*it);
+			feature->createFeature((*it),surFeatureObject,cellFeatureObject);
+			delete feature;
+		}
+	}
+
+	/* Reserve... */
+	surObjects.reserve(surObjects.size() + surFeatureObject.size());
+	cellObjects.reserve(cellObjects.size() + cellFeatureObject.size());
+	/* ...and concatenate this new definitions to the current ones */
+	surObjects.insert( surObjects.end(), surFeatureObject.begin(), surFeatureObject.end() );
+	cellObjects.insert( cellObjects.end(), cellFeatureObject.begin(), cellFeatureObject.end() );
+
+	/* First we create all the surfaces defined by the user. Ultimately, we'll have to clone and transform this ones */
+	map<SurfaceId,Surface*> user_surfaces;
+	vector<SurfaceObject*>::const_iterator it_sur = surObjects.begin();
+	for(; it_sur != surObjects.end() ; ++it_sur) {
+		/* Surface information */
+		SurfaceId userSurfaceId((*it_sur)->getUserSurfaceId());
+		/* Check duplicated IDs */
+		map<SurfaceId,Surface*>::const_iterator it_id = user_surfaces.find(userSurfaceId);
+		if(it_id != user_surfaces.end())
+			throw Surface::BadSurfaceCreation(userSurfaceId,"Duplicated id");
+
+		/* Create surface */
+		Surface* new_surface = surface_factory.createSurface((*it_sur));
+		/* Update surface map */
+		user_surfaces[new_surface->getUserId()] = new_surface;
+	}
+
+	/* Check for duplicated cells */
+	set<CellId> user_cell_ids;
+	vector<CellObject*>::const_iterator it_cell = cellObjects.begin();
+	for(; it_cell != cellObjects.end() ; ++it_cell) {
+		CellId userCellId = (*it_cell)->getUserCellId();
+		/* Check duplicated IDs */
+		set<CellId>::const_iterator it_id = user_cell_ids.find(userCellId);
+		if(it_id != user_cell_ids .end())
+			throw Cell::BadCellCreation(userCellId,"Duplicated id");
+		/* Check other stuff */
+		if((*it_cell)->getFill() != Universe::BASE && ((*it_cell)->getFill() == (*it_cell)->getUniverse()))
+			throw Cell::BadCellCreation(userCellId,"What are you trying to do? You can't fill a cell with the same universe in which is contained");
+
+		user_cell_ids.insert(userCellId);
+	}
+
+	/* Map cell with universes */
+	map<UniverseId,vector<CellObject*> > u_cells;  /* Universe definition */
+	for(it_cell = cellObjects.begin() ; it_cell != cellObjects.end() ; ++it_cell) {
+		UniverseId universe = (*it_cell)->getUniverse();
+		u_cells[universe].push_back(*it_cell);
+	}
+
+	addUniverse((*u_cells.begin()).first,u_cells,user_surfaces);
+
+	/* Now, if we have a Materials pointer, we should update the materials on each cell */
+	if(materials)
+		setupMaterials(*materials);
+
+	/* Clean surfaces */
+	map<SurfaceId,Surface*>::iterator it_user = user_surfaces.begin();
+	for(; it_user != user_surfaces.end() ; ++it_user)
+		delete (*it_user).second;
+
+	/* Finally we should purge the extra definitions added by the geometry feature */
+	purgePointers(cellFeatureObject);
+	purgePointers(surFeatureObject);
 };
 
 CellId Geometry::getPath(const Cell* cell) const {
@@ -289,32 +399,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	return new_universe;
 }
 
-template<class T>
-static void pushDefinition(GeometryObject* geo, std::vector<T*>& definition) {
-	definition.push_back(dynamic_cast<T*>(geo));
-}
-
-void Geometry::setupGeometry(std::vector<GeometryObject*>& definitions) {
-	std::vector<SurfaceObject*> surDefinitions;
-	std::vector<CellObject*> cellDefinitions;
-	std::vector<FeatureObject*> featureDefinitions;
-	/* Dispatch each definition to the corresponding container */
-	vector<GeometryObject*>::const_iterator it_def = definitions.begin();
-
-	for(; it_def != definitions.end() ; ++it_def) {
-		string type = (*it_def)->getObjectName();
-		if (type == Cell::name())
-			pushDefinition(*it_def,cellDefinitions);
-		else if (type == Surface::name())
-			pushDefinition(*it_def,surDefinitions);
-		else if (type == GeometricFeature::name())
-			pushDefinition(*it_def,featureDefinitions);
-	}
-	setupGeometry(surDefinitions,cellDefinitions,featureDefinitions);
-	definitions.clear();
-}
-
-void Geometry::setupMaterials(const Medium& materialContainer) {
+void Geometry::setupMaterials(const Materials& materialContainer) {
 	/* Iterate over each material on the map */
 	map<InternalCellId, MaterialId>::const_iterator it_mat = mat_map.begin();
 	for(; it_mat != mat_map.end() ; ++it_mat) {
@@ -336,74 +421,6 @@ void Geometry::setupMaterials(const Medium& materialContainer) {
 						"The cell is not filled with a material or a universe");
 		}
 	}
-}
-
-void Geometry::setupGeometry(std::vector<SurfaceObject*>& surDefinitions,
-                             std::vector<CellObject*>& cellDefinitions,
-                             std::vector<FeatureObject*>& featureDefinitions) {
-
-	/* Create geometric features */
-	if(featureDefinitions.size() != 0) {
-		/* Now lets move on into the lattices */
-		for(vector<FeatureObject*>::const_iterator it = featureDefinitions.begin() ; it != featureDefinitions.end() ; ++it) {
-			/* Create a lattice factory */
-			GeometricFeature* feature = feature_factory.createFeature(*it);
-			feature->createFeature((*it),surDefinitions,cellDefinitions);
-			delete feature;
-		}
-	}
-
-	/* First we add all the surfaces defined by the user. Ultimately, we'll have to clone and transform this ones */
-	map<SurfaceId,Surface*> user_surfaces;
-	vector<SurfaceObject*>::const_iterator it_sur = surDefinitions.begin();
-	for(; it_sur != surDefinitions.end() ; ++it_sur) {
-		/* Surface information */
-		SurfaceId userSurfaceId((*it_sur)->getUserSurfaceId());
-		/* Check duplicated IDs */
-		map<SurfaceId,Surface*>::const_iterator it_id = user_surfaces.find(userSurfaceId);
-		if(it_id != user_surfaces.end())
-			throw Surface::BadSurfaceCreation(userSurfaceId,"Duplicated id");
-
-		/* Create surface */
-		Surface* new_surface = surface_factory.createSurface((*it_sur));
-		/* Update surface map */
-		user_surfaces[new_surface->getUserId()] = new_surface;
-	}
-
-	/* Check for duplicated cells */
-	set<CellId> user_cell_ids;
-	vector<CellObject*>::const_iterator it_cell = cellDefinitions.begin();
-	for(; it_cell != cellDefinitions.end() ; ++it_cell) {
-		CellId userCellId = (*it_cell)->getUserCellId();
-		/* Check duplicated IDs */
-		set<CellId>::const_iterator it_id = user_cell_ids.find(userCellId);
-		if(it_id != user_cell_ids .end())
-			throw Cell::BadCellCreation(userCellId,"Duplicated id");
-		/* Check other stuff */
-		if((*it_cell)->getFill() != Universe::BASE && ((*it_cell)->getFill() == (*it_cell)->getUniverse()))
-			throw Cell::BadCellCreation(userCellId,"What are you trying to do? You can't fill a cell with the same universe in which is contained");
-
-		user_cell_ids.insert(userCellId);
-	}
-
-	/* Map cell with universes */
-	map<UniverseId,vector<CellObject*> > u_cells;  /* Universe definition */
-	for(it_cell = cellDefinitions.begin() ; it_cell != cellDefinitions.end() ; ++it_cell) {
-		UniverseId universe = (*it_cell)->getUniverse();
-		u_cells[universe].push_back(*it_cell);
-	}
-
-	addUniverse((*u_cells.begin()).first,u_cells,user_surfaces);
-
-	/* Clean surfaces */
-	map<SurfaceId,Surface*>::iterator it_user = user_surfaces.begin();
-	for(; it_user != user_surfaces.end() ; ++it_user)
-		delete (*it_user).second;
-
-	/* Clean definitions, we don't need this anymore */
-	purgePointers(surDefinitions);
-	purgePointers(cellDefinitions);
-	purgePointers(featureDefinitions);
 }
 
 void Geometry::printGeo(std::ostream& out) const {

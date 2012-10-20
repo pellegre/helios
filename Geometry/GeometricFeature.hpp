@@ -63,9 +63,9 @@ namespace Helios {
 		 * Create the the feature and add new cells/surfaces into the containers.
 		 * Returns the number of the new range of max user IDs.
 		 */
-		virtual void createFeature(const FeatureObject* featureDefinition,
-								   std::vector<SurfaceObject*>& surfaceDefinition,
-								   std::vector<CellObject*>& cellDefinition) const = 0;
+		virtual void createFeature(const FeatureObject* featureObject,
+								   std::vector<SurfaceObject*>& surfaceObject,
+								   std::vector<CellObject*>& cellObject) const = 0;
 
 		virtual ~GeometricFeature() {/* */};
 	};
@@ -82,9 +82,9 @@ namespace Helios {
 		/* Constructor with current surfaces and cells on the geometry */
 		Lattice(const FeatureObject* definition);
 
-		void createFeature(const FeatureObject* featureDefinition,
-						   std::vector<SurfaceObject*>& surfaceDefinition,
-						   std::vector<CellObject*>& cellDefinition) const;
+		void createFeature(const FeatureObject* featureObject,
+						   std::vector<SurfaceObject*>& surfaceObject,
+						   std::vector<CellObject*>& cellObject) const;
 
 		virtual ~Lattice() {/* */}
 

@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Parser/ParserTypes.hpp"
 #include "Geometry/Geometry.hpp"
-#include "Material/Medium.hpp"
+#include "Material/Materials.hpp"
 #include "Material/MacroXs.hpp"
 #include "Transport/Particle.hpp"
 #include "Transport/Source.hpp"
@@ -132,14 +132,12 @@ int main(int argc, char **argv) {
 	environment.setup();
 
 	/* Setup problem */
-	std::vector<GeometryObject*> geometryDefinitions = parser->getGeometry();
 	std::vector<SourceDefinition*> sourceDefinitions = parser->getSource();
 
 	/* Geometry */
-	Geometry* geometry = new Geometry(geometryDefinitions);
+	Geometry* geometry = environment.getModule<Geometry>();
 	/* Get materials */
-	Medium* materials = environment.getModule<Medium>();
-	geometry->setupMaterials(*materials);
+	Materials* materials = environment.getModule<Materials>();
 	/* Get the source */
 	Source* source = new Source(sourceDefinitions);
 
@@ -290,6 +288,5 @@ int main(int argc, char **argv) {
 	Log::ok() << " Final keff = "<< ave_keff/ (double)(cycles - skip) << Log::endl;
 
 	delete source;
-	delete geometry;
 	delete parser;
 }

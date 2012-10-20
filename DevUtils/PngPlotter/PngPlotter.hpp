@@ -37,7 +37,7 @@
 #include "../../Common/Common.hpp"
 #include "../../Parser/ParserTypes.hpp"
 #include "../../Geometry/Geometry.hpp"
-#include "../../Material/Medium.hpp"
+#include "../../Material/Materials.hpp"
 #include "pngwriter.hpp"
 
 class PngPlotter {

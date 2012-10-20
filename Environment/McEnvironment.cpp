@@ -33,7 +33,8 @@ namespace Helios {
 
 McEnvironment::McEnvironment(Parser* parser) : parser(parser) {
 	/* Register the module factories */
-	registerFactory(new MediumFactory(this));
+	registerFactory(new MaterialsFactory(this));
+	registerFactory(new GeometryFactory(this));
 }
 
 void McEnvironment::parseFile(const std::string& filename) {
@@ -62,12 +63,18 @@ McEnvironment::~McEnvironment() {
 }
 
 void McEnvironment::setup() {
-	/* First, we need to setup the materials (i.e. medium) */
-	setupModule<Medium>();
+	/* First, we need to setup the materials (i.e. materials) */
+	setupModule<Materials>();
+
+	/* Once materials are setup, we need to setup the geometry (so cells can grab materials from the environment)*/
+	setupModule<Geometry>();
 
 	/* Clean all definitions */
-	for(map<string,vector<McObject*> >::iterator it = object_map.begin() ; it != object_map.end() ; ++it)
+	for(map<string,vector<McObject*> >::iterator it = object_map.begin() ; it != object_map.end() ; ++it) {
 		purgePointers((*it).second);
+	}
+	/* Clear map */
+	object_map.clear();
 }
 
 } /* namespace Helios */

@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TESTCOMMON_HPP_
 
 #include "../../Common/Common.hpp"
+#include "../../Environment/McEnvironment.hpp"
 
 class InputPath {
 	static InputPath inputpath;

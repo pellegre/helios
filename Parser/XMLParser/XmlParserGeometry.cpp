@@ -147,11 +147,11 @@ void XmlParser::geoNode(TiXmlNode* pParent) {
 		if (t == TiXmlNode::TINYXML_ELEMENT) {
 			string element_value(pChild->Value());
 			if (element_value == "surface")
-				geometricDefinition.push_back(surfaceAttrib(pChild->ToElement()));
+				objects.push_back(surfaceAttrib(pChild->ToElement()));
 			else if (element_value == "cell")
-				geometricDefinition.push_back(cellAttrib(pChild->ToElement()));
+				objects.push_back(cellAttrib(pChild->ToElement()));
 			else if (element_value == "lattice")
-				geometricDefinition.push_back(latticeAttrib(pChild->ToElement()));
+				objects.push_back(latticeAttrib(pChild->ToElement()));
 			else {
 				vector<string> keywords;
 				keywords.push_back(element_value);

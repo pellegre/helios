@@ -52,20 +52,25 @@ protected:
 		srand(time(NULL));
 		/* Parser (XML for now) */
 		parser = new Helios::XmlParser;
-		/* Parse the file */
-		parser->parseFile(InputPath::access().getPath() + "/GeometryTest/" + filename);
-		/* Geometry */
-		std::vector<Helios::GeometryObject*> geometryDefinitions = parser->getGeometry();
-		geometry = new Helios::Geometry(geometryDefinitions);
+		/* Environment */
+		environment = new Helios::McEnvironment(parser);
+		/* Parse files, to get the information to create the environment */
+		environment->parseFile(InputPath::access().getPath() + "/GeometryTest/" + filename);
+		/* Setup the problem */
+		environment->setup();
+		/* Get geometry */
+		geometry = environment->getModule<Helios::Geometry>();
 	}
 
 	void TearDown() {
-		delete geometry;
 		delete parser;
+		delete environment;
 	}
 
 	/* Name of the file */
 	std::string filename;
+	/* Environment */
+	Helios::McEnvironment* environment;
 	/* Geometry */
 	Helios::Geometry* geometry;
 	/* Parser*/

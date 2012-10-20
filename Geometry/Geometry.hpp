@@ -37,16 +37,20 @@
 #include "Universe.hpp"
 #include "GeometricFeature.hpp"
 #include "GeometryObject.hpp"
-#include "../Material/Medium.hpp"
+#include "../Material/Materials.hpp"
 #include "../Common/Common.hpp"
 
 namespace Helios {
 
-	class Geometry {
+	class Geometry: public McModule {
 
 	public:
 
-		Geometry(std::vector<GeometryObject*>& definitions);
+		/* Name of this module */
+		static std::string name() {return "geometry";}
+
+		/* Constructor */
+		Geometry(const std::vector<McObject*>& definitions, const Materials* materials = 0);
 
 		/* Exception */
 		class GeometryError : public std::exception {
@@ -60,16 +64,6 @@ namespace Helios {
 			}
 			~GeometryError() throw() {/* */};
 		};
-
-		/* ---- Material information */
-
-		/*
-		 * This function connect each material on the container with the corresponding cell.
-		 * The material ID for each cell was specified earlier on the constructor of the
-		 * geometry. If some cell was defined with an inexistent material ID, this method will
-		 * thrown a geometric error notifying that.
-		 */
-		void setupMaterials(const Medium& materialContainer);
 
 		/* ---- Get Cell information */
 
@@ -136,6 +130,16 @@ namespace Helios {
 		/* Container of universes */
 		std::vector<Universe*> universes;
 
+		/* ---- Material information */
+
+		/*
+		 * This function connect each material on the container with the corresponding cell.
+		 * The material ID for each cell was specified earlier on the constructor of the
+		 * geometry. If some cell was defined with an inexistent material ID, this method will
+		 * thrown a geometric error notifying that.
+		 */
+		void setupMaterials(const Materials& materialContainer);
+
 		/* ----- Map surfaces */
 
 		/* This map an internal ID with the full path of a surface */
@@ -161,21 +165,8 @@ namespace Helios {
 		Geometry(const Geometry& geo);
 		Geometry& operator= (const Geometry& other);
 
-		/* ---- Geometry setup */
-
-		/* This is the interface to setup the geometry of the problem */
-		void setupGeometry(std::vector<GeometryObject*>& definitions);
-
-		/*
-		 * This is the interface to setup the geometry of the problem, when all definitions
-		 * are dispatched to the corresponding type
-		 */
-		void setupGeometry(std::vector<SurfaceObject*>& surDefinitions,
-				           std::vector<CellObject*>& cellDefinitions,
-				           std::vector<FeatureObject*>& featureDefinitions);
-
 		/* Add cell */
-		Cell* addCell(const CellObject* cellDefinition, const std::map<SurfaceId,Surface*>& user_surfaces);
+		Cell* addCell(const CellObject* cellObject, const std::map<SurfaceId,Surface*>& user_surfaces);
 		/* Add recursively all universe that are nested */
 		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<CellObject*> >& u_cells,
 				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation(),
@@ -184,6 +175,18 @@ namespace Helios {
 		/* Add a surface to the geometry, prior to check duplicated ones. */
 		Surface* addSurface(const Surface* surface, const Transformation& trans,const std::vector<Cell::SenseSurface>& parent_surfaces,
 				            const std::string& parent_id, const std::string& surf_id);
+	};
+
+	class McEnvironment;
+
+	/* Material Factory */
+	class GeometryFactory : public ModuleFactory {
+	public:
+		/* Prevent construction or copy */
+		GeometryFactory(McEnvironment* environment) : ModuleFactory(Geometry::name(),environment) {/* */};
+		/* Create a new material */
+		McModule* create(const std::vector<McObject*>& objects) const;
+		virtual ~GeometryFactory() {/* */}
 	};
 
 } /* namespace Helios */

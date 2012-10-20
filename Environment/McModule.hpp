@@ -58,7 +58,7 @@ namespace Helios {
 
 	/*
 	 * This class represents a component on the program that deal with families of related or dependent
-	 * objects. For example, the Geometry class, the Medium class, and so on.
+	 * objects. For example, the Geometry class, the Materials class, and so on.
 	 */
 	class McModule {
 		/* Module name */
@@ -77,7 +77,7 @@ namespace Helios {
 		/* Pointer to the parent environment */
 		McEnvironment* environment;
 	protected:
-		McEnvironment* getEnvironment() {return environment;}
+		McEnvironment* getEnvironment() const {return environment;}
 	public:
 		ModuleFactory(const std::string& name, McEnvironment* environment) : name(name), environment(environment) {/* */}
 		/* Create an instance of an object from a group of objects definition */

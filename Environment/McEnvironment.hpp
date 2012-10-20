@@ -41,8 +41,11 @@
 /* Parser class */
 #include "../Parser/Parser.hpp"
 
-/* Medium */
-#include "../Material/Medium.hpp"
+/* Materials */
+#include "../Material/Materials.hpp"
+
+/* Geometry */
+#include "../Geometry/Geometry.hpp"
 
 namespace Helios {
 
@@ -128,7 +131,13 @@ namespace Helios {
 		std::map<std::string,ModuleFactory*>::const_iterator it = factory_map.find(module);
 		/* Return module */
 		if(it != factory_map.end()) {
-			std::vector<McObject*> definitions = object_map[module];
+			/* There is a factory, but we should check if there are definitions loaded on the system */
+			std::map<std::string,std::vector<McObject*> >::iterator itObject = object_map.find(module);
+			if(itObject == object_map.end())
+				/* No definition, cannot setup */
+				return;
+			/* Get definitions and create module */
+			std::vector<McObject*> definitions = (*itObject).second;
 			Module* mod = dynamic_cast<Module*>(it->second->create(definitions));
 			/* Update the map of modules */
 			module_map[module] = mod;

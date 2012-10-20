@@ -41,7 +41,7 @@ namespace Helios {
 		MaterialId matid;
 	public:
 		/* Different type of geometric entities */
-		MaterialObject(const std::string& type, const MaterialId& matid) : McObject("medium",type), matid(matid) {/* */};
+		MaterialObject(const std::string& type, const MaterialId& matid) : McObject("materials",type), matid(matid) {/* */};
 		MaterialId getMatid() const {
 			return matid;
 		}

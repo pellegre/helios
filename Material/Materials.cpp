@@ -25,14 +25,14 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Medium.hpp"
+#include "Materials.hpp"
 #include "MacroXs.hpp"
 
 using namespace std;
 
 namespace Helios {
 
-Medium::Medium(const vector<McObject*>& matDefinitions) : McModule(name()) {
+Materials::Materials(const vector<McObject*>& matDefinitions) : McModule(name()) {
 	/* Check number of definitions */
 	if(matDefinitions.size() == 0)
 		throw GeneralError("No information available for materials object");
@@ -53,7 +53,7 @@ Medium::Medium(const vector<McObject*>& matDefinitions) : McModule(name()) {
 		objects.push_back(newObject);
 	}
 
-	/* Detect the type of materials on the medium. We can't have a mix of materials on a problem */
+	/* Detect the type of materials on the materials. We can't have a mix of materials on a problem */
 	if(name == MacroXs::name())
 		/* Macroscopic cross section factory */
 		factory = new MacroXsFactory;
@@ -76,14 +76,14 @@ Medium::Medium(const vector<McObject*>& matDefinitions) : McModule(name()) {
 	}
 }
 
-void Medium::printMaterials(std::ostream& out) const {
+void Materials::printMaterials(std::ostream& out) const {
 	vector<Material*>::const_iterator it_mat = materials.begin();
 	for(; it_mat != materials.end() ; it_mat++) {
 		out << *(*it_mat) << endl;
 	}
 }
 
-Medium::~Medium() {
+Materials::~Materials() {
 	/* Delete materials */
 	purgePointers(materials);
 	/* Delete factory */

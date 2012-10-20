@@ -98,7 +98,7 @@ set(MCFILES Common/Common.cpp
             Geometry/Surfaces/CylinderOnAxis.cpp    
             Geometry/Surfaces/CylinderOnAxisOrigin.cpp
             Material/Material.cpp
-            Material/Medium.cpp
+            Material/Materials.cpp
             Material/MacroXs.cpp                                                        
             Parser/Parser.cpp
             Parser/XMLParser/tinystr.cpp

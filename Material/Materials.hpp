@@ -25,8 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MEDIUM_HPP_
-#define MEDIUM_HPP_
+#ifndef MATERIALS_HPP_
+#define MATERIALS_HPP_
 
 #include <map>
 #include <vector>
@@ -41,7 +41,7 @@ namespace Helios {
 	 * The main function is to collect all the materials in the problem and provide
 	 * a centralized place to look for them.
 	 */
-	class Medium : public McModule {
+	class Materials : public McModule {
 		/* Material Factory */
 		MaterialFactory* factory;
 
@@ -54,20 +54,20 @@ namespace Helios {
 		std::map<MaterialId, InternalMaterialId> material_map;
 
 		/* Prevent copy */
-		Medium(const Medium& geo);
-		Medium& operator= (const Medium& other);
+		Materials(const Materials& geo);
+		Materials& operator= (const Materials& other);
 
 	public:
 		/* ---- Module stuff */
 
 		/* Name of this module */
-		static std::string name() {return "medium"; }
+		static std::string name() {return "materials"; }
 
 		/* Get object */
 		template<class Object>
 		std::vector<Object*> getObject(const UserId& id) const;
 
-		Medium(const std::vector<McObject*>& matDefinitions);
+		Materials(const std::vector<McObject*>& matDefinitions);
 
 		/* ---- Get information */
 
@@ -100,11 +100,11 @@ namespace Helios {
 		/* Print a list of materials on the container */
 		void printMaterials(std::ostream& out) const;
 
-		virtual ~Medium();
+		virtual ~Materials();
 	};
 
 	template<class Object>
-	std::vector<Object*> Medium::getObject(const UserId& id) const {
+	std::vector<Object*> Materials::getObject(const UserId& id) const {
 		/* Check if we are dealing with this kind of material */
 		if(Object::name() != material_type)
 			throw(MaterialError(id,"Material type *" + Object::name() + "* is not loaded into the system"));
@@ -124,16 +124,16 @@ namespace Helios {
 	class McEnvironment;
 
 	/* Material Factory */
-	class MediumFactory : public ModuleFactory {
+	class MaterialsFactory : public ModuleFactory {
 	public:
 		/* Prevent construction or copy */
-		MediumFactory(McEnvironment* environment) : ModuleFactory(Medium::name(),environment) {/* */};
+		MaterialsFactory(McEnvironment* environment) : ModuleFactory(Materials::name(),environment) {/* */};
 		/* Create a new material */
 		McModule* create(const std::vector<McObject*>& objects) const {
-			return new Medium(objects);
+			return new Materials(objects);
 		}
-		virtual ~MediumFactory() {/* */}
+		virtual ~MaterialsFactory() {/* */}
 	};
 
 } /* namespace Helios */
-#endif /* MEDIUM_HPP_ */
+#endif /* MATERIALS_HPP_ */

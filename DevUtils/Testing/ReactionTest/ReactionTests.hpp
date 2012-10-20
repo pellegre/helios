@@ -131,10 +131,10 @@ protected:
 	HeavyIntUniformSamplerPtrTest() : IntUniformSamplerPtrTest(50000,100,1000000) {/* */}
 	virtual ~HeavyIntUniformSamplerPtrTest() {/* */}
 };
-class MediumIntUniformSamplerPtrTest : public IntUniformSamplerPtrTest {
+class MaterialsIntUniformSamplerPtrTest : public IntUniformSamplerPtrTest {
 protected:
-	MediumIntUniformSamplerPtrTest() : IntUniformSamplerPtrTest(50,100,1000000) {/* */}
-	virtual ~MediumIntUniformSamplerPtrTest() {/* */}
+	MaterialsIntUniformSamplerPtrTest() : IntUniformSamplerPtrTest(50,100,1000000) {/* */}
+	virtual ~MaterialsIntUniformSamplerPtrTest() {/* */}
 };
 class OneIntUniformSamplerPtrTest : public IntUniformSamplerPtrTest {
 protected:
@@ -167,10 +167,10 @@ protected:
 	HeavyIntOddZeroedSamplerPtrTest() : IntOddZeroedSamplerPtrTest(50000,100,1000000) {/* */}
 	virtual ~HeavyIntOddZeroedSamplerPtrTest() {/* */}
 };
-class MediumIntOddZeroedSamplerPtrTest : public IntOddZeroedSamplerPtrTest {
+class MaterialsIntOddZeroedSamplerPtrTest : public IntOddZeroedSamplerPtrTest {
 protected:
-	MediumIntOddZeroedSamplerPtrTest() : IntOddZeroedSamplerPtrTest(50,100,1000000) {/* */}
-	virtual ~MediumIntOddZeroedSamplerPtrTest() {/* */}
+	MaterialsIntOddZeroedSamplerPtrTest() : IntOddZeroedSamplerPtrTest(50,100,1000000) {/* */}
+	virtual ~MaterialsIntOddZeroedSamplerPtrTest() {/* */}
 };
 class OneIntOddZeroedSamplerPtrTest : public IntOddZeroedSamplerPtrTest {
 protected:
@@ -179,10 +179,10 @@ protected:
 };
 
 TEST_F(HeavyIntUniformSamplerPtrTest, SamplingIntegers) {checkUniformSamples();}
-TEST_F(MediumIntUniformSamplerPtrTest, SamplingIntegers) {checkUniformSamples();}
+TEST_F(MaterialsIntUniformSamplerPtrTest, SamplingIntegers) {checkUniformSamples();}
 TEST_F(OneIntUniformSamplerPtrTest, SamplingIntegers) {checkUniformSamples();}
 TEST_F(HeavyIntOddZeroedSamplerPtrTest, SamplingIntegers) {checkZeroedSamples();}
-TEST_F(MediumIntOddZeroedSamplerPtrTest, SamplingIntegers) {checkZeroedSamples();}
+TEST_F(MaterialsIntOddZeroedSamplerPtrTest, SamplingIntegers) {checkZeroedSamples();}
 TEST_F(OneIntOddZeroedSamplerPtrTest, SamplingIntegers) {checkZeroedSamples();}
 
 template<class TypeReaction>
@@ -232,10 +232,10 @@ protected:
 	HeavyIntUniformSamplerCpyTest() : IntUniformSamplerCpyTest(50000,100,1000000) {/* */}
 	virtual ~HeavyIntUniformSamplerCpyTest() {/* */}
 };
-class MediumIntUniformSamplerCpyTest : public IntUniformSamplerCpyTest {
+class MaterialsIntUniformSamplerCpyTest : public IntUniformSamplerCpyTest {
 protected:
-	MediumIntUniformSamplerCpyTest() : IntUniformSamplerCpyTest(50,100,1000000) {/* */}
-	virtual ~MediumIntUniformSamplerCpyTest() {/* */}
+	MaterialsIntUniformSamplerCpyTest() : IntUniformSamplerCpyTest(50,100,1000000) {/* */}
+	virtual ~MaterialsIntUniformSamplerCpyTest() {/* */}
 };
 class OneIntUniformSamplerCpyTest : public IntUniformSamplerCpyTest {
 protected:
@@ -268,10 +268,10 @@ protected:
 	HeavyIntOddZeroedSamplerCpyTest() : IntOddZeroedSamplerCpyTest(50000,100,1000000) {/* */}
 	virtual ~HeavyIntOddZeroedSamplerCpyTest() {/* */}
 };
-class MediumIntOddZeroedSamplerCpyTest : public IntOddZeroedSamplerCpyTest {
+class MaterialsIntOddZeroedSamplerCpyTest : public IntOddZeroedSamplerCpyTest {
 protected:
-	MediumIntOddZeroedSamplerCpyTest() : IntOddZeroedSamplerCpyTest(50,100,1000000) {/* */}
-	virtual ~MediumIntOddZeroedSamplerCpyTest() {/* */}
+	MaterialsIntOddZeroedSamplerCpyTest() : IntOddZeroedSamplerCpyTest(50,100,1000000) {/* */}
+	virtual ~MaterialsIntOddZeroedSamplerCpyTest() {/* */}
 };
 class OneIntOddZeroedSamplerCpyTest : public IntOddZeroedSamplerCpyTest {
 protected:
@@ -280,10 +280,10 @@ protected:
 };
 
 TEST_F(HeavyIntUniformSamplerCpyTest, SamplingIntegers) {checkUniformSamples();}
-TEST_F(MediumIntUniformSamplerCpyTest, SamplingIntegers) {checkUniformSamples();}
+TEST_F(MaterialsIntUniformSamplerCpyTest, SamplingIntegers) {checkUniformSamples();}
 TEST_F(OneIntUniformSamplerCpyTest, SamplingIntegers) {checkUniformSamples();}
 TEST_F(HeavyIntOddZeroedSamplerCpyTest, SamplingIntegers) {checkZeroedSamples();}
-TEST_F(MediumIntOddZeroedSamplerCpyTest, SamplingIntegers) {checkZeroedSamples();}
+TEST_F(MaterialsIntOddZeroedSamplerCpyTest, SamplingIntegers) {checkZeroedSamples();}
 TEST_F(OneIntOddZeroedSamplerCpyTest, SamplingIntegers) {checkZeroedSamples();}
 
 #endif /* REACTIONTESTS_HPP_ */
