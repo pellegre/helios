@@ -41,6 +41,7 @@ namespace Helios {
 	class Universe;
 	class Surface;
 	class Geometry;
+	class CellObject;
 
 	class Transformation {
 
@@ -78,60 +79,7 @@ namespace Helios {
 		/* Hold extra information about the cell */
 		enum CellInfo {
 			NONE     = 0, /* No special cell attributes */
-			DEADCELL = 2  /* Particles should be killed when entering us */
-		};
-
-		class Definition : public GeometryObject {
-			CellId userCellId;
-			Cell::CellInfo flags;
-			UniverseId universe;
-			UniverseId fill;
-			MaterialId matid;
-			Transformation transformation;
-
-			/* Handling surfaces */
-			std::vector<SurfaceId> surfacesIds;   /* IDs of the surfaces */
-			std::vector<SenseSurface> surfacesPtrs; /* Pair of sense and pointer to a set of constructed surfaces */
-		public:
-
-			Definition() : GeometryObject(Cell::name()) {/* */}
-			Definition(const CellId& userCellId, const std::vector<SurfaceId>& surfacesIds, const Cell::CellInfo flags,
-					   const UniverseId& universe, const UniverseId& fill,const MaterialId& matid, const Transformation& transformation) :
-					   GeometryObject(Cell::name()), userCellId(userCellId), surfacesIds(surfacesIds), flags(flags),
-				       universe(universe), fill(fill), matid(matid), transformation(transformation) {/* */}
-			Cell::CellInfo getFlags() const {
-				return flags;
-			}
-			CellId getUserCellId() const {
-				return userCellId;
-			}
-			UniverseId getUniverse() const {
-				return universe;
-			}
-			UniverseId getFill() const {
-				return fill;
-			}
-			MaterialId getMatId() const {
-				return matid;
-			}
-			Transformation getTransformation() const {
-				return transformation;
-			}
-
-			/* Setting surfaces */
-			void setSenseSurface(const std::vector<SenseSurface>& ptrs) {
-				surfacesPtrs = ptrs;
-			}
-			std::vector<SenseSurface> getSenseSurface() const {
-				return surfacesPtrs;
-			}
-
-			/* Getting surfaces */
-			std::vector<SurfaceId> getSurfaceIds() const {
-				return surfacesIds;
-			}
-
-			~Definition() {/* */}
+			DEADCELL = 1  /* Particles should be killed when entering us */
 		};
 
 		/* Exception */
@@ -193,7 +141,7 @@ namespace Helios {
 
 	protected:
 
-		Cell(const Definition* definition);
+		Cell(const CellObject* definition);
 		/* Prevent copy */
 		Cell(const Cell& cell);
 		Cell& operator= (const Cell& other);
@@ -216,26 +164,46 @@ namespace Helios {
 
 	};
 
+	class CellObject : public GeometryObject {
+		CellId userCellId;
+		Cell::CellInfo flags;
+		UniverseId universe;
+		UniverseId fill;
+		MaterialId matId;
+		Transformation transformation;
+
+		/* Handling surfaces */
+		std::vector<SurfaceId> surfacesIds;   /* IDs of the surfaces */
+		std::vector<Cell::SenseSurface> surfacesPtrs; /* Pair of sense and pointer to a set of constructed surfaces */
+	public:
+
+		CellObject() : GeometryObject(Cell::name()) {/* */}
+		CellObject(const CellId& userCellId, const std::vector<SurfaceId>& surfacesIds, const Cell::CellInfo flags,
+				   const UniverseId& universe, const UniverseId& fill,const MaterialId& matId, const Transformation& transformation) :
+				   GeometryObject(Cell::name()), userCellId(userCellId), surfacesIds(surfacesIds), flags(flags),
+			       universe(universe), fill(fill), matId(matId), transformation(transformation) {/* */}
+		Cell::CellInfo getFlags() const {return flags;}
+		CellId getUserCellId() const {return userCellId;}
+		UniverseId getUniverse() const {return universe;}
+		UniverseId getFill() const {return fill;}
+		MaterialId getMatId() const {return matId;}
+		Transformation getTransformation() const {return transformation;}
+		/* Setting surfaces */
+		void setSenseSurface(const std::vector<Cell::SenseSurface>& ptrs) {surfacesPtrs = ptrs;}
+		std::vector<Cell::SenseSurface> getSenseSurface() const {return surfacesPtrs;}
+		/* Getting surfaces */
+		std::vector<SurfaceId> getSurfaceIds() const {return surfacesIds;}
+		~CellObject() {/* */}
+	};
+
+
 	class CellFactory {
-
-		/* Static instance of the factory */
-		static CellFactory factory;
-
+	public:
 		/* Prevent construction or copy */
 		CellFactory() {/* */};
-		CellFactory& operator= (const CellFactory& other);
-		CellFactory(const CellFactory&);
-		virtual ~CellFactory() {/* */}
-
-	public:
-		/* Access the factory, reference to the static singleton */
-		static CellFactory& access() {return factory;}
-
 		/* Create a new surface */
-		Cell* createCell(const Cell::Definition* definition) const {
-			return new Cell(definition);
-		}
-
+		Cell* createCell(const CellObject* definition) const;
+		virtual ~CellFactory() {/* */}
 	};
 
 } /* namespace Helios */

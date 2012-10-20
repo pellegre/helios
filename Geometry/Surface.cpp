@@ -34,10 +34,7 @@ using namespace std;
 
 namespace Helios {
 
-/* Static global instance of the singleton */
-SurfaceFactory SurfaceFactory::factory;
-
-Surface::Surface(const Definition* definition) : surfid(definition->getUserSurfaceId()), flag(definition->getFlags()), int_surfid(0) {/* */};
+Surface::Surface(const SurfaceObject* definition) : surfid(definition->getUserSurfaceId()), flag(definition->getFlags()), int_surfid(0) {/* */};
 
 SurfaceFactory::SurfaceFactory() {
 	/* Surface registering */
@@ -52,7 +49,7 @@ SurfaceFactory::SurfaceFactory() {
 	registerSurface(CylinderOnAxis<zaxis>());       /* c/z - radius x y */
 }
 
-Surface* SurfaceFactory::createSurface(const Surface::Definition* definition) const {
+Surface* SurfaceFactory::createSurface(const SurfaceObject* definition) const {
 	map<string,Surface::Constructor>::const_iterator it_type = constructor_table.find(definition->getType());
 	if(it_type != constructor_table.end())
 		return (*it_type).second(definition);

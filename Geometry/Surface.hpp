@@ -41,6 +41,8 @@
 
 namespace Helios {
 
+	class SurfaceObject;
+
 	class Surface {
 
 	public:
@@ -55,34 +57,8 @@ namespace Helios {
 			VACUUM = 2
 		};
 
-		class Definition : public GeometryObject {
-			SurfaceId userSurfaceId;
-			std::string type;
-			std::vector<double> coeffs;
-			Surface::SurfaceInfo flags;
-		public:
-			Definition() : GeometryObject(Surface::name()) {/* */}
-			Definition(const SurfaceId& userSurfaceId, const std::string& type,
-					   const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags = Surface::NONE) :
-					   GeometryObject(Surface::name()), userSurfaceId(userSurfaceId), type(type),
-					   coeffs(coeffs), flags(flags) {/* */}
-			std::vector<double> getCoeffs() const {
-				return coeffs;
-			}
-			std::string getType() const {
-				return type;
-			}
-			SurfaceId getUserSurfaceId() const {
-				return userSurfaceId;
-			}
-			Surface::SurfaceInfo getFlags() const {
-				return flags;
-			}
-			~Definition() {/* */}
-		};
-
 		/* Surface constructor function */
-		typedef Surface(*(*Constructor)(const Definition*));
+		typedef Surface(*(*Constructor)(const SurfaceObject*));
 		/* Friendly factory */
 		friend class SurfaceFactory;
 		/* Friendly printer */
@@ -153,7 +129,7 @@ namespace Helios {
 		/* Constructor from id and flags */
 		Surface(const SurfaceId& surfid, const SurfaceInfo& flag) : surfid(surfid), flag(flag), int_surfid(0) {/* */};
 		/* Create surface from user id */
-		Surface(const Definition* definition);
+		Surface(const SurfaceObject* definition);
 		/* Prevent copy */
 		Surface(const Surface& surface);
 		Surface& operator= (const Surface& other);
@@ -204,29 +180,48 @@ namespace Helios {
 		}
 	}
 
-	class SurfaceFactory {
+	class SurfaceObject : public GeometryObject {
+		SurfaceId userSurfaceId;
+		std::string type;
+		std::vector<double> coeffs;
+		Surface::SurfaceInfo flags;
+	public:
+		SurfaceObject() : GeometryObject(Surface::name()) {/* */}
+		SurfaceObject(const SurfaceId& userSurfaceId, const std::string& type,
+				   const std::vector<double>& coeffs, const Surface::SurfaceInfo& flags = Surface::NONE) :
+				   GeometryObject(Surface::name()), userSurfaceId(userSurfaceId), type(type),
+				   coeffs(coeffs), flags(flags) {/* */}
+		std::vector<double> getCoeffs() const {
+			return coeffs;
+		}
+		std::string getType() const {
+			return type;
+		}
+		SurfaceId getUserSurfaceId() const {
+			return userSurfaceId;
+		}
+		Surface::SurfaceInfo getFlags() const {
+			return flags;
+		}
+		~SurfaceObject() {/* */}
+	};
 
-		/* Static instance of the factory */
-		static SurfaceFactory factory;
+	class SurfaceFactory {
 
 		/* Map of surfaces types and constructors */
 		std::map<std::string, Surface::Constructor> constructor_table;
 
+	public:
 		/* Prevent construction or copy */
 		SurfaceFactory();
-		SurfaceFactory& operator= (const SurfaceFactory& other);
-		SurfaceFactory(const SurfaceFactory&);
-		virtual ~SurfaceFactory() {/* */}
-
-	public:
-		/* Access the factory, reference to the static singleton */
-		static SurfaceFactory& access() {return factory;}
 
 		/* Register a new surface */
 		void registerSurface(const Surface& surface);
 
 		/* Create a new surface */
-		Surface* createSurface(const Surface::Definition* definition) const;
+		Surface* createSurface(const SurfaceObject* definition) const;
+
+		virtual ~SurfaceFactory() {/* */}
 	};
 
 	/* Output surface information */

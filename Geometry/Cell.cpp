@@ -36,12 +36,9 @@ using namespace std;
 
 namespace Helios {
 
-/* Static global instance of the singleton */
-CellFactory CellFactory::factory;
-
 Surface* Transformation::operator()(const Surface* surface) const { return surface->transformate(translation); }
 
-Cell::Cell(const Definition* definition) :
+Cell::Cell(const CellObject* definition) :
 	surfaces(definition->getSenseSurface()),
 	flag(definition->getFlags()),
 	fill(0),
@@ -137,6 +134,10 @@ void Cell::intersect(const Coordinate& position, const Direction& direction, Sur
 		}
 	}
 
+}
+
+Cell* CellFactory::createCell(const CellObject* definition) const {
+	return new Cell(definition);
 }
 
 } /* namespace Helios */

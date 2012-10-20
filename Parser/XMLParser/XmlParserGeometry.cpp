@@ -35,7 +35,7 @@ using namespace std;
 namespace Helios {
 
 /* Parse surface attributes */
-static GeometricFeature::Definition* latticeAttrib(TiXmlElement* pElement) {
+static FeatureObject* latticeAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[5] = {"id","type","dimension","pitch","universes"};
 	static XmlParser::XmlAttributes latAttrib(vector<string>(required, required + 5), vector<string>());
@@ -51,7 +51,7 @@ static GeometricFeature::Definition* latticeAttrib(TiXmlElement* pElement) {
 	vector<double> width = getContainer<double>(mapAttrib["pitch"]);
 	vector<UniverseId> universes = getContainer<UniverseId>(mapAttrib["universes"]);
 	/* Return surface definition */
-	return new Lattice::Definition(id,type,dimension,width,universes);
+	return new LatticeObject(id,type,dimension,width,universes);
 }
 
 /* Initialization of values on the surface flag */
@@ -62,7 +62,7 @@ static map<string,Surface::SurfaceInfo> initSurfaceInfo() {
 	return values_map;
 }
 /* Parse surface attributes */
-static Surface::Definition* surfaceAttrib(TiXmlElement* pElement) {
+static SurfaceObject* surfaceAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[3] = {"id", "type", "coeffs"};
 	static const string optional[1] = {"boundary"};
@@ -80,7 +80,7 @@ static Surface::Definition* surfaceAttrib(TiXmlElement* pElement) {
 	vector<double> coeffs = getContainer<double>(mapAttrib["coeffs"]);
 	Surface::SurfaceInfo flags = sur_flags.getValue(mapAttrib);
 	/* Return surface definition */
-	return new Surface::Definition(id,type,coeffs,flags);
+	return new SurfaceObject(id,type,coeffs,flags);
 }
 
 /* Initialization of values on the surface flag */
@@ -91,7 +91,7 @@ static map<string,Cell::CellInfo> initCellInfo() {
 	return values_map;
 }
 /* Parse cell attributes */
-static Cell::Definition* cellAttrib(TiXmlElement* pElement) {
+static CellObject* cellAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[3] = {"id"};
 	static const string optional[6] = {"material","type","fill","universe","translation","surfaces"};
@@ -136,7 +136,7 @@ static Cell::Definition* cellAttrib(TiXmlElement* pElement) {
 	}
 
 	/* Return surface definition */
-	return new Cell::Definition(id,surfaces,flags,universe,fill,matid,trans);
+	return new CellObject(id,surfaces,flags,universe,fill,matid,trans);
 }
 
 void XmlParser::geoNode(TiXmlNode* pParent) {

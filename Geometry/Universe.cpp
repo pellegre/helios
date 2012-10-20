@@ -32,9 +32,6 @@ using namespace std;
 
 namespace Helios {
 
-/* Static global instance of the singleton */
-UniverseFactory UniverseFactory::factory;
-
 const UniverseId Universe::BASE = "0";
 
 Universe::Universe(const UniverseId& univid, Cell* parent) : univid(univid), parent(parent) {/* */}

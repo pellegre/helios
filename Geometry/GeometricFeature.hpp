@@ -39,6 +39,9 @@
 
 namespace Helios {
 
+	class FeatureObject;
+	class LatticeObject;
+
 	/*
 	 * A geometric feature is a collection of geometry entities that conform a complex
 	 * object. For example, a pin, pin ring or a lattice.
@@ -54,35 +57,15 @@ namespace Helios {
 
 		static std::string name() {return "feature";}
 
-		class Definition : public GeometryObject {
-
-		protected:
-			/* The universe where this feature will be constructed */
-			UniverseId userFeatureId;
-			/* Name of the feature */
-			std::string feature;
-		public:
-			Definition(const std::string& feature, const UniverseId& userFeatureId) :
-				GeometryObject(GeometricFeature::name()), feature(feature), userFeatureId(userFeatureId) {/* */}
-			std::string getFeature() const {
-				return feature;
-			}
-			UniverseId getUserFeatureId() const {
-				return userFeatureId;
-			}
-			virtual ~Definition() {/* */}
-		};
-
-		GeometricFeature(const Definition* definition) :
-						feature(definition->getFeature()) {/* */};
+		GeometricFeature(const FeatureObject* definition);
 
 		/*
 		 * Create the the feature and add new cells/surfaces into the containers.
 		 * Returns the number of the new range of max user IDs.
 		 */
-		virtual void createFeature(const Definition* featureDefinition,
-								   std::vector<Surface::Definition*>& surfaceDefinition,
-								   std::vector<Cell::Definition*>& cellDefinition) const = 0;
+		virtual void createFeature(const FeatureObject* featureDefinition,
+								   std::vector<SurfaceObject*>& surfaceDefinition,
+								   std::vector<CellObject*>& cellDefinition) const = 0;
 
 		virtual ~GeometricFeature() {/* */};
 	};
@@ -92,47 +75,16 @@ namespace Helios {
 
 	public:
 
-		class Definition : public GeometricFeature::Definition {
-			std::string type;
-			std::vector<unsigned int> dimension;
-			std::vector<double> pitch;
-			std::vector<UniverseId> universes;
-		public:
-
-			Definition(const UniverseId& userLatticeId, const std::string& type, const std::vector<unsigned int>& dimension,
-					   const std::vector<double>& pitch, const std::vector<UniverseId>& universes) :
-					   GeometricFeature::Definition("lattice",userLatticeId), type(type), dimension(dimension),
-					   pitch(pitch), universes(universes) {/* */}
-
-			std::vector<unsigned int> getDimension() const {
-				return dimension;
-			}
-
-			std::string getType() const {
-				return type;
-			}
-
-			std::vector<UniverseId> getUniverses() const {
-				return universes;
-			}
-
-			std::vector<double> getWidth() const {
-				return pitch;
-			}
-
-			~Definition() {/* */}
-		};
-
-		typedef void(*Constructor)(const Lattice::Definition& new_lat,
-								   std::vector<Surface::Definition*>& sur_def,
-								   std::vector<Cell::Definition*>& cell_def);
+		typedef void(*Constructor)(const LatticeObject& new_lat,
+								   std::vector<SurfaceObject*>& sur_def,
+								   std::vector<CellObject*>& cell_def);
 
 		/* Constructor with current surfaces and cells on the geometry */
-		Lattice(const GeometricFeature::Definition* definition);
+		Lattice(const FeatureObject* definition);
 
-		void createFeature(const GeometricFeature::Definition* featureDefinition,
-						   std::vector<Surface::Definition*>& surfaceDefinition,
-						   std::vector<Cell::Definition*>& cellDefinition) const;
+		void createFeature(const FeatureObject* featureDefinition,
+						   std::vector<SurfaceObject*>& surfaceDefinition,
+						   std::vector<CellObject*>& cellDefinition) const;
 
 		virtual ~Lattice() {/* */}
 
@@ -148,28 +100,65 @@ namespace Helios {
 
 	};
 
+	class FeatureObject : public GeometryObject {
+
+	protected:
+		/* The universe where this feature will be constructed */
+		UniverseId userFeatureId;
+		/* Name of the feature */
+		std::string feature;
+	public:
+		FeatureObject(const std::string& feature, const UniverseId& userFeatureId) :
+			GeometryObject(GeometricFeature::name()), feature(feature), userFeatureId(userFeatureId) {/* */}
+		std::string getFeature() const {
+			return feature;
+		}
+		UniverseId getUserFeatureId() const {
+			return userFeatureId;
+		}
+		virtual ~FeatureObject() {/* */}
+	};
+
+	class LatticeObject : public FeatureObject {
+		std::string type;
+		std::vector<unsigned int> dimension;
+		std::vector<double> pitch;
+		std::vector<UniverseId> universes;
+	public:
+
+		LatticeObject(const UniverseId& userLatticeId, const std::string& type, const std::vector<unsigned int>& dimension,
+				   const std::vector<double>& pitch, const std::vector<UniverseId>& universes) :
+				   FeatureObject("lattice",userLatticeId), type(type), dimension(dimension),
+				   pitch(pitch), universes(universes) {/* */}
+
+		std::vector<unsigned int> getDimension() const {
+			return dimension;
+		}
+
+		std::string getType() const {
+			return type;
+		}
+
+		std::vector<UniverseId> getUniverses() const {
+			return universes;
+		}
+
+		std::vector<double> getWidth() const {
+			return pitch;
+		}
+
+		~LatticeObject() {/* */}
+	};
+
 	class FeatureFactory {
 
-		/* Static instance of the factory */
-		static FeatureFactory factory;
+	public:
 
 		/* Prevent construction or copy */
 		FeatureFactory() {/* */};
-		FeatureFactory& operator= (const FeatureFactory& other);
-		FeatureFactory(const FeatureFactory&);
-		virtual ~FeatureFactory() {/* */}
-
-	public:
-		/* Access the factory, reference to the static singleton */
-		static FeatureFactory& access() {return factory;}
-
 		/* Create a new surface */
-		GeometricFeature* createFeature(const GeometricFeature::Definition* definition) const {
-			if(definition->getFeature() == "lattice")
-				return new Lattice(definition);
-			return 0;
-		}
-
+		GeometricFeature* createFeature(const FeatureObject* definition) const;
+		virtual ~FeatureFactory() {/* */}
 	};
 } /* namespace Helios */
 #endif /* GEOMETRICFEATURE_HPP_ */

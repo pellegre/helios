@@ -177,11 +177,11 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 	return new_surface;
 }
 
-Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<Cell::Definition*> >& u_cells,
+Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<CellObject*> >& u_cells,
 		                        const map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans,
 		                        const vector<Cell::SenseSurface>& parent_surfaces, const std::string& parent_id) {
 	/* Create universe */
-	Universe* new_universe = UniverseFactory::access().createUniverse(uni_def);
+	Universe* new_universe = new Universe(uni_def);
 	/* Set internal / unique index */
 	new_universe->setInternalId(universes.size());
 	/* Push the universe into the container */
@@ -189,14 +189,14 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	/* Update universe map */
 	universe_map[new_universe->getUserId()].push_back(new_universe->getInternalId());
 
-	map<UniverseId,vector<Cell::Definition*> >::const_iterator it_uni_cells = u_cells.find(uni_def);
+	map<UniverseId,vector<CellObject*> >::const_iterator it_uni_cells = u_cells.find(uni_def);
 	if(it_uni_cells == u_cells.end()) return 0;
 
 	/* Get the cell of this level */
-	vector<Cell::Definition*> cell_def = (*it_uni_cells).second;
+	vector<CellObject*> cell_def = (*it_uni_cells).second;
 
 	/* Add each cell of this universe */
-	vector<Cell::Definition*>::iterator it_cell = cell_def.begin();
+	vector<CellObject*>::iterator it_cell = cell_def.begin();
     map<SurfaceId,Surface*> temp_sur_map;
 
     /* Separator to get user ID */
@@ -246,7 +246,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    (*it_cell)->setSenseSurface(boundingSurfaces);
 
 	    /* Now we can construct the cell */
-	    Cell* new_cell = CellFactory::access().createCell((*it_cell));
+	    Cell* new_cell = cell_factory.createCell((*it_cell));
 	    /* Get new cell ID based on the parent cell */
 	    CellId cell_id;
 	    if(parent_id.size() == 0) cell_id = (*it_cell)->getUserCellId();
@@ -295,9 +295,9 @@ static void pushDefinition(GeometryObject* geo, std::vector<T*>& definition) {
 }
 
 void Geometry::setupGeometry(std::vector<GeometryObject*>& definitions) {
-	std::vector<Surface::Definition*> surDefinitions;
-	std::vector<Cell::Definition*> cellDefinitions;
-	std::vector<GeometricFeature::Definition*> featureDefinitions;
+	std::vector<SurfaceObject*> surDefinitions;
+	std::vector<CellObject*> cellDefinitions;
+	std::vector<FeatureObject*> featureDefinitions;
 	/* Dispatch each definition to the corresponding container */
 	vector<GeometryObject*>::const_iterator it_def = definitions.begin();
 
@@ -338,16 +338,16 @@ void Geometry::setupMaterials(const Medium& materialContainer) {
 	}
 }
 
-void Geometry::setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
-                             std::vector<Cell::Definition*>& cellDefinitions,
-                             std::vector<GeometricFeature::Definition*>& featureDefinitions) {
+void Geometry::setupGeometry(std::vector<SurfaceObject*>& surDefinitions,
+                             std::vector<CellObject*>& cellDefinitions,
+                             std::vector<FeatureObject*>& featureDefinitions) {
 
 	/* Create geometric features */
 	if(featureDefinitions.size() != 0) {
 		/* Now lets move on into the lattices */
-		for(vector<GeometricFeature::Definition*>::const_iterator it = featureDefinitions.begin() ; it != featureDefinitions.end() ; ++it) {
+		for(vector<FeatureObject*>::const_iterator it = featureDefinitions.begin() ; it != featureDefinitions.end() ; ++it) {
 			/* Create a lattice factory */
-			GeometricFeature* feature = FeatureFactory::access().createFeature(*it);
+			GeometricFeature* feature = feature_factory.createFeature(*it);
 			feature->createFeature((*it),surDefinitions,cellDefinitions);
 			delete feature;
 		}
@@ -355,7 +355,7 @@ void Geometry::setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
 
 	/* First we add all the surfaces defined by the user. Ultimately, we'll have to clone and transform this ones */
 	map<SurfaceId,Surface*> user_surfaces;
-	vector<Surface::Definition*>::const_iterator it_sur = surDefinitions.begin();
+	vector<SurfaceObject*>::const_iterator it_sur = surDefinitions.begin();
 	for(; it_sur != surDefinitions.end() ; ++it_sur) {
 		/* Surface information */
 		SurfaceId userSurfaceId((*it_sur)->getUserSurfaceId());
@@ -365,14 +365,14 @@ void Geometry::setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
 			throw Surface::BadSurfaceCreation(userSurfaceId,"Duplicated id");
 
 		/* Create surface */
-		Surface* new_surface = SurfaceFactory::access().createSurface((*it_sur));
+		Surface* new_surface = surface_factory.createSurface((*it_sur));
 		/* Update surface map */
 		user_surfaces[new_surface->getUserId()] = new_surface;
 	}
 
 	/* Check for duplicated cells */
 	set<CellId> user_cell_ids;
-	vector<Cell::Definition*>::const_iterator it_cell = cellDefinitions.begin();
+	vector<CellObject*>::const_iterator it_cell = cellDefinitions.begin();
 	for(; it_cell != cellDefinitions.end() ; ++it_cell) {
 		CellId userCellId = (*it_cell)->getUserCellId();
 		/* Check duplicated IDs */
@@ -387,7 +387,7 @@ void Geometry::setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
 	}
 
 	/* Map cell with universes */
-	map<UniverseId,vector<Cell::Definition*> > u_cells;  /* Universe definition */
+	map<UniverseId,vector<CellObject*> > u_cells;  /* Universe definition */
 	for(it_cell = cellDefinitions.begin() ; it_cell != cellDefinitions.end() ; ++it_cell) {
 		UniverseId universe = (*it_cell)->getUniverse();
 		u_cells[universe].push_back(*it_cell);

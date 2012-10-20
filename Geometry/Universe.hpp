@@ -58,12 +58,16 @@ namespace Helios {
 
 	protected:
 
-		Universe(const UniverseId& univid, Cell* parent = 0);
 		/* Prevent copy */
 		Universe(const Universe& uni);
 		Universe& operator=(const Universe& uni);
 
 	public:
+
+		/* Name of this object */
+		static std::string name() {return "universe";}
+
+		Universe(const UniverseId& univid, Cell* parent = 0);
 
 		/* Constant to reference the base universe */
 		static const UniverseId BASE;
@@ -114,28 +118,6 @@ namespace Helios {
 		void print(std::ostream& out, const Geometry* geometry) const;
 
 		virtual ~Universe() {/* */};
-	};
-
-	class UniverseFactory {
-
-		/* Static instance of the factory */
-		static UniverseFactory factory;
-
-		/* Prevent construction or copy */
-		UniverseFactory() {/* */};
-		UniverseFactory& operator= (const UniverseFactory& other);
-		UniverseFactory(const UniverseFactory&);
-		virtual ~UniverseFactory() {/* */}
-
-	public:
-		/* Access the factory, reference to the static singleton */
-		static UniverseFactory& access() {return factory;}
-
-		/* Create a new surface */
-		Universe* createUniverse(const UniverseId& univid, Cell* parent = 0) const {
-			return new Universe(univid, parent);
-		}
-
 	};
 
 

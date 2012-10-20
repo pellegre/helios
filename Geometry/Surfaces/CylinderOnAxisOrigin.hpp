@@ -38,13 +38,13 @@ namespace Helios {
 	class CylinderOnAxisOrigin: public Helios::Surface {
 
 		/* Static constructor functions */
-		static Surface* xAxisConstructor(const Definition* definition) {
+		static Surface* xAxisConstructor(const SurfaceObject* definition) {
 			return new CylinderOnAxisOrigin<xaxis>(definition);
 		}
-		static Surface* yAxisConstructor(const Definition* definition) {
+		static Surface* yAxisConstructor(const SurfaceObject* definition) {
 			return new CylinderOnAxisOrigin<yaxis>(definition);
 		}
-		static Surface* zAxisConstructor(const Definition* definition) {
+		static Surface* zAxisConstructor(const SurfaceObject* definition) {
 			return new CylinderOnAxisOrigin<zaxis>(definition);
 		}
 
@@ -62,7 +62,7 @@ namespace Helios {
 		CylinderOnAxisOrigin(const SurfaceId& surid, const SurfaceInfo& flags, const double& radius)
 					   : Surface(surid,flags), radius(radius) {/* */};
 
-		CylinderOnAxisOrigin(const Definition* definition);
+		CylinderOnAxisOrigin(const SurfaceObject* definition);
 
 		void normal(const Coordinate& point, Direction& vnormal) const;
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
@@ -90,7 +90,7 @@ namespace Helios {
 
 	/* Constructor */
 	template<int axis>
-	CylinderOnAxisOrigin<axis>::CylinderOnAxisOrigin(const Definition* definition)
+	CylinderOnAxisOrigin<axis>::CylinderOnAxisOrigin(const SurfaceObject* definition)
 		: Surface(definition) {
 		/* Check number of parameters */
 		if(definition->getCoeffs().size() == 1) {

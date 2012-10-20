@@ -124,6 +124,11 @@ namespace Helios {
 
 	private:
 
+		/* Factories */
+		CellFactory cell_factory;
+		SurfaceFactory surface_factory;
+		FeatureFactory feature_factory;
+
 		/* Container of surfaces defined on the problem */
 		std::vector<Surface*> surfaces;
 		/* Container of cells defined on the problem */
@@ -165,14 +170,14 @@ namespace Helios {
 		 * This is the interface to setup the geometry of the problem, when all definitions
 		 * are dispatched to the corresponding type
 		 */
-		void setupGeometry(std::vector<Surface::Definition*>& surDefinitions,
-				           std::vector<Cell::Definition*>& cellDefinitions,
-				           std::vector<GeometricFeature::Definition*>& featureDefinitions);
+		void setupGeometry(std::vector<SurfaceObject*>& surDefinitions,
+				           std::vector<CellObject*>& cellDefinitions,
+				           std::vector<FeatureObject*>& featureDefinitions);
 
 		/* Add cell */
-		Cell* addCell(const Cell::Definition* cellDefinition, const std::map<SurfaceId,Surface*>& user_surfaces);
+		Cell* addCell(const CellObject* cellDefinition, const std::map<SurfaceId,Surface*>& user_surfaces);
 		/* Add recursively all universe that are nested */
-		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<Cell::Definition*> >& u_cells,
+		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<CellObject*> >& u_cells,
 				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation(),
 				              const std::vector<Cell::SenseSurface>& parent_surfaces = std::vector<Cell::SenseSurface>(),
 				              const std::string& parent_id = "");

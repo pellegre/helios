@@ -36,13 +36,13 @@ namespace Helios {
 	class PlaneNormal: public Helios::Surface {
 
 		/* Static constructor functions */
-		static Surface* xAxisConstructor(const Definition* definition) {
+		static Surface* xAxisConstructor(const SurfaceObject* definition) {
 			return new PlaneNormal<xaxis>(definition);
 		}
-		static Surface* yAxisConstructor(const Definition* definition) {
+		static Surface* yAxisConstructor(const SurfaceObject* definition) {
 			return new PlaneNormal<yaxis>(definition);
 		}
-		static Surface* zAxisConstructor(const Definition* definition) {
+		static Surface* zAxisConstructor(const SurfaceObject* definition) {
 			return new PlaneNormal<zaxis>(definition);
 		}
 
@@ -60,7 +60,7 @@ namespace Helios {
 		PlaneNormal(const SurfaceId& surid, const SurfaceInfo& flags, const double& coordinate)
 					   : Surface(surid,flags), coordinate(coordinate) {/* */};
 
-		PlaneNormal(const Definition* definition);
+		PlaneNormal(const SurfaceObject* definition);
 
 		void normal(const Coordinate& point, Direction& vnormal) const;
 		bool intersect(const Coordinate& pos, const Direction& dir, const bool& sense, double& distance) const;
@@ -89,7 +89,7 @@ namespace Helios {
 
 	/* Constructor */
 	template<int axis>
-	PlaneNormal<axis>::PlaneNormal(const Definition* definition)
+	PlaneNormal<axis>::PlaneNormal(const SurfaceObject* definition)
 		: Surface(definition) {
 		/* Check number of parameters */
 		if(definition->getCoeffs().size() == 1) {
