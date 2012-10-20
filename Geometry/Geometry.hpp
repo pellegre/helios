@@ -130,16 +130,6 @@ namespace Helios {
 		/* Container of universes */
 		std::vector<Universe*> universes;
 
-		/* ---- Material information */
-
-		/*
-		 * This function connect each material on the container with the corresponding cell.
-		 * The material ID for each cell was specified earlier on the constructor of the
-		 * geometry. If some cell was defined with an inexistent material ID, this method will
-		 * thrown a geometric error notifying that.
-		 */
-		void setupMaterials(const Materials& materialContainer);
-
 		/* ----- Map surfaces */
 
 		/* This map an internal ID with the full path of a surface */
@@ -158,23 +148,55 @@ namespace Helios {
 		/* This map the original cell ID with all the internal cells IDs */
 		std::map<CellId, std::vector<InternalCellId> > cell_internal_map;
 
+		/* ----- Map universes */
+
+		/* This map the original universe ID with all the internal universes IDs */
 		std::map<UniverseId, std::vector<InternalUniverseId> > universe_map;
-		std::map<InternalCellId, MaterialId> mat_map;
+
+		/* Map of cell to materials IDs */
+		std::map<InternalCellId, MaterialId> material_map;
 
 		/* Prevent copy */
 		Geometry(const Geometry& geo);
 		Geometry& operator= (const Geometry& other);
 
+		/* Parent Cell class (auxiliary, to encapsulate information about the parent cell of an universe) */
+		class ParentCell {
+			Transformation transformation;
+			std::vector<Cell::SenseSurface> parent_surfaces;
+			std::string id;
+		public:
+			ParentCell() : transformation(), parent_surfaces(), id() {/* */}
+			ParentCell(const Transformation& transformation, const std::vector<Cell::SenseSurface>& parent_surfaces, const std::string& id) :
+				transformation(transformation), parent_surfaces(parent_surfaces), id(id) {/* */}
+			const std::string& getId() const {return id;}
+			void setId(std::string id) {this->id = id;}
+			const std::vector<Cell::SenseSurface>& getSurfaces() const {return parent_surfaces;}
+			void setSurfaces(std::vector<Cell::SenseSurface> surfaces) {this->parent_surfaces = surfaces;}
+			const Transformation& getTransformation() const {return transformation;}
+			void setTransformation(Transformation transformation) {this->transformation = transformation;}
+			~ParentCell() {/* */}
+		};
+
 		/* Add cell */
 		Cell* addCell(const CellObject* cellObject, const std::map<SurfaceId,Surface*>& user_surfaces);
+
 		/* Add recursively all universe that are nested */
 		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<CellObject*> >& u_cells,
-				              const std::map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans = Transformation(),
-				              const std::vector<Cell::SenseSurface>& parent_surfaces = std::vector<Cell::SenseSurface>(),
-				              const std::string& parent_id = "");
+				              const std::map<SurfaceId,Surface*>& user_surfaces, const ParentCell& parent_cell = ParentCell());
+
 		/* Add a surface to the geometry, prior to check duplicated ones. */
-		Surface* addSurface(const Surface* surface, const Transformation& trans,const std::vector<Cell::SenseSurface>& parent_surfaces,
-				            const std::string& parent_id, const std::string& surf_id);
+		Surface* addSurface(const Surface* surface, const ParentCell& parent_cell, const std::string& surf_id);
+
+		/* ---- Material information */
+
+		/*
+		 * This function connect each material on the container with the corresponding cell.
+		 * The material ID for each cell was specified earlier on the constructor of the
+		 * geometry. If some cell was defined with an inexistent material ID, this method will
+		 * thrown a geometric error notifying that.
+		 */
+		void setupMaterials(const Materials& materials);
 	};
 
 	class McEnvironment;

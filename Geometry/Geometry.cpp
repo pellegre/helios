@@ -252,14 +252,13 @@ SurfaceId Geometry::getUserId(const Surface* surf) const {
 	return *tok.begin();
 }
 
-Surface* Geometry::addSurface(const Surface* surface, const Transformation& trans,const vector<Cell::SenseSurface>& parent_surfaces,
-		                      const std::string& parent_id, const std::string& surf_id) {
+Surface* Geometry::addSurface(const Surface* surface, const ParentCell& parent_cell, const std::string& surf_id) {
 	/* Create the new duplicated surface */
-	Surface* new_surface = trans(surface);
+	Surface* new_surface = parent_cell.getTransformation()(surface);
 
 	/* Check if the surface is not duplicated */
-	vector<Cell::SenseSurface>::const_iterator it_sur = parent_surfaces.begin();
-	for(; it_sur != parent_surfaces.end() ; ++it_sur) {
+	vector<Cell::SenseSurface>::const_iterator it_sur = parent_cell.getSurfaces().begin();
+	for(; it_sur != parent_cell.getSurfaces().end() ; ++it_sur) {
 		if(*new_surface == *((*it_sur).first)) {
 			delete new_surface;
 			return (*it_sur).first;
@@ -270,8 +269,8 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 	new_surface->setInternalId(surfaces.size());
 	/* Update surface map */
     SurfaceId new_surf_id;
-    if(parent_id.size() == 0) new_surf_id = surf_id;
-    else new_surf_id = surf_id + "<" + parent_id;
+    if(parent_cell.getId().size() == 0) new_surf_id = surf_id;
+    else new_surf_id = surf_id + "<" + parent_cell.getId();
 
     /* Update path map */
     surface_path_map[new_surface->getInternalId()] = new_surf_id;
@@ -288,8 +287,8 @@ Surface* Geometry::addSurface(const Surface* surface, const Transformation& tran
 }
 
 Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,vector<CellObject*> >& u_cells,
-		                        const map<SurfaceId,Surface*>& user_surfaces, const Transformation& trans,
-		                        const vector<Cell::SenseSurface>& parent_surfaces, const std::string& parent_id) {
+		                        const map<SurfaceId,Surface*>& user_surfaces, const ParentCell& parent_cell) {
+
 	/* Create universe */
 	Universe* new_universe = new Universe(uni_def);
 	/* Set internal / unique index */
@@ -315,33 +314,33 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	for(; it_cell != cell_def.end() ; ++it_cell) {
 
 		/* Cell information */
-		CellId userCellId((*it_cell)->getUserCellId());
-		vector<SurfaceId> surfacesId((*it_cell)->getSurfaceIds());
+		CellId user_cell_id((*it_cell)->getUserCellId());
+		vector<SurfaceId> surfaces_id((*it_cell)->getSurfaceIds());
 
 		/* Now get the surfaces and put the references inside the cell */
-	    vector<Cell::SenseSurface> boundingSurfaces;
-	    vector<SurfaceId>::const_iterator it = surfacesId.begin();
+	    vector<Cell::SenseSurface> bounding_surfaces;
+	    vector<SurfaceId>::const_iterator it = surfaces_id.begin();
 
-	    for (;it != surfacesId.end(); ++it) {
+	    for (;it != surfaces_id.end(); ++it) {
 	    	/* Get user ID */
 	    	tokenizer<char_separator<char> > tok((*it),sep);
-	    	SurfaceId userSurfaceId(*tok.begin());
+	    	SurfaceId user_surface_id(*tok.begin());
 
 	    	/* Get internal index */
-	    	map<SurfaceId,Surface*>::const_iterator it_sur = user_surfaces.find(userSurfaceId);
+	    	map<SurfaceId,Surface*>::const_iterator it_sur = user_surfaces.find(user_surface_id);
 	    	if(it_sur == user_surfaces.end())
-	    		throw Cell::BadCellCreation(userCellId,"Surface number " + toString(userSurfaceId) + " doesn't exist.");
+	    		throw Cell::BadCellCreation(user_cell_id,"Surface number " + toString(user_surface_id) + " doesn't exist.");
 
 	    	/* New surface for this cell */
 	    	Surface* new_surface = 0;
 
 	    	/* Check for already created surfaces inside this universe */
-	    	map<SurfaceId,Surface*>::const_iterator it_temp_sur = temp_sur_map.find(userSurfaceId);
+	    	map<SurfaceId,Surface*>::const_iterator it_temp_sur = temp_sur_map.find(user_surface_id);
 	    	if(it_temp_sur != temp_sur_map.end())
 	    		/* The surface is created */
 	    		new_surface = (*it_temp_sur).second;
 	    	else {
-	    		new_surface = addSurface((*it_sur).second,trans,parent_surfaces,parent_id,userSurfaceId);
+	    		new_surface = addSurface((*it_sur).second,parent_cell,user_surface_id);
 		    	temp_sur_map[new_surface->getUserId()] = new_surface;
 	    	}
 
@@ -349,18 +348,18 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    	Cell::SenseSurface newSurface(new_surface,getSign(*it));
 
 	    	/* Push it into the container */
-	        boundingSurfaces.push_back(newSurface);
+	        bounding_surfaces.push_back(newSurface);
 	    }
 
 	    /* Push the surfaces with sense into the cell definition */
-	    (*it_cell)->setSenseSurface(boundingSurfaces);
+	    (*it_cell)->setSenseSurface(bounding_surfaces);
 
 	    /* Now we can construct the cell */
 	    Cell* new_cell = cell_factory.createCell((*it_cell));
 	    /* Get new cell ID based on the parent cell */
 	    CellId cell_id;
-	    if(parent_id.size() == 0) cell_id = (*it_cell)->getUserCellId();
-	    else cell_id = (*it_cell)->getUserCellId() + "<" + parent_id;
+	    if(parent_cell.getId().size() == 0) cell_id = (*it_cell)->getUserCellId();
+	    else cell_id = (*it_cell)->getUserCellId() + "<" + parent_cell.getId();
 		/* Set internal / unique index */
 	    new_cell->setInternalId(cells.size());
 
@@ -372,7 +371,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    cell_reverse_map[(*it_cell)->getUserCellId()] = new_cell->getInternalId();
 
 	    /* Update material map */
-	    mat_map[new_cell->getInternalId()] = (*it_cell)->getMatId();
+	    material_map[new_cell->getInternalId()] = (*it_cell)->getMatId();
 	    /* Push the cell into the container */
 	    cells.push_back(new_cell);
 	    /* Link this cell with the new universe */
@@ -381,12 +380,23 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    /* Check if this cell is filled by another universe */
 	    UniverseId fill_universe_id = (*it_cell)->getFill();
 	    if(fill_universe_id != Universe::BASE) {
+
+	    	/* Get parent surfaces */
+	    	std::vector<Cell::SenseSurface> parent_surfaces = parent_cell.getSurfaces();
+
+	    	/* Push parent surfaces into bounding surfaces */
 	    	vector<Cell::SenseSurface>::const_iterator it_psur = parent_surfaces.begin();
 	    	for(; it_psur != parent_surfaces.end() ; ++it_psur)
-	    		boundingSurfaces.push_back((*it_psur));
-	    	/* Create recursively the other universes and also propagate the transformation */
-	    	Universe* fill_universe = addUniverse(fill_universe_id,u_cells,user_surfaces,
-	    			                  trans + (*it_cell)->getTransformation(),boundingSurfaces,cell_id);
+	    		bounding_surfaces.push_back((*it_psur));
+
+	    	/* Propagate the transformation... */
+	    	Transformation new_transformation = parent_cell.getTransformation() + (*it_cell)->getTransformation();
+	    	/* ... and create a new Parent Cell */
+	    	ParentCell new_parent(new_transformation,bounding_surfaces,cell_id);
+
+	    	/* Create recursively the other universes */
+	    	Universe* fill_universe = addUniverse(fill_universe_id,u_cells,user_surfaces,new_parent);
+
 	    	if(fill_universe)
 	    		new_cell->setFill(fill_universe);
 	    	else
@@ -399,17 +409,17 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	return new_universe;
 }
 
-void Geometry::setupMaterials(const Materials& materialContainer) {
+void Geometry::setupMaterials(const Materials& materials) {
 	/* Iterate over each material on the map */
-	map<InternalCellId, MaterialId>::const_iterator it_mat = mat_map.begin();
-	for(; it_mat != mat_map.end() ; ++it_mat) {
+	map<InternalCellId, MaterialId>::const_iterator it_mat = material_map.begin();
+	for(; it_mat != material_map.end() ; ++it_mat) {
 		/* Get cell */
 		Cell* cell = cells[(*it_mat).first];
 		/* Get material ID */
 		MaterialId matId = (*it_mat).second;
 		if(matId != Material::NONE && matId != Material::VOID) {
 			try {
-				cell->setMaterial(materialContainer.getMaterial(matId));
+				cell->setMaterial(materials.getMaterial(matId));
 			} catch (std::exception& error) {
 				throw Cell::BadCellCreation(getUserId(cell),error.what());
 			}
