@@ -27,7 +27,6 @@
 
 #include <cstdlib>
 #include <set>
-#include<boost/tokenizer.hpp>
 
 #include "Surface.hpp"
 #include "Cell.hpp"
@@ -37,16 +36,8 @@
 #include "Geometry.hpp"
 
 using namespace std;
-using namespace boost;
 
 namespace Helios {
-
-static inline bool getSign(const SurfaceId& value) {
-	if(value.find("-") != string::npos)
-		return false;
-	else
-		return true;
-}
 
 McModule* GeometryFactory::create(const std::vector<McObject*>& objects) const  {
 	/* Try to get the materials */
@@ -65,6 +56,10 @@ static void pushObject(McObject* geo, std::vector<T*>& definition) {
 }
 
 Geometry::Geometry(const std::vector<McObject*>& definitions, const Materials* materials) : McModule(name()) {
+	/* Initialize object maps */
+	object_maps[Cell::name()] = ObjectMap(&cell_path_map,&cell_reverse_map,&cell_internal_map);
+	object_maps[Surface::name()] = ObjectMap(&surface_path_map,&surface_reverse_map,&surface_internal_map);
+
 	/* Objects */
 	vector<SurfaceObject*> surObjects;
 	vector<CellObject*> cellObjects;
@@ -162,106 +157,16 @@ Geometry::Geometry(const std::vector<McObject*>& definitions, const Materials* m
 	purgePointers(surFeatureObject);
 };
 
-CellId Geometry::getPath(const Cell* cell) const {
-	/* Get the internal ID */
-	InternalCellId internal = cell->getInternalId();
-	map<InternalCellId,CellId>::const_iterator it = cell_path_map.find(internal);
-	/* This is the full path of this cell */
-	return (*it).second;
-}
-
-CellId Geometry::getUserId(const Cell* cell) const {
-	/* This is the full path of this cell */
-	CellId full_path = getPath(cell);
-	/* Get the original ID of the cell */
-	char_separator<char> sep("< ");
-	tokenizer<char_separator<char> > tok(full_path,sep);
-	return *tok.begin();
-}
-
-std::vector<Cell*> Geometry::getCells(const std::string& pathOrig) {
-	/* Erase spaces */
-	string path(pathOrig);
-	path.erase(std::remove_if(path.begin(), path.end(),::isspace), path.end());
-	/* Detect if is a full path (only one cell) or a group of cells */
-	if(path.find("<") != string::npos) {
-		/* One specific cell */
-		map<CellId,InternalCellId>::iterator it = cell_reverse_map.find(path);
-		if(it != cell_reverse_map.end()) {
-			std::vector<Cell*> ptr;
-			ptr.push_back(cells[(*it).second]);
-			return ptr;
-		} else
-			throw GeometryError("Could not find any cell on path " + path);
-	} else {
-		/* Group of cells (or a cell on top level) */
-		map<CellId,vector<InternalCellId> >::iterator it = cell_internal_map.find(path);
-		if(it != cell_internal_map.end()) {
-			std::vector<Cell*> ptrs;
-			vector<InternalCellId> internal = (*it).second;
-			for(vector<InternalCellId>::const_iterator it_internal = internal.begin() ; it_internal != internal.end() ; ++it_internal)
-				ptrs.push_back(cells[*it_internal]);
-			return ptrs;
-		} else
-			throw GeometryError("Cell " + path + " does not exist");
-	}
-}
-
-std::vector<Surface*> Geometry::getSurfaces(const std::string& pathOrig) {
-	/* Erase spaces */
-	string path(pathOrig);
-	path.erase(std::remove_if(path.begin(), path.end(),::isspace), path.end());
-	/* Detect if is a full path (only one surface) or a group of surfaces */
-	if(path.find("<") != string::npos) {
-		/* One specific cell */
-		map<SurfaceId,InternalSurfaceId>::iterator it = surface_reverse_map.find(path);
-		if(it != surface_reverse_map.end()) {
-			std::vector<Surface*> ptr;
-			ptr.push_back(surfaces[(*it).second]);
-			return ptr;
-		} else
-			throw GeometryError("Could not find any surface on path " + path);
-	} else {
-		/* Group of surfaces (or a surface on top level) */
-		map<SurfaceId,vector<InternalSurfaceId> >::iterator it = surface_internal_map.find(path);
-		if(it != surface_internal_map.end()) {
-			std::vector<Surface*> ptrs;
-			vector<InternalSurfaceId> internal = (*it).second;
-			for(vector<InternalSurfaceId>::const_iterator it_internal = internal.begin() ; it_internal != internal.end() ; ++it_internal)
-				ptrs.push_back(surfaces[*it_internal]);
-			return ptrs;
-		} else
-			throw GeometryError("Surface " + path + " does not exist");
-	}
-}
-
-SurfaceId Geometry::getPath(const Surface* surf) const {
-	/* Get the internal ID */
-	InternalSurfaceId internal = surf->getInternalId();
-	map<InternalSurfaceId,SurfaceId>::const_iterator it = surface_path_map.find(internal);
-	/* This is the full path of this cell */
-	return (*it).second;
-}
-
-SurfaceId Geometry::getUserId(const Surface* surf) const {
-	/* This is the full path of this cell */
-	SurfaceId full_path = getPath(surf);
-	/* Get the original ID of the cell */
-	char_separator<char> sep("< ");
-	tokenizer<char_separator<char> > tok(full_path,sep);
-	return *tok.begin();
-}
-
 Surface* Geometry::addSurface(const Surface* surface, const ParentCell& parent_cell, const std::string& surf_id) {
 	/* Create the new duplicated surface */
 	Surface* new_surface = parent_cell.getTransformation()(surface);
 
 	/* Check if the surface is not duplicated */
-	vector<Cell::SenseSurface>::const_iterator it_sur = parent_cell.getSurfaces().begin();
+	vector<Surface*>::const_iterator it_sur = parent_cell.getSurfaces().begin();
 	for(; it_sur != parent_cell.getSurfaces().end() ; ++it_sur) {
-		if(*new_surface == *((*it_sur).first)) {
+		if(*new_surface == *(*it_sur)) {
 			delete new_surface;
-			return (*it_sur).first;
+			return (*it_sur);
 		}
 	}
 
@@ -308,23 +213,18 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	vector<CellObject*>::iterator it_cell = cell_def.begin();
     map<SurfaceId,Surface*> temp_sur_map;
 
-    /* Separator to get user ID */
-	char_separator<char> sep("- ");
-
 	for(; it_cell != cell_def.end() ; ++it_cell) {
 
 		/* Cell information */
 		CellId user_cell_id((*it_cell)->getUserCellId());
-		vector<SurfaceId> surfaces_id((*it_cell)->getSurfaceIds());
+		vector<SurfaceId> surfaces_id = CellFactory::getSurfacesIds((*it_cell)->getSurfacesExpression());
 
 		/* Now get the surfaces and put the references inside the cell */
-	    vector<Cell::SenseSurface> bounding_surfaces;
+	    vector<Surface*> bounding_surfaces;
 	    vector<SurfaceId>::const_iterator it = surfaces_id.begin();
 
 	    for (;it != surfaces_id.end(); ++it) {
-	    	/* Get user ID */
-	    	tokenizer<char_separator<char> > tok((*it),sep);
-	    	SurfaceId user_surface_id(*tok.begin());
+	    	SurfaceId user_surface_id = (*it);
 
 	    	/* Get internal index */
 	    	map<SurfaceId,Surface*>::const_iterator it_sur = user_surfaces.find(user_surface_id);
@@ -341,21 +241,15 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    		new_surface = (*it_temp_sur).second;
 	    	else {
 	    		new_surface = addSurface((*it_sur).second,parent_cell,user_surface_id);
-		    	temp_sur_map[new_surface->getUserId()] = new_surface;
+		    	temp_sur_map[user_surface_id] = new_surface;
 	    	}
 
-	    	/* Get surface with sense */
-	    	Cell::SenseSurface newSurface(new_surface,getSign(*it));
-
 	    	/* Push it into the container */
-	        bounding_surfaces.push_back(newSurface);
+	        bounding_surfaces.push_back(new_surface);
 	    }
 
-	    /* Push the surfaces with sense into the cell definition */
-	    (*it_cell)->setSenseSurface(bounding_surfaces);
-
 	    /* Now we can construct the cell */
-	    Cell* new_cell = cell_factory.createCell((*it_cell));
+	    Cell* new_cell = cell_factory.createCell((*it_cell),temp_sur_map);
 	    /* Get new cell ID based on the parent cell */
 	    CellId cell_id;
 	    if(parent_cell.getId().size() == 0) cell_id = (*it_cell)->getUserCellId();
@@ -368,7 +262,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    /* Update internal map */
 	    cell_internal_map[(*it_cell)->getUserCellId()].push_back(new_cell->getInternalId());
 	    /* Update reverse map */
-	    cell_reverse_map[(*it_cell)->getUserCellId()] = new_cell->getInternalId();
+	    cell_reverse_map[cell_id] = new_cell->getInternalId();
 
 	    /* Update material map */
 	    material_map[new_cell->getInternalId()] = (*it_cell)->getMatId();
@@ -382,10 +276,10 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    if(fill_universe_id != Universe::BASE) {
 
 	    	/* Get parent surfaces */
-	    	std::vector<Cell::SenseSurface> parent_surfaces = parent_cell.getSurfaces();
+	    	std::vector<Surface*> parent_surfaces = parent_cell.getSurfaces();
 
 	    	/* Push parent surfaces into bounding surfaces */
-	    	vector<Cell::SenseSurface>::const_iterator it_psur = parent_surfaces.begin();
+	    	vector<Surface*>::const_iterator it_psur = parent_surfaces.begin();
 	    	for(; it_psur != parent_surfaces.end() ; ++it_psur)
 	    		bounding_surfaces.push_back((*it_psur));
 
@@ -407,6 +301,25 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 
 	/* Return the universe */
 	return new_universe;
+}
+
+template<class Object>
+static inline std::vector<Object*>
+pushObjectContainer(const std::vector<Object*>& objects,const std::vector<InternalId>& internal_ids) {
+	std::vector<InternalId>::const_iterator it = internal_ids.begin();
+	std::vector<Object*> object_container;
+	for( ; it != internal_ids.end() ; ++it)
+		object_container.push_back(objects[(*it)]);
+	return object_container;
+}
+
+template<>
+std::vector<Cell*> Geometry::getContainer<Cell>(const std::vector<InternalId>& internal_ids) const {
+	return pushObjectContainer(cells,internal_ids);
+}
+template<>
+std::vector<Surface*> Geometry::getContainer<Surface>(const std::vector<InternalId>& internal_ids) const {
+	return pushObjectContainer(surfaces,internal_ids);
 }
 
 void Geometry::setupMaterials(const Materials& materials) {

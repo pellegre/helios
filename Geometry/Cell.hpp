@@ -141,7 +141,7 @@ namespace Helios {
 
 	protected:
 
-		Cell(const CellObject* definition);
+		Cell(const CellObject* definition, const std::vector<SenseSurface>& surfaces);
 		/* Prevent copy */
 		Cell(const Cell& cell);
 		Cell& operator= (const Cell& other);
@@ -165,44 +165,45 @@ namespace Helios {
 	};
 
 	class CellObject : public GeometryObject {
-		CellId userCellId;
+		CellId user_cell_id;
 		Cell::CellInfo flags;
 		UniverseId universe;
 		UniverseId fill;
 		MaterialId matId;
 		Transformation transformation;
-
-		/* Handling surfaces */
-		std::vector<SurfaceId> surfacesIds;   /* IDs of the surfaces */
-		std::vector<Cell::SenseSurface> surfacesPtrs; /* Pair of sense and pointer to a set of constructed surfaces */
+		std::string surfaces_expression;   /* IDs of the surfaces */
 	public:
 
 		CellObject() : GeometryObject(Cell::name()) {/* */}
-		CellObject(const CellId& userCellId, const std::vector<SurfaceId>& surfacesIds, const Cell::CellInfo flags,
+		CellObject(const CellId& userCellId, const std::string& surfaces_expression, const Cell::CellInfo flags,
 				   const UniverseId& universe, const UniverseId& fill,const MaterialId& matId, const Transformation& transformation) :
-				   GeometryObject(Cell::name()), userCellId(userCellId), surfacesIds(surfacesIds), flags(flags),
-			       universe(universe), fill(fill), matId(matId), transformation(transformation) {/* */}
+				   GeometryObject(Cell::name()), user_cell_id(userCellId), surfaces_expression(surfaces_expression),
+				   flags(flags),universe(universe), fill(fill), matId(matId), transformation(transformation) {/* */}
 		Cell::CellInfo getFlags() const {return flags;}
-		CellId getUserCellId() const {return userCellId;}
+		CellId getUserCellId() const {return user_cell_id;}
 		UniverseId getUniverse() const {return universe;}
 		UniverseId getFill() const {return fill;}
 		MaterialId getMatId() const {return matId;}
 		Transformation getTransformation() const {return transformation;}
-		/* Setting surfaces */
-		void setSenseSurface(const std::vector<Cell::SenseSurface>& ptrs) {surfacesPtrs = ptrs;}
-		std::vector<Cell::SenseSurface> getSenseSurface() const {return surfacesPtrs;}
 		/* Getting surfaces */
-		std::vector<SurfaceId> getSurfaceIds() const {return surfacesIds;}
+		std::string getSurfacesExpression() const {return surfaces_expression;}
 		~CellObject() {/* */}
 	};
 
 
 	class CellFactory {
 	public:
+		/*
+		 * Given a surface expression, the functions returns the unique surfaces IDs on that expression.
+		 * This function is called by the Geometry class to know which surfaces should create when constructing
+		 * a given cell
+		 */
+		static std::vector<SurfaceId> getSurfacesIds(const std::string& surface_expresion);
+
 		/* Prevent construction or copy */
 		CellFactory() {/* */};
 		/* Create a new surface */
-		Cell* createCell(const CellObject* definition) const;
+		Cell* createCell(const CellObject* definition, std::map<SurfaceId,Surface*>& cell_surfaces) const;
 		virtual ~CellFactory() {/* */}
 	};
 

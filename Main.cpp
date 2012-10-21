@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Parser/ParserTypes.hpp"
 #include "Geometry/Geometry.hpp"
+#include "Geometry/Cell.hpp"
 #include "Material/Materials.hpp"
 #include "Material/MacroXs.hpp"
 #include "Transport/Particle.hpp"
@@ -136,6 +137,11 @@ int main(int argc, char **argv) {
 
 	/* Geometry */
 	Geometry* geometry = environment.getModule<Geometry>();
+	geometry->printGeo(cout);
+
+	vector<Surface*> surfaces = environment.getObject<Geometry,Surface>("1<2[0,1,0]<1");
+	cout << *surfaces[0] << endl;
+
 	/* Get materials */
 	Materials* materials = environment.getModule<Materials>();
 	/* Get the source */
@@ -147,9 +153,9 @@ int main(int argc, char **argv) {
 
 	/* Initialization - KEFF cycle */
 	double keff = 1.186;
-	int neutrons = 60000;
-	int skip = 50;
-	int cycles = 250;
+	int neutrons = 2500;
+	int skip = 10;
+	int cycles = 50;
 	list<pair<const Cell*,Particle> > particles;
 	/* Particle bank, the particles for the next cycle are banked here */
 	list<pair<const Cell*,Particle> > fission_bank;

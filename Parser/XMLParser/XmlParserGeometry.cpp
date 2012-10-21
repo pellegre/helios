@@ -114,7 +114,7 @@ static CellObject* cellAttrib(TiXmlElement* pElement) {
 
 	/* Get attributes */
 	CellId id = fromString<CellId>(mapAttrib["id"]);
-	vector<SurfaceId> surfaces = getContainer<SurfaceId>(mapAttrib["surfaces"]);
+	string surfaces_expression = mapAttrib["surfaces"];
 
 	/* Flags of the cell */
 	Cell::CellInfo flags = cell_flags.getValue(mapAttrib);
@@ -136,7 +136,7 @@ static CellObject* cellAttrib(TiXmlElement* pElement) {
 	}
 
 	/* Return surface definition */
-	return new CellObject(id,surfaces,flags,universe,fill,matid,trans);
+	return new CellObject(id,surfaces_expression,flags,universe,fill,matid,trans);
 }
 
 void XmlParser::geoNode(TiXmlNode* pParent) {

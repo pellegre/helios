@@ -31,22 +31,24 @@
 #include "Universe.hpp"
 #include "Surface.hpp"
 #include "Geometry.hpp"
+#include <boost/tokenizer.hpp>
 
 using namespace std;
+using namespace boost;
 
 namespace Helios {
 
 Surface* Transformation::operator()(const Surface* surface) const { return surface->transformate(translation); }
 
-Cell::Cell(const CellObject* definition) :
-	surfaces(definition->getSenseSurface()),
+Cell::Cell(const CellObject* definition, const std::vector<SenseSurface>& surfaces) :
+	surfaces(surfaces),
 	flag(definition->getFlags()),
 	fill(0),
 	material(0),
 	parent(0),
 	int_cellid(0) {
     /* Set the new cell on surfaces neighbor container */
-    vector<Cell::SenseSurface>::iterator it_sur = surfaces.begin();
+    vector<Cell::SenseSurface>::const_iterator it_sur = surfaces.begin();
 	for(; it_sur != surfaces.end() ; ++it_sur)
 		(*it_sur).first->addNeighborCell((*it_sur).second,this);
 }
@@ -136,8 +138,45 @@ void Cell::intersect(const Coordinate& position, const Direction& direction, Sur
 
 }
 
-Cell* CellFactory::createCell(const CellObject* definition) const {
-	return new Cell(definition);
+static inline bool getSign(const SurfaceId& value) {
+	if(value.find("-") != string::npos) return false;
+	else return true;
+}
+
+static inline SurfaceId getAbsId(const SurfaceId& sense_id) {
+	char_separator<char> sep("- ");
+	/* Get user ID */
+	tokenizer<char_separator<char> > tok(sense_id,sep);
+	return (*tok.begin());
+}
+
+static inline vector<string> getUniqueTokens(const char_separator<char>& sep, const string& expresion) {
+	tokenizer<char_separator<char> > tok(expresion, sep);
+	vector<string> tokens;
+	tokens.insert(tokens.begin(),tok.begin(),tok.end());
+	sort(tokens.begin(),tokens.end());
+	vector<string>::const_iterator it = unique(tokens.begin(),tokens.end());
+	tokens.resize(it - tokens.begin());
+	return tokens;
+}
+
+std::vector<SurfaceId> CellFactory::getSurfacesIds(const string& surface_expresion) {
+	return getUniqueTokens(char_separator<char>("():- "),surface_expresion);
+}
+
+Cell* CellFactory::createCell(const CellObject* definition, std::map<SurfaceId,Surface*>& cell_surfaces) const {
+	/* Get surface expression */
+	string surface_expresion = definition->getSurfacesExpression();
+	vector<string> tokens = getUniqueTokens(char_separator<char>("() "),surface_expresion);;
+
+	/* Now get the tokens and craft a container with surfaces and senses */
+	vector<Cell::SenseSurface> sense_surfaces_container;
+	for(vector<string>::const_iterator it = tokens.begin() ; it != tokens.end() ; ++it) {
+		Cell::SenseSurface sense_surface(cell_surfaces[getAbsId(*it)],getSign(*it));
+		sense_surfaces_container.push_back(sense_surface);
+	}
+
+	return new Cell(definition,sense_surfaces_container);
 }
 
 } /* namespace Helios */

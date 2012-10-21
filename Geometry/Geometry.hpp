@@ -31,6 +31,7 @@
 #include <vector>
 #include <ostream>
 #include <string>
+#include <boost/tokenizer.hpp>
 
 #include "Surface.hpp"
 #include "Cell.hpp"
@@ -65,29 +66,24 @@ namespace Helios {
 			~GeometryError() throw() {/* */};
 		};
 
-		/* ---- Get Cell information */
+		/* ---- Get information */
 
-		/* Get user ID of a cell */
-		CellId getUserId(const Cell* cell) const;
-		/* Get full path of a cell */
-		CellId getPath(const Cell* cell) const;
-		/* Get all cells */
-		const std::vector<Cell*>& getCells() const {return cells;};
-		/* Get references to cells from a path expression */
-		std::vector<Cell*> getCells(const std::string& path);
+		/* Get user ID of an object */
+		template<class Object>
+		UserId getUserId(const Object* object) const;
+		/* Get full path of an object */
+		template<class Object>
+		UserId getPath(const Object* object) const;
+		/* Get references to objects from a path expression or id */
+		template<class Object>
+		std::vector<Object*> getObject(const UserId& id) const;
 
-		/* ---- Get Surface information */
-
-		/* Get user ID of a cell */
-		SurfaceId getUserId(const Surface* surf) const;
-		/* Get full path of a cell */
-		SurfaceId getPath(const Surface* surf) const;
+		/* Get container of universes */
+		const std::vector<Universe*>& getUniverses() const {return universes;};
 		/* Get container of surfaces */
 		const std::vector<Surface*>& getSurfaces() const {return surfaces;};
-		/* Get references to cells from a path expression */
-		std::vector<Surface*> getSurfaces(const std::string& path);
-
-		const std::vector<Universe*>& getUniverses() const {return universes;};
+		/* Get all cells */
+		const std::vector<Cell*>& getCells() const {return cells;};
 
 		/* Print cell with each surface of the geometry */
 		void printGeo(std::ostream& out) const;
@@ -117,11 +113,36 @@ namespace Helios {
 		virtual ~Geometry();
 
 	private:
+		/* Prevent copy */
+		Geometry(const Geometry& geo);
+		Geometry& operator= (const Geometry& other);
 
 		/* Factories */
 		CellFactory cell_factory;
 		SurfaceFactory surface_factory;
 		FeatureFactory feature_factory;
+
+		/* Template to hold maps from different object */
+		class ObjectMap {
+			/* This map an internal ID with the full path of a object */
+			const std::map<InternalId,UserId>* path_map;
+			/* This map the full path of a object with the internal ID */
+			const std::map<UserId, InternalId>* reverse_map;
+			/* This map the original object ID with all the internal objects IDs */
+			const std::map<UserId, std::vector<InternalId> >* internal_map;
+		public:
+			ObjectMap() {/**/}
+			ObjectMap(const std::map<InternalId,UserId>* path_map, const std::map<UserId, InternalId>* reverse_map,
+					  const std::map<UserId, std::vector<InternalId> >* internal_map) :
+					  path_map(path_map), reverse_map(reverse_map), internal_map(internal_map) {/* */}
+			~ObjectMap() {/* */}
+			const std::map<UserId, std::vector<InternalId> >& getInternalMap() const {return *internal_map;}
+			const std::map<InternalId, UserId>& getPathMap() const {return *path_map;}
+			const std::map<UserId, InternalId>& getReverseMap() const {return *reverse_map;}
+		};
+
+		/* Map of Object */
+		std::map<std::string,ObjectMap> object_maps;
 
 		/* Container of surfaces defined on the problem */
 		std::vector<Surface*> surfaces;
@@ -136,7 +157,7 @@ namespace Helios {
 		std::map<InternalSurfaceId,SurfaceId> surface_path_map;
 		/* This map the full path of a surface with the internal ID */
 		std::map<SurfaceId, InternalSurfaceId> surface_reverse_map;
-		/* This map the original cell ID with all the internal surfaces IDs */
+		/* This map the original surface ID with all the internal surfaces IDs */
 		std::map<SurfaceId, std::vector<InternalSurfaceId> > surface_internal_map;
 
 		/* ----- Map cells */
@@ -156,30 +177,27 @@ namespace Helios {
 		/* Map of cell to materials IDs */
 		std::map<InternalCellId, MaterialId> material_map;
 
-		/* Prevent copy */
-		Geometry(const Geometry& geo);
-		Geometry& operator= (const Geometry& other);
+		/* Get container of objects given the INTERNAL cells id */
+		template<class Object>
+		std::vector<Object*> getContainer(const std::vector<InternalId>& internal_ids) const;
 
 		/* Parent Cell class (auxiliary, to encapsulate information about the parent cell of an universe) */
 		class ParentCell {
 			Transformation transformation;
-			std::vector<Cell::SenseSurface> parent_surfaces;
+			std::vector<Surface*> parent_surfaces;
 			std::string id;
 		public:
 			ParentCell() : transformation(), parent_surfaces(), id() {/* */}
-			ParentCell(const Transformation& transformation, const std::vector<Cell::SenseSurface>& parent_surfaces, const std::string& id) :
+			ParentCell(const Transformation& transformation, const std::vector<Surface*>& parent_surfaces, const std::string& id) :
 				transformation(transformation), parent_surfaces(parent_surfaces), id(id) {/* */}
 			const std::string& getId() const {return id;}
 			void setId(std::string id) {this->id = id;}
-			const std::vector<Cell::SenseSurface>& getSurfaces() const {return parent_surfaces;}
-			void setSurfaces(std::vector<Cell::SenseSurface> surfaces) {this->parent_surfaces = surfaces;}
+			const std::vector<Surface*>& getSurfaces() const {return parent_surfaces;}
+			void setSurfaces(std::vector<Surface*> surfaces) {this->parent_surfaces = surfaces;}
 			const Transformation& getTransformation() const {return transformation;}
 			void setTransformation(Transformation transformation) {this->transformation = transformation;}
 			~ParentCell() {/* */}
 		};
-
-		/* Add cell */
-		Cell* addCell(const CellObject* cellObject, const std::map<SurfaceId,Surface*>& user_surfaces);
 
 		/* Add recursively all universe that are nested */
 		Universe* addUniverse(const UniverseId& uni_def, const std::map<UniverseId,std::vector<CellObject*> >& u_cells,
@@ -198,6 +216,63 @@ namespace Helios {
 		 */
 		void setupMaterials(const Materials& materials);
 	};
+
+	/* Get containers of cells */
+	template<>
+	std::vector<Cell*> Geometry::getContainer<Cell>(const std::vector<InternalId>& internal_ids) const;
+	/* Get containers of surfaces */
+	template<>
+	std::vector<Surface*> Geometry::getContainer<Surface>(const std::vector<InternalId>& internal_ids) const;
+
+	template<class Object>
+	UserId Geometry::getPath(const Object* object) const {
+		/* Get the internal ID */
+		InternalId internal = object->getInternalId();
+		std::map<InternalId,UserId> path_map = object_maps.find(Object::name())->second.getPathMap();
+		std::map<InternalId,UserId>::const_iterator it = path_map.find(internal);
+		/* This is the full path of this cell */
+		return (*it).second;
+	}
+
+	template<class Object>
+	UserId Geometry::getUserId(const Object* object) const {
+		/* This is the full path of this cell */
+		UserId full_path = getPath(object);
+		/* Get the original ID of the cell */
+		boost::char_separator<char> sep("< ");
+		boost::tokenizer<boost::char_separator<char> > tok(full_path,sep);
+		return *tok.begin();
+	}
+
+	template<class Object>
+	std::vector<Object*> Geometry::getObject(const UserId& orig_id) const {
+		std::string id(orig_id);
+		id.erase(std::remove_if(id.begin(), id.end(),::isspace), id.end());
+		/* Get maps */
+		std::map<UserId,InternalId> reverse_map = object_maps.find(Object::name())->second.getReverseMap();
+		std::map<UserId,std::vector<InternalId> > internal_map = object_maps.find(Object::name())->second.getInternalMap();
+		/* Detect if is a full path (only one cell) or a group of cells */
+		if(id.find("<") != std::string::npos) {
+			/* One specific cell */
+			std::map<UserId,InternalId>::iterator it = reverse_map.find(id);
+			if(it != reverse_map.end()) {
+				std::vector<InternalId> internal_ids;
+				internal_ids.push_back(it->second);
+				return getContainer<Object>(internal_ids);
+			}
+			else
+				throw GeometryError("Could not find any " + Object::name() + " on path " + id);
+		}
+		else {
+			/* Group of objects (or a object on top level) */
+			std::map<UserId,std::vector<InternalId> >::const_iterator it = internal_map.find(id);
+			if(it != internal_map.end()) {
+				std::vector<InternalId> internal_ids = (*it).second;
+				return getContainer<Object>(internal_ids);
+			} else
+				throw GeometryError(Object::name() + " " + id + " does not exist");
+		}
+	}
 
 	class McEnvironment;
 

@@ -62,13 +62,13 @@ template<int axis>
 static string getAbscissaSurface(const int& v) {
 	switch(axis) {
 	case xaxis :
-		return "(," + toString(v) + ",)";
+		return "[," + toString(v) + ",]";
 		break;
 	case yaxis :
-		return "(,," + toString(v) + ")";
+		return "[,," + toString(v) + "]";
 		break;
 	case zaxis :
-		return "(" + toString(v) + ",,)";
+		return "[" + toString(v) + ",,]";
 		break;
 	}
 	return "";
@@ -94,13 +94,13 @@ template<int axis>
 static string getOrdinateSurface(const int& v) {
 	switch(axis) {
 	case xaxis :
-		return "(,," + toString(v) + ")";
+		return "[,," + toString(v) + "]";
 		break;
 	case yaxis :
-		return "(" + toString(v) + ",,)";
+		return "[" + toString(v) + ",,]";
 		break;
 	case zaxis :
-		return "(," + toString(v) + ",)";
+		return "[," + toString(v) + ",]";
 		break;
 	}
 	return "";
@@ -126,13 +126,13 @@ template<int axis>
 static string getLatticePosition(const int& x, const int& y) {
 	switch(axis) {
 	case xaxis :
-		return "(0," + toString(x) + "," + toString(y) + ")";
+		return "[0," + toString(x) + "," + toString(y) + "]";
 		break;
 	case yaxis :
-		return "(" + toString(y) + "," + toString(x) + ",0)";
+		return "[" + toString(y) + "," + toString(x) + ",0]";
 		break;
 	case zaxis :
-		return "(" + toString(x) + "," + toString(y) + ",0)";
+		return "[" + toString(x) + "," + toString(y) + ",0]";
 		break;
 	}
 	return "";
@@ -202,11 +202,11 @@ static void gen2DLattice(const LatticeObject& new_lat,std::vector<SurfaceObject*
 	/* Now create each cell of the lattice, on the universe defined by the user (left to right, bottom to top) */
 	for(int i = dimension[1] - 1 ; i >= 0  ; i--) {
 		for(int j = 0 ; j < dimension[0]  ; j++) {
-			vector<SurfaceId> surfs;
-			surfs.push_back(y_surfaces[i]->getUserSurfaceId());
-			surfs.push_back("-" + y_surfaces[i + 1]->getUserSurfaceId());
-			surfs.push_back(x_surfaces[j]->getUserSurfaceId());
-			surfs.push_back("-"+x_surfaces[j + 1]->getUserSurfaceId());
+			std::string surfs = "";
+			surfs += (y_surfaces[i]->getUserSurfaceId()) + " ";
+			surfs += ("-" + y_surfaces[i + 1]->getUserSurfaceId()) + " ";
+			surfs += (x_surfaces[j]->getUserSurfaceId()) + " ";
+			surfs += ("-"+x_surfaces[j + 1]->getUserSurfaceId()) + " ";
 
 			/* Translate the cell to the lattice point */
 			Transformation transf(getTranslation<axis>(x_coordinates[j],y_coordinates[i]));
