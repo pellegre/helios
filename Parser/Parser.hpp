@@ -51,6 +51,9 @@ namespace Helios {
 		 */
 		std::vector<SourceDefinition*> sourceDefinition;
 
+		/* Parse the file and save the data on internal structures */
+		virtual void parseInputFile(const std::string& file) = 0;
+
 	public:
 
 		/* Exception */
@@ -93,8 +96,7 @@ namespace Helios {
 
 		Parser() {/* */};
 
-		/* Parse the file and save the data on internal structures */
-		virtual void parseFile(const std::string& file) = 0;
+		void parseFile(const std::string& file);
 
 		/*
 		 * ---- Setup and return constructed objects.

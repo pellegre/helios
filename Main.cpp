@@ -43,44 +43,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace std;
 using namespace Helios;
 
-static pair<string,size_t> seachKeyWords(const vector<string>& files, vector<string> search_keys) {
-
-	/* Pair of file and match */
-	pair<string,size_t> file_line;
-	/* Count matches of bad keyword on the line */
-	map<size_t,pair<string,size_t> > line_match;
-
-	for(vector<string>::const_iterator it_file = files.begin() ; it_file != files.end() ; ++it_file) {
-		string filename = (*it_file);
-		string line;
-		ifstream file (filename.c_str());
-		size_t counter = 0;
-
-		if (file.is_open()) {
-			while (file.good()) {
-				getline (file,line);
-				bool find = true;
-				size_t nfound = 0;
-				for(size_t key = 0 ; key < search_keys.size() ; key++) {
-					bool found = line.find(search_keys[key]) != string::npos;
-					find &= found;
-					if(found)
-						/* Count a match for this line */
-						nfound++;
-				}
-				if(find) return pair<string,size_t>(filename,counter);
-				else line_match[nfound] = pair<string,size_t>(filename,counter);
-
-				counter++;
-			}
-			file.close();
-		}
-	}
-
-	/* Return the better match */
-	return (*(--line_match.end())).second;
-}
-
 int main(int argc, char **argv) {
 	/* Check number of arguments */
 	if(argc < 2) {
@@ -97,32 +59,9 @@ int main(int argc, char **argv) {
 	/* Container of filenames */
 	vector<string> input_files;
 
-	try {
-
-		while(*(++argv)) {
-			string filename = string(*(argv));
-			input_files.push_back(filename);
-		}
-
-	} catch(Parser::ParserError& parsererror) {
-
-		/* Nothing to do, just print the message and exit */
-		Log::error() << parsererror.what() << Log::endl;
-		return 1;
-
-	} catch(Parser::KeywordParserError& keyerror) {
-
-		pair<string,size_t> file_line = seachKeyWords(input_files,keyerror.getKeys());
-
-		if(file_line.second) {
-			Log::error() << "Error parsing file : " + file_line.first << Log::endl;
-			Log::error() << "Line " << (file_line.second + 1) << " : " << keyerror.what() << Log::endl;
-		}
-		else {
-			Log::error() << keyerror.what() << Log::endl;
-		}
-
-		return 1;
+	while(*(++argv)) {
+		string filename = string(*(argv));
+		input_files.push_back(filename);
 	}
 
 	/* Environment */

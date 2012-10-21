@@ -116,7 +116,7 @@ void XmlParser::rootNode(TiXmlNode* pParent, const string& filename) {
 	}
 }
 
-void XmlParser::parseFile(const string& file) {
+void XmlParser::parseInputFile(const string& file) {
 	/* Open document */
 	TiXmlDocument doc(file.c_str());
 	bool loadOkay = doc.LoadFile();

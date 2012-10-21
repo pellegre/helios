@@ -33,6 +33,56 @@ using namespace std;
 
 namespace Helios {
 
+static size_t seachKeyWords(const string& filename, vector<string> search_keys) {
+
+	/* Pair of file and match */
+	size_t file_line;
+	/* Count matches of bad keyword on the line */
+	map<size_t,size_t> line_match;
+	string line;
+	ifstream file (filename.c_str());
+	size_t counter = 0;
+
+	if (file.is_open()) {
+		while (file.good()) {
+			getline (file,line);
+			bool find = true;
+			size_t nfound = 0;
+			for(size_t key = 0 ; key < search_keys.size() ; key++) {
+				bool found = line.find(search_keys[key]) != string::npos;
+				find &= found;
+				if(found)
+					/* Count a match for this line */
+					nfound++;
+			}
+			if(find) return counter;
+			else line_match[nfound] = counter;
+
+			counter++;
+		}
+		file.close();
+	}
+
+	/* Return the better match */
+	return (*(--line_match.end())).second;
+}
+
+void Parser::parseFile(const std::string& file) {
+	try {
+		/* Parse the data with the child class */
+		parseInputFile(file);
+	} catch(Parser::KeywordParserError& keyerror) {
+		size_t file_line = seachKeyWords(file,keyerror.getKeys());
+		if(file_line) {
+			/* If there is a line that match the error, throw a message with that line */
+			throw(ParserError("Error parsing file " + file + " on line " + toString(file_line + 1) + " : " +  keyerror.what()));
+		}
+		else {
+			Log::error() << keyerror.what() << Log::endl;
+		}
+	}
+}
+
 void tokenize(const string& str, vector<string>& tokens, const string& delimiters) {
 	/* Skip delimiters at beginning */
 	string::size_type lastPos = str.find_first_not_of(delimiters, 0);

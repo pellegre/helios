@@ -55,6 +55,9 @@ namespace Helios {
 		typedef void (XmlParser::*NodeParser)(TiXmlNode* node);
 		std::map<std::string,NodeParser> root_map;
 
+		/* Parse a file */
+		void parseInputFile(const std::string& file);
+
 	public:
 
 		XmlParser();
@@ -94,9 +97,6 @@ namespace Helios {
 			std::string getString(const AttribMap& attrib_map) const;
 			~AttributeValue() {/* */};
 		};
-
-		/* Parse a file */
-		void parseFile(const std::string& file);
 
 		~XmlParser() {/* */};
 	};
