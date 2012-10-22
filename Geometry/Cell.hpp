@@ -34,36 +34,13 @@
 
 #include "../Common/Common.hpp"
 #include "../Material/Material.hpp"
+#include "Transformation.hpp"
 #include "GeometryObject.hpp"
 
 namespace Helios {
 
 	class Universe;
-	class Surface;
-	class Geometry;
 	class CellObject;
-
-	class Transformation {
-
-		/* A translation transformation */
-		Direction translation;
-		/* A rotation (degrees around each of the 3 axis) */
-		Direction rotation;
-
-	public:
-		Transformation(const Direction& translation = Direction(0,0,0), const Direction& rotation = Direction(0,0,0))
-						: translation(translation), rotation(rotation) {/* */}
-
-		/* Returns a new instance of a cloned transformed surface */
-		Surface* operator()(const Surface* surface) const;
-
-		/* Sum transformations */
-		const Transformation operator+(const Transformation& right) const {
-			return Transformation(right.translation + translation, right.rotation + rotation);
-		}
-
-		~Transformation() {/* */}
-	};
 
 	class Cell {
 
@@ -75,6 +52,8 @@ namespace Helios {
 		typedef std::pair<Surface*, bool> SenseSurface;
 		/* Friendly factory */
 		friend class CellFactory;
+		/* Friendly printer */
+		friend std::ostream& operator<<(std::ostream& out, const Cell& q);
 
 		/* Hold extra information about the cell */
 		enum CellInfo {
@@ -98,10 +77,13 @@ namespace Helios {
 		/* Get container of bounding surfaces. */
 		const std::vector<SenseSurface>& getBoundingSurfaces() const { return surfaces;}
 
-		/* Set internal / unique identifier for the cell */
-		void setInternalId(const InternalCellId& internal) {int_cellid = internal;}
 		/* Return the internal ID associated with this cell. */
-		const InternalCellId& getInternalId() const {return int_cellid;}
+		const CellId& getUserId() const {return user_id;}
+
+		/* Set internal / unique identifier for the cell */
+		void setInternalId(const InternalCellId& internal) {internal_id = internal;}
+		/* Return the internal ID associated with this cell. */
+		const InternalCellId& getInternalId() const {return internal_id;}
 
 		/* Return information about this cell */
 		CellInfo getFlag() const {return flag;}
@@ -134,9 +116,6 @@ namespace Helios {
 		/* Get the nearest surface to a point in a given direction */
 		void intersect(const Coordinate& position, const Direction& direction, Surface*& surface, bool& sense, double& distance) const;
 
-		/* Print a cell */
-		void print(std::ostream& out, const Geometry* geometry) const;
-
 		virtual ~Cell() {/* */};
 
 	protected:
@@ -160,9 +139,13 @@ namespace Helios {
 		 */
 		Universe* parent;
 		/* Internal identification of this cell */
-		InternalCellId int_cellid;
-
+		InternalCellId internal_id;
+		/* cCell id choose by the user */
+		CellId user_id;
 	};
+
+	/* Output surface information */
+	std::ostream& operator<<(std::ostream& out, const Cell& q);
 
 	class CellObject : public GeometryObject {
 		CellId user_cell_id;
@@ -189,7 +172,6 @@ namespace Helios {
 		std::string getSurfacesExpression() const {return surfaces_expression;}
 		~CellObject() {/* */}
 	};
-
 
 	class CellFactory {
 	public:

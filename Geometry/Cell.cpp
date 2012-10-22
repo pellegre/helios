@@ -38,15 +38,14 @@ using namespace boost;
 
 namespace Helios {
 
-Surface* Transformation::operator()(const Surface* surface) const { return surface->transformate(translation); }
-
 Cell::Cell(const CellObject* definition, const std::vector<SenseSurface>& surfaces) :
 	surfaces(surfaces),
+	user_id(definition->getUserCellId()),
 	flag(definition->getFlags()),
 	fill(0),
 	material(0),
 	parent(0),
-	int_cellid(0) {
+	internal_id(0) {
     /* Set the new cell on surfaces neighbor container */
     vector<Cell::SenseSurface>::const_iterator it_sur = surfaces.begin();
 	for(; it_sur != surfaces.end() ; ++it_sur)
@@ -59,39 +58,32 @@ void Cell::setFill(Universe* universe) {
 	fill->setParent(this);
 }
 
-void Cell::print(std::ostream& out, const Geometry* geometry) const {
-	vector<Cell::SenseSurface>::const_iterator it_sur = surfaces.begin();
-	out << "cell = (internal = " << getInternalId() << ")" << " ; universe = ";
+std::ostream& operator<<(std::ostream& out, const Cell& q) {
+	out << Log::ident(1) << "cell = " << q.getUserId() << " (internal = " << q.getInternalId() << ")" ;
 
 	/* Print universe where this cell is */
-	if(parent)
-		out << parent->getUserId();
-	else
-		out << "0";
+	out << " ; universe = " << q.parent->getUserId();
 
 	/* If this cell is filled with another universe, print the universe ID */
-	if(fill)
-		out << " ; fill = " << fill->getUserId();
+	if(q.fill) out << " ; fill = " << q.fill->getUserId();
 
 	/* Print material */
-	if(material)
-		out << " ; material = " << material->getUserId();
+	if(q.material) out << " ; material = " << q.material->getUserId();
 
 	/* Print flags */
-	out << " ; flags = " << getFlag();
-
-	out << endl;
+	out << " ; flags = " << q.getFlag(); out << endl;
 
 	/* Print surfaces */
-	while(it_sur != surfaces.end()) {
-		out << "    ";
-		if((*it_sur).second)
-			out << "(+) path = " << geometry->getPath((*it_sur).first) << " - " << (*(*it_sur).first);
-		else
-			out << "(-) path = " << geometry->getPath((*it_sur).first) << " - " << (*(*it_sur).first);
+	vector<Cell::SenseSurface>::const_iterator it_sur = q.surfaces.begin();
+	while(it_sur != q.surfaces.end()) {
+		out << Log::ident(2);
+		if((*it_sur).second) out << "(+) " << (*(*it_sur).first);
+		else out << "(-) " << (*(*it_sur).first);
 		out << endl;
 		++it_sur;
 	}
+
+	return out;
 }
 
 const Cell* Cell::findCell(const Coordinate& position, const Surface* skip) const {

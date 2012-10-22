@@ -32,6 +32,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace Helios {
 
+	class Uniform {
+	protected:
+		/* Points defining the interval */
+		double umin,umax;
+	public:
+		Uniform() : umin(0), umax(0) {/* */}
+		Uniform(const double& umin, const double& umax) : umin(umin), umax(umax) {/* */}
+		void operator() (double& value, Random& r) const {
+			value += (umax - umin)*r.uniform() + umin;
+		};
+		~Uniform() {/* */}
+	};
+
 	template<int axis>
 	class Box1D : public Distribution {
 		Uniform uniform;

@@ -33,6 +33,19 @@ using namespace std;
 
 namespace Helios {
 
+DistributionCustomObject::DistributionCustomObject(const std::string& type, const DistributionId& distid,
+		   const std::vector<DistributionId>& samplersIds, const std::vector<double>& weights) :
+	DistributionBaseObject(type,distid) , samplersIds(samplersIds) , weights(weights) {
+	/* Check the weight input */
+	if(this->weights.size() == 0) {
+		this->weights.resize(this->samplersIds.size());
+		/* Equal probability for all samplers */
+		double prob = 1/(double)this->samplersIds.size();
+		for(size_t i = 0 ; i < this->samplersIds.size() ; ++i)
+			this->weights[i] = prob;
+	}
+}
+
 /* Constructor from definition */
 DistributionCustom::DistributionCustom(const DistributionBaseObject* definition) : DistributionBase(definition) {
 	const DistributionCustomObject* distObject = static_cast<const DistributionCustomObject*>(definition);
@@ -72,6 +85,6 @@ void DistributionFactory::registerDistribution(const DistributionBase& distribut
 	constructor_table[distribution.getName()] = distribution.constructor();
 }
 
-DistributionBase::DistributionBase(const DistributionBaseObject* definition) : distid(definition->getUserId()) {/* */};
+DistributionBase::DistributionBase(const DistributionBaseObject* definition) : user_id(definition->getUserId()) {/* */};
 
 } /* namespace Helios */

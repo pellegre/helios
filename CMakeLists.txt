@@ -93,8 +93,8 @@ set(MCFILES Common/Common.cpp
             Geometry/Geometry.cpp
             Geometry/Universe.cpp               
             Geometry/Cell.cpp
-            Geometry/Surface.cpp
             Geometry/GeometricFeature.cpp
+            Geometry/Surface.cpp
             Geometry/Surfaces/CylinderOnAxis.cpp    
             Geometry/Surfaces/CylinderOnAxisOrigin.cpp
             Material/Material.cpp

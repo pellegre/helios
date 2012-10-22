@@ -36,6 +36,32 @@ namespace Helios {
 
 Surface::Surface(const SurfaceObject* definition) : surfid(definition->getUserSurfaceId()), flag(definition->getFlags()), int_surfid(0) {/* */};
 
+void Surface::addNeighborCell(const bool& sense, Cell* cell) {
+	if(sense)
+		neighbor_pos.push_back(cell);
+	else
+		neighbor_neg.push_back(cell);
+}
+
+const std::vector<Cell*>& Surface::getNeighborCell(const bool& sense) const {
+	if(sense)
+		return neighbor_pos;
+	else
+		return neighbor_neg;
+}
+
+/* Cross a surface, i.e. find next cell. Of course, this should be called on a position located on the surface */
+void Surface::cross(const Coordinate& position, const bool& sense, const Cell*& cell) const {
+	/* Set to zero */
+	cell = 0;
+	const std::vector<Cell*>& neighbor = getNeighborCell(not sense);
+	std::vector<Cell*>::const_iterator it_neighbor = neighbor.begin();
+	for( ; it_neighbor != neighbor.end() ; ++it_neighbor) {
+		cell = (*it_neighbor)->findCell(position,this);
+		if(cell) break;
+	}
+}
+
 SurfaceFactory::SurfaceFactory() {
 	/* Surface registering */
 	registerSurface(PlaneNormal<xaxis>());          /* px - coeffs */

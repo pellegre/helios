@@ -25,29 +25,34 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Universe.hpp"
-#include "Geometry.hpp"
+#ifndef TRANSFORMATION_HPP_
+#define TRANSFORMATION_HPP_
 
-using namespace std;
+#include "Surface.hpp"
 
 namespace Helios {
 
-const UniverseId Universe::BASE = "0";
+class Transformation {
 
-Universe::Universe(const UniverseId& user_id, Cell* parent) : user_id(user_id), parent(parent) {/* */}
+	/* A translation transformation */
+	Direction translation;
+	/* A rotation (degrees around each of the 3 axis) */
+	Direction rotation;
 
-void Universe::addCell(Cell* cell) {
-	/* Link the cell to this universe */
-	cell->setParent(this);
-	cells.push_back(cell);
-}
+public:
+	Transformation(const Direction& translation = Direction(0,0,0), const Direction& rotation = Direction(0,0,0))
+					: translation(translation), rotation(rotation) {/* */}
 
-std::ostream& operator<<(std::ostream& out, const Universe& q) {
-	out << "universe = " << q.getUserId() << " (internal = " << q.getInternalId() << ")" << endl;
-	vector<Cell*>::const_iterator it_cell = q.cells.begin();
-	for(; it_cell != q.cells.end() ; it_cell++)
-		out << *(*it_cell);
-	return out;
-}
+	/* Returns a new instance of a cloned transformed surface */
+	Surface* operator()(const Surface* surface) const { return surface->transformate(translation); }
+
+	/* Sum transformations */
+	const Transformation operator+(const Transformation& right) const {
+		return Transformation(right.translation + translation, right.rotation + rotation);
+	}
+
+	~Transformation() {/* */}
+};
 
 } /* namespace Helios */
+#endif /* TRASNFORMATION_HPP_ */

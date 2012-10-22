@@ -44,11 +44,11 @@ namespace Helios {
 		friend class UniverseFactory;
 
 		/* Internal identification of this universe */
-		InternalUniverseId int_univid;
+		InternalUniverseId internal_id;
 		/* A vector of cells */
 		std::vector<Cell*> cells;
 		/* Universe id choose by the user */
-		UniverseId univid;
+		UniverseId user_id;
 		/*
 		 * Parent cell : Each universe has ONLY one parent cell. If more than one cell
 		 * is filled with the same universe, the universe is cloned. The base universe
@@ -63,6 +63,8 @@ namespace Helios {
 		Universe& operator=(const Universe& uni);
 
 	public:
+
+		friend std::ostream& operator<<(std::ostream& out, const Universe& q);
 
 		/* Name of this object */
 		static std::string name() {return "universe";}
@@ -106,16 +108,11 @@ namespace Helios {
 		const Cell* getParent() const {return parent;}
 
 		/* Return the user ID associated with the universe. */
-		const UniverseId& getUserId() const {return univid;}
+		const UniverseId& getUserId() const {return user_id;}
 		/* Set internal / unique identifier for the cell */
-		void setInternalId(const InternalCellId& internal) {int_univid = internal;}
+		void setInternalId(const InternalCellId& internal) {internal_id = internal;}
 		/* Return the internal ID associated with the universe. */
-		const InternalUniverseId& getInternalId() const {return int_univid;}
-		/* Get number of cells */
-		size_t getCellCount() const {return cells.size();}
-
-		/* Print cells on this universe */
-		void print(std::ostream& out, const Geometry* geometry) const;
+		const InternalUniverseId& getInternalId() const {return internal_id;}
 
 		virtual ~Universe() {/* */};
 	};

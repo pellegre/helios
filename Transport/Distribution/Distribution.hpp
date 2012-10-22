@@ -64,7 +64,7 @@ namespace Helios {
 		/* Constructor from definition */
 		DistributionBase(const DistributionBaseObject* definition);
 		/* Only used by the factory */
-		DistributionBase() : distid() {/* */};
+		DistributionBase() : user_id() {/* */};
 
 		/* Sample a coordinate */
 		virtual void operator() (Particle& particle, Random& r) const = 0;
@@ -72,7 +72,7 @@ namespace Helios {
 		virtual ~DistributionBase() {/* */};
 
 		DistributionId getDistid() const {
-			return distid;
+			return user_id;
 		}
 
 	protected:
@@ -82,7 +82,7 @@ namespace Helios {
 		virtual Constructor constructor() const = 0;
 	private:
 		/* Distribution ID defined by the user */
-		DistributionId distid;
+		DistributionId user_id;
 	};
 
 	/* Base class for distribution */
@@ -105,19 +105,6 @@ namespace Helios {
 		virtual std::string getName() const  = 0;
 		/* Get constructor */
 		virtual Constructor constructor() const = 0;
-	};
-
-	class Uniform {
-	protected:
-		/* Points defining the interval */
-		double umin,umax;
-	public:
-		Uniform() : umin(0), umax(0) {/* */}
-		Uniform(const double& umin, const double& umax) : umin(umin), umax(umax) {/* */}
-		void operator() (double& value, Random& r) const {
-			value += (umax - umin)*r.uniform() + umin;
-		};
-		~Uniform() {/* */}
 	};
 
 	/* Base class for distribution */
@@ -199,17 +186,7 @@ namespace Helios {
 
 	public:
 		DistributionCustomObject(const std::string& type, const DistributionId& distid,
-				   const std::vector<DistributionId>& samplersIds, const std::vector<double>& weights) :
-			DistributionBaseObject(type,distid) , samplersIds(samplersIds) , weights(weights) {
-			/* Check the weight input */
-			if(this->weights.size() == 0) {
-				this->weights.resize(this->samplersIds.size());
-				/* Equal probability for all samplers */
-				double prob = 1/(double)this->samplersIds.size();
-				for(size_t i = 0 ; i < this->samplersIds.size() ; ++i)
-					this->weights[i] = prob;
-			}
-		}
+				   const std::vector<DistributionId>& samplersIds, const std::vector<double>& weights);
 
 		virtual ~DistributionCustomObject() {/* */}
 
