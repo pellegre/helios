@@ -40,14 +40,7 @@ using namespace std;
 namespace Helios {
 
 McModule* GeometryFactory::create(const std::vector<McObject*>& objects) const  {
-	/* Try to get the materials */
-	const Materials* materials = 0;
-	try {
-		materials = getEnvironment()->getModule<Materials>();
-	} catch (exception& error) {
-		Log::warn() << error.what() << endl;
-	}
-	return new Geometry(objects,materials);
+	return new Geometry(objects,getEnvironment());
 }
 
 template<class T>
@@ -55,7 +48,7 @@ static void pushObject(McObject* geo, std::vector<T*>& definition) {
 	definition.push_back(dynamic_cast<T*>(geo));
 }
 
-Geometry::Geometry(const std::vector<McObject*>& definitions, const Materials* materials) : McModule(name()) {
+Geometry::Geometry(const std::vector<McObject*>& definitions, const McEnvironment* environment) : McModule(name(),environment) {
 	/* Initialize object maps */
 	object_maps[Cell::name()] = ObjectMap(&cell_path_map,&cell_reverse_map,&cell_internal_map);
 	object_maps[Surface::name()] = ObjectMap(&surface_path_map,&surface_reverse_map,&surface_internal_map);
@@ -143,9 +136,17 @@ Geometry::Geometry(const std::vector<McObject*>& definitions, const Materials* m
 
 	addUniverse((*u_cells.begin()).first,u_cells,user_surfaces);
 
-	/* Now, if we have a Materials pointer, we should update the materials on each cell */
+	/* Try to get the materials */
+	const Materials* materials = 0;
+	try {
+		materials = getEnvironment()->getModule<Materials>();
+	} catch (exception& error) {
+		Log::warn() << error.what() << endl;
+	}
+	/* Now, if we have a Materials pointer, we should update the materials on each cell... */
 	if(materials)
 		setupMaterials(*materials);
+	/* ... if not, just continue and hope the best */
 
 	/* Clean surfaces */
 	map<SurfaceId,Surface*>::iterator it_user = user_surfaces.begin();

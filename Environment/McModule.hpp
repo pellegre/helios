@@ -64,8 +64,13 @@ namespace Helios {
 	class McModule {
 		/* Module name */
 		std::string name;
+		/* Pointer to the parent environment */
+		const McEnvironment* environment;
+	protected:
+		/*  Get the environment */
+		const McEnvironment* getEnvironment() const {return environment;}
 	public:
-		McModule(const std::string& name) : name(name) {/* */};
+		McModule(const std::string& name, const McEnvironment* environment) : name(name), environment(environment) {/* */};
 		/* Get module name */
 		std::string getName() const {return name;}
 		virtual ~McModule() {/* */};
@@ -76,11 +81,11 @@ namespace Helios {
 		/* Name of the modules this factory creates */
 		std::string name;
 		/* Pointer to the parent environment */
-		McEnvironment* environment;
+		const McEnvironment* environment;
 	protected:
-		McEnvironment* getEnvironment() const {return environment;}
+		const McEnvironment* getEnvironment() const {return environment;}
 	public:
-		ModuleFactory(const std::string& name, McEnvironment* environment) : name(name), environment(environment) {/* */}
+		ModuleFactory(const std::string& name, const McEnvironment* environment) : name(name), environment(environment) {/* */}
 		/* Create an instance of an object from a group of objects definition */
 		virtual McModule* create(const std::vector<McObject*>& objects) const = 0;
 		/* Get name */

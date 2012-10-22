@@ -73,7 +73,7 @@ namespace Helios {
 		static std::string name() {return "sources";}
 
 		/* Construction from definitions */
-		Source(const std::vector<McObject*>& definitions);
+		Source(const std::vector<McObject*>& definitions, const McEnvironment* environment);
 
 		/* Sample a particle */
 		Particle sample(Random& r) const {

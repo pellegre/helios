@@ -32,7 +32,7 @@ using namespace std;
 
 namespace Helios {
 
-Materials::Materials(const vector<McObject*>& matDefinitions) : McModule(name()) {
+Materials::Materials(const vector<McObject*>& matDefinitions, const McEnvironment* environment) : McModule(name(),environment) {
 	/* Check number of definitions */
 	if(matDefinitions.size() == 0)
 		throw GeneralError("No information available for materials object");

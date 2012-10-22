@@ -32,7 +32,7 @@ using namespace std;
 namespace Helios {
 
 McModule* SourceFactory::create(const std::vector<McObject*>& objects) const {
-	return new Source(objects);
+	return new Source(objects,getEnvironment());
 }
 
 template<class T>
@@ -40,7 +40,7 @@ static void pushObject(McObject* src, vector<T*>& definition) {
 	definition.push_back(dynamic_cast<T*>(src));
 }
 
-Source::Source(const vector<McObject*>& definitions) : McModule(name()) {
+Source::Source(const vector<McObject*>& definitions, const McEnvironment* environment) : McModule(name(),environment) {
 	/* Containers of each source object */
 	vector<DistributionBaseObject*> distObject;
 	vector<ParticleSamplerObject*> samplerObject;

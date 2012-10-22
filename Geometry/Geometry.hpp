@@ -51,7 +51,7 @@ namespace Helios {
 		static std::string name() {return "geometry";}
 
 		/* Constructor */
-		Geometry(const std::vector<McObject*>& definitions, const Materials* materials = 0);
+		Geometry(const std::vector<McObject*>& definitions, const McEnvironment* environment);
 
 		/* Exception */
 		class GeometryError : public std::exception {

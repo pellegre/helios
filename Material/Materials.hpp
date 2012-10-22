@@ -67,7 +67,7 @@ namespace Helios {
 		template<class Object>
 		std::vector<Object*> getObject(const UserId& id) const;
 
-		Materials(const std::vector<McObject*>& matDefinitions);
+		Materials(const std::vector<McObject*>& matDefinitions, const McEnvironment* environment);
 
 		/* ---- Get information */
 
@@ -130,7 +130,7 @@ namespace Helios {
 		MaterialsFactory(McEnvironment* environment) : ModuleFactory(Materials::name(),environment) {/* */};
 		/* Create a new material */
 		McModule* create(const std::vector<McObject*>& objects) const {
-			return new Materials(objects);
+			return new Materials(objects,getEnvironment());
 		}
 		virtual ~MaterialsFactory() {/* */}
 	};

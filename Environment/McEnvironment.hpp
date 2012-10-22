@@ -141,7 +141,7 @@ namespace Helios {
 				return;
 			/* Get definitions and create module */
 			std::vector<McObject*> definitions = (*itObject).second;
-			Module* mod = dynamic_cast<Module*>(it->second->create(definitions));
+			McModule* mod = it->second->create(definitions);
 			/* Update the map of modules */
 			module_map[module] = mod;
 		}
