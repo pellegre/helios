@@ -29,6 +29,7 @@
 #define MCMODULE_HPP_
 
 #include <vector>
+#include <string>
 
 namespace Helios {
 

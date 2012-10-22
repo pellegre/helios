@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace Helios {
 
 	class Isotropic : public DistributionBase {
-		static DistributionBase* IsotropicConstructor(const Definition* definition) {
+		static DistributionBase* IsotropicConstructor(const DistributionBaseObject* definition) {
 			return new Isotropic(definition);
 		}
 		Constructor constructor() const {
@@ -45,7 +45,7 @@ namespace Helios {
 		}
 	public:
 		Isotropic() {/* */}
-		Isotropic(const Definition* definition) : DistributionBase(definition) {/* */}
+		Isotropic(const DistributionBaseObject* definition) : DistributionBase(definition) {/* */}
 		virtual void operator() (Particle& particle, Random& r) const {
 			isotropicDirection(particle.dir(),r);
 		};

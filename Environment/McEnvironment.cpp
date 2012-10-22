@@ -35,6 +35,7 @@ McEnvironment::McEnvironment(Parser* parser) : parser(parser) {
 	/* Register the module factories */
 	registerFactory(new MaterialsFactory(this));
 	registerFactory(new GeometryFactory(this));
+	registerFactory(new SourceFactory(this));
 }
 
 void McEnvironment::parseFile(const std::string& filename) {
@@ -68,6 +69,9 @@ void McEnvironment::setup() {
 
 	/* Once materials are setup, we need to setup the geometry (so cells can grab materials from the environment)*/
 	setupModule<Geometry>();
+
+	/* Finally, we setup the source */
+	setupModule<Source>();
 
 	/* Clean all definitions */
 	for(map<string,vector<McObject*> >::iterator it = object_map.begin() ; it != object_map.end() ; ++it) {

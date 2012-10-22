@@ -32,10 +32,13 @@
 
 #include "../Common/Common.hpp"
 #include "../Common/Sampler.hpp"
-#include "SourceDefinition.hpp"
+#include "SourceObject.hpp"
 #include "Distribution/Distribution.hpp"
 
 namespace Helios {
+
+	class ParticleSamplerObject;
+	class ParticleSourceObject;
 
 	/* Sampling a particle (position, energy and angle) */
 	class ParticleSampler {
@@ -54,52 +57,10 @@ namespace Helios {
 
 		/* Sampling different stuff on phase space */
 		std::vector<DistributionBase*> distributions;
+
 	public:
-
-		class Definition : public SourceDefinition {
-			/* ID defined by the user for this sampler */
-			SamplerId samplerid;
-			/* Reference position of the sampler */
-			Coordinate position;
-			/* Reference direction of the sampler */
-			Direction direction;
-			/* Samplers IDs */
-			std::vector<DistributionId> distributionIds;
-
-			/* Sampling different stuff on phase space */
-			std::vector<DistributionBase*> distributions;
-		public:
-			Definition(const SamplerId& samplerid, const Coordinate& position,
-					   const Direction& direction, const std::vector<DistributionId>& distributionIds) :
-					   SourceDefinition(SourceDefinition::SAMPLER), samplerid(samplerid),
-					   position(position), direction(direction), distributionIds(distributionIds) {/* */}
-
-			Direction getDirection() const {
-				return direction;
-			}
-
-			std::vector<DistributionBase*> getDistributions() const {
-				return distributions;
-			}
-
-			void setDistributions(std::vector<DistributionBase*> distributions) {
-				this->distributions = distributions;
-			}
-
-			Coordinate getPosition() const {
-				return position;
-			}
-
-			SamplerId getSamplerid() const {
-				return samplerid;
-			}
-
-			std::vector<DistributionId> getDistributionIds() const {
-				return distributionIds;
-			}
-
-			~Definition() {/* */}
-		};
+		/* Name of this object */
+		static std::string name() {return "sampler";}
 
 		/* Exception */
 		class BadSamplerCreation : public std::exception {
@@ -114,7 +75,7 @@ namespace Helios {
 			~BadSamplerCreation() throw() {/* */};
 		};
 
-		ParticleSampler(const ParticleSampler::Definition* definition);
+		ParticleSampler(const ParticleSamplerObject* definition);
 
 		/* Sample particle */
 		void operator() (Particle& particle,Random& r) const {
@@ -136,49 +97,8 @@ namespace Helios {
 	class ParticleSource {
 
 	public:
-
-		class Definition : public SourceDefinition {
-			/* Samplers IDs */
-			std::vector<SamplerId> samplersIds;
-			/* Weights of each sampler */
-			std::vector<double> weights;
-			/* Strength of the source on the problem */
-			double strength;
-
-			/* Samplers */
-			std::vector<ParticleSampler*> samplers;
-		public:
-			Definition(const std::vector<SamplerId>& samplersIds, const std::vector<double>& weights, const double& strength) :
-				SourceDefinition(SourceDefinition::SOURCE), samplersIds(samplersIds), weights(weights), strength(strength) {
-				/* Check the weight input */
-				if(this->weights.size() == 0) {
-					this->weights.resize(this->samplersIds.size());
-					/* Equal probability for all samplers */
-					double prob = 1/(double)this->samplersIds.size();
-					for(size_t i = 0 ; i < this->samplersIds.size() ; ++i)
-						this->weights[i] = prob;
-				}
-			}
-
-			std::vector<ParticleSampler*> getSamplers() const {
-				return samplers;
-			}
-
-			void setSamplers(std::vector<ParticleSampler*> samplers) {
-				this->samplers = samplers;
-			}
-
-			std::vector<SamplerId> getSamplersIds() const {
-				return samplersIds;
-			}
-
-			std::vector<double> getWeights() const {
-				return weights;
-			}
-			double getStrength() const {
-				return strength;
-			}
-		};
+		/* Name of this object */
+		static std::string name() {return "source";}
 
 		/* Exception */
 		class BadSourceCreation : public std::exception {
@@ -194,7 +114,7 @@ namespace Helios {
 		};
 
 		/* Create the source */
-		ParticleSource(const ParticleSource::Definition* definition);
+		ParticleSource(const ParticleSourceObject* definition);
 
 		/* Sample a particle */
 		Particle sample(Random& r) const {
@@ -225,5 +145,94 @@ namespace Helios {
 		double strength;
 	};
 
+	class ParticleSamplerObject : public SourceObject {
+		/* ID defined by the user for this sampler */
+		SamplerId samplerid;
+		/* Reference position of the sampler */
+		Coordinate position;
+		/* Reference direction of the sampler */
+		Direction direction;
+		/* Samplers IDs */
+		std::vector<DistributionId> distributionIds;
+
+		/* Sampling different stuff on phase space */
+		std::vector<DistributionBase*> distributions;
+	public:
+		ParticleSamplerObject(const SamplerId& samplerid, const Coordinate& position,
+				   const Direction& direction, const std::vector<DistributionId>& distributionIds) :
+				   SourceObject(ParticleSampler::name()), samplerid(samplerid),
+				   position(position), direction(direction), distributionIds(distributionIds) {/* */}
+
+		Direction getDirection() const {
+			return direction;
+		}
+
+		std::vector<DistributionBase*> getDistributions() const {
+			return distributions;
+		}
+
+		void setDistributions(std::vector<DistributionBase*> distributions) {
+			this->distributions = distributions;
+		}
+
+		Coordinate getPosition() const {
+			return position;
+		}
+
+		SamplerId getSamplerid() const {
+			return samplerid;
+		}
+
+		std::vector<DistributionId> getDistributionIds() const {
+			return distributionIds;
+		}
+
+		~ParticleSamplerObject() {/* */}
+	};
+
+	class ParticleSourceObject : public SourceObject {
+		/* Samplers IDs */
+		std::vector<SamplerId> samplersIds;
+		/* Weights of each sampler */
+		std::vector<double> weights;
+		/* Strength of the source on the problem */
+		double strength;
+
+		/* Samplers */
+		std::vector<ParticleSampler*> samplers;
+	public:
+		ParticleSourceObject(const std::vector<SamplerId>& samplersIds, const std::vector<double>& weights, const double& strength) :
+			SourceObject(ParticleSource::name()), samplersIds(samplersIds), weights(weights), strength(strength) {
+			/* Check the weight input */
+			if(this->weights.size() == 0) {
+				this->weights.resize(this->samplersIds.size());
+				/* Equal probability for all samplers */
+				double prob = 1/(double)this->samplersIds.size();
+				for(size_t i = 0 ; i < this->samplersIds.size() ; ++i)
+					this->weights[i] = prob;
+			}
+		}
+
+		std::vector<ParticleSampler*> getSamplers() const {
+			return samplers;
+		}
+
+		void setSamplers(std::vector<ParticleSampler*> samplers) {
+			this->samplers = samplers;
+		}
+
+		std::vector<SamplerId> getSamplersIds() const {
+			return samplersIds;
+		}
+
+		std::vector<double> getWeights() const {
+			return weights;
+		}
+		double getStrength() const {
+			return strength;
+		}
+
+		~ParticleSourceObject() {/* */}
+	};
 } /* namespace Helios */
 #endif /* PARTICLESOURCE_HPP_ */

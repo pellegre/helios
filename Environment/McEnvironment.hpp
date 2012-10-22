@@ -47,6 +47,9 @@
 /* Geometry */
 #include "../Geometry/Geometry.hpp"
 
+/* Source */
+#include "../Transport/Source.hpp"
+
 namespace Helios {
 
 	/* Environment class, contains all the modules that conforms the MC problem */

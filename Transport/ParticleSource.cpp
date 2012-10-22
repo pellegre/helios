@@ -32,7 +32,7 @@ using namespace std;
 namespace Helios {
 
 
-ParticleSource::ParticleSource(const ParticleSource::Definition* definition) : strength(definition->getStrength()) {
+ParticleSource::ParticleSource(const ParticleSourceObject* definition) : strength(definition->getStrength()) {
 	/* Get samplers */
 	std::vector<ParticleSampler*> samplers = definition->getSamplers();
 	/* Get weight of each sampler */
@@ -41,7 +41,7 @@ ParticleSource::ParticleSource(const ParticleSource::Definition* definition) : s
 	source_sampler = new Sampler<ParticleSampler*>(samplers,weights);
 }
 
-ParticleSampler::ParticleSampler(const ParticleSampler::Definition* definition) :
+ParticleSampler::ParticleSampler(const ParticleSamplerObject* definition) :
 		samplerid(definition->getSamplerid()), position(definition->getPosition()),
 		direction(definition->getDirection()), energy(1.0), weight(1.0), state(Particle::ALIVE),
 		distributions(definition->getDistributions())

@@ -43,7 +43,7 @@
 
 namespace Helios {
 
-	class Geometry: public McModule {
+	class Geometry : public McModule {
 
 	public:
 

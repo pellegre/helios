@@ -25,31 +25,22 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SOURCEDEFINITION_HPP_
-#define SOURCEDEFINITION_HPP_
+#ifndef SOURCEOBJECT_HPP_
+#define SOURCEOBJECT_HPP_
+
+#include "../Environment/McModule.hpp"
+#include "../Common/Common.hpp"
 
 namespace Helios {
 
-	/* Generic and base class to define all source related objects */
-	class SourceDefinition {
+	/* Generic and base class to define all geometric entities */
+	class SourceObject : public McObject {
 	public:
-
-		enum SourceType {
-			SAMPLER = 1,
-			DIST    = 2,
-			SOURCE  = 3
-		};
-
 		/* Different type of geometric entities */
-		SourceDefinition(const SourceType& type) : type(type) {/* */};
-		/* Get the type */
-		SourceType getType() const {return type;}
-		virtual ~SourceDefinition(){/* */};
-
-	private:
-		SourceType type;
+		SourceObject(const std::string& type) : McObject("sources",type) {/* */};
+		virtual ~SourceObject(){/* */};
 	};
 
 } /* namespace Helios */
 
-#endif /* SOURCEDEFINITION_HPP_ */
+#endif /* SOURCEOBJECT_HPP_ */

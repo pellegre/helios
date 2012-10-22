@@ -30,32 +30,18 @@
 
 #include "../../Common/Common.hpp"
 #include "../../Common/Sampler.hpp"
-#include "../SourceDefinition.hpp"
+#include "../SourceObject.hpp"
 #include "../Particle.hpp"
 
 namespace Helios {
+	class DistributionBaseObject;
 
 	/* Base class for distribution */
 	class DistributionBase {
 
 	public:
-		/* Base class to define a distribution */
-		class Definition : public SourceDefinition {
-			/* Type of distribution */
-			std::string type;
-			/* Distribution ID on this problem */
-			DistributionId distid;
-		public:
-			Definition(const std::string& type, const DistributionId& distid) :
-				SourceDefinition(SourceDefinition::DIST), type(type), distid(distid) {/* */}
-			DistributionId getUserId() const {
-				return distid;
-			}
-			std::string getType() const {
-				return type;
-			}
-			virtual ~Definition() {/* */}
-		};
+
+		static std::string name() {return "distribution";}
 
 		/* Exception */
 		class BadDistributionCreation : public std::exception {
@@ -71,12 +57,12 @@ namespace Helios {
 		};
 
 		/* Constructor */
-		typedef DistributionBase(*(*Constructor)(const Definition*));
+		typedef DistributionBase(*(*Constructor)(const DistributionBaseObject*));
 		/* Friendly factory */
 		friend class DistributionFactory;
 
 		/* Constructor from definition */
-		DistributionBase(const Definition* definition) : distid(definition->getUserId()) {/* */};
+		DistributionBase(const DistributionBaseObject* definition);
 		/* Only used by the factory */
 		DistributionBase() : distid() {/* */};
 
@@ -103,21 +89,9 @@ namespace Helios {
 	class Distribution : public DistributionBase {
 
 	public:
-		/* Base class to define a distribution */
-		class Definition : public DistributionBase::Definition {
-			/* Coefficients for each child */
-			std::vector<double> coeffs;
-		public:
-			Definition(const std::string& type, const DistributionId& distid, const std::vector<double>& coeffs) :
-				DistributionBase::Definition(type,distid) , coeffs(coeffs) {/* */}
-			std::vector<double> getCoeffs() const {
-				return coeffs;
-			}
-			virtual ~Definition() {/* */}
-		};
 
 		/* Constructor from definition */
-		Distribution(const DistributionBase::Definition* definition) : DistributionBase(definition) {/* */};
+		Distribution(const DistributionBaseObject* definition) : DistributionBase(definition) {/* */};
 		/* Only used by the factory */
 		Distribution() {/* */};
 
@@ -150,60 +124,9 @@ namespace Helios {
 	class DistributionCustom : public DistributionBase {
 
 	public:
-		/* Base class to define a distribution */
-		class Definition : public DistributionBase::Definition {
-			/* Samplers IDs */
-			std::vector<DistributionId> samplersIds;
-			/* Weights of each sampler */
-			std::vector<double> weights;
-
-			/* Samplers */
-			std::vector<DistributionBase*> samplers;
-
-		public:
-			Definition(const std::string& type, const DistributionId& distid,
-					   const std::vector<DistributionId>& samplersIds, const std::vector<double>& weights) :
-				DistributionBase::Definition(type,distid) , samplersIds(samplersIds) , weights(weights) {
-				/* Check the weight input */
-				if(this->weights.size() == 0) {
-					this->weights.resize(this->samplersIds.size());
-					/* Equal probability for all samplers */
-					double prob = 1/(double)this->samplersIds.size();
-					for(size_t i = 0 ; i < this->samplersIds.size() ; ++i)
-						this->weights[i] = prob;
-				}
-			}
-
-			virtual ~Definition() {/* */}
-
-			std::vector<DistributionBase*> getDistributions() const {
-				return samplers;
-			}
-
-			void setDistributions(std::vector<DistributionBase*> samplers) {
-				this->samplers = samplers;
-			}
-
-			std::vector<DistributionId> getDistributionIds() const {
-				return samplersIds;
-			}
-
-			std::vector<double> getWeights() const {
-				return weights;
-			}
-
-		};
 
 		/* Constructor from definition */
-		DistributionCustom(const DistributionBase::Definition* definition) : DistributionBase(definition) {
-			const DistributionCustom::Definition* distDefinition = static_cast<const DistributionCustom::Definition*>(definition);
-			/* Weights of each sampler */
-			std::vector<double> weights = distDefinition->getWeights();
-			/* Samplers */
-			std::vector<DistributionBase*> samplers = distDefinition->getDistributions();
-			/* Create sampler */
-			distribution_sampler = new Sampler<DistributionBase*>(samplers,weights);
-		};
+		DistributionCustom(const DistributionBaseObject* definition);
 
 		/* Only used by the factory */
 		DistributionCustom() : DistributionBase() , distribution_sampler(0) {};
@@ -221,7 +144,7 @@ namespace Helios {
 		/* Get name of the distribution */
 		virtual std::string getName() const  {return "custom";};
 		/* Get constructor */
-		static DistributionBase* CustomConstructor(const DistributionBase::Definition* definition) {
+		static DistributionBase* CustomConstructor(const DistributionBaseObject* definition) {
 			return new DistributionCustom(definition);
 		}
 		Constructor constructor() const {
@@ -231,31 +154,94 @@ namespace Helios {
 		Sampler<DistributionBase*>* distribution_sampler;
 	};
 
-	class DistributionFactory {
+	/* ------- Objects for distributions */
 
-		/* Static instance of the factory */
-		static DistributionFactory factory;
+	/* Base class to define a distribution */
+	class DistributionBaseObject : public SourceObject {
+		/* Type of distribution */
+		std::string type;
+		/* Distribution ID on this problem */
+		DistributionId distid;
+	public:
+		DistributionBaseObject(const std::string& type, const DistributionId& distid) :
+			SourceObject(DistributionBase::name()), type(type), distid(distid) {/* */}
+		DistributionId getUserId() const {
+			return distid;
+		}
+		std::string getType() const {
+			return type;
+		}
+		virtual ~DistributionBaseObject() {/* */}
+	};
 
-		/* Map of surfaces types and constructors */
-		std::map<std::string, DistributionBase::Constructor> constructor_table;
+	/* Base class to define a distribution */
+	class DistributionObject : public DistributionBaseObject {
+		/* Coefficients for each child */
+		std::vector<double> coeffs;
+	public:
+		DistributionObject(const std::string& type, const DistributionId& distid, const std::vector<double>& coeffs) :
+			DistributionBaseObject(type,distid) , coeffs(coeffs) {/* */}
+		std::vector<double> getCoeffs() const {
+			return coeffs;
+		}
+		virtual ~DistributionObject() {/* */}
+	};
 
-		/* Prevent construction or copy */
-		DistributionFactory();
-		DistributionFactory& operator= (const DistributionFactory& other);
-		DistributionFactory(const DistributionFactory&);
-		virtual ~DistributionFactory() {/* */}
+	/* Base class to define a distribution */
+	class DistributionCustomObject : public DistributionBaseObject {
+		/* Samplers IDs */
+		std::vector<DistributionId> samplersIds;
+		/* Weights of each sampler */
+		std::vector<double> weights;
+
+		/* Samplers */
+		std::vector<DistributionBase*> samplers;
 
 	public:
+		DistributionCustomObject(const std::string& type, const DistributionId& distid,
+				   const std::vector<DistributionId>& samplersIds, const std::vector<double>& weights) :
+			DistributionBaseObject(type,distid) , samplersIds(samplersIds) , weights(weights) {
+			/* Check the weight input */
+			if(this->weights.size() == 0) {
+				this->weights.resize(this->samplersIds.size());
+				/* Equal probability for all samplers */
+				double prob = 1/(double)this->samplersIds.size();
+				for(size_t i = 0 ; i < this->samplersIds.size() ; ++i)
+					this->weights[i] = prob;
+			}
+		}
 
-		/* Access the factory, reference to the static singleton */
-		static DistributionFactory& access() {return factory;}
+		virtual ~DistributionCustomObject() {/* */}
 
+		std::vector<DistributionBase*> getDistributions() const {
+			return samplers;
+		}
+
+		void setDistributions(std::vector<DistributionBase*> samplers) {
+			this->samplers = samplers;
+		}
+
+		std::vector<DistributionId> getDistributionIds() const {
+			return samplersIds;
+		}
+
+		std::vector<double> getWeights() const {
+			return weights;
+		}
+
+	};
+
+	class DistributionFactory {
+		/* Map of surfaces types and constructors */
+		std::map<std::string, DistributionBase::Constructor> constructor_table;
+	public:
+		/* Prevent construction or copy */
+		DistributionFactory();
 		/* Register a new surface */
-		void registerDistribution(const DistributionBase& surface);
-
+		void registerDistribution(const DistributionBase& distribution);
 		/* Create a new surface */
-		DistributionBase* createDistribution(const DistributionBase::Definition* definition) const;
-
+		DistributionBase* createDistribution(const DistributionBaseObject* definition) const;
+		virtual ~DistributionFactory() {/* */}
 	};
 
 } /* namespace Helios */

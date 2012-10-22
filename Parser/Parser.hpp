@@ -45,12 +45,6 @@ namespace Helios {
 		/* Definitions of different types of objects */
 		std::vector<McObject*> objects;
 
-		/*
-		 * Source Stuff
-		 * All the materials definitions should be pushed here.
-		 */
-		std::vector<SourceDefinition*> sourceDefinition;
-
 		/* Parse the file and save the data on internal structures */
 		virtual void parseInputFile(const std::string& file) = 0;
 
@@ -98,19 +92,8 @@ namespace Helios {
 
 		void parseFile(const std::string& file);
 
-		/*
-		 * ---- Setup and return constructed objects.
-		 */
-		/* Get the source definitions */
-		const std::vector<SourceDefinition*>& getSource() {return sourceDefinition;};
-
 		/* Get objects */
 		const std::vector<McObject*>& getObjects() {return objects;};
-
-		/* Clear definitions inside the parser */
-		void clear() {
-			sourceDefinition.clear();
-		}
 
 		virtual ~Parser() {/* */};
 	};

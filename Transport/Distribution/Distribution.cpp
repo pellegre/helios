@@ -33,7 +33,16 @@ using namespace std;
 
 namespace Helios {
 
-DistributionFactory DistributionFactory::factory;
+/* Constructor from definition */
+DistributionCustom::DistributionCustom(const DistributionBaseObject* definition) : DistributionBase(definition) {
+	const DistributionCustomObject* distObject = static_cast<const DistributionCustomObject*>(definition);
+	/* Weights of each sampler */
+	std::vector<double> weights = distObject->getWeights();
+	/* Samplers */
+	std::vector<DistributionBase*> samplers = distObject->getDistributions();
+	/* Create sampler */
+	distribution_sampler = new Sampler<DistributionBase*>(samplers,weights);
+};
 
 DistributionFactory::DistributionFactory() {
 	/* Distribution registering */
@@ -51,7 +60,7 @@ DistributionFactory::DistributionFactory() {
 	registerDistribution(DistributionCustom());
 }
 
-DistributionBase* DistributionFactory::createDistribution(const DistributionBase::Definition* definition) const {
+DistributionBase* DistributionFactory::createDistribution(const DistributionBaseObject* definition) const {
 	map<string,DistributionBase::Constructor>::const_iterator it_type = constructor_table.find(definition->getType());
 	if(it_type != constructor_table.end())
 		return (*it_type).second(definition);
@@ -62,4 +71,7 @@ DistributionBase* DistributionFactory::createDistribution(const DistributionBase
 void DistributionFactory::registerDistribution(const DistributionBase& distribution) {
 	constructor_table[distribution.getName()] = distribution.constructor();
 }
+
+DistributionBase::DistributionBase(const DistributionBaseObject* definition) : distid(definition->getUserId()) {/* */};
+
 } /* namespace Helios */

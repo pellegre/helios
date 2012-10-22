@@ -89,7 +89,7 @@ protected:
 	void random(const std::string& source_file, const Helios::CellId& cellExpected) {
 		/* Get source from file */
 		parser->parseFile(InputPath::access().getPath() + "/SourceTest/" + source_file);
-		std::vector<Helios::SourceDefinition*> sourceDefinitions = parser->getSource();
+		std::vector<Helios::SourceObject*> sourceDefinitions = parser->getSource();
 		source = new Helios::Source(sourceDefinitions);
 
 		for(size_t h = 0 ; h < histories ; h++) {
@@ -111,7 +111,7 @@ protected:
 	std::map<Helios::CellId,size_t> collect(const std::string& source_file, size_t samples) {
 		/* Get source from file */
 		parser->parseFile(InputPath::access().getPath() + "/SourceTest/" + source_file);
-		std::vector<Helios::SourceDefinition*> sourceDefinitions = parser->getSource();
+		std::vector<Helios::SourceObject*> sourceDefinitions = parser->getSource();
 		source = new Helios::Source(sourceDefinitions);
 
 		/* Collect statistic on each cell */

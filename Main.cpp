@@ -71,9 +71,6 @@ int main(int argc, char **argv) {
 	/* Setup the problem */
 	environment.setup();
 
-	/* Setup problem */
-	std::vector<SourceDefinition*> sourceDefinitions = parser->getSource();
-
 	/* Geometry */
 	Geometry* geometry = environment.getModule<Geometry>();
 	geometry->printGeo(cout);
@@ -84,7 +81,7 @@ int main(int argc, char **argv) {
 	/* Get materials */
 	Materials* materials = environment.getModule<Materials>();
 	/* Get the source */
-	Source* source = new Source(sourceDefinitions);
+	Source* source = environment.getModule<Source>();
 
 	/* Initialization - Random number */
 	Random r;
@@ -92,9 +89,9 @@ int main(int argc, char **argv) {
 
 	/* Initialization - KEFF cycle */
 	double keff = 1.186;
-	int neutrons = 2500;
-	int skip = 10;
-	int cycles = 50;
+	int neutrons = 25;
+	int skip = 5;
+	int cycles = 10;
 	list<pair<const Cell*,Particle> > particles;
 	/* Particle bank, the particles for the next cycle are banked here */
 	list<pair<const Cell*,Particle> > fission_bank;
@@ -232,6 +229,5 @@ int main(int argc, char **argv) {
 
 	Log::ok() << " Final keff = "<< ave_keff/ (double)(cycles - skip) << Log::endl;
 
-	delete source;
 	delete parser;
 }

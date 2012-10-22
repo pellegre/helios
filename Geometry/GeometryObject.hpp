@@ -28,6 +28,9 @@
 #ifndef GEOMETRYOBJECT_HPP_
 #define GEOMETRYOBJECT_HPP_
 
+#include "../Environment/McModule.hpp"
+#include "../Common/Common.hpp"
+
 namespace Helios {
 
 	/* Generic and base class to define all geometric entities */

@@ -31,7 +31,7 @@
 #include <map>
 #include <vector>
 #include "../Common/Sampler.hpp"
-#include "SourceDefinition.hpp"
+#include "SourceObject.hpp"
 #include "ParticleSource.hpp"
 
 namespace Helios {
@@ -41,7 +41,10 @@ namespace Helios {
 	 * When the source is eliminated, all this resources are deallocated. This class is the equivalent
 	 * to the Geometry class for cells and surfaces.
 	 */
-	class Source {
+	class Source : public McModule {
+
+		/* Distribution factory */
+		DistributionFactory distribution_factory;
 
 		/* Distributions */
 		std::vector<DistributionBase*> distributions;
@@ -56,21 +59,21 @@ namespace Helios {
 		/* A sampler of sources */
 		Sampler<ParticleSource*>* source_sampler;
 
-		/* Setup the source from the base definitions */
-		void setupSource(std::vector<SourceDefinition*>& definitions);
-
 		/* Once the definitions are dispatched, setup source with this function */
-		void setupSource(std::vector<DistributionBase::Definition*>& distDefinition,
-				         std::vector<ParticleSampler::Definition*>& samplerDefinition,
-				         std::vector<ParticleSource::Definition*>& sourceDefinition);
+		void setupSource(std::vector<DistributionBaseObject*>& distObject,
+				         std::vector<ParticleSamplerObject*>& samplerObject,
+				         std::vector<ParticleSourceObject*>& sourceObject);
 
 		/* Maps of internal IDs with user defined IDs */
 		std::map<DistributionId,InternalDistributionId> distribution_map;
 		std::map<SamplerId,InternalSamplerId> sampler_map;
 
 	public:
+		/* Name of this module */
+		static std::string name() {return "sources";}
+
 		/* Construction from definitions */
-		Source(std::vector<SourceDefinition*>& definitions) {setupSource(definitions);}
+		Source(const std::vector<McObject*>& definitions);
 
 		/* Sample a particle */
 		Particle sample(Random& r) const {
@@ -81,6 +84,18 @@ namespace Helios {
 		}
 
 		~Source();
+	};
+
+	class McEnvironment;
+
+	/* Material Factory */
+	class SourceFactory : public ModuleFactory {
+	public:
+		/* Prevent construction or copy */
+		SourceFactory(McEnvironment* environment) : ModuleFactory(Source::name(),environment) {/* */};
+		/* Create a new material */
+		McModule* create(const std::vector<McObject*>& objects) const;
+		virtual ~SourceFactory() {/* */}
 	};
 
 } /* namespace Helios */

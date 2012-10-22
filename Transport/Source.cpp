@@ -31,46 +31,47 @@ using namespace std;
 
 namespace Helios {
 
+McModule* SourceFactory::create(const std::vector<McObject*>& objects) const {
+	return new Source(objects);
+}
+
 template<class T>
-static void pushDefinition(SourceDefinition* src, vector<T*>& definition) {
+static void pushObject(McObject* src, vector<T*>& definition) {
 	definition.push_back(dynamic_cast<T*>(src));
 }
 
-void Source::setupSource(vector<SourceDefinition*>& definitions) {
-	vector<DistributionBase::Definition*> distDefinition;
-	vector<ParticleSampler::Definition*> samplerDefinition;
-	vector<ParticleSource::Definition*> sourceDefinition;
+Source::Source(const vector<McObject*>& definitions) : McModule(name()) {
+	/* Containers of each source object */
+	vector<DistributionBaseObject*> distObject;
+	vector<ParticleSamplerObject*> samplerObject;
+	vector<ParticleSourceObject*> sourceObject;
 	/* Dispatch each definition to the corresponding container */
-	vector<SourceDefinition*>::const_iterator it_def = definitions.begin();
+	vector<McObject*>::const_iterator it_def = definitions.begin();
 
+	/* Get the type and put the object on the correct container */
 	for(; it_def != definitions.end() ; ++it_def) {
-		switch((*it_def)->getType()) {
-		case SourceDefinition::DIST:
-			pushDefinition(*it_def,distDefinition);
-			break;
-		case SourceDefinition::SAMPLER:
-			pushDefinition(*it_def,samplerDefinition);
-			break;
-		case SourceDefinition::SOURCE:
-			pushDefinition(*it_def,sourceDefinition);
-			break;
-		}
+		string type = (*it_def)->getObjectName();
+		if (type == DistributionBase::name())
+			pushObject(*it_def,distObject);
+		else if (type == ParticleSampler::name())
+			pushObject(*it_def,samplerObject);
+		else if (type == ParticleSource::name())
+			pushObject(*it_def,sourceObject);
 	}
 
-	setupSource(distDefinition,samplerDefinition,sourceDefinition);
-	definitions.clear();
+	setupSource(distObject,samplerObject,sourceObject);
 }
 
-void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition,
-		                 vector<ParticleSampler::Definition*>& samplerDefinition,
-		                 vector<ParticleSource::Definition*>& sourceDefinition) {
+void Source::setupSource(vector<DistributionBaseObject*>& distObject,
+		                 vector<ParticleSamplerObject*>& samplerObject,
+		                 vector<ParticleSourceObject*>& sourceObject) {
 
 	/* Container of custom distributions */
-	vector<DistributionCustom::Definition*> customDefinition;
+	vector<DistributionCustomObject*> customObject;
 
 	/* Create the distributions */
-	vector<DistributionBase::Definition*>::const_iterator itDist = distDefinition.begin();
-	for(; itDist != distDefinition.end() ; ++itDist) {
+	vector<DistributionBaseObject*>::const_iterator itDist = distObject.begin();
+	for(; itDist != distObject.end() ; ++itDist) {
 		DistributionId id = (*itDist)->getUserId();
 		if(distribution_map.find(id) != distribution_map.end())
 			throw(DistributionBase::BadDistributionCreation(id,"Duplicated id"));
@@ -78,16 +79,16 @@ void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition,
 			/* Update distribution map */
 			distribution_map[id] = distributions.size();
 			/* Create the distribution */
-			DistributionBase* distPtr = DistributionFactory::access().createDistribution((*itDist));
+			DistributionBase* distPtr = distribution_factory.createDistribution((*itDist));
 			/* Push it into the container */
 			distributions.push_back(distPtr);
 		} else
-			customDefinition.push_back(static_cast<DistributionCustom::Definition*>(*itDist));
+			customObject.push_back(static_cast<DistributionCustomObject*>(*itDist));
 	}
 
 	/* Create custom definitions */
-	vector<DistributionCustom::Definition*>::const_iterator itCustom = customDefinition.begin();
-	for(; itCustom != customDefinition.end() ; ++itCustom) {
+	vector<DistributionCustomObject*>::const_iterator itCustom = customObject.begin();
+	for(; itCustom != customObject.end() ; ++itCustom) {
 		/* Get distributions */
 		vector<DistributionId> distIds = (*itCustom)->getDistributionIds();
 		vector<DistributionBase*> distPtrs;
@@ -104,14 +105,14 @@ void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition,
 		/* Update distribution map */
 		distribution_map[(*itCustom)->getUserId()] = distributions.size();
 		/* Create the distribution */
-		DistributionBase* distPtr = DistributionFactory::access().createDistribution((*itCustom));
+		DistributionBase* distPtr = distribution_factory.createDistribution((*itCustom));
 		/* Push it into the container */
 		distributions.push_back(distPtr);
 	}
 
 	/* Create samplers */
-	vector<ParticleSampler::Definition*>::const_iterator itSampler = samplerDefinition.begin();
-	for(; itSampler != samplerDefinition.end() ; ++itSampler) {
+	vector<ParticleSamplerObject*>::const_iterator itSampler = samplerObject.begin();
+	for(; itSampler != samplerObject.end() ; ++itSampler) {
 		/* Get distributions */
 		vector<DistributionId> distIds = (*itSampler)->getDistributionIds();
 		vector<DistributionBase*> distPtrs;
@@ -130,13 +131,13 @@ void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition,
 		particle_samplers.push_back(sampler);
 	}
 
-	if(sourceDefinition.size() == 0)
+	if(sourceObject.size() == 0)
 		throw(ParticleSource::BadSourceCreation("You didn't put any source on the <sources> node in the input file"));
 
 	/* Finally, create the source with each samplers */
 	vector<double> strengths;
-	vector<ParticleSource::Definition*>::const_iterator itSource = sourceDefinition.begin();
-	for(; itSource != sourceDefinition.end() ; ++itSource) {
+	vector<ParticleSourceObject*>::const_iterator itSource = sourceObject.begin();
+	for(; itSource != sourceObject.end() ; ++itSource) {
 		/* Get distributions */
 		vector<SamplerId> samplerIds = (*itSource)->getSamplersIds();
 		vector<ParticleSampler*> samplerPtrs;
@@ -153,10 +154,6 @@ void Source::setupSource(vector<DistributionBase::Definition*>& distDefinition,
 		sources.push_back(source);
 		strengths.push_back(source->getStrength());
 	}
-
-	purgePointers(distDefinition);
-	purgePointers(samplerDefinition);
-	purgePointers(sourceDefinition);
 
 	/* Once we got all the sources, we should create the sampler */
 	source_sampler = new Sampler<ParticleSource*>(sources,strengths);

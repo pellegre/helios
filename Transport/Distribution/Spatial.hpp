@@ -36,13 +36,13 @@ namespace Helios {
 	class Box1D : public Distribution {
 		Uniform uniform;
 		/* Static constructor functions */
-		static DistributionBase* xAxisConstructor(const DistributionBase::Definition* definition) {
+		static DistributionBase* xAxisConstructor(const DistributionBaseObject* definition) {
 			return new Box1D<xaxis>(definition);
 		}
-		static DistributionBase* yAxisConstructor(const DistributionBase::Definition* definition) {
+		static DistributionBase* yAxisConstructor(const DistributionBaseObject* definition) {
 			return new Box1D<yaxis>(definition);
 		}
-		static DistributionBase* zAxisConstructor(const DistributionBase::Definition* definition) {
+		static DistributionBase* zAxisConstructor(const DistributionBaseObject* definition) {
 			return new Box1D<zaxis>(definition);
 		}
 		Constructor constructor() const {
@@ -65,9 +65,9 @@ namespace Helios {
 		}
 	public:
 		Box1D() {/* */}
-		Box1D(const DistributionBase::Definition* definition) : Distribution(definition) {
-			const Distribution::Definition* distDefinition = static_cast<const Distribution::Definition*>(definition);
-			std::vector<double> coeffs = distDefinition->getCoeffs();
+		Box1D(const DistributionBaseObject* definition) : Distribution(definition) {
+			const DistributionObject* distObject = static_cast<const DistributionObject*>(definition);
+			std::vector<double> coeffs = distObject->getCoeffs();
 			if(coeffs.size() != 2)
 				throw BadDistributionCreation(definition->getUserId(),
 						"Bad number of coefficients. Expected 2 : umin umax");
@@ -84,13 +84,13 @@ namespace Helios {
 		/* Uniform distributions */
 		Uniform uniform1,uniform2;
 		/* Static constructor functions */
-		static DistributionBase* xAxisConstructor(const DistributionBase::Definition* definition) {
+		static DistributionBase* xAxisConstructor(const DistributionBaseObject* definition) {
 			return new Box2D<xaxis>(definition);
 		}
-		static DistributionBase* yAxisConstructor(const DistributionBase::Definition* definition) {
+		static DistributionBase* yAxisConstructor(const DistributionBaseObject* definition) {
 			return new Box2D<yaxis>(definition);
 		}
-		static DistributionBase* zAxisConstructor(const DistributionBase::Definition* definition) {
+		static DistributionBase* zAxisConstructor(const DistributionBaseObject* definition) {
 			return new Box2D<zaxis>(definition);
 		}
 		Constructor constructor() const {
@@ -113,9 +113,9 @@ namespace Helios {
 		}
 	public:
 		Box2D() {/* */}
-		Box2D(const DistributionBase::Definition* definition) : Distribution(definition) {
-			const Distribution::Definition* distDefinition = static_cast<const Distribution::Definition*>(definition);
-			std::vector<double> coeffs = distDefinition->getCoeffs();
+		Box2D(const DistributionBaseObject* definition) : Distribution(definition) {
+			const DistributionObject* distObject = static_cast<const DistributionObject*>(definition);
+			std::vector<double> coeffs = distObject->getCoeffs();
 			if(coeffs.size() != 4)
 				throw BadDistributionCreation(definition->getUserId(),
 						"Bad number of coefficients. Expected 4 : umin umax vmin vmax");
@@ -146,7 +146,7 @@ namespace Helios {
 		Uniform uniformx;
 		Uniform uniformy;
 		Uniform uniformz;
-		static DistributionBase* Box3DConstructor(const DistributionBase::Definition* definition) {
+		static DistributionBase* Box3DConstructor(const DistributionBaseObject* definition) {
 			return new Box3D(definition);
 		}
 		Constructor constructor() const {
@@ -158,9 +158,9 @@ namespace Helios {
 		}
 	public:
 		Box3D() {/* */}
-		Box3D(const DistributionBase::Definition* definition) : Distribution(definition) {
-			const Distribution::Definition* distDefinition = static_cast<const Distribution::Definition*>(definition);
-			std::vector<double> coeffs = distDefinition->getCoeffs();
+		Box3D(const DistributionBaseObject* definition) : Distribution(definition) {
+			const DistributionObject* distObject = static_cast<const DistributionObject*>(definition);
+			std::vector<double> coeffs = distObject->getCoeffs();
 			if(coeffs.size() != 6)
 				throw BadDistributionCreation(definition->getUserId(),
 						"Bad number of coefficients. Expected 6 : xmin xmax ymin ymax zmin zmax");
@@ -180,13 +180,13 @@ namespace Helios {
 	class Cyl2D : public Distribution {
 		double rmin,rmax;
 		/* Static constructor functions */
-		static DistributionBase* xAxisConstructor(const DistributionBase::Definition* definition) {
+		static DistributionBase* xAxisConstructor(const DistributionBaseObject* definition) {
 			return new Cyl2D<xaxis>(definition);
 		}
-		static DistributionBase* yAxisConstructor(const DistributionBase::Definition* definition) {
+		static DistributionBase* yAxisConstructor(const DistributionBaseObject* definition) {
 			return new Cyl2D<yaxis>(definition);
 		}
-		static DistributionBase* zAxisConstructor(const DistributionBase::Definition* definition) {
+		static DistributionBase* zAxisConstructor(const DistributionBaseObject* definition) {
 			return new Cyl2D<zaxis>(definition);
 		}
 		Constructor constructor() const {
@@ -209,9 +209,9 @@ namespace Helios {
 		}
 	public:
 		Cyl2D() {/* */}
-		Cyl2D(const DistributionBase::Definition* definition) : Distribution(definition) {
-			const Distribution::Definition* distDefinition = static_cast<const Distribution::Definition*>(definition);
-			std::vector<double> coeffs = distDefinition->getCoeffs();
+		Cyl2D(const DistributionBaseObject* definition) : Distribution(definition) {
+			const DistributionObject* distObject = static_cast<const DistributionObject*>(definition);
+			std::vector<double> coeffs = distObject->getCoeffs();
 			if(coeffs.size() != 2)
 				throw BadDistributionCreation(definition->getUserId(),
 						"Bad number of coefficients. Expected 2 : rmin rmax");

@@ -35,7 +35,7 @@ using namespace std;
 namespace Helios {
 
 /* Box distribution */
-static SourceDefinition* boxAttrib(TiXmlElement* pElement) {
+static SourceObject* boxAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[2] = {"id", "type"};
 	static const string optional[3] = {"x","y","z"};
@@ -62,11 +62,11 @@ static SourceDefinition* boxAttrib(TiXmlElement* pElement) {
 		}
 	}
 	/* Return surface definition */
-	return new Distribution::Definition(type,id,coeffs);
+	return new DistributionObject(type,id,coeffs);
 }
 
 /* Isotropic distribution */
-static SourceDefinition* cylAttrib(TiXmlElement* pElement) {
+static SourceObject* cylAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[3] = {"id", "type", "r"};
 	static XmlParser::XmlAttributes surAttrib(vector<string>(required, required + 3), vector<string>());
@@ -81,11 +81,11 @@ static SourceDefinition* cylAttrib(TiXmlElement* pElement) {
 	vector<double> coeffs = getContainer<double>(mapAttrib["r"]);
 
 	/* Return surface definition */
-	return new Distribution::Definition(type,id,coeffs);
+	return new DistributionObject(type,id,coeffs);
 }
 
 /* Isotropic distribution */
-static SourceDefinition* isoAttrib(TiXmlElement* pElement) {
+static SourceObject* isoAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[2] = {"id", "type"};
 	static XmlParser::XmlAttributes surAttrib(vector<string>(required, required + 2), vector<string>());
@@ -98,11 +98,11 @@ static SourceDefinition* isoAttrib(TiXmlElement* pElement) {
 	DistributionId id = fromString<DistributionId>(mapAttrib["id"]);
 	string type = mapAttrib["type"];
 	/* Return surface definition */
-	return new DistributionBase::Definition(type,id);
+	return new DistributionBaseObject(type,id);
 }
 
 /* User defined distribution */
-static SourceDefinition* customAttrib(TiXmlElement* pElement) {
+static SourceObject* customAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[3] = {"id", "type", "dist"};
 	static const string optional[1] = {"weights"};
@@ -118,11 +118,11 @@ static SourceDefinition* customAttrib(TiXmlElement* pElement) {
 	vector<DistributionId> samplerIds = getContainer<DistributionId>(mapAttrib["dist"]);
 	vector<double> weights = getContainer<double>(mapAttrib["weights"]);
 	/* Return surface definition */
-	return new DistributionCustom::Definition(type,id,samplerIds,weights);
+	return new DistributionCustomObject(type,id,samplerIds,weights);
 }
 
-static map<string,SourceDefinition(*(*)(TiXmlElement*))> initMap() {
-	map<string,SourceDefinition(*(*)(TiXmlElement*))> m;
+static map<string,SourceObject(*(*)(TiXmlElement*))> initMap() {
+	map<string,SourceObject(*(*)(TiXmlElement*))> m;
 	m["box"] = boxAttrib;
 	m["cyl"] = cylAttrib;
 	m["isotropic"] = isoAttrib;
@@ -143,10 +143,10 @@ static map<string,string> initTypeDist() {
 }
 
 /* Initialize map of attribute parsers */
-static map<string,SourceDefinition(*(*)(TiXmlElement*))> mapParser = initMap();
+static map<string,SourceObject(*(*)(TiXmlElement*))> mapParser = initMap();
 
 /* Parse distribution attributes */
-static SourceDefinition* distAttrib(TiXmlElement* pElement) {
+static SourceObject* distAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[2] = {"id", "type"};
 	static XmlParser::XmlAttributes distAttrib(vector<string>(required, required + 2), vector<string>());
@@ -172,7 +172,7 @@ static SourceDefinition* distAttrib(TiXmlElement* pElement) {
 }
 
 /* Parse Sampler attributes */
-static SourceDefinition* samplerAttrib(TiXmlElement* pElement) {
+static SourceObject* samplerAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[2] = {"id", "pos"};
 	static const string optional[3] = {"dir", "energy" , "dist"};
@@ -190,11 +190,11 @@ static SourceDefinition* samplerAttrib(TiXmlElement* pElement) {
 	Direction dir = getBlitzArray<double>(dirAttrib.getString(mapAttrib));
 	vector<DistributionId> distIds = getContainer<DistributionId>(mapAttrib["dist"]);
 	/* Return surface definition */
-	return new ParticleSampler::Definition(id,pos,dir,distIds);
+	return new ParticleSamplerObject(id,pos,dir,distIds);
 }
 
 /* Parse Source attributes */
-static SourceDefinition* sourceAttrib(TiXmlElement* pElement) {
+static SourceObject* sourceAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[1] = {"samplers"};
 	static const string optional[2] = {"strength","weights"};
@@ -210,7 +210,7 @@ static SourceDefinition* sourceAttrib(TiXmlElement* pElement) {
 	vector<SamplerId> samplerIds = getContainer<SamplerId>(mapAttrib["samplers"]);
 	vector<double> weights = getContainer<double>(mapAttrib["weights"]);
 	/* Return surface definition */
-	return new ParticleSource::Definition(samplerIds,weights,strength);
+	return new ParticleSourceObject(samplerIds,weights,strength);
 }
 
 void XmlParser::srcNode(TiXmlNode* pParent) {
@@ -221,11 +221,11 @@ void XmlParser::srcNode(TiXmlNode* pParent) {
 		if (t == TiXmlNode::TINYXML_ELEMENT) {
 			string element_value(pChild->Value());
 			if (element_value == "dist")
-				sourceDefinition.push_back(distAttrib(pChild->ToElement()));
+				objects.push_back(distAttrib(pChild->ToElement()));
 			else if (element_value == "sampler")
-				sourceDefinition.push_back(samplerAttrib(pChild->ToElement()));
+				objects.push_back(samplerAttrib(pChild->ToElement()));
 			else if (element_value == "source")
-				sourceDefinition.push_back(sourceAttrib(pChild->ToElement()));
+				objects.push_back(sourceAttrib(pChild->ToElement()));
 			else {
 				vector<string> keywords;
 				keywords.push_back(element_value);
