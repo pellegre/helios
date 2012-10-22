@@ -45,34 +45,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class SourceTest : public ::testing::Test {
 
 protected:
-	SourceTest(const std::string& geo_file) : r(trng::lcg64()), geo_file(geo_file) {/* */}
+	SourceTest(const std::string& geo_file) : geo_file(geo_file) {/* */}
 
 	virtual ~SourceTest() {/* */}
 
 	void SetUp() {
-		/* Seed */
-		r.getEngine().seed((long unsigned int)1);
 		/* Parser (XML for now) */
 		parser = new Helios::XmlParser;
-		/* Parse the file */
-		parser->parseFile(InputPath::access().getPath() + "/SourceTest/" + geo_file);
-		/* Geometry */
-		std::vector<Helios::GeometryObject*> geometryDefinitions = parser->getGeometry();
-		geometry = new Helios::Geometry(geometryDefinitions);
+		/* Environment */
+		environment = new Helios::McEnvironment(parser);
+		/* Parse files, to get the information to create the environment */
+		environment->parseFile(InputPath::access().getPath() + "/SourceTest/" + geo_file);
+		/* Setup the problem (the geometry) */
+		environment->setup();
+		/* Get geometry */
+		geometry = environment->getModule<Helios::Geometry>();
+		/* Clear the geometry objects */
+		parser->clear();
 	}
 
 	void TearDown() {
-		delete geometry;
+		delete environment;
 		delete parser;
 	}
 	/* Random generator */
 	Helios::Random r;
 	/* Name of the geometry file */
 	std::string geo_file;
+	/* Environment */
+	Helios::McEnvironment* environment;
 	/* Geometry */
 	Helios::Geometry* geometry;
-	/* Source */
-	Helios::Source* source;
 	/* Parser*/
 	Helios::Parser* parser;
 };
@@ -89,8 +92,8 @@ protected:
 	void random(const std::string& source_file, const Helios::CellId& cellExpected) {
 		/* Get source from file */
 		parser->parseFile(InputPath::access().getPath() + "/SourceTest/" + source_file);
-		std::vector<Helios::SourceObject*> sourceDefinitions = parser->getSource();
-		source = new Helios::Source(sourceDefinitions);
+		std::vector<Helios::McObject*> sourceDefinitions = parser->getObjects(); /* Only source definitions */
+		Helios::Source* source = environment->createModule<Helios::Source>(sourceDefinitions);
 
 		for(size_t h = 0 ; h < histories ; h++) {
 			/* sample particle */
@@ -111,8 +114,8 @@ protected:
 	std::map<Helios::CellId,size_t> collect(const std::string& source_file, size_t samples) {
 		/* Get source from file */
 		parser->parseFile(InputPath::access().getPath() + "/SourceTest/" + source_file);
-		std::vector<Helios::SourceObject*> sourceDefinitions = parser->getSource();
-		source = new Helios::Source(sourceDefinitions);
+		std::vector<Helios::McObject*> sourceDefinitions = parser->getObjects(); /* Only source definitions */
+		Helios::Source* source = environment->createModule<Helios::Source>(sourceDefinitions);
 
 		/* Collect statistic on each cell */
 		std::map<Helios::CellId,size_t> cellCount;
@@ -134,7 +137,6 @@ protected:
 		/* Return count on each cell */
 		return cellCount;
 	}
-
 	/* Number of histories */
 	const size_t histories;
 };

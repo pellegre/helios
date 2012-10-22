@@ -49,7 +49,6 @@ protected:
 	virtual ~GeometryTest() {/* */}
 
 	void SetUp() {
-		srand(time(NULL));
 		/* Parser (XML for now) */
 		parser = new Helios::XmlParser;
 		/* Environment */

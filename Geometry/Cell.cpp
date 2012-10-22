@@ -86,15 +86,21 @@ std::ostream& operator<<(std::ostream& out, const Cell& q) {
 	return out;
 }
 
-const Cell* Cell::findCell(const Coordinate& position, const Surface* skip) const {
+bool Cell::isInside(const Coordinate& position, const Surface* skip) const {
 	vector<SenseSurface>::const_iterator it;
 	for (it = surfaces.begin(); it != surfaces.end(); ++it) {
 		if (it->first != skip) {
 			if (it->first->sense(position) != it->second)
 			/* The sense of the point isn't the same the same sense as we know this cell is defined... */
-			return 0;
+			return false;
 		}
 	}
+	return true;
+}
+
+const Cell* Cell::findCell(const Coordinate& position, const Surface* skip) const {
+	/* Check if the point is inside this cell */
+	if(!isInside(position,skip)) return 0;
     /* If we get here, we are inside the cell :-) */
 	if(fill) return fill->findCell(position,skip);
 	else return this;

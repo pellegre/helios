@@ -45,6 +45,10 @@ void McEnvironment::parseFile(const std::string& filename) {
 }
 
 void McEnvironment::parseFiles(const std::vector<std::string>& input_files) {
+	/* Check if there is a parser on the environment */
+	if (!parser)
+		throw(GeneralError("Attempt to parse a file without a parser loaded on the environment"));
+
 	/* Parse information */
 	for(vector<string>::const_iterator it = input_files.begin() ; it != input_files.end() ; ++it)
 		parser->parseFile((*it));

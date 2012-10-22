@@ -58,7 +58,12 @@ namespace Helios {
 	public:
 
 		/* Constructor from a parser */
-		McEnvironment(Parser* parser);
+		McEnvironment(Parser* parser = 0);
+
+		/* ---- Parser management */
+
+		/* Set a parser */
+		void setParser(Parser* new_parser) {parser = new_parser;}
 
 		/*
 		 * Parse file (thrown an exception if there isn't a parser) and push the definitions
@@ -72,16 +77,26 @@ namespace Helios {
 		 */
 		void parseFiles(const std::vector<std::string>& input_files);
 
-		/* Register a module factory */
-		void registerFactory(ModuleFactory* factory) {
-			factory_map[factory->getName()] = factory;
-		}
+		/* ---- Modules management */
 
-		/* Get a module that should be loaded on the map */
+		/*
+		 * Create a module with the information that is loaded into the environment. The created
+		 * module won't be loaded and is user responsibility to delete it after is done with it.
+		 */
+		template<class Module>
+		Module* createModule(const std::vector<McObject*>& definitions) const;
+
+		/*
+		 * Get a module that should be loaded on the map. In case the module is not loaded, this
+		 * will thrown an exception.
+		 */
 		template<class Module>
 		Module* getModule() const;
 
-		/* Get a collection of objects managed by some module (referenced with an user id) */
+		/*
+		 * Get a collection of objects managed by some module (referenced with an user id). If the module
+		 * or the object is not present on the system, an exception will be thrown.
+		 */
 		template<class Module, class Object>
 		std::vector<Object*> getObject(const UserId& id) const;
 
@@ -92,6 +107,11 @@ namespace Helios {
 		 * fail in some way.
 		 */
 		void setup();
+
+		/* Register a module factory */
+		void registerFactory(ModuleFactory* factory) {
+			factory_map[factory->getName()] = factory;
+		}
 
 		virtual ~McEnvironment();
 
@@ -144,6 +164,31 @@ namespace Helios {
 			McModule* mod = it->second->create(definitions);
 			/* Update the map of modules */
 			module_map[module] = mod;
+		}
+		else
+			throw(GeneralError("Cannot create module *" + module + "* (no factory is registered) "));
+	}
+
+	template<class Module>
+	Module* McEnvironment::createModule(const std::vector<McObject*>& user_definitions) const {
+		/* Get the module name (all modules should have this static function) */
+		std::string module = Module::name();
+		/* Find factory on map */
+		std::map<std::string,ModuleFactory*>::const_iterator it = factory_map.find(module);
+		/* Return module */
+		if(it != factory_map.end()) {
+			/* There is a factory, but we should get the definitions related to this module */
+			std::vector<McObject*> definitions;
+			for(std::vector<McObject*>::const_iterator it_obj = user_definitions.begin() ; it_obj != user_definitions.end() ; ++it_obj) {
+				if((*it_obj)->getModuleName() == Module::name())
+					definitions.push_back(*it_obj);
+			}
+
+			if(definitions.size() == 0)
+				throw(GeneralError("Cannot create module *" + module + "*. "
+						"The objects supplied by the user does not contain information about that module"));
+
+			return dynamic_cast<Module*>(it->second->create(definitions));
 		}
 		else
 			throw(GeneralError("Cannot create module *" + module + "* (no factory is registered) "));

@@ -94,6 +94,8 @@ namespace Helios {
 
 		/* Get objects */
 		const std::vector<McObject*>& getObjects() {return objects;};
+		/* Clear objects, erase all the internal definitions of the parser */
+		void clear() {objects.clear();}
 
 		virtual ~Parser() {/* */};
 	};

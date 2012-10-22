@@ -107,11 +107,17 @@ namespace Helios {
 
 		/*
 		 * Check if the cell contains the point and return a reference to the cell that the point is contained.
-		 * The cell could be at other level (universe) on the geometry. A NULL pointer is returned if the point
-		 * is not inside this cell.
+		 * The cell could be at other level (universe) on the geometry (a recursive search is done).
+		 * A NULL pointer is returned if the point is not inside this cell.
 		 * Optionally skip checking one surface if we know we've crossed it.
 		 */
-		virtual const Cell* findCell(const Coordinate& position, const Surface* skip = 0) const;
+		const Cell* findCell(const Coordinate& position, const Surface* skip = 0) const;
+
+		/*
+		 * Check if the cell contains the point.
+		 * Optionally skip checking one surface if we know we've crossed it.
+		 */
+		bool isInside(const Coordinate& position, const Surface* skip = 0) const;
 
 		/* Get the nearest surface to a point in a given direction */
 		void intersect(const Coordinate& position, const Direction& direction, Surface*& surface, bool& sense, double& distance) const;
