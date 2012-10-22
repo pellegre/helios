@@ -25,6 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <set>
+
 #include "Distribution.hpp"
 #include "Spatial.hpp"
 #include "Angular.hpp"
@@ -74,11 +76,68 @@ DistributionFactory::DistributionFactory() {
 }
 
 DistributionBase* DistributionFactory::createDistribution(const DistributionBaseObject* definition) const {
+	/* Create this particular distribution */
 	map<string,DistributionBase::Constructor>::const_iterator it_type = constructor_table.find(definition->getType());
 	if(it_type != constructor_table.end())
 		return (*it_type).second(definition);
 	else
-		throw DistributionBase::BadDistributionCreation(definition->getUserId(),"Distribution type " + definition->getType() + " is not defined");
+		throw DistributionBase::BadDistributionCreation(definition->getUserId(),
+				"Distribution type " + definition->getType() + " is not defined");
+}
+
+std::vector<DistributionBase*> DistributionFactory::createDistributions(const std::vector<DistributionBaseObject*>& dist_objects) const {
+
+	/* Container of user distributions */
+	std::vector<DistributionBase*> distributions;
+
+	/* Container of custom distributions */
+	vector<DistributionCustomObject*> custom_object;
+
+	/* Map of user IDs with the distribution objects */
+	map<DistributionId,DistributionBase*> distribution_map;
+
+	/* Create the distributions */
+	vector<DistributionBaseObject*>::const_iterator it_distribution = dist_objects.begin();
+	for(; it_distribution != dist_objects.end() ; ++it_distribution) {
+		DistributionId id = (*it_distribution)->getUserId();
+		if(distribution_map.find(id) != distribution_map.end())
+			throw(DistributionBase::BadDistributionCreation(id,"Duplicated id"));
+		if((*it_distribution)->getType() != "custom") {
+			/* Create the distribution */
+			DistributionBase* dist_ptr = createDistribution((*it_distribution));
+			/* Update distribution map */
+			distribution_map[id] = dist_ptr;
+			/* Push it into the container */
+			distributions.push_back(dist_ptr);
+		} else
+			custom_object.push_back(static_cast<DistributionCustomObject*>(*it_distribution));
+	}
+
+	/* Create custom definitions */
+	vector<DistributionCustomObject*>::const_iterator it_custom = custom_object.begin();
+	for(; it_custom != custom_object.end() ; ++it_custom) {
+		/* Get distributions IDs */
+		vector<DistributionId> dist_ids = (*it_custom)->getDistributionIds();
+		/* Container to save the distributions */
+		vector<DistributionBase*> distPtrs;
+		for(vector<DistributionId>::iterator it = dist_ids.begin() ; it != dist_ids.end() ; ++it) {
+			map<DistributionId,DistributionBase*>::const_iterator it_dist_id = distribution_map.find((*it));
+			if(it_dist_id == distribution_map.end())
+				throw(DistributionBase::BadDistributionCreation((*it_custom)->getUserId(),
+					  "Distribution id " + toString((*it)) + " does not exist"));
+			else
+				distPtrs.push_back((*it_dist_id).second);
+		}
+		/* Put the distribution container into the definition */
+		(*it_custom)->setDistributions(distPtrs);
+		/* Create the distribution */
+		DistributionBase* distPtr = createDistribution((*it_custom));
+		/* Push it into the container */
+		distributions.push_back(distPtr);
+	}
+
+	/* Return created distributions */
+	return distributions;
 }
 
 void DistributionFactory::registerDistribution(const DistributionBase& distribution) {

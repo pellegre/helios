@@ -71,7 +71,7 @@ namespace Helios {
 
 		virtual ~DistributionBase() {/* */};
 
-		DistributionId getDistid() const {
+		DistributionId getUserId() const {
 			return user_id;
 		}
 
@@ -211,13 +211,15 @@ namespace Helios {
 	class DistributionFactory {
 		/* Map of surfaces types and constructors */
 		std::map<std::string, DistributionBase::Constructor> constructor_table;
+		/* Create a Distribution */
+		DistributionBase* createDistribution(const DistributionBaseObject* definition) const;
 	public:
 		/* Prevent construction or copy */
 		DistributionFactory();
 		/* Register a new surface */
 		void registerDistribution(const DistributionBase& distribution);
 		/* Create a new surface */
-		DistributionBase* createDistribution(const DistributionBaseObject* definition) const;
+		std::vector<DistributionBase*> createDistributions(const std::vector<DistributionBaseObject*>& definitions) const;
 		virtual ~DistributionFactory() {/* */}
 	};
 

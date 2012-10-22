@@ -66,49 +66,13 @@ void Source::setupSource(vector<DistributionBaseObject*>& distObject,
 		                 vector<ParticleSamplerObject*>& samplerObject,
 		                 vector<ParticleSourceObject*>& sourceObject) {
 
-	/* Container of custom distributions */
-	vector<DistributionCustomObject*> customObject;
+	/* Create distributions */
+	distributions = distribution_factory.createDistributions(distObject);
 
-	/* Create the distributions */
-	vector<DistributionBaseObject*>::const_iterator itDist = distObject.begin();
-	for(; itDist != distObject.end() ; ++itDist) {
-		DistributionId id = (*itDist)->getUserId();
-		if(distribution_map.find(id) != distribution_map.end())
-			throw(DistributionBase::BadDistributionCreation(id,"Duplicated id"));
-		if((*itDist)->getType() != "custom") {
-			/* Update distribution map */
-			distribution_map[id] = distributions.size();
-			/* Create the distribution */
-			DistributionBase* distPtr = distribution_factory.createDistribution((*itDist));
-			/* Push it into the container */
-			distributions.push_back(distPtr);
-		} else
-			customObject.push_back(static_cast<DistributionCustomObject*>(*itDist));
-	}
+	/* Update the distribution map */
+	for(size_t i = 0; i < distributions.size() ; ++i)
+		distribution_map[distributions[i]->getUserId()] = i;
 
-	/* Create custom definitions */
-	vector<DistributionCustomObject*>::const_iterator itCustom = customObject.begin();
-	for(; itCustom != customObject.end() ; ++itCustom) {
-		/* Get distributions */
-		vector<DistributionId> distIds = (*itCustom)->getDistributionIds();
-		vector<DistributionBase*> distPtrs;
-		for(vector<DistributionId>::iterator it = distIds.begin() ; it != distIds.end() ; ++it) {
-			map<DistributionId,InternalDistributionId>::iterator itId = distribution_map.find((*it));
-			if(itId == distribution_map.end())
-				throw(DistributionBase::BadDistributionCreation((*itCustom)->getUserId(),
-					  "Distribution id " + toString((*it)) + " does not exist"));
-			else
-				distPtrs.push_back(distributions[(*itId).second]);
-		}
-		/* Put the distribution container into the definition */
-		(*itCustom)->setDistributions(distPtrs);
-		/* Update distribution map */
-		distribution_map[(*itCustom)->getUserId()] = distributions.size();
-		/* Create the distribution */
-		DistributionBase* distPtr = distribution_factory.createDistribution((*itCustom));
-		/* Push it into the container */
-		distributions.push_back(distPtr);
-	}
 
 	/* Create samplers */
 	vector<ParticleSamplerObject*>::const_iterator itSampler = samplerObject.begin();

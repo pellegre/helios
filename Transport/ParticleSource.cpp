@@ -42,7 +42,7 @@ ParticleSource::ParticleSource(const ParticleSourceObject* definition) : strengt
 }
 
 ParticleSampler::ParticleSampler(const ParticleSamplerObject* definition) :
-		samplerid(definition->getSamplerid()), position(definition->getPosition()),
+		user_id(definition->getSamplerid()), position(definition->getPosition()),
 		direction(definition->getDirection()), energy(1.0), weight(1.0), state(Particle::ALIVE),
 		distributions(definition->getDistributions())
 		{/* */}

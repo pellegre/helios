@@ -43,7 +43,7 @@ namespace Helios {
 	/* Sampling a particle (position, energy and angle) */
 	class ParticleSampler {
 		/* ID defined by the user for this sampler */
-		SamplerId samplerid;
+		SamplerId user_id;
 		/* Reference position of the sampler */
 		Coordinate position;
 		/* Reference direction of the sampler */
@@ -76,6 +76,10 @@ namespace Helios {
 		};
 
 		ParticleSampler(const ParticleSamplerObject* definition);
+
+		SamplerId getUserId() const {
+			return user_id;
+		}
 
 		/* Sample particle */
 		void operator() (Particle& particle,Random& r) const {
