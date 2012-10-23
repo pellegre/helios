@@ -35,6 +35,9 @@ using namespace std;
 
 namespace Helios {
 
+/* Maximum number of samples */
+unsigned long int ParticleSampler::max_samples = 1000000;
+
 ParticleSampler::ParticleSampler(const ParticleSamplerObject* definition, const Source* source) :
 		user_id(definition->getSamplerid()), position(definition->getPosition()),
 		direction(definition->getDirection()), energy(1.0), weight(1.0), state(Particle::ALIVE) {
@@ -75,22 +78,15 @@ ParticleCellSampler::ParticleCellSampler(const ParticleSamplerObject* definition
 	 * or accept the particles based on the cell specified ONLY sampling the distributions that
 	 * change the position of the particle.
 	 */
-
 	for(vector<DistributionBase*>::const_iterator it = distributions.begin() ; it != distributions.end() ; ++it) {
 		/* Find positions distributions */
-		if(isPositionDistribution(*it)) {
+		if(isPositionDistribution(*it))
 			/* Push to the container */
 			pos_distributions.push_back((*it));
-			cout << "pos = " << *(*it) << endl;
-		}
 	}
-
 	/* Remove those from the original container */
 	vector<DistributionBase*>::iterator it = remove_if(distributions.begin(),distributions.end(),isPositionDistribution);
 	distributions.resize(it - distributions.begin());
-
-	for(it = distributions.begin() ; it != distributions.end() ; ++it)
-		cout << "no-pos = " << *(*it) << endl;
 }
 
 /* Sample particle (and check cell) */
@@ -104,10 +100,8 @@ void ParticleCellSampler::operator() (Particle& particle,Random& r) const {
 		/* Initial position for sampling */
 		particle.pos() = position;
 		/* Apply position distributions */
-		for(vector<DistributionBase*>::const_iterator it = pos_distributions.begin() ; it != pos_distributions.end() ; ++it) {
+		for(vector<DistributionBase*>::const_iterator it = pos_distributions.begin() ; it != pos_distributions.end() ; ++it)
 			(*(*it))(particle,r);
-			cout << particle.pos() << endl;
-		}
 		/* Check if we are inside the cell */
 		for(vector<Cell*>::const_iterator it = cells.begin() ; it != cells.end() ; ++it) {
 			if((*it)->isInside(particle.pos())) {

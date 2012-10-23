@@ -67,7 +67,7 @@ namespace Helios {
 		/* Name of this object */
 		static std::string name() {return "sampler";}
 		/* Max sampling rejections */
-		static const int max_samples = 1000;
+		static unsigned long int max_samples;
 
 		/* Exception */
 		class BadSamplerCreation : public std::exception {
