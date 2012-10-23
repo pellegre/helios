@@ -94,19 +94,21 @@ std::vector<DistributionBase*> DistributionFactory::createDistributions(const st
 		/* Get distributions IDs */
 		vector<DistributionId> dist_ids = (*it_custom)->getDistributionIds();
 		/* Container to save the distributions */
-		vector<DistributionBase*> distPtrs;
+		vector<DistributionBase*> dist_ptrs;
 		for(vector<DistributionId>::iterator it = dist_ids.begin() ; it != dist_ids.end() ; ++it) {
 			map<DistributionId,DistributionBase*>::const_iterator it_dist_id = distribution_map.find((*it));
 			if(it_dist_id == distribution_map.end())
 				throw(DistributionBase::BadDistributionCreation((*it_custom)->getUserId(),
 					  "Distribution id " + toString((*it)) + " does not exist"));
 			else
-				distPtrs.push_back((*it_dist_id).second);
+				dist_ptrs.push_back((*it_dist_id).second);
 		}
 		/* Create the distribution */
-		DistributionBase* distPtr = new DistributionCustom(*it_custom,distPtrs);
+		DistributionBase* dist_custom = new DistributionCustom(*it_custom,dist_ptrs);
+		/* Push this distribution on the map */
+		distribution_map[(*it_custom)->getUserId()] = dist_custom;
 		/* Push it into the container */
-		distributions.push_back(distPtr);
+		distributions.push_back(dist_custom);
 	}
 
 	/* Return created distributions */

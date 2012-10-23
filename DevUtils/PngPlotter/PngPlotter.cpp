@@ -30,8 +30,8 @@
 using namespace std;
 using namespace Helios;
 
-PngPlotter::PngPlotter(const double& width, const double& height, const int& pixel) :
-	width(width), height(height), pixel(pixel), colorMatrix(pixel,pixel) {
+PngPlotter::PngPlotter(const double& width, const double& height, const int& pixel, const double& value) :
+	width(width), height(height), pixel(pixel), colorMatrix(pixel,pixel), value(value) {
 
 	Log::bok() << "Initializing PNG Plotter " << Log::endl;
 	Log::msg() << Log::ident(1) << " - Size   = " << width << " x " << height << Log::endl;

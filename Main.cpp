@@ -74,10 +74,6 @@ int main(int argc, char **argv) {
 	/* Geometry */
 	Geometry* geometry = environment.getModule<Geometry>();
 
-//	geometry->printGeo(cout);
-//	vector<Surface*> surfaces = environment.getObject<Geometry,Surface>("1<2[0,1,0]<1");
-//	cout << *surfaces[0] << endl;
-
 	/* Get materials */
 	Materials* materials = environment.getModule<Materials>();
 	/* Get the source */

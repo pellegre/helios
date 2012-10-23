@@ -85,7 +85,7 @@ namespace Helios {
 		}
 
 		/* Sample particle */
-		void operator() (Particle& particle,Random& r) const {
+		virtual void operator() (Particle& particle,Random& r) const {
 			/* Set phase space coordinates of this sampler */
 			particle.pos() = position;
 			particle.dir() = direction;

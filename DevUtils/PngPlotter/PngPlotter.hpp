@@ -49,6 +49,7 @@ class PngPlotter {
 	/* Plotting parameters */
 	double width;
 	double height;
+	double value;
 	int pixel;
 	ColorMatrix colorMatrix;
 
@@ -79,28 +80,29 @@ class PngPlotter {
 		const double ymax;
 		const double deltax;
 		const double deltay;
+		const double value;
 
 		template<int uaxis>
-		static Helios::Coordinate setCoordinate(const double&x, const double&y) {
+		static Helios::Coordinate setCoordinate(const double&x, const double&y, const double& value) {
 			switch(uaxis) {
 			case Helios::xaxis :
-				return Helios::Coordinate(0.0,x,y);
+				return Helios::Coordinate(value,x,y);
 				break;
 			case Helios::yaxis :
-				return Helios::Coordinate(y,0.0,x);
+				return Helios::Coordinate(y,value,x);
 				break;
 			case Helios::zaxis :
-				return Helios::Coordinate(x,y,0.0);
+				return Helios::Coordinate(x,y,value);
 				break;
 			}
 			return Helios::Coordinate();
 		}
 
 	public:
-		MaterialFinder(const double& width, const double& height, const int& pixel,
+		MaterialFinder(const double& width, const double& height, const int& pixel,const double& value,
 				   const Helios::Geometry* geometry, ColorMatrix& colorMatrix) :
 				   pixel(pixel), geometry(geometry), colorMatrix(colorMatrix),
-				   xmin(-width), xmax(width), ymin(-height), ymax(height),
+				   xmin(-width), xmax(width), ymin(-height), ymax(height), value(value),
 				   deltax((xmax - xmin) / (double)(pixel)),
 				   deltay((ymax - ymin) / (double)(pixel)) {/* */}
 
@@ -111,7 +113,7 @@ class PngPlotter {
 					double x = xmin + (double)i * deltax;
 					double y = ymin + (double)j * deltay;
 					/* Set point on the space */
-					Helios::Coordinate point(setCoordinate<axis>(x,y));
+					Helios::Coordinate point(setCoordinate<axis>(x,y,value));
 					/* Find cell */
 					const Helios::Cell* findCell = geometry->findCell(point);
 					if(findCell) {
@@ -153,28 +155,29 @@ class PngPlotter {
 		const double ymax;
 		const double deltax;
 		const double deltay;
+		const double value;
 
 		template<int uaxis>
-		static Helios::Coordinate setCoordinate(const double&x, const double&y) {
+		static Helios::Coordinate setCoordinate(const double&x, const double&y,const double& value) {
 			switch(uaxis) {
 			case Helios::xaxis :
-				return Helios::Coordinate(0.0,x,y);
+				return Helios::Coordinate(value,x,y);
 				break;
 			case Helios::yaxis :
-				return Helios::Coordinate(y,0.0,x);
+				return Helios::Coordinate(y,value,x);
 				break;
 			case Helios::zaxis :
-				return Helios::Coordinate(x,y,0.0);
+				return Helios::Coordinate(x,y,value);
 				break;
 			}
 			return Helios::Coordinate();
 		}
 
 	public:
-		CellFinder(const double& width, const double& height, const int& pixel,
+		CellFinder(const double& width, const double& height, const int& pixel,const double& value,
 				   const Helios::Geometry* geometry, ColorMatrix& colorMatrix) :
 				   pixel(pixel), geometry(geometry), colorMatrix(colorMatrix),
-				   xmin(-width), xmax(width), ymin(-height), ymax(height),
+				   xmin(-width), xmax(width), ymin(-height), ymax(height), value(value),
 				   deltax((xmax - xmin) / (double)(pixel)),
 				   deltay((ymax - ymin) / (double)(pixel)) {/* */}
 
@@ -185,7 +188,7 @@ class PngPlotter {
 					double x = xmin + (double)i * deltax;
 					double y = ymin + (double)j * deltay;
 					/* Set point on the space */
-					Helios::Coordinate point(setCoordinate<axis>(x,y));
+					Helios::Coordinate point(setCoordinate<axis>(x,y,value));
 					/* Find cell */
 					const Helios::Cell* findCell = geometry->findCell(point);
 					if(findCell) {
@@ -256,7 +259,7 @@ class PngPlotter {
 	void dump(const std::string& filename, const int& maxId, PixelColor pixelColor);
 
 public:
-	PngPlotter(const double& width, const double& height, const int& pixel);
+	PngPlotter(const double& width, const double& height, const int& pixel, const double& value);
 
 	double getHeight() const {
 		return height;
@@ -300,13 +303,13 @@ public:
 template<int axis>
 void PngPlotter::plotMaterial(const Helios::Geometry* geometry) {
 	/* Get the color matrix */
-	tbb::parallel_for(tbb::blocked_range<int>(0,pixel),MaterialFinder<axis>(width,height,pixel,geometry,colorMatrix));
+	tbb::parallel_for(tbb::blocked_range<int>(0,pixel),MaterialFinder<axis>(width,height,pixel,value,geometry,colorMatrix));
 }
 
 template<int axis>
 void PngPlotter::plotCell(const Helios::Geometry* geometry) {
 	/* Get the color matrix */
-	tbb::parallel_for(tbb::blocked_range<int>(0,pixel),CellFinder<axis>(width,height,pixel,geometry,colorMatrix));
+	tbb::parallel_for(tbb::blocked_range<int>(0,pixel),CellFinder<axis>(width,height,pixel,value,geometry,colorMatrix));
 }
 
 template<int axis>

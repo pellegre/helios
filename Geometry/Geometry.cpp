@@ -335,13 +335,13 @@ void Geometry::setupMaterials(const Materials& materials) {
 			try {
 				cell->setMaterial(materials.getMaterial(matId));
 			} catch (std::exception& error) {
-				throw Cell::BadCellCreation(getUserId(cell),error.what());
+				throw Cell::BadCellCreation(cell->getUserId(),error.what());
 			}
 
 		} else if (matId == Material::NONE) {
 			/* No material in this cell, we should check if the cell is filled with something */
 			if(!cell->getFill())
-				throw Cell::BadCellCreation(getUserId(cell),
+				throw Cell::BadCellCreation(cell->getUserId(),
 						"The cell is not filled with a material or a universe");
 		}
 	}

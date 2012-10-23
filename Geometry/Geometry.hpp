@@ -68,9 +68,6 @@ namespace Helios {
 
 		/* ---- Get information */
 
-		/* Get user ID of an object */
-		template<class Object>
-		UserId getUserId(const Object* object) const;
 		/* Get full path of an object */
 		template<class Object>
 		UserId getPath(const Object* object) const;
@@ -232,16 +229,6 @@ namespace Helios {
 		std::map<InternalId,UserId>::const_iterator it = path_map.find(internal);
 		/* This is the full path of this cell */
 		return (*it).second;
-	}
-
-	template<class Object>
-	UserId Geometry::getUserId(const Object* object) const {
-		/* This is the full path of this cell */
-		UserId full_path = getPath(object);
-		/* Get the original ID of the cell */
-		boost::char_separator<char> sep("< ");
-		boost::tokenizer<boost::char_separator<char> > tok(full_path,sep);
-		return *tok.begin();
 	}
 
 	template<class Object>
