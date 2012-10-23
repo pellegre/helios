@@ -43,8 +43,9 @@ namespace Helios {
 	 */
 	class Source : public McModule {
 
-		/* Distribution factory */
+		/* ---- Factories */
 		DistributionFactory distribution_factory;
+		SamplerFactory sampler_factory;
 
 		/* Distributions */
 		std::vector<DistributionBase*> distributions;

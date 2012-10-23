@@ -11,7 +11,7 @@
 #define BUILD_TYPE "debug"
 #define COMPILER_NAME "/opt/intel/composerxe-2011.4.191/bin/intel64/icpc"
 #define COMPILER_FLAGS "-g -O0 -Wall"
-#define GIT_SHA1 "46b1bd46a20904a086785db49f729cf7f8f98c22"
-#define COMPILATION_DATE "10/23/2012 - 11:31:06 AM"
+#define GIT_SHA1 "c8e7f1d6e963374e8363fd2038721fd10717e225"
+#define COMPILATION_DATE "10/23/2012 - 02:49:48 PM"
 
 #endif // CONFIG_H

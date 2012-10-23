@@ -76,13 +76,12 @@ namespace Helios {
 		std::string name;
 		/* Pointer to the parent environment */
 		const McEnvironment* environment;
-	protected:
-		/*  Get the environment */
-		const McEnvironment* getEnvironment() const {return environment;}
 	public:
 		McModule(const std::string& name, const McEnvironment* environment) : name(name), environment(environment) {/* */};
 		/* Get module name */
 		std::string getName() const {return name;}
+		/*  Get the environment */
+		const McEnvironment* getEnvironment() const {return environment;}
 		virtual ~McModule() {/* */};
 	};
 

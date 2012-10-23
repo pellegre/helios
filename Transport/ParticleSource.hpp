@@ -43,6 +43,8 @@ namespace Helios {
 
 	/* Sampling a particle (position, energy and angle) */
 	class ParticleSampler {
+
+	protected:
 		/* ID defined by the user for this sampler */
 		SamplerId user_id;
 		/* Reference position of the sampler */
@@ -64,6 +66,8 @@ namespace Helios {
 	public:
 		/* Name of this object */
 		static std::string name() {return "sampler";}
+		/* Max sampling rejections */
+		static const int max_samples = 1000;
 
 		/* Exception */
 		class BadSamplerCreation : public std::exception {
@@ -99,6 +103,21 @@ namespace Helios {
 		}
 
 		virtual ~ParticleSampler(){/* */};
+	};
+
+	class Cell;
+
+	/* Sample a particle constrained on a cell */
+	class ParticleCellSampler : public ParticleSampler {
+		/* Cell */
+		std::vector<Cell*> cells;
+		/* Position distributions */
+		std::vector<DistributionBase*> pos_distributions;
+	public:
+		ParticleCellSampler(const ParticleSamplerObject* definition, const Source* source);
+		/* Sample particle (and check cell) */
+		void operator() (Particle& particle,Random& r) const;
+		~ParticleCellSampler() {/* */}
 	};
 
 	class ParticleSource {
@@ -169,13 +188,15 @@ namespace Helios {
 		Direction direction;
 		/* Samplers IDs */
 		std::vector<DistributionId> distribution_ids;
+		/* In case we need geometric constraint */
+		CellId cell_id; /* Could be a path o a cell too... */
 
 		friend class ParticleSampler;
 	public:
 		ParticleSamplerObject(const SamplerId& sampler_id, const Coordinate& position,
-				   const Direction& direction, const std::vector<DistributionId>& distribution_ids) :
+				   const Direction& direction, const std::vector<DistributionId>& distribution_ids, CellId& cell_id) :
 				   SourceObject(ParticleSampler::name()), sampler_id(sampler_id),
-				   position(position), direction(direction), distribution_ids(distribution_ids) {/* */}
+				   position(position), direction(direction), distribution_ids(distribution_ids), cell_id(cell_id) {/* */}
 
 		Direction getDirection() const {
 			return direction;
@@ -187,6 +208,10 @@ namespace Helios {
 
 		SamplerId getSamplerid() const {
 			return sampler_id;
+		}
+
+		CellId getCellId() const {
+			return cell_id;
 		}
 
 		std::vector<DistributionId> getDistributionIds() const {
@@ -224,5 +249,17 @@ namespace Helios {
 
 		~ParticleSourceObject() {/* */}
 	};
+
+	/* ------- Factories */
+
+	class SamplerFactory {
+	public:
+		/* Prevent construction or copy */
+		SamplerFactory() {/* */};
+		/* Create a new surface */
+		ParticleSampler* create(const ParticleSamplerObject* definition, const Source* source) const;
+		virtual ~SamplerFactory() {/* */}
+	};
+
 } /* namespace Helios */
 #endif /* PARTICLESOURCE_HPP_ */

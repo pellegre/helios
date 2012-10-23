@@ -70,7 +70,7 @@ Source::Source(const vector<McObject*>& definitions, const McEnvironment* enviro
 	/* Create samplers */
 	vector<ParticleSamplerObject*>::const_iterator itSampler = samplerObject.begin();
 	for(; itSampler != samplerObject.end() ; ++itSampler) {
-		ParticleSampler* sampler = new ParticleSampler((*itSampler),this);
+		ParticleSampler* sampler = sampler_factory.create((*itSampler),this);
 		sampler_map[(*itSampler)->getSamplerid()] = sampler;
 		particle_samplers.push_back(sampler);
 	}

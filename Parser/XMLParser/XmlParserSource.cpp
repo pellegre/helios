@@ -175,9 +175,10 @@ static SourceObject* distAttrib(TiXmlElement* pElement) {
 static SourceObject* samplerAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[2] = {"id", "pos"};
-	static const string optional[3] = {"dir", "energy" , "dist"};
-	static XmlParser::XmlAttributes surAttrib(vector<string>(required, required + 2), vector<string>(optional, optional + 3));
+	static const string optional[4] = {"dir", "energy" , "dist", "cell"};
+	static XmlParser::XmlAttributes surAttrib(vector<string>(required, required + 2), vector<string>(optional, optional + 4));
 	XmlParser::AttributeValue<string> dirAttrib("dir","1 0 0");
+	XmlParser::AttributeValue<CellId> cellAttrib("cell","0");
 	XmlParser::AttributeValue<double> energyAttrib("energy",1.0);
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
@@ -189,8 +190,9 @@ static SourceObject* samplerAttrib(TiXmlElement* pElement) {
 	Coordinate pos = getBlitzArray<double>(mapAttrib["pos"]);
 	Direction dir = getBlitzArray<double>(dirAttrib.getString(mapAttrib));
 	vector<DistributionId> distIds = getContainer<DistributionId>(mapAttrib["dist"]);
+	CellId cell = cellAttrib.getString(mapAttrib);
 	/* Return surface definition */
-	return new ParticleSamplerObject(id,pos,dir,distIds);
+	return new ParticleSamplerObject(id,pos,dir,distIds,cell);
 }
 
 /* Parse Source attributes */
