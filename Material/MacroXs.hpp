@@ -150,6 +150,7 @@ namespace Helios {
 	class MacroXsObject : public MaterialObject {
 		/* Map of macroscopic XS name to a vector of group constant */
 		std::map<std::string,std::vector<double> > constant;
+		friend class MacroXs;
 	public:
 		MacroXsObject(const MaterialId& matid, std::map<std::string,std::vector<double> >& constant) :
 			MaterialObject(MacroXs::name(),matid), constant(constant) {/* */}

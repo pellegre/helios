@@ -29,5 +29,21 @@
 
 namespace Helios {
 
+const McEnvironment* McObject::getEnvironment() const {
+	/* Check if the environment is set into the object */
+	if(!environment)
+		throw(GeneralError("Object " + getObjectName() + " from module " + getModuleName() +
+				" attempted to access the environment but there isn't a reference to it "));
+	return environment;
+}
+
+const McEnvironment* ModuleFactory::getEnvironment() const {
+	/* Check if the environment is set into the object */
+	if(!environment)
+		throw(GeneralError("Module " + getName() +
+				" attempted to access the environment but there isn't a reference to it "));
+
+	return environment;
+}
 
 } /* namespace Helios */

@@ -296,7 +296,7 @@ Universe* Geometry::addUniverse(const UniverseId& uni_def, const map<UniverseId,
 	    		new_cell->setFill(fill_universe);
 	    	else
 	    		throw Cell::BadCellCreation((*it_cell)->getUserCellId(),
-	    				"Attempting to fill with an empty universe (fill = " + toString(fill_universe_id) + ") " );
+	    				"Attempting to fill with an empty/inexistent universe (fill = " + toString(fill_universe_id) + ") " );
 	    }
 	}
 

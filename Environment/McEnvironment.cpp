@@ -55,8 +55,11 @@ void McEnvironment::parseFiles(const std::vector<std::string>& input_files) {
 	/* Get parsed objects */
 	vector<McObject*> objects = parser->getObjects();
 	/* Put the on the map */
-	for(vector<McObject*>::iterator it = objects.begin() ; it != objects.end() ; ++it)
+	for(vector<McObject*>::iterator it = objects.begin() ; it != objects.end() ; ++it) {
+		/* Set the environment where this object is passing through */
+		(*it)->setEnvironment(this);
 		object_map[(*it)->getModuleName()].push_back((*it));
+	}
 }
 
 McEnvironment::~McEnvironment() {

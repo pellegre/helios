@@ -113,7 +113,7 @@ namespace Helios {
 	public:
 
 		/* Constructor from definition */
-		DistributionCustom(const DistributionBaseObject* definition);
+		DistributionCustom(const DistributionBaseObject* definition, const std::vector<DistributionBase*>& distPtrs);
 
 		/* Only used by the factory */
 		DistributionCustom() : DistributionBase() , distribution_sampler(0) {};
@@ -132,7 +132,7 @@ namespace Helios {
 		virtual std::string getName() const  {return "custom";};
 		/* Get constructor */
 		static DistributionBase* CustomConstructor(const DistributionBaseObject* definition) {
-			return new DistributionCustom(definition);
+			return 0; /* No constructor (this distribution is not on the factory)*/
 		}
 		Constructor constructor() const {
 			return CustomConstructor;
@@ -149,6 +149,7 @@ namespace Helios {
 		std::string type;
 		/* Distribution ID on this problem */
 		DistributionId distid;
+		friend class DistributionBase;
 	public:
 		DistributionBaseObject(const std::string& type, const DistributionId& distid) :
 			SourceObject(DistributionBase::name()), type(type), distid(distid) {/* */}
@@ -165,6 +166,7 @@ namespace Helios {
 	class DistributionObject : public DistributionBaseObject {
 		/* Coefficients for each child */
 		std::vector<double> coeffs;
+		friend class Distribution;
 	public:
 		DistributionObject(const std::string& type, const DistributionId& distid, const std::vector<double>& coeffs) :
 			DistributionBaseObject(type,distid) , coeffs(coeffs) {/* */}
@@ -180,23 +182,12 @@ namespace Helios {
 		std::vector<DistributionId> samplersIds;
 		/* Weights of each sampler */
 		std::vector<double> weights;
-
-		/* Samplers */
-		std::vector<DistributionBase*> samplers;
-
+		friend class DistributionCustom;
 	public:
 		DistributionCustomObject(const std::string& type, const DistributionId& distid,
 				   const std::vector<DistributionId>& samplersIds, const std::vector<double>& weights);
 
 		virtual ~DistributionCustomObject() {/* */}
-
-		std::vector<DistributionBase*> getDistributions() const {
-			return samplers;
-		}
-
-		void setDistributions(std::vector<DistributionBase*> samplers) {
-			this->samplers = samplers;
-		}
 
 		std::vector<DistributionId> getDistributionIds() const {
 			return samplersIds;

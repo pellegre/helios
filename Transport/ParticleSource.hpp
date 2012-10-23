@@ -39,6 +39,7 @@ namespace Helios {
 
 	class ParticleSamplerObject;
 	class ParticleSourceObject;
+	class Source;
 
 	/* Sampling a particle (position, energy and angle) */
 	class ParticleSampler {
@@ -75,7 +76,7 @@ namespace Helios {
 			~BadSamplerCreation() throw() {/* */};
 		};
 
-		ParticleSampler(const ParticleSamplerObject* definition);
+		ParticleSampler(const ParticleSamplerObject* definition, const Source* source);
 
 		SamplerId getUserId() const {
 			return user_id;
@@ -118,7 +119,7 @@ namespace Helios {
 		};
 
 		/* Create the source */
-		ParticleSource(const ParticleSourceObject* definition);
+		ParticleSource(const ParticleSourceObject* definition, const Source* source);
 
 		/* Sample a particle */
 		Particle sample(Random& r) const {
@@ -159,8 +160,7 @@ namespace Helios {
 		/* Samplers IDs */
 		std::vector<DistributionId> distributionIds;
 
-		/* Sampling different stuff on phase space */
-		std::vector<DistributionBase*> distributions;
+		friend class ParticleSampler;
 	public:
 		ParticleSamplerObject(const SamplerId& samplerid, const Coordinate& position,
 				   const Direction& direction, const std::vector<DistributionId>& distributionIds) :
@@ -169,14 +169,6 @@ namespace Helios {
 
 		Direction getDirection() const {
 			return direction;
-		}
-
-		std::vector<DistributionBase*> getDistributions() const {
-			return distributions;
-		}
-
-		void setDistributions(std::vector<DistributionBase*> distributions) {
-			this->distributions = distributions;
 		}
 
 		Coordinate getPosition() const {
@@ -204,26 +196,10 @@ namespace Helios {
 
 		/* Samplers */
 		std::vector<ParticleSampler*> samplers;
+		friend class ParticleSource;
 	public:
-		ParticleSourceObject(const std::vector<SamplerId>& samplersIds, const std::vector<double>& weights, const double& strength) :
-			SourceObject(ParticleSource::name()), samplersIds(samplersIds), weights(weights), strength(strength) {
-			/* Check the weight input */
-			if(this->weights.size() == 0) {
-				this->weights.resize(this->samplersIds.size());
-				/* Equal probability for all samplers */
-				double prob = 1/(double)this->samplersIds.size();
-				for(size_t i = 0 ; i < this->samplersIds.size() ; ++i)
-					this->weights[i] = prob;
-			}
-		}
-
-		std::vector<ParticleSampler*> getSamplers() const {
-			return samplers;
-		}
-
-		void setSamplers(std::vector<ParticleSampler*> samplers) {
-			this->samplers = samplers;
-		}
+		ParticleSourceObject(const std::vector<SamplerId>& samplersIds, const std::vector<double>& weights,
+				const double& strength);
 
 		std::vector<SamplerId> getSamplersIds() const {
 			return samplersIds;

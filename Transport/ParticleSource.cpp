@@ -26,24 +26,49 @@
  */
 
 #include "ParticleSource.hpp"
+#include "Source.hpp"
+#include "../Environment/McEnvironment.hpp"
 
 using namespace std;
 
 namespace Helios {
 
 
-ParticleSource::ParticleSource(const ParticleSourceObject* definition) : strength(definition->getStrength()) {
-	/* Get samplers */
-	std::vector<ParticleSampler*> samplers = definition->getSamplers();
+ParticleSource::ParticleSource(const ParticleSourceObject* definition, const Source* source) : strength(definition->getStrength()) {
+	/* Get distributions */
+	vector<SamplerId> sampler_ids = definition->getSamplersIds();
+
+	/* Get instances of the samplers IDs */
+	vector<ParticleSampler*> samplers;
+	for(vector<SamplerId>::iterator it = sampler_ids.begin() ; it != sampler_ids.end() ; ++it)
+		samplers.push_back(source->getObject<ParticleSampler>((*it))[0]);
+
 	/* Get weight of each sampler */
 	std::vector<double> weights = definition->getWeights();
 	/* Create a sampler */
 	source_sampler = new Sampler<ParticleSampler*>(samplers,weights);
 }
 
-ParticleSampler::ParticleSampler(const ParticleSamplerObject* definition) :
+ParticleSampler::ParticleSampler(const ParticleSamplerObject* definition, const Source* source) :
 		user_id(definition->getSamplerid()), position(definition->getPosition()),
-		direction(definition->getDirection()), energy(1.0), weight(1.0), state(Particle::ALIVE),
-		distributions(definition->getDistributions())
-		{/* */}
+		direction(definition->getDirection()), energy(1.0), weight(1.0), state(Particle::ALIVE) {
+
+	/* Get distributions */
+	vector<DistributionId> distribution_ids = definition->getDistributionIds();
+
+	for(vector<DistributionId>::iterator it = distribution_ids.begin() ; it != distribution_ids.end() ; ++it)
+		distributions.push_back(source->getObject<DistributionBase>((*it))[0]);
+}
+
+ParticleSourceObject::ParticleSourceObject(const std::vector<SamplerId>& samplersIds, const std::vector<double>& weights, const double& strength) :
+	SourceObject(ParticleSource::name()), samplersIds(samplersIds), weights(weights), strength(strength) {
+	/* Check the weight input */
+	if(this->weights.size() == 0) {
+		this->weights.resize(this->samplersIds.size());
+		/* Equal probability for all samplers */
+		double prob = 1/(double)this->samplersIds.size();
+		for(size_t i = 0 ; i < this->samplersIds.size() ; ++i)
+			this->weights[i] = prob;
+	}
+}
 } /* namespace Helios */

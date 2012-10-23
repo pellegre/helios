@@ -58,7 +58,7 @@ namespace Helios {
 			std::string reason;
 		public:
 			GeometryError(const std::string& msg) {
-				reason = msg;
+				reason = "Geometry Error : " + msg;
 			}
 			const char *what() const throw() {
 				return reason.c_str();

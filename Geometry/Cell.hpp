@@ -161,6 +161,7 @@ namespace Helios {
 		MaterialId matId;
 		Transformation transformation;
 		std::string surfaces_expression;   /* IDs of the surfaces */
+		friend class Cell;
 	public:
 
 		CellObject() : GeometryObject(Cell::name()) {/* */}

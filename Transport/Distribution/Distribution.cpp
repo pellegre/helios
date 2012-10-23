@@ -49,14 +49,13 @@ DistributionCustomObject::DistributionCustomObject(const std::string& type, cons
 }
 
 /* Constructor from definition */
-DistributionCustom::DistributionCustom(const DistributionBaseObject* definition) : DistributionBase(definition) {
+DistributionCustom::DistributionCustom(const DistributionBaseObject* definition,
+		const vector<DistributionBase*>& distPtrs) : DistributionBase(definition) {
 	const DistributionCustomObject* distObject = static_cast<const DistributionCustomObject*>(definition);
 	/* Weights of each sampler */
 	std::vector<double> weights = distObject->getWeights();
-	/* Samplers */
-	std::vector<DistributionBase*> samplers = distObject->getDistributions();
 	/* Create sampler */
-	distribution_sampler = new Sampler<DistributionBase*>(samplers,weights);
+	distribution_sampler = new Sampler<DistributionBase*>(distPtrs,weights);
 };
 
 DistributionFactory::DistributionFactory() {
@@ -72,7 +71,6 @@ DistributionFactory::DistributionFactory() {
 	registerDistribution(Cyl2D<yaxis>());
 	registerDistribution(Cyl2D<zaxis>());
 	registerDistribution(Isotropic());
-	registerDistribution(DistributionCustom());
 }
 
 DistributionBase* DistributionFactory::createDistribution(const DistributionBaseObject* definition) const {
@@ -128,10 +126,8 @@ std::vector<DistributionBase*> DistributionFactory::createDistributions(const st
 			else
 				distPtrs.push_back((*it_dist_id).second);
 		}
-		/* Put the distribution container into the definition */
-		(*it_custom)->setDistributions(distPtrs);
 		/* Create the distribution */
-		DistributionBase* distPtr = createDistribution((*it_custom));
+		DistributionBase* distPtr = new DistributionCustom(*it_custom,distPtrs);
 		/* Push it into the container */
 		distributions.push_back(distPtr);
 	}

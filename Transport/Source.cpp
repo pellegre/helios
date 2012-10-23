@@ -45,6 +45,7 @@ Source::Source(const vector<McObject*>& definitions, const McEnvironment* enviro
 	vector<DistributionBaseObject*> distObject;
 	vector<ParticleSamplerObject*> samplerObject;
 	vector<ParticleSourceObject*> sourceObject;
+
 	/* Dispatch each definition to the corresponding container */
 	vector<McObject*>::const_iterator it_def = definitions.begin();
 
@@ -59,68 +60,45 @@ Source::Source(const vector<McObject*>& definitions, const McEnvironment* enviro
 			pushObject(*it_def,sourceObject);
 	}
 
-	setupSource(distObject,samplerObject,sourceObject);
-}
-
-void Source::setupSource(vector<DistributionBaseObject*>& distObject,
-		                 vector<ParticleSamplerObject*>& samplerObject,
-		                 vector<ParticleSourceObject*>& sourceObject) {
-
 	/* Create distributions */
 	distributions = distribution_factory.createDistributions(distObject);
 
 	/* Update the distribution map */
 	for(size_t i = 0; i < distributions.size() ; ++i)
-		distribution_map[distributions[i]->getUserId()] = i;
-
+		distribution_map[distributions[i]->getUserId()] = distributions[i];
 
 	/* Create samplers */
 	vector<ParticleSamplerObject*>::const_iterator itSampler = samplerObject.begin();
 	for(; itSampler != samplerObject.end() ; ++itSampler) {
-		/* Get distributions */
-		vector<DistributionId> distIds = (*itSampler)->getDistributionIds();
-		vector<DistributionBase*> distPtrs;
-		for(vector<DistributionId>::iterator it = distIds.begin() ; it != distIds.end() ; ++it) {
-			map<DistributionId,InternalDistributionId>::iterator itId = distribution_map.find((*it));
-			if(itId == distribution_map.end())
-				throw(ParticleSampler::BadSamplerCreation((*itSampler)->getSamplerid(),
-					  "Distribution id <" + toString((*it)) + "> does not exist"));
-			else
-				distPtrs.push_back(distributions[(*itId).second]);
-		}
-		/* Put the distribution container into the definition */
-		(*itSampler)->setDistributions(distPtrs);
-		ParticleSampler* sampler = new ParticleSampler((*itSampler));
-		sampler_map[(*itSampler)->getSamplerid()] = particle_samplers.size();
+		ParticleSampler* sampler = new ParticleSampler((*itSampler),this);
+		sampler_map[(*itSampler)->getSamplerid()] = sampler;
 		particle_samplers.push_back(sampler);
 	}
 
 	if(sourceObject.size() == 0)
-		throw(ParticleSource::BadSourceCreation("You didn't put any source on the <sources> node in the input file"));
+		throw(ParticleSource::BadSourceCreation("There isn't sources definitions available"));
 
-	/* Finally, create the source with each samplers */
+	/* Finally, create the source with each sampler */
 	vector<double> strengths;
 	vector<ParticleSourceObject*>::const_iterator itSource = sourceObject.begin();
 	for(; itSource != sourceObject.end() ; ++itSource) {
-		/* Get distributions */
-		vector<SamplerId> samplerIds = (*itSource)->getSamplersIds();
-		vector<ParticleSampler*> samplerPtrs;
-		for(vector<SamplerId>::iterator it = samplerIds.begin() ; it != samplerIds.end() ; ++it) {
-			map<SamplerId,InternalSamplerId>::iterator itId = sampler_map.find((*it));
-			if(itId == sampler_map.end())
-				throw(ParticleSource::BadSourceCreation("Sampler id <" + toString((*it)) + "> does not exist"));
-			else
-				samplerPtrs.push_back(particle_samplers[(*itId).second]);
-		}
-		/* Put the distribution container into the definition */
-		(*itSource)->setSamplers(samplerPtrs);
-		ParticleSource* source = new ParticleSource((*itSource));
+		ParticleSource* source = new ParticleSource((*itSource),this);
 		sources.push_back(source);
 		strengths.push_back(source->getStrength());
 	}
 
 	/* Once we got all the sources, we should create the sampler */
 	source_sampler = new Sampler<ParticleSource*>(sources,strengths);
+}
+
+template<>
+const std::map<UserId,DistributionBase*>& Source::getObjectMap<DistributionBase>() const {
+	return distribution_map;
+}
+
+template<>
+const std::map<UserId,ParticleSampler*>& Source::getObjectMap<ParticleSampler>() const {
+	return sampler_map;
 }
 
 Source::~Source() {

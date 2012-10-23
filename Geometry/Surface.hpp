@@ -159,6 +159,7 @@ namespace Helios {
 		std::string type;
 		std::vector<double> coeffs;
 		Surface::SurfaceInfo flags;
+		friend class Surface;
 	public:
 		SurfaceObject() : GeometryObject(Surface::name()) {/* */}
 		SurfaceObject(const SurfaceId& userSurfaceId, const std::string& type,

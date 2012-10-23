@@ -65,8 +65,12 @@ namespace Helios {
 				         std::vector<ParticleSourceObject*>& sourceObject);
 
 		/* Maps of internal IDs with user defined IDs */
-		std::map<DistributionId,InternalDistributionId> distribution_map;
-		std::map<SamplerId,InternalSamplerId> sampler_map;
+		std::map<DistributionId,DistributionBase*> distribution_map;
+		std::map<SamplerId,ParticleSampler*> sampler_map;
+
+		/* Get references to objects from an id */
+		template<class Object>
+		const std::map<UserId,Object*>& getObjectMap() const;
 
 	public:
 		/* Name of this module */
@@ -74,6 +78,19 @@ namespace Helios {
 
 		/* Construction from definitions */
 		Source(const std::vector<McObject*>& definitions, const McEnvironment* environment);
+
+		/* Exception */
+		class SourceError : public std::exception {
+			std::string reason;
+		public:
+			SourceError(const std::string& msg) {
+				reason = "Source Error : " + msg;
+			}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			~SourceError() throw() {/* */};
+		};
 
 		/* Sample a particle */
 		Particle sample(Random& r) const {
@@ -83,8 +100,32 @@ namespace Helios {
 			return particle;
 		}
 
+		/* Get references to objects from an id */
+		template<class Object>
+		std::vector<Object*> getObject(const UserId& id) const;
+
 		~Source();
 	};
+
+	/* Get map of objects */
+	template<>
+	const std::map<UserId,DistributionBase*>& Source::getObjectMap<DistributionBase>() const;
+	template<>
+	const std::map<UserId,ParticleSamplerObject*>& Source::getObjectMap<ParticleSamplerObject>() const;
+
+	template<class Object>
+	std::vector<Object*> Source::getObject(const UserId& id) const {
+		/* Get reverse map of the object */
+		const std::map<UserId,Object*>& reverse_map = getObjectMap<Object>();
+		typename std::map<UserId,Object*>::const_iterator it = reverse_map.find(id);
+		if(it != reverse_map.end()) {
+			std::vector<Object*> object;
+			object.push_back((*it).second);
+			return object;
+		}
+		else
+			throw SourceError("Could not find any " + Object::name() + " with id " + id);
+	}
 
 	class McEnvironment;
 

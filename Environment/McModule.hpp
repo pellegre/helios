@@ -31,6 +31,8 @@
 #include <vector>
 #include <string>
 
+#include "../Common/Common.hpp"
+
 namespace Helios {
 
 	class McEnvironment;
@@ -40,9 +42,22 @@ namespace Helios {
 	 * All definitions on each module should be derived from this class
 	 */
 	class McObject {
+		/* Pointer to the parent environment */
+		McEnvironment* environment;
+		/* Module name where this object should be constructed */
+		std::string module;
+		/* Name of this object */
+		std::string name;
+		/* Set the environment (each time this object pass trough the environment) */
+		void setEnvironment(McEnvironment* env) {environment = env;}
+		/* Friendly environment */
+		friend class McEnvironment;
+	protected:
+		/*  Get the environment */
+		const McEnvironment* getEnvironment() const;
 	public:
 		/* Different type of geometric entities */
-		McObject(const std::string& module,const std::string& name) : module(module), name(name) {/* */};
+		McObject(const std::string& module,const std::string& name) : module(module), name(name), environment(0) {/* */};
 
 		/* Get the name of the module that deals with this object */
 		std::string getModuleName() const {return module;}
@@ -50,11 +65,6 @@ namespace Helios {
 		std::string getObjectName() const {return name;}
 
 		virtual ~McObject(){/* */};
-	private:
-		/* Module name where this object should be constructed */
-		std::string module;
-		/* Name of this object */
-		std::string name;
 	};
 
 	/*
@@ -83,7 +93,7 @@ namespace Helios {
 		/* Pointer to the parent environment */
 		const McEnvironment* environment;
 	protected:
-		const McEnvironment* getEnvironment() const {return environment;}
+		const McEnvironment* getEnvironment() const;
 	public:
 		ModuleFactory(const std::string& name, const McEnvironment* environment) : name(name), environment(environment) {/* */}
 		/* Create an instance of an object from a group of objects definition */

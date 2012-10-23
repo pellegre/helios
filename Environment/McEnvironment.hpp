@@ -84,7 +84,7 @@ namespace Helios {
 		 * module won't be loaded and is user responsibility to delete it after is done with it.
 		 */
 		template<class Module>
-		Module* createModule(const std::vector<McObject*>& definitions) const;
+		Module* createModule(const std::vector<McObject*>& definitions);
 
 		/*
 		 * Get a module that should be loaded on the map. In case the module is not loaded, this
@@ -170,7 +170,7 @@ namespace Helios {
 	}
 
 	template<class Module>
-	Module* McEnvironment::createModule(const std::vector<McObject*>& user_definitions) const {
+	Module* McEnvironment::createModule(const std::vector<McObject*>& user_definitions) {
 		/* Get the module name (all modules should have this static function) */
 		std::string module = Module::name();
 		/* Find factory on map */
@@ -180,8 +180,11 @@ namespace Helios {
 			/* There is a factory, but we should get the definitions related to this module */
 			std::vector<McObject*> definitions;
 			for(std::vector<McObject*>::const_iterator it_obj = user_definitions.begin() ; it_obj != user_definitions.end() ; ++it_obj) {
-				if((*it_obj)->getModuleName() == Module::name())
+				if((*it_obj)->getModuleName() == Module::name()) {
+					/* Set the environment where this object is passing through */
+					(*it_obj)->setEnvironment(this);
 					definitions.push_back(*it_obj);
+				}
 			}
 
 			if(definitions.size() == 0)
