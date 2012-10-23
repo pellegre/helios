@@ -58,6 +58,8 @@ namespace Helios {
 
 		/* Constructor */
 		typedef DistributionBase(*(*Constructor)(const DistributionBaseObject*));
+		/* Friendly printer */
+		friend std::ostream& operator<<(std::ostream& out, const DistributionBase& q);
 		/* Friendly factory */
 		friend class DistributionFactory;
 
@@ -80,6 +82,8 @@ namespace Helios {
 		virtual std::string getName() const  = 0;
 		/* Get constructor */
 		virtual Constructor constructor() const = 0;
+		/* Print internal parameters of the distribution */
+		virtual void print(std::ostream& out) const = 0;
 	private:
 		/* Distribution ID defined by the user */
 		DistributionId user_id;
@@ -137,9 +141,12 @@ namespace Helios {
 		Constructor constructor() const {
 			return CustomConstructor;
 		}
+		void print(std::ostream& out) const;
 		/* Sampler of ParticleSampler(s) */
 		Sampler<DistributionBase*>* distribution_sampler;
 	};
+
+	std::ostream& operator<<(std::ostream& out, const DistributionBase& q);
 
 	/* ------- Objects for distributions */
 

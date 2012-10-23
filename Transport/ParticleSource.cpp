@@ -33,6 +33,28 @@ using namespace std;
 
 namespace Helios {
 
+ParticleSampler::ParticleSampler(const ParticleSamplerObject* definition, const Source* source) :
+		user_id(definition->getSamplerid()), position(definition->getPosition()),
+		direction(definition->getDirection()), energy(1.0), weight(1.0), state(Particle::ALIVE) {
+
+	/* Get distributions */
+	vector<DistributionId> distribution_ids = definition->getDistributionIds();
+
+	for(vector<DistributionId>::iterator it = distribution_ids.begin() ; it != distribution_ids.end() ; ++it)
+		distributions.push_back(source->getObject<DistributionBase>((*it))[0]);
+}
+
+std::ostream& operator<<(std::ostream& out, const ParticleSampler& q) {
+	out << "sampler = " << q.getUserId()
+		<< " ; position = " << q.position
+		<< " ; direction = " << q.direction
+		<< " ; energy = " << q.energy
+		<< " ; weight = " << q.weight
+		<< endl;
+	for(std::vector<DistributionBase*>::const_iterator it = q.distributions.begin() ; it != q.distributions.end() ; ++it)
+		out << Log::ident(2) << " * " << *(*it) << endl;
+	return out;
+}
 
 ParticleSource::ParticleSource(const ParticleSourceObject* definition, const Source* source) : strength(definition->getStrength()) {
 	/* Get distributions */
@@ -49,25 +71,28 @@ ParticleSource::ParticleSource(const ParticleSourceObject* definition, const Sou
 	source_sampler = new Sampler<ParticleSampler*>(samplers,weights);
 }
 
-ParticleSampler::ParticleSampler(const ParticleSamplerObject* definition, const Source* source) :
-		user_id(definition->getSamplerid()), position(definition->getPosition()),
-		direction(definition->getDirection()), energy(1.0), weight(1.0), state(Particle::ALIVE) {
-
+std::ostream& operator<<(std::ostream& out, const ParticleSource& q) {
 	/* Get distributions */
-	vector<DistributionId> distribution_ids = definition->getDistributionIds();
-
-	for(vector<DistributionId>::iterator it = distribution_ids.begin() ; it != distribution_ids.end() ; ++it)
-		distributions.push_back(source->getObject<DistributionBase>((*it))[0]);
+	vector<ParticleSampler*> samplers = q.source_sampler->getReactions();
+	/* Reaction matrix */
+	const double* reaction_matrix = q.source_sampler->getReactionMatrix();
+	/* Print each distributions */
+	size_t i = 0;
+	for( ; i < samplers.size() - 1 ; ++i)
+		out << Log::ident(1) << " ( cdf = " << fixed << reaction_matrix[i] << " ) " << *samplers[i];
+	/* Last one... */
+	out << Log::ident(1) << " ( cdf = " << 1.0 << " ) " << *samplers[i];
+	return out;
 }
 
-ParticleSourceObject::ParticleSourceObject(const std::vector<SamplerId>& samplersIds, const std::vector<double>& weights, const double& strength) :
-	SourceObject(ParticleSource::name()), samplersIds(samplersIds), weights(weights), strength(strength) {
+ParticleSourceObject::ParticleSourceObject(const std::vector<SamplerId>& samplers_ids, const std::vector<double>& weights, const double& strength) :
+	SourceObject(ParticleSource::name()), samplers_ids(samplers_ids), weights(weights), strength(strength) {
 	/* Check the weight input */
 	if(this->weights.size() == 0) {
-		this->weights.resize(this->samplersIds.size());
+		this->weights.resize(this->samplers_ids.size());
 		/* Equal probability for all samplers */
-		double prob = 1/(double)this->samplersIds.size();
-		for(size_t i = 0 ; i < this->samplersIds.size() ; ++i)
+		double prob = 1/(double)this->samplers_ids.size();
+		for(size_t i = 0 ; i < this->samplers_ids.size() ; ++i)
 			this->weights[i] = prob;
 	}
 }

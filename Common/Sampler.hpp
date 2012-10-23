@@ -199,6 +199,12 @@ namespace Helios {
 		/* Get reaction container */
 		const std::vector<TypeReaction>& getReactions() const {return reactions;}
 
+		/* Get number of energies */
+		int getEnergyNumber() const {return nenergy;}
+
+		/* Get reaction matrix */
+		const double* getReactionMatrix() const {return reaction_matrix;}
+
 		~Sampler() {delete [] reaction_matrix;};
 
 	};

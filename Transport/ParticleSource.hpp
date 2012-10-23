@@ -59,6 +59,8 @@ namespace Helios {
 		/* Sampling different stuff on phase space */
 		std::vector<DistributionBase*> distributions;
 
+		/* Friendly printer */
+		friend std::ostream& operator<<(std::ostream& out, const ParticleSampler& q);
 	public:
 		/* Name of this object */
 		static std::string name() {return "sampler";}
@@ -102,6 +104,8 @@ namespace Helios {
 	class ParticleSource {
 
 	public:
+		friend std::ostream& operator<<(std::ostream& out, const ParticleSource& q);
+
 		/* Name of this object */
 		static std::string name() {return "source";}
 
@@ -150,22 +154,28 @@ namespace Helios {
 		double strength;
 	};
 
+	/* Printers */
+	std::ostream& operator<<(std::ostream& out, const ParticleSampler& q);
+	std::ostream& operator<<(std::ostream& out, const ParticleSource& q);
+
+	/* ------- Objects for samplers and sources */
+
 	class ParticleSamplerObject : public SourceObject {
 		/* ID defined by the user for this sampler */
-		SamplerId samplerid;
+		SamplerId sampler_id;
 		/* Reference position of the sampler */
 		Coordinate position;
 		/* Reference direction of the sampler */
 		Direction direction;
 		/* Samplers IDs */
-		std::vector<DistributionId> distributionIds;
+		std::vector<DistributionId> distribution_ids;
 
 		friend class ParticleSampler;
 	public:
-		ParticleSamplerObject(const SamplerId& samplerid, const Coordinate& position,
-				   const Direction& direction, const std::vector<DistributionId>& distributionIds) :
-				   SourceObject(ParticleSampler::name()), samplerid(samplerid),
-				   position(position), direction(direction), distributionIds(distributionIds) {/* */}
+		ParticleSamplerObject(const SamplerId& sampler_id, const Coordinate& position,
+				   const Direction& direction, const std::vector<DistributionId>& distribution_ids) :
+				   SourceObject(ParticleSampler::name()), sampler_id(sampler_id),
+				   position(position), direction(direction), distribution_ids(distribution_ids) {/* */}
 
 		Direction getDirection() const {
 			return direction;
@@ -176,11 +186,11 @@ namespace Helios {
 		}
 
 		SamplerId getSamplerid() const {
-			return samplerid;
+			return sampler_id;
 		}
 
 		std::vector<DistributionId> getDistributionIds() const {
-			return distributionIds;
+			return distribution_ids;
 		}
 
 		~ParticleSamplerObject() {/* */}
@@ -188,7 +198,7 @@ namespace Helios {
 
 	class ParticleSourceObject : public SourceObject {
 		/* Samplers IDs */
-		std::vector<SamplerId> samplersIds;
+		std::vector<SamplerId> samplers_ids;
 		/* Weights of each sampler */
 		std::vector<double> weights;
 		/* Strength of the source on the problem */
@@ -198,11 +208,11 @@ namespace Helios {
 		std::vector<ParticleSampler*> samplers;
 		friend class ParticleSource;
 	public:
-		ParticleSourceObject(const std::vector<SamplerId>& samplersIds, const std::vector<double>& weights,
+		ParticleSourceObject(const std::vector<SamplerId>& samplers_ids, const std::vector<double>& weights,
 				const double& strength);
 
 		std::vector<SamplerId> getSamplersIds() const {
-			return samplersIds;
+			return samplers_ids;
 		}
 
 		std::vector<double> getWeights() const {

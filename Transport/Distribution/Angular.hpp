@@ -43,6 +43,8 @@ namespace Helios {
 		std::string getName() const {
 			return "isotropic";
 		}
+		/* Print internal parameters of the distribution */
+		void print(std::ostream& out) const {/* */};
 	public:
 		Isotropic() {/* */}
 		Isotropic(const DistributionBaseObject* definition) : DistributionBase(definition) {/* */}

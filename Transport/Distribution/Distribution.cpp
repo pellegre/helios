@@ -35,29 +35,6 @@ using namespace std;
 
 namespace Helios {
 
-DistributionCustomObject::DistributionCustomObject(const std::string& type, const DistributionId& distid,
-		   const std::vector<DistributionId>& samplersIds, const std::vector<double>& weights) :
-	DistributionBaseObject(type,distid) , samplersIds(samplersIds) , weights(weights) {
-	/* Check the weight input */
-	if(this->weights.size() == 0) {
-		this->weights.resize(this->samplersIds.size());
-		/* Equal probability for all samplers */
-		double prob = 1/(double)this->samplersIds.size();
-		for(size_t i = 0 ; i < this->samplersIds.size() ; ++i)
-			this->weights[i] = prob;
-	}
-}
-
-/* Constructor from definition */
-DistributionCustom::DistributionCustom(const DistributionBaseObject* definition,
-		const vector<DistributionBase*>& distPtrs) : DistributionBase(definition) {
-	const DistributionCustomObject* distObject = static_cast<const DistributionCustomObject*>(definition);
-	/* Weights of each sampler */
-	std::vector<double> weights = distObject->getWeights();
-	/* Create sampler */
-	distribution_sampler = new Sampler<DistributionBase*>(distPtrs,weights);
-};
-
 DistributionFactory::DistributionFactory() {
 	/* Distribution registering */
 	registerDistribution(Box1D<xaxis>());
@@ -141,5 +118,48 @@ void DistributionFactory::registerDistribution(const DistributionBase& distribut
 }
 
 DistributionBase::DistributionBase(const DistributionBaseObject* definition) : user_id(definition->getUserId()) {/* */};
+
+std::ostream& operator<<(std::ostream& out, const DistributionBase& q) {
+	out << "distribution = " << q.getUserId() << " ; type = " << q.getName() << " ;";
+	q.print(out);
+	return out;
+}
+
+/* Constructor from definition */
+DistributionCustom::DistributionCustom(const DistributionBaseObject* definition,
+		const vector<DistributionBase*>& distPtrs) : DistributionBase(definition) {
+	const DistributionCustomObject* distObject = static_cast<const DistributionCustomObject*>(definition);
+	/* Weights of each sampler */
+	std::vector<double> weights = distObject->getWeights();
+	/* Create sampler */
+	distribution_sampler = new Sampler<DistributionBase*>(distPtrs,weights);
+};
+
+void DistributionCustom::print(std::ostream& out) const {
+	out << endl;
+	/* Get distributions */
+	vector<DistributionBase*> distributions = distribution_sampler->getReactions();
+	/* Reaction matrix */
+	const double* reaction_matrix = distribution_sampler->getReactionMatrix();
+	/* Print each distributions */
+	size_t i = 0;
+	for( ; i < distributions.size() - 1 ; ++i)
+		out << Log::ident(3) << " - ( cdf = " << fixed << reaction_matrix[i] << " ) " << *distributions[i] << endl;
+	/* Last one... */
+	out << Log::ident(3) << " - ( cdf = " << 1.0 << " ) " << *distributions[i];
+}
+
+DistributionCustomObject::DistributionCustomObject(const std::string& type, const DistributionId& distid,
+		   const std::vector<DistributionId>& samplersIds, const std::vector<double>& weights) :
+	DistributionBaseObject(type,distid) , samplersIds(samplersIds) , weights(weights) {
+	/* Check the weight input */
+	if(this->weights.size() == 0) {
+		this->weights.resize(this->samplersIds.size());
+		/* Equal probability for all samplers */
+		double prob = 1/(double)this->samplersIds.size();
+		for(size_t i = 0 ; i < this->samplersIds.size() ; ++i)
+			this->weights[i] = prob;
+	}
+}
 
 } /* namespace Helios */

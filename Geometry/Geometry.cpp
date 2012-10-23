@@ -347,7 +347,7 @@ void Geometry::setupMaterials(const Materials& materials) {
 	}
 }
 
-void Geometry::printGeo(std::ostream& out) const {
+void Geometry::print(std::ostream& out) const {
 	vector<Universe*>::const_iterator it_uni = universes.begin();
 	for(; it_uni != universes.end() ; it_uni++)
 		out << *(*it_uni);

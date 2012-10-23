@@ -94,6 +94,7 @@ protected:
 		parser->parseFile(InputPath::access().getPath() + "/SourceTest/" + source_file);
 		std::vector<Helios::McObject*> sourceDefinitions = parser->getObjects(); /* Only source definitions */
 		Helios::Source* source = environment->createModule<Helios::Source>(sourceDefinitions);
+		source->print(std::cout);
 
 		for(size_t h = 0 ; h < histories ; h++) {
 			/* sample particle */
@@ -116,6 +117,7 @@ protected:
 		parser->parseFile(InputPath::access().getPath() + "/SourceTest/" + source_file);
 		std::vector<Helios::McObject*> sourceDefinitions = parser->getObjects(); /* Only source definitions */
 		Helios::Source* source = environment->createModule<Helios::Source>(sourceDefinitions);
+		source->print(std::cout);
 
 		/* Collect statistic on each cell */
 		std::map<Helios::CellId,size_t> cellCount;

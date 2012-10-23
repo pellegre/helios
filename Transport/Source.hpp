@@ -104,6 +104,9 @@ namespace Helios {
 		template<class Object>
 		std::vector<Object*> getObject(const UserId& id) const;
 
+		/* Print the source of the system */
+		void print(std::ostream& out) const;
+
 		~Source();
 	};
 

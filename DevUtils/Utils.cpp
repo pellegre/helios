@@ -50,7 +50,7 @@ void transport(const Helios::Geometry& geometry, const Helios::Coordinate& start
 				cout << pos << endl;
 				cout << *surface << endl;
 				cout << "Geometry : " << endl;
-				geometry.printGeo(std::cout);
+				geometry.print(std::cout);
 		}
 		/* Put user IDs */
 		cells.push_back(geometry.getUserId(cell));
@@ -81,7 +81,7 @@ double randomTransport(const Helios::Geometry& geometry, const Helios::Coordinat
 				cout << pos << endl;
 				cout << *surface << endl;
 				cout << "Geometry : " << endl;
-				geometry.printGeo(std::cout);
+				geometry.print(std::cout);
 		}
 		if(cell->getFlag() & Cell::DEADCELL) break;
 	}

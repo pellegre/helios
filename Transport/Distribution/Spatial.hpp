@@ -39,6 +39,8 @@ namespace Helios {
 	public:
 		Uniform() : umin(0), umax(0) {/* */}
 		Uniform(const double& umin, const double& umax) : umin(umin), umax(umax) {/* */}
+		double getMin() const {return umin;}
+		double getMax() const {return umax;}
 		void operator() (double& value, Random& r) const {
 			value += (umax - umin)*r.uniform() + umin;
 		};
@@ -76,6 +78,9 @@ namespace Helios {
 		std::string getName() const {
 			return "box-" + getAxisName<axis>();
 		}
+		void print(std::ostream& out) const {
+			out << " (umin = " << uniform.getMin() << " , umax = " << uniform.getMax() << ") ";
+		};
 	public:
 		Box1D() {/* */}
 		Box1D(const DistributionBaseObject* definition) : Distribution(definition) {
@@ -124,6 +129,10 @@ namespace Helios {
 		std::string getName() const {
 			return "box-" + getPlaneName<axis>();
 		}
+		void print(std::ostream& out) const {
+			out << " (umin = " << uniform1.getMin() << " , umax = " << uniform1.getMax() << " ) ; ";
+			out << "(vmin = " << uniform2.getMin() << " , vmax = " << uniform2.getMax() << " ) ";
+		};
 	public:
 		Box2D() {/* */}
 		Box2D(const DistributionBaseObject* definition) : Distribution(definition) {
@@ -169,6 +178,11 @@ namespace Helios {
 		std::string getName() const {
 			return "box-xyz";
 		}
+		void print(std::ostream& out) const {
+			out << " (xmin = " << uniformx.getMin() << " , xmax = " << uniformx.getMax() << " ) ; ";
+			out << "(ymin = " << uniformy.getMin() << " , ymax = " << uniformy.getMax() << " ) ; ";
+			out << "(zmin = " << uniformz.getMin() << " , zmax = " << uniformz.getMax() << " ) ";
+		};
 	public:
 		Box3D() {/* */}
 		Box3D(const DistributionBaseObject* definition) : Distribution(definition) {
@@ -220,6 +234,9 @@ namespace Helios {
 		std::string getName() const {
 			return "cyl-" + getAxisName<axis>();
 		}
+		void print(std::ostream& out) const {
+			out << " (rmin = " << rmin << " , rmax = " << rmax << ") ";
+		};
 	public:
 		Cyl2D() {/* */}
 		Cyl2D(const DistributionBaseObject* definition) : Distribution(definition) {

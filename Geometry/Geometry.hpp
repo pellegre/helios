@@ -86,7 +86,7 @@ namespace Helios {
 		const std::vector<Cell*>& getCells() const {return cells;};
 
 		/* Print cell with each surface of the geometry */
-		void printGeo(std::ostream& out) const;
+		void print(std::ostream& out) const;
 
 	    /* Find a cell given an arbitrary point in the problem (starting from the base universe) */
 		const Cell* findCell(const Coordinate& position) const {

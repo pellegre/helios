@@ -89,9 +89,9 @@ int main(int argc, char **argv) {
 
 	/* Initialization - KEFF cycle */
 	double keff = 1.186;
-	int neutrons = 30;
-	int skip = 5;
-	int cycles = 25;
+	int neutrons = 60000;
+	int skip = 50;
+	int cycles = 250;
 	list<pair<const Cell*,Particle> > particles;
 	/* Particle bank, the particles for the next cycle are banked here */
 	list<pair<const Cell*,Particle> > fission_bank;

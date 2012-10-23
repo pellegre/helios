@@ -91,6 +91,19 @@ Source::Source(const vector<McObject*>& definitions, const McEnvironment* enviro
 	source_sampler = new Sampler<ParticleSource*>(sources,strengths);
 }
 
+void Source::print(std::ostream& out) const {
+	/* Get distributions */
+	vector<ParticleSource*> samplers = source_sampler->getReactions();
+	/* Reaction matrix */
+	const double* reaction_matrix = source_sampler->getReactionMatrix();
+	/* Print each distributions */
+	size_t i = 0;
+	for( ; i < samplers.size() - 1 ; ++i)
+		out << " ( cdf = " << reaction_matrix[i] << " ) " << endl << *samplers[i];
+	/* Last one... */
+	out << " ( cdf =  1.0 ) "<< endl << *samplers[i];
+}
+
 template<>
 const std::map<UserId,DistributionBase*>& Source::getObjectMap<DistributionBase>() const {
 	return distribution_map;
