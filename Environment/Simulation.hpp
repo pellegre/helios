@@ -34,17 +34,21 @@ namespace Helios {
 
 /* Class that launch a simulation from a bank of particles */
 class Simulation {
-
+protected:
+	/* Local copy of the random number engine */
+	Random random;
+	/* Environment (is where this class should look for the data) */
+	McEnvironment* environment;
 public:
 
 	/* Pair of particle and cell */
-	typedef std::pair<const Cell*,Particle> CellParticle;
+	typedef std::pair<InternalCellId,Particle> CellParticle;
 
 	/* Initialize simulation */
-	Simulation() {/* */};
+	Simulation(const Random& random,McEnvironment* environment) : random(random), environment(environment) {/* */};
 
 	/* Launch a simulation */
-	virtual void launch(const std::vector<CellParticle>& particles, std::vector<CellParticle>& bank, Random& r) = 0;
+	virtual void launch() = 0;
 
 	virtual ~Simulation() {/* */};
 };
@@ -58,16 +62,24 @@ public:
  */
 class KeffSimulation : public Simulation {
 	/* Population after the simulation */
-	double population;
+	double keff;
+	/* Particles per cycle */
+	size_t particles_number;
+	/* Global particle bank for this simulation */
+	std::vector<CellParticle> fission_bank;
+	/* Local particle bank for for this simulation */
+	std::vector<CellParticle> local_fission_bank;
+	/* Reference to the geometry of the problem */
+	Geometry* geometry;
 public:
 	/* Initialize simulation */
-	KeffSimulation() : population(0.0) {/* */};
+	KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
 
 	/* Launch a simulation */
-	void launch(const std::vector<CellParticle>& particles, std::vector<CellParticle>& bank, Random& r);
+	void launch();
 
 	/* Get multiplication factor */
-	double getPopulation() const {return population;}
+	double getKeff() const {return keff;}
 
 	virtual ~KeffSimulation() {/* */};
 };

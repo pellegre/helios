@@ -73,14 +73,6 @@ int main(int argc, char **argv) {
 	/* Setup the problem */
 	environment.setup();
 
-	/* Geometry */
-	const Geometry* geometry = environment.getModule<Geometry>();
-
-	/* Get materials */
-	const Materials* materials = environment.getModule<Materials>();
-	/* Get the source */
-	const Source* source = environment.getModule<Source>();
-
 	/* Initialization - Random number */
 	Random r;
 	r.getEngine().seed((long unsigned int)1);
@@ -91,42 +83,17 @@ int main(int argc, char **argv) {
 	int neutrons = 10000;
 	int skip = 5;
 	int cycles = 200;
-	vector<Simulation::CellParticle> particles;
-	particles.reserve(2 * neutrons);
-	/* Particle bank, the particles for the next cycle are banked here */
-	vector<Simulation::CellParticle> particle_bank;
-	particle_bank.reserve(2 * neutrons);
 
-	for(size_t i = 0 ; i < neutrons ; ++i) {
-		/* Sample particle */
-        Particle p = source->sample(r);
-		const Cell* c(geometry->findCell(p.pos()));
-		particles.push_back(Simulation::CellParticle(c,p));
-	}
+	/* Initialize simulation */
+	KeffSimulation simulation(r,&environment,keff,neutrons);
 
 	for(int ncycle = 0 ; ncycle <= cycles ; ++ncycle) {
 
-		/* Update new particles from the fission bank */
-		while(!particle_bank.empty()) {
-			/* Get banked particle */
-			Simulation::CellParticle banked_particle = particle_bank.back();
-			particle_bank.pop_back();
-			/* Split particle */
-			double amp = banked_particle.second.wgt() / keff;
-			int split = std::max(1,(int)(amp));
-			/* New weight of the particle */
-			banked_particle.second.wgt() = amp/(double)split;
-			/* Put the split particle into the "simulation" list */
-			banked_particle.second.sta() = Particle::ALIVE;
-			for(int i = 0 ; i < split ; i++)
-				particles.push_back(banked_particle);
-		}
-
-		KeffSimulation simulation;
-		simulation.launch(particles,particle_bank,r);
+		simulation.launch();
 
 		/* Calculate multiplication factor */
-		keff = simulation.getPopulation() / (double) neutrons;
+		keff = simulation.getKeff();
+
 		if(ncycle > skip) {
 			Log::ok() << "Cycle = " << ncycle << " - keff = " << keff << Log::endl;
 			ave_keff += keff;
@@ -134,8 +101,6 @@ int main(int argc, char **argv) {
 			Log::ok() << " Cycle (Inactive) = " << ncycle << " - keff = " << keff << Log::endl;
 		}
 
-		/* Clear container */
-		particles.clear();
 	}
 
 	Log::ok() << " Final keff = "<< ave_keff/ (double)(cycles - skip) << Log::endl;

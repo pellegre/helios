@@ -31,19 +31,45 @@ using namespace std;
 
 namespace Helios {
 
-void KeffSimulation::launch(const vector<CellParticle>& particles, vector<CellParticle>& fission_bank, Random& r) {
+KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
+		Simulation(_random,_environment), keff(keff), particles_number(_particles_number) {
+
+	/* Get the source from the environment */
+	const Source* source = environment->getModule<Source>();
+
+	/* Get geometry from the environment */
+	geometry = environment->getModule<Geometry>();
+
+	/* Reserve space for the particle bank */
+	fission_bank.reserve(2 * particles_number);
+
+	/* Populate the particle bank with the initial source */
+	for(size_t i = 0 ; i < particles_number ; ++i) {
+		/* Sample particle */
+        Particle particle = source->sample(random);
+		const Cell* cell(geometry->findCell(particle.pos()));
+		fission_bank.push_back(CellParticle(cell->getInternalId(),particle));
+	}
+};
+
+void KeffSimulation::launch() {
+
+	/* --- Random number */
+	Random& r(random);
+
+	/* --- Population */
+	double population = 0.0;
 
 	/* --- Initialize geometry stuff */
-
 	Surface* surface(0);  /* Surface pointer */
 	bool sense(true);     /* Sense of the surface we are crossing */
 	double distance(0.0); /* Distance to closest surface */
 
-	for(vector<CellParticle>::const_iterator it = particles.begin() ; it != particles.end() ; ++it) {
+	for(vector<CellParticle>::const_iterator it = fission_bank.begin() ; it != fission_bank.end() ; ++it) {
 
 		/* Get particle from the user supplied bank */
-		pair<const Cell*,Particle> pc = (*it);
-		const Cell* cell = pc.first;
+		CellParticle pc = (*it);
+		const Cell* cell = geometry->getCells()[pc.first];
 		Particle particle = pc.second;
 
 		/* Flag if particle is out of the system */
@@ -120,12 +146,33 @@ void KeffSimulation::launch(const vector<CellParticle>& particles, vector<CellPa
 			if(particle.sta() == Particle::DEAD) break;
 			if(particle.sta() == Particle::BANK) {
 				population += particle.wgt();
-				fission_bank.push_back(CellParticle(cell,particle));
+				local_fission_bank.push_back(CellParticle(cell->getInternalId(),particle));
 				break;
 			}
 		}
 	}
-}
 
+	/* --- Calculate multiplication factor for this cycle */
+	keff = population / (double) particles_number;
+
+	/* --- Clear particle bank*/
+	fission_bank.clear();
+
+	/* --- Re-populate the particle bank with the new source */
+	while(!local_fission_bank.empty()) {
+		/* Get banked particle */
+		Simulation::CellParticle banked_particle = local_fission_bank.back();
+		local_fission_bank.pop_back();
+		/* Split particle */
+		double amp = banked_particle.second.wgt() / keff;
+		int split = std::max(1,(int)(amp));
+		/* New weight of the particle */
+		banked_particle.second.wgt() = amp/(double)split;
+		/* Put the split particle into the "simulation" list */
+		banked_particle.second.sta() = Particle::ALIVE;
+		for(int i = 0 ; i < split ; i++)
+			fission_bank.push_back(banked_particle);
+	}
+}
 
 } /* namespace Helios */
