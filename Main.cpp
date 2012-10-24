@@ -39,11 +39,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Transport/Source.hpp"
 #include "Common/Common.hpp"
 #include "Environment/McEnvironment.hpp"
+#include "Environment/Simulation.hpp"
 
 using namespace std;
 using namespace Helios;
 
 int main(int argc, char **argv) {
+
 	/* Check number of arguments */
 	if(argc < 2) {
 	  Helios::Log::error() << "Usage : " << argv[0] << " <filename>" << Helios::Log::endl;
@@ -72,12 +74,111 @@ int main(int argc, char **argv) {
 	environment.setup();
 
 	/* Geometry */
-	Geometry* geometry = environment.getModule<Geometry>();
+	const Geometry* geometry = environment.getModule<Geometry>();
 
 	/* Get materials */
-	Materials* materials = environment.getModule<Materials>();
+	const Materials* materials = environment.getModule<Materials>();
 	/* Get the source */
-	Source* source = environment.getModule<Source>();
+	const Source* source = environment.getModule<Source>();
+
+	/* Initialization - Random number */
+	Random r;
+	r.getEngine().seed((long unsigned int)1);
+
+	/* Initialization - KEFF cycle */
+	double keff = 1.186;
+	double ave_keff = 0.0;
+	int neutrons = 10000;
+	int skip = 5;
+	int cycles = 200;
+	vector<Simulation::CellParticle> particles;
+	particles.reserve(2 * neutrons);
+	/* Particle bank, the particles for the next cycle are banked here */
+	vector<Simulation::CellParticle> particle_bank;
+	particle_bank.reserve(2 * neutrons);
+
+	for(size_t i = 0 ; i < neutrons ; ++i) {
+		/* Sample particle */
+        Particle p = source->sample(r);
+		const Cell* c(geometry->findCell(p.pos()));
+		particles.push_back(Simulation::CellParticle(c,p));
+	}
+
+	for(int ncycle = 0 ; ncycle <= cycles ; ++ncycle) {
+
+		/* Update new particles from the fission bank */
+		while(!particle_bank.empty()) {
+			/* Get banked particle */
+			Simulation::CellParticle banked_particle = particle_bank.back();
+			particle_bank.pop_back();
+			/* Split particle */
+			double amp = banked_particle.second.wgt() / keff;
+			int split = std::max(1,(int)(amp));
+			/* New weight of the particle */
+			banked_particle.second.wgt() = amp/(double)split;
+			/* Put the split particle into the "simulation" list */
+			banked_particle.second.sta() = Particle::ALIVE;
+			for(int i = 0 ; i < split ; i++)
+				particles.push_back(banked_particle);
+		}
+
+		KeffSimulation simulation;
+		simulation.launch(particles,particle_bank,r);
+
+		/* Calculate multiplication factor */
+		keff = simulation.getPopulation() / (double) neutrons;
+		if(ncycle > skip) {
+			Log::ok() << "Cycle = " << ncycle << " - keff = " << keff << Log::endl;
+			ave_keff += keff;
+		} else {
+			Log::ok() << " Cycle (Inactive) = " << ncycle << " - keff = " << keff << Log::endl;
+		}
+
+		/* Clear container */
+		particles.clear();
+	}
+
+	Log::ok() << " Final keff = "<< ave_keff/ (double)(cycles - skip) << Log::endl;
+
+	delete parser;
+	return 0;
+}
+
+int main__(int argc, char **argv) {
+	/* Check number of arguments */
+	if(argc < 2) {
+	  Helios::Log::error() << "Usage : " << argv[0] << " <filename>" << Helios::Log::endl;
+	  exit(1);
+	}
+
+	/* Print header */
+	Log::header();
+
+	/* Parser (XML for now) */
+	Parser* parser = new XmlParser;
+
+	/* Container of filenames */
+	vector<string> input_files;
+
+	while(*(++argv)) {
+		string filename = string(*(argv));
+		input_files.push_back(filename);
+	}
+
+	/* Environment */
+	McEnvironment environment(parser);
+	/* Parse files, to get the information to create the environment */
+	environment.parseFiles(input_files);
+	/* Setup the problem */
+	environment.setup();
+
+	/* Geometry */
+	const Geometry* geometry = environment.getModule<Geometry>();
+
+	/* Get materials */
+	const Materials* materials = environment.getModule<Materials>();
+	/* Get the source */
+	const Source* source = environment.getModule<Source>();
 
 	/* Initialization - Random number */
 	Random r;
@@ -226,4 +327,5 @@ int main(int argc, char **argv) {
 	Log::ok() << " Final keff = "<< ave_keff/ (double)(cycles - skip) << Log::endl;
 
 	delete parser;
+	return 0;
 }

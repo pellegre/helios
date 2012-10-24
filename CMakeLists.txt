@@ -15,7 +15,7 @@ set( ${PROJECT_NAME}_MINOR_VERSION 1 )
 
 set(CMAKE_AR xiar)
 set(CMAKE_CXX_FLAGS_RELEASE "-xHOST -O3 -ipo -no-prec-div -static-intel") 
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O2 -Wall")
 
 if(CMAKE_BUILD_TYPE STREQUAL "release")
   set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
@@ -86,7 +86,8 @@ link_directories(${Boost_LIBRARIES_DIRS})
 set(MCFILES Common/Common.cpp
             Common/Log/Log.cpp
             Environment/McEnvironment.cpp   
-            Environment/McModule.cpp                      
+            Environment/McModule.cpp
+            Environment/Simulation.cpp                                  
             Transport/Particle.cpp
             Transport/Distribution/Distribution.cpp
             Transport/ParticleSource.cpp                       

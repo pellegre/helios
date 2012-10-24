@@ -68,6 +68,13 @@ McEnvironment::~McEnvironment() {
 		delete (*it).second;
 	for(map<std::string,McModule*>::iterator it = module_map.begin() ; it != module_map.end() ; ++it)
 		delete (*it).second;
+
+	/* Clean all definitions */
+	for(map<string,vector<McObject*> >::iterator it = object_map.begin() ; it != object_map.end() ; ++it) {
+		purgePointers((*it).second);
+	}
+	/* Clear map */
+	object_map.clear();
 }
 
 void McEnvironment::setup() {
@@ -79,13 +86,6 @@ void McEnvironment::setup() {
 
 	/* Finally, we setup the source */
 	setupModule<Source>();
-
-	/* Clean all definitions */
-	for(map<string,vector<McObject*> >::iterator it = object_map.begin() ; it != object_map.end() ; ++it) {
-		purgePointers((*it).second);
-	}
-	/* Clear map */
-	object_map.clear();
 }
 
 } /* namespace Helios */
