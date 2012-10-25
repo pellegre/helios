@@ -36,16 +36,20 @@ namespace Helios {
 class Simulation {
 protected:
 	/* Local copy of the random number engine */
-	Random random;
+	Random base;
 	/* Environment (is where this class should look for the data) */
 	McEnvironment* environment;
+
+	/* Parameters for random number on simulations */
+	size_t max_rng_per_source;
+	size_t max_rng_per_history;
 public:
 
 	/* Pair of particle and cell */
 	typedef std::pair<InternalCellId,Particle> CellParticle;
 
 	/* Initialize simulation */
-	Simulation(const Random& random,McEnvironment* environment) : random(random), environment(environment) {/* */};
+	Simulation(const Random& base,McEnvironment* environment);
 
 	/* Launch a simulation */
 	virtual void launch() = 0;
@@ -67,8 +71,6 @@ class KeffSimulation : public Simulation {
 	size_t particles_number;
 	/* Global particle bank for this simulation */
 	std::vector<CellParticle> fission_bank;
-	/* Local particle bank for for this simulation */
-	std::vector<CellParticle> local_fission_bank;
 	/* Reference to the geometry of the problem */
 	Geometry* geometry;
 public:

@@ -14,8 +14,8 @@ set( ${PROJECT_NAME}_MINOR_VERSION 1 )
 # ---- Compiler settings for different builds
 
 set(CMAKE_AR xiar)
-set(CMAKE_CXX_FLAGS_RELEASE "-xHOST -O3 -ipo -no-prec-div -static-intel") 
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O2 -Wall")
+set(CMAKE_CXX_FLAGS_RELEASE "-xHOST -openmp -O3 -ipo -no-prec-div -static-intel") 
+set(CMAKE_CXX_FLAGS_DEBUG "-g -openmp -O2 -Wall")
 
 if(CMAKE_BUILD_TYPE STREQUAL "release")
   set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})

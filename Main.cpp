@@ -81,8 +81,8 @@ int main(int argc, char **argv) {
 	double keff = 1.186;
 	double ave_keff = 0.0;
 	int neutrons = 10000;
-	int skip = 5;
-	int cycles = 200;
+	int skip = 50;
+	int cycles = 250;
 
 	/* Initialize simulation */
 	KeffSimulation simulation(r,&environment,keff,neutrons);

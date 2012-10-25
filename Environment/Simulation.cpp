@@ -24,12 +24,19 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <omp.h>
 
 #include "Simulation.hpp"
 
 using namespace std;
 
 namespace Helios {
+
+Simulation::Simulation(const Random& base,McEnvironment* environment) : base(base), environment(environment) {
+	/* Parameters for random number on simulations */
+	max_rng_per_source = 100;
+	max_rng_per_history = 100000;
+};
 
 KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
 		Simulation(_random,_environment), keff(keff), particles_number(_particles_number) {
@@ -42,118 +49,154 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 
 	/* Reserve space for the particle bank */
 	fission_bank.reserve(2 * particles_number);
+	fission_bank.resize(particles_number);
 
 	/* Populate the particle bank with the initial source */
+	#pragma omp parallel for
 	for(size_t i = 0 ; i < particles_number ; ++i) {
+		/* Jump random number generator */
+		Random random(base);
+		random.getEngine().jump(i * max_rng_per_source);
 		/* Sample particle */
-        Particle particle = source->sample(random);
+		Particle particle = source->sample(random);
 		const Cell* cell(geometry->findCell(particle.pos()));
-		fission_bank.push_back(CellParticle(cell->getInternalId(),particle));
+		fission_bank[i] = CellParticle(cell->getInternalId(),particle);
 	}
+
+	/* Jump on base stream of RNGs */
+	base.getEngine().jump(particles_number * max_rng_per_source);
 };
 
 void KeffSimulation::launch() {
 
-	/* --- Random number */
-	Random& r(random);
-
 	/* --- Population */
-	double population = 0.0;
+	vector<double> population;
+	double pop = 0;
 
-	/* --- Initialize geometry stuff */
-	Surface* surface(0);  /* Surface pointer */
-	bool sense(true);     /* Sense of the surface we are crossing */
-	double distance(0.0); /* Distance to closest surface */
+	/* --- Local particle bank for for this simulation */
+	vector<CellParticle> local_fission_bank(fission_bank);
 
-	for(vector<CellParticle>::const_iterator it = fission_bank.begin() ; it != fission_bank.end() ; ++it) {
+	#pragma omp parallel
+	{
+		/* --- Initialize geometry stuff */
+		Surface* surface(0);  /* Surface pointer */
+		bool sense(true);     /* Sense of the surface we are crossing */
+		double distance(0.0); /* Distance to closest surface */
 
-		/* Get particle from the user supplied bank */
-		CellParticle pc = (*it);
-		const Cell* cell = geometry->getCells()[pc.first];
-		Particle particle = pc.second;
+		/* Thread id */
+		int bank_id = 0;
 
-		/* Flag if particle is out of the system */
-		bool out = false;
+		/* Update local containers */
+		#pragma omp critical
+		{
+			/* Initialize local thread data */
+			population.push_back(0.0);
+			/* Get id of this thread */
+			bank_id = population.size() - 1;
+		}
 
-		while(true) {
+		#pragma omp for
+		for(size_t i = 0 ; i < fission_bank.size() ; ++i) {
 
-			/* Get next surface and distance */
-			cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
+			/* --- Random number */
+			Random r(base);
+			r.getEngine().jump(i * max_rng_per_history);
 
-			/* Energy index of the particle */
-			EnergyIndex energy_index = particle.eix();
-			/* Get material */
-			const Material* material = cell->getMaterial();
-			/* Get total cross section */
-			double mfp = material->getMeanFreePath(energy_index);
+			/* Get particle from the user supplied bank */
+			CellParticle pc = fission_bank[i];
+			const Cell* cell = geometry->getCells()[pc.first];
+			Particle particle = pc.second;
 
-			/* Get collision distance */
-			double collision_distance = -log(r.uniform())*mfp;
+			/* Flag if particle is out of the system */
+			bool out = false;
 
-			while(collision_distance > distance) {
-				/* Cut on a vacuum surface */
-				if(surface->getFlags() & Surface::VACUUM) {
-					out = true;
-					break;
-				}
+			while(true) {
 
-				/* Transport the particle to the surface */
-				particle.pos() = particle.pos() + distance * particle.dir();
+				/* Get next surface and distance */
+				cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
 
-				if(surface->getFlags() & Surface::REFLECTING) {
-					/* Get normal */
-					Direction normal;
-					surface->normal(particle.pos(),normal);
-					/* Reverse if necessary */
-					if(sense == false) normal = -normal;
-					/* Calculate the new direction */
-					double projection = 2 * dot(particle.dir(), normal);
-					particle.dir() = particle.dir() - projection * normal;
-				} else {
-					/* Now get next cell */
-					surface->cross(particle.pos(),sense,cell);
-					if(!cell) {
-						cout << particle << endl;
-						cout << *surface << endl;
-					}
-					/* Cut if the cell is dead */
-					if(cell->getFlag() & Cell::DEADCELL) {
+				/* Energy index of the particle */
+				EnergyIndex energy_index = particle.eix();
+				/* Get material */
+				const Material* material = cell->getMaterial();
+				/* Get total cross section */
+				double mfp = material->getMeanFreePath(energy_index);
+
+				/* Get collision distance */
+				double collision_distance = -log(r.uniform())*mfp;
+
+				while(collision_distance > distance) {
+					/* Cut on a vacuum surface */
+					if(surface->getFlags() & Surface::VACUUM) {
 						out = true;
 						break;
 					}
+
+					/* Transport the particle to the surface */
+					particle.pos() = particle.pos() + distance * particle.dir();
+
+					if(surface->getFlags() & Surface::REFLECTING) {
+						/* Get normal */
+						Direction normal;
+						surface->normal(particle.pos(),normal);
+						/* Reverse if necessary */
+						if(sense == false) normal = -normal;
+						/* Calculate the new direction */
+						double projection = 2 * dot(particle.dir(), normal);
+						particle.dir() = particle.dir() - projection * normal;
+					} else {
+						/* Now get next cell */
+						surface->cross(particle.pos(),sense,cell);
+						if(!cell) {
+							cout << particle << endl;
+							cout << *surface << endl;
+						}
+						/* Cut if the cell is dead */
+						if(cell->getFlag() & Cell::DEADCELL) {
+							out = true;
+							break;
+						}
+					}
+
+					/* Calculate new distance to the closest surface */
+					cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
+
+					/* Update material */
+					material = cell->getMaterial();
+					mfp = material->getMeanFreePath(energy_index);
+
+					/* And the new collision distance */
+					collision_distance = -log(r.uniform())*mfp;
 				}
 
-				/* Calculate new distance to the closest surface */
-				cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
+				if(out) break;
 
-				/* Update material */
-				material = cell->getMaterial();
-				mfp = material->getMeanFreePath(energy_index);
+				/* If we are out, we reach some point inside a cell were a collision should occur */
+				particle.pos() = particle.pos() + collision_distance * particle.dir();
 
-				/* And the new collision distance */
-				collision_distance = -log(r.uniform())*mfp;
-			}
+				/* get and apply reaction to the particle */
+				Reaction* reaction = material->getReaction(particle.eix(),r);
+				(*reaction)(particle,r);
 
-			if(out) break;
-
-			/* If we are out, we reach some point inside a cell were a collision should occur */
-			particle.pos() = particle.pos() + collision_distance * particle.dir();
-
-			/* get and apply reaction to the particle */
-			Reaction* reaction = material->getReaction(particle.eix(),r);
-			(*reaction)(particle,r);
-
-			if(particle.sta() == Particle::DEAD) break;
-			if(particle.sta() == Particle::BANK) {
-				population += particle.wgt();
-				local_fission_bank.push_back(CellParticle(cell->getInternalId(),particle));
-				break;
+				if(particle.sta() == Particle::DEAD) break;
+				if(particle.sta() == Particle::BANK) {
+					/* Update local particle bank */
+					population[bank_id] += particle.wgt();
+					local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);
+					break;
+				}
 			}
 		}
 	}
 
+	/* Jump on random number generation */
+	base.getEngine().jump(fission_bank.size() * max_rng_per_history);
+
 	/* --- Calculate multiplication factor for this cycle */
-	keff = population / (double) particles_number;
+
+	for(size_t i = 0 ; i < population.size() ; ++i)
+		pop += population[i];
+	keff = pop / (double) particles_number;
 
 	/* --- Clear particle bank*/
 	fission_bank.clear();
@@ -163,6 +206,8 @@ void KeffSimulation::launch() {
 		/* Get banked particle */
 		Simulation::CellParticle banked_particle = local_fission_bank.back();
 		local_fission_bank.pop_back();
+		if(banked_particle.second.sta() != Particle::BANK) continue;
+
 		/* Split particle */
 		double amp = banked_particle.second.wgt() / keff;
 		int split = std::max(1,(int)(amp));
