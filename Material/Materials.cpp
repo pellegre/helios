@@ -88,6 +88,6 @@ Materials::~Materials() {
 	purgePointers(materials);
 	/* Delete factory */
 	delete factory;
-};
+}
 
 } /* namespace Helios */

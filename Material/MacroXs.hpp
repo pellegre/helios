@@ -40,7 +40,7 @@ namespace Helios {
 	class MacroXs: public Helios::Material {
 
 		/* Number of groups */
-		int ngroups;
+		size_t ngroups;
 		/* Total cross section */
 		std::vector<double> mfp;
 

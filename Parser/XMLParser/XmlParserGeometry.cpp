@@ -47,7 +47,7 @@ static FeatureObject* latticeAttrib(TiXmlElement* pElement) {
 	/* Get attributes */
 	UniverseId id = fromString<UniverseId>(mapAttrib["id"]);
 	string type = mapAttrib["type"];
-	vector<unsigned int> dimension = getContainer<unsigned int>(mapAttrib["dimension"]);
+	vector<int> dimension = getContainer<int>(mapAttrib["dimension"]);
 	vector<double> width = getContainer<double>(mapAttrib["pitch"]);
 	vector<UniverseId> universes = getContainer<UniverseId>(mapAttrib["universes"]);
 	/* Return surface definition */

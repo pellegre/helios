@@ -36,7 +36,7 @@ PngPlotter::PngPlotter(const double& width, const double& height, const int& pix
 	Log::bok() << "Initializing PNG Plotter " << Log::endl;
 	Log::msg() << Log::ident(1) << " - Size   = " << width << " x " << height << Log::endl;
 	Log::msg() << Log::ident(1) << " - Pixels = " << pixel << " x " << pixel  << Log::endl ;
-};
+}
 
 void PngPlotter::dump(const std::string& filename, const int& maxId, PixelColor pixelColor) {
 	/* Now go backwards to set the black lines on the other side */

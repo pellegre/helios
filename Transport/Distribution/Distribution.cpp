@@ -119,7 +119,7 @@ void DistributionFactory::registerDistribution(const DistributionBase& distribut
 	constructor_table[distribution.getName()] = distribution.constructor();
 }
 
-DistributionBase::DistributionBase(const DistributionBaseObject* definition) : user_id(definition->getUserId()) {/* */};
+DistributionBase::DistributionBase(const DistributionBaseObject* definition) : user_id(definition->getUserId()) {/* */}
 
 std::ostream& operator<<(std::ostream& out, const DistributionBase& q) {
 	out << "distribution = " << q.getUserId() << " ; type = " << q.getName() << " ;";
@@ -135,7 +135,7 @@ DistributionCustom::DistributionCustom(const DistributionBaseObject* definition,
 	std::vector<double> weights = distObject->getWeights();
 	/* Create sampler */
 	distribution_sampler = new Sampler<DistributionBase*>(distPtrs,weights);
-};
+}
 
 void DistributionCustom::print(std::ostream& out) const {
 	out << endl;

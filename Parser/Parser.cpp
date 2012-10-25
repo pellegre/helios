@@ -35,8 +35,6 @@ namespace Helios {
 
 static size_t seachKeyWords(const string& filename, vector<string> search_keys) {
 
-	/* Pair of file and match */
-	size_t file_line;
 	/* Count matches of bad keyword on the line */
 	map<size_t,size_t> line_match;
 	string line;

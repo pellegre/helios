@@ -81,10 +81,10 @@ namespace Helios {
 		class AttributeValue {
 			/* Attribute value */
 			std::string attrib_name;
-			/* Required arguments */
-			std::map<std::string,T> values;
 			/* Default value */
 			T default_value;
+			/* Required arguments */
+			std::map<std::string,T> values;
 			/* Throw exception */
 			void throwException(const AttribMap& attrib_map, const std::string& msg) const;
 		public:

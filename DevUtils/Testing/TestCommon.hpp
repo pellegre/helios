@@ -43,7 +43,7 @@ public:
 };
 
 template<class T>
-static inline std::vector<T> genVector(T min, T max) {
+inline std::vector<T> genVector(T min, T max) {
 	std::vector<T> v;
 	for(T i = min ; i <= max ; i++) {
 		v.push_back(i);
@@ -52,7 +52,7 @@ static inline std::vector<T> genVector(T min, T max) {
 }
 
 template<>
-static inline std::vector<std::string> genVector(std::string min, std::string max) {
+inline std::vector<std::string> genVector(std::string min, std::string max) {
 	std::vector<std::string> v;
 	for(int i = Helios::fromString<int>(min) ; i <= Helios::fromString<int>(max) ; i++) {
 		v.push_back(Helios::toString(i));

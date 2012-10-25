@@ -92,7 +92,7 @@ ParticleCellSampler::ParticleCellSampler(const ParticleSamplerObject* definition
 /* Sample particle (and check cell) */
 void ParticleCellSampler::operator() (Particle& particle,Random& r) const {
 	/* Number of samples */
-	int nsamples = 0;
+	size_t nsamples = 0;
 	/* Flag if is inside the cell */
 	bool inside = false;
 	/* First get the position (rejecting point outside the cell) */

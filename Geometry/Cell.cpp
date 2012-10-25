@@ -40,12 +40,13 @@ namespace Helios {
 
 Cell::Cell(const CellObject* definition, const std::vector<SenseSurface>& surfaces) :
 	surfaces(surfaces),
-	user_id(definition->getUserCellId()),
 	flag(definition->getFlags()),
 	fill(0),
 	material(0),
 	parent(0),
-	internal_id(0) {
+	internal_id(0),
+	user_id(definition->getUserCellId())
+	{
     /* Set the new cell on surfaces neighbor container */
     vector<Cell::SenseSurface>::const_iterator it_sur = surfaces.begin();
 	for(; it_sur != surfaces.end() ; ++it_sur)

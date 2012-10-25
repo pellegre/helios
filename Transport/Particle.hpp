@@ -42,7 +42,8 @@ namespace Helios {
 			BANK  = 2  /* The particle state should be banked on next step */
 		};
 
-		Particle() {/* */}
+		Particle() : position(Coordinate(0,0,0)), direction(Direction(0,0,0)), energy(EnergyPair(0,1.0)),
+					 weight(1.0), state(ALIVE) {/* */}
 		Particle(const Coordinate& position, const Direction& direction, const EnergyPair& energy,const double& weight) :
 				 position(position), direction(direction), energy(energy), weight(weight), state(ALIVE) {/* */}
 

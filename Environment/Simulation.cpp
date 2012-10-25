@@ -36,7 +36,7 @@ Simulation::Simulation(const Random& base,McEnvironment* environment) : base(bas
 	/* Parameters for random number on simulations */
 	max_rng_per_source = 100;
 	max_rng_per_history = 100000;
-};
+}
 
 KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
 		Simulation(_random,_environment), keff(keff), particles_number(_particles_number) {
@@ -65,7 +65,7 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 
 	/* Jump on base stream of RNGs */
 	base.getEngine().jump(particles_number * max_rng_per_source);
-};
+}
 
 void KeffSimulation::launch() {
 

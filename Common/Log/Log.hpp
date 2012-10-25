@@ -106,8 +106,8 @@ public:
 	/* Print program header */
 	static void header(std::ostream& out = std::cout);
 	/* Get a color out stream (to standard output) */
-	template<Color color> static std::ostream& color() {
-		logger.messages << color_map[color];
+	template<Color _color> static std::ostream& color() {
+		logger.messages << color_map[_color];
 		return logger.messages;
 	}
 

@@ -33,7 +33,7 @@ using namespace std;
 
 namespace Helios {
 
-GeometricFeature::GeometricFeature(const FeatureObject* definition) : feature(definition->getFeature()) {/* */};
+GeometricFeature::GeometricFeature(const FeatureObject* definition) : feature(definition->getFeature()) {/* */}
 
 /* Create a new surface */
 GeometricFeature* FeatureFactory::createFeature(const FeatureObject* definition) const {
@@ -59,7 +59,7 @@ static string getPlaneAbscissa() {
 }
 
 template<int axis>
-static string getAbscissaSurface(const int& v) {
+static string getAbscissaSurface(const size_t& v) {
 	switch(axis) {
 	case xaxis :
 		return "[," + toString(v) + ",]";
@@ -91,7 +91,7 @@ static string getPlaneOrdinate() {
 }
 
 template<int axis>
-static string getOrdinateSurface(const int& v) {
+static string getOrdinateSurface(const size_t& v) {
 	switch(axis) {
 	case xaxis :
 		return "[,," + toString(v) + "]";
@@ -123,7 +123,7 @@ static Direction getTranslation(const double& x, const double& y) {
 }
 
 template<int axis>
-static string getLatticePosition(const int& x, const int& y) {
+static string getLatticePosition(const size_t& x, const size_t& y) {
 	switch(axis) {
 	case xaxis :
 		return "[0," + toString(x) + "," + toString(y) + "]";
@@ -146,7 +146,7 @@ static void gen2DLattice(const LatticeObject& new_lat,std::vector<SurfaceObject*
 		                 std::vector<CellObject*>& cell_def) {
 
 	/* Get dimension and pitch */
-	vector<unsigned int> dimension = new_lat.getDimension();
+	vector<int> dimension = new_lat.getDimension();
 	vector<double> pitch = new_lat.getWidth();
 	/* Get universes to fill each cell */
 	vector<UniverseId> universes = new_lat.getUniverses();
@@ -160,20 +160,18 @@ static void gen2DLattice(const LatticeObject& new_lat,std::vector<SurfaceObject*
 
 	/* Get coordinates on x axis */
 	double x_min = -width[0]/2;
-	double x_max = width[0]/2;
 	/* Get delta on x axis */
 	double x_delta = width[0] / (double) dimension[0];
 
 	/* Get coordinates on y axis */
 	double y_min = -width[1]/2;
-	double y_max = width[1]/2;
 	/* Get delta on y axis */
 	double y_delta = width[1] / (double) dimension[1];
 
 	/* Now create "y" surfaces from left to right */
 	vector<SurfaceObject*> y_surfaces;
 	vector<double> y_coordinates;
-	for(size_t i = 0 ; i <= dimension[1] ; i++) {
+	for(int i = 0 ; i <= dimension[1] ; i++) {
 		vector<double> coeff;
 		double sur_pos = y_min + (double)i * y_delta;
 		coeff.push_back(sur_pos);
@@ -187,7 +185,7 @@ static void gen2DLattice(const LatticeObject& new_lat,std::vector<SurfaceObject*
 	/* Now create "x" surfaces from bottom to top */
 	vector<SurfaceObject*> x_surfaces;
 	vector<double> x_coordinates;
-	for(size_t i = 0 ; i <= dimension[0] ; i++) {
+	for(int i = 0 ; i <= dimension[0] ; i++) {
 		vector<double> coeff;
 		double sur_pos = x_min + (double)i * x_delta;
 		coeff.push_back(sur_pos);
@@ -259,7 +257,7 @@ Lattice::Lattice(const FeatureObject* definition) : GeometricFeature(definition)
 	if(uni_count != universes.size())
 		throw Universe::BadUniverseCreation(latt_id,
 		"Invalid number of universes in lattice (expected = " + toString(uni_count) + " ; input = " + toString(universes.size()) + ")");
-};
+}
 
 void Lattice::createFeature(const FeatureObject* featureObject,
                               std::vector<SurfaceObject*>& surfaceObject,

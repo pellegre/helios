@@ -145,7 +145,7 @@ namespace Helios {
 	    }
 	    distance = 0.0;
 	    return false;
-	};
+	}
 
 	template<int axis>
 	Surface* PlaneNormal<axis>::transformate(const Direction& trans) const {

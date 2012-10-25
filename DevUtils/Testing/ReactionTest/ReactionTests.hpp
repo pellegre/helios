@@ -42,16 +42,16 @@ template<class T>
 class SamplerGenerator {
 
 	/* Number of samples (i.e. reactions) */
-	int nsamples;
+	size_t nsamples;
 	/* Number of energies */
-	int nenergy;
+	size_t nenergy;
 	/* Vector of probabilities */
 	std::vector<double> prob;
 	/* Samples map */
 	std::vector<T> samples;
 public:
 
-	SamplerGenerator(const std::vector<T>& samples, int nenergy) :
+	SamplerGenerator(const std::vector<T>& samples, size_t nenergy) :
 		             nsamples(samples.size()), nenergy(nenergy), prob(nenergy,1.0), samples(samples) {/* */}
 
 	/* Get map with uniform probabilities */
@@ -107,13 +107,13 @@ protected:
 };
 
 /* Test for sampling integers (uniform) */
-class IntUniformSamplerPtrTest : public SamplerPtrTest<int> {
-	int nsamples;
-	int histories;
-	int nenergies;
+class IntUniformSamplerPtrTest : public SamplerPtrTest<size_t> {
+	size_t nsamples;
+	size_t histories;
+	size_t nenergies;
 protected:
-	IntUniformSamplerPtrTest(const int& nsamples, const int& nenergies, const int& histories) :
-		           SamplerPtrTest<int>(SamplerGenerator<int>(genVector<int>(0,nsamples-1),nenergies).getUniformMap()),
+	IntUniformSamplerPtrTest(const size_t& nsamples, const size_t& nenergies, const size_t& histories) :
+		           SamplerPtrTest<size_t>(SamplerGenerator<size_t>(genVector<size_t>(0,nsamples-1),nenergies).getUniformMap()),
 		           nsamples(nsamples), histories(histories), nenergies(nenergies) {/* */}
 	void checkUniformSamples() const {
 		for(size_t h = 0 ; h < histories ; h++) {
@@ -142,13 +142,13 @@ protected:
 	virtual ~OneIntUniformSamplerPtrTest() {/* */}
 };
 
-class IntOddZeroedSamplerPtrTest : public SamplerPtrTest<int> {
-	int nsamples;
-	int histories;
-	int nenergies;
+class IntOddZeroedSamplerPtrTest : public SamplerPtrTest<size_t> {
+	size_t nsamples;
+	size_t histories;
+	size_t nenergies;
 protected:
-	IntOddZeroedSamplerPtrTest(const int& nsamples, const int& nenergies, const int& histories) :
-		           SamplerPtrTest<int>(SamplerGenerator<int>(genVector<int>(0,nsamples-1),nenergies).getOddZeroedMap()),
+	IntOddZeroedSamplerPtrTest(const size_t& nsamples, const size_t& nenergies, const size_t& histories) :
+		           SamplerPtrTest<size_t>(SamplerGenerator<size_t>(genVector<size_t>(0,nsamples-1),nenergies).getOddZeroedMap()),
 		           nsamples(nsamples), histories(histories), nenergies(nenergies) {/* */}
 	void checkZeroedSamples() const {
 		for(size_t h = 0 ; h < histories ; h++) {
@@ -208,13 +208,13 @@ protected:
 };
 
 /* Test for sampling integers (uniform) */
-class IntUniformSamplerCpyTest : public SamplerCpyTest<int> {
-	int nsamples;
-	int histories;
-	int nenergies;
+class IntUniformSamplerCpyTest : public SamplerCpyTest<size_t> {
+	size_t nsamples;
+	size_t histories;
+	size_t nenergies;
 protected:
-	IntUniformSamplerCpyTest(const int& nsamples, const int& nenergies, const int& histories) :
-		           SamplerCpyTest<int>(SamplerGenerator<int>(genVector<int>(0,nsamples-1),nenergies).getUniformMap()),
+	IntUniformSamplerCpyTest(const size_t& nsamples, const size_t& nenergies, const size_t& histories) :
+		           SamplerCpyTest<size_t>(SamplerGenerator<size_t>(genVector<size_t>(0,nsamples-1),nenergies).getUniformMap()),
 		           nsamples(nsamples), histories(histories),nenergies(nenergies) {/* */}
 	void checkUniformSamples() const {
 		for(size_t h = 0 ; h < histories ; h++) {
@@ -243,13 +243,13 @@ protected:
 	virtual ~OneIntUniformSamplerCpyTest() {/* */}
 };
 
-class IntOddZeroedSamplerCpyTest : public SamplerCpyTest<int> {
-	int nsamples;
-	int histories;
-	int nenergies;
+class IntOddZeroedSamplerCpyTest : public SamplerCpyTest<size_t> {
+	size_t nsamples;
+	size_t histories;
+	size_t nenergies;
 protected:
-	IntOddZeroedSamplerCpyTest(const int& nsamples, const int& nenergies, const int& histories) :
-		           SamplerCpyTest<int>(SamplerGenerator<int>(genVector<int>(0,nsamples-1),nenergies).getOddZeroedMap()),
+	IntOddZeroedSamplerCpyTest(const size_t& nsamples, const size_t& nenergies, const size_t& histories) :
+		           SamplerCpyTest<size_t>(SamplerGenerator<size_t>(genVector<size_t>(0,nsamples-1),nenergies).getOddZeroedMap()),
 		           nsamples(nsamples), histories(histories), nenergies(nenergies) {/* */}
 	void checkZeroedSamples() const {
 		for(size_t h = 0 ; h < histories ; h++) {

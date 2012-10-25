@@ -26,7 +26,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "Common.hpp"
+#include "AxisName.hpp"
 
 using namespace std;
 
+namespace Helios {
 
+/* Get the name of an axis (no - template) */
+std::string getAxisName(int axis) {
+	switch(axis) {
+	case xaxis :
+		return "x";
+		break;
+	case yaxis :
+		return "y";
+		break;
+	case zaxis :
+		return "z";
+		break;
+	}
+	return "";
+}
+
+}

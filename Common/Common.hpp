@@ -51,9 +51,6 @@ namespace Helios {
 	/* Matrix of integers */
 	typedef Array<int,2> IntMatrix;
 
-	/* Epsilon of floating point */
-	const double eps = std::numeric_limits<double>::epsilon();
-
 	/* User IDs are ALWAYS a string */
 	typedef std::string UserId;
 

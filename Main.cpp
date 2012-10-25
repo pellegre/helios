@@ -139,9 +139,6 @@ int main__(int argc, char **argv) {
 
 	/* Geometry */
 	const Geometry* geometry = environment.getModule<Geometry>();
-
-	/* Get materials */
-	const Materials* materials = environment.getModule<Materials>();
 	/* Get the source */
 	const Source* source = environment.getModule<Source>();
 
@@ -151,7 +148,7 @@ int main__(int argc, char **argv) {
 
 	/* Initialization - KEFF cycle */
 	double keff = 1.186;
-	int neutrons = 60000;
+	size_t neutrons = 60000;
 	int skip = 50;
 	int cycles = 250;
 	list<pair<const Cell*,Particle> > particles;

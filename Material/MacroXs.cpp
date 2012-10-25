@@ -97,7 +97,7 @@ MacroXs::~MacroXs() {
 	vector<Reaction*> reactions = reaction_sampler->getReactions();
 	purgePointers(reactions);
 	delete reaction_sampler;
-};
+}
 
 vector<Material*> MacroXsFactory::createMaterials(const vector<MaterialObject*>& definitions) const {
 	/* Cast macro object */

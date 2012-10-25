@@ -49,9 +49,9 @@ class PngPlotter {
 	/* Plotting parameters */
 	double width;
 	double height;
-	double value;
 	int pixel;
 	ColorMatrix colorMatrix;
+	double value;
 
 	/* Return a color is HSV format (tune the saturation value) */
 	Color colorFromCell(const int& cellId, const int& maxId) const {
@@ -78,9 +78,9 @@ class PngPlotter {
 		const double xmax;
 		const double ymin;
 		const double ymax;
+		const double value;
 		const double deltax;
 		const double deltay;
-		const double value;
 
 		template<int uaxis>
 		static Helios::Coordinate setCoordinate(const double&x, const double&y, const double& value) {
@@ -153,9 +153,9 @@ class PngPlotter {
 		const double xmax;
 		const double ymin;
 		const double ymax;
+		const double value;
 		const double deltax;
 		const double deltay;
-		const double value;
 
 		template<int uaxis>
 		static Helios::Coordinate setCoordinate(const double&x, const double&y,const double& value) {
@@ -224,7 +224,7 @@ class PngPlotter {
 	public:
 		SourceSimulator(const double& width, const double& height, const int& pixel,
 				   const Helios::Source* source, const Helios::Random &r,  ColorMatrix& colorMatrix) :
-				   pixel(pixel), source(source), r(r), colorMatrix(colorMatrix),
+				   pixel(pixel), source(source), colorMatrix(colorMatrix), r(r),
 				   xmin(-width), xmax(width), ymin(-height), ymax(height),
 				   deltax((xmax - xmin) / (double)(pixel)),
 				   deltay((ymax - ymin) / (double)(pixel)) {/* */}

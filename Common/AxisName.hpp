@@ -53,20 +53,7 @@ namespace Helios {
 	}
 
 	/* Get the name of an axis (no - template) */
-	static std::string getAxisName(int axis) {
-		switch(axis) {
-		case xaxis :
-			return "x";
-			break;
-		case yaxis :
-			return "y";
-			break;
-		case zaxis :
-			return "z";
-			break;
-		}
-		return "";
-	}
+	std::string getAxisName(int axis);
 
 	/* Return the plane perpendicular to an axis */
 	template<int axis>

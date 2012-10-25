@@ -34,7 +34,8 @@ using namespace std;
 
 namespace Helios {
 
-Surface::Surface(const SurfaceObject* definition) : surfid(definition->getUserSurfaceId()), flag(definition->getFlags()), int_surfid(0) {/* */};
+Surface::Surface(const SurfaceObject* definition) :
+		surfid(definition->getUserSurfaceId()), flag(definition->getFlags()), int_surfid(0) {/* */}
 
 void Surface::addNeighborCell(const bool& sense, Cell* cell) {
 	if(sense)

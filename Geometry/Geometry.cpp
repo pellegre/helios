@@ -156,7 +156,7 @@ Geometry::Geometry(const std::vector<McObject*>& definitions, const McEnvironmen
 	/* Finally we should purge the extra definitions added by the geometry feature */
 	purgePointers(cellFeatureObject);
 	purgePointers(surFeatureObject);
-};
+}
 
 Surface* Geometry::addSurface(const Surface* surface, const ParentCell& parent_cell, const std::string& surf_id) {
 	/* Create the new duplicated surface */

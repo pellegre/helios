@@ -81,8 +81,8 @@ class TypeWithSize<8> {
   typedef __int64 Int;
   typedef unsigned __int64 UInt;
 #else
-  typedef long long Int;  // NOLINT
-  typedef unsigned long long UInt;  // NOLINT
+  typedef int64_t Int;  // NOLINT
+  typedef uint64_t UInt;  // NOLINT
 #endif  // GTEST_OS_WINDOWS
 };
 

@@ -167,8 +167,8 @@ namespace Helios {
 		CellObject() : GeometryObject(Cell::name()) {/* */}
 		CellObject(const CellId& userCellId, const std::string& surfaces_expression, const Cell::CellInfo flags,
 				   const UniverseId& universe, const UniverseId& fill,const MaterialId& matId, const Transformation& transformation) :
-				   GeometryObject(Cell::name()), user_cell_id(userCellId), surfaces_expression(surfaces_expression),
-				   flags(flags),universe(universe), fill(fill), matId(matId), transformation(transformation) {/* */}
+				   GeometryObject(Cell::name()), user_cell_id(userCellId), flags(flags),universe(universe), fill(fill),
+				   matId(matId), transformation(transformation),surfaces_expression(surfaces_expression) {/* */}
 		Cell::CellInfo getFlags() const {return flags;}
 		CellId getUserCellId() const {return user_cell_id;}
 		UniverseId getUniverse() const {return universe;}

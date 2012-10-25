@@ -91,7 +91,7 @@ namespace Helios {
 	private:
 
 		std::string type;
-		std::vector<unsigned int> dimension;
+		std::vector<int> dimension;
 		std::vector<double> pitch;
 		std::vector<UniverseId> universes;
 
@@ -109,7 +109,7 @@ namespace Helios {
 		std::string feature;
 	public:
 		FeatureObject(const std::string& feature, const UniverseId& userFeatureId) :
-			GeometryObject(GeometricFeature::name()), feature(feature), userFeatureId(userFeatureId) {/* */}
+			GeometryObject(GeometricFeature::name()), userFeatureId(userFeatureId), feature(feature) {/* */}
 		std::string getFeature() const {
 			return feature;
 		}
@@ -121,17 +121,17 @@ namespace Helios {
 
 	class LatticeObject : public FeatureObject {
 		std::string type;
-		std::vector<unsigned int> dimension;
+		std::vector<int> dimension;
 		std::vector<double> pitch;
 		std::vector<UniverseId> universes;
 	public:
 
-		LatticeObject(const UniverseId& userLatticeId, const std::string& type, const std::vector<unsigned int>& dimension,
+		LatticeObject(const UniverseId& userLatticeId, const std::string& type, const std::vector<int>& dimension,
 				   const std::vector<double>& pitch, const std::vector<UniverseId>& universes) :
 				   FeatureObject("lattice",userLatticeId), type(type), dimension(dimension),
 				   pitch(pitch), universes(universes) {/* */}
 
-		std::vector<unsigned int> getDimension() const {
+		std::vector<int> getDimension() const {
 			return dimension;
 		}
 

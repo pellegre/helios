@@ -164,7 +164,7 @@ namespace Helios {
 	    double k = dotProduct<axis>(dir, trpos);
 	    double c = dotProduct<axis>(trpos, trpos) - radius*radius;
 	    return quadraticIntersect(a,k,c,sense,distance);
-	};
+	}
 
 	template<int axis>
 	Surface* CylinderOnAxis<axis>::transformate(const Direction& trans) const {

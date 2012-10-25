@@ -137,7 +137,7 @@ namespace Helios {
 			coeffs.push_back(c);
 		}
 		TinyVector<T,3> array(0,0,0);
-		for(int i = 0 ; i < coeffs.size() && i < 3 ; ++i)
+		for(size_t i = 0 ; i < coeffs.size() && i < 3 ; ++i)
 			array[i] = coeffs[i];
 
 		return array;

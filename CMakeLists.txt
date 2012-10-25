@@ -13,13 +13,11 @@ set( ${PROJECT_NAME}_MINOR_VERSION 1 )
 
 # ---- Compiler settings for different builds
 
-set(CMAKE_AR xiar)
-set(CMAKE_CXX_FLAGS_RELEASE "-xHOST -openmp -O3 -ipo -no-prec-div -static-intel") 
-set(CMAKE_CXX_FLAGS_DEBUG "-g -openmp -O2 -Wall")
-
 if(CMAKE_BUILD_TYPE STREQUAL "release")
+  set(CMAKE_CXX_FLAGS_RELEASE "-ansi -pedantic -Wall -fopenmp -O3")
   set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
 else(CMAKE_BUILD_TYPE STREQUAL "debug")
+  set(CMAKE_CXX_FLAGS_DEBUG "-g -ansi -pedantic -Wall -fopenmp -O0")
   set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
 endif()
 
