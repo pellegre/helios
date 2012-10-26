@@ -52,7 +52,7 @@ class SourceSimulator {
 public:
 
 	SourceSimulator(const McEnvironment* environment, const Random& base, vector<Simulation::CellParticle>& particles,
-			const size_t& max_rng_per_source) : base(base), particles(particles), max_rng(max_rng),
+			const size_t& max_rng) : base(base), particles(particles), max_rng(max_rng),
 			source(environment->getModule<Source>()), geometry(environment->getModule<Geometry>()) {/* */}
 
 	void operator() (const tbb::blocked_range<size_t>& range) const {

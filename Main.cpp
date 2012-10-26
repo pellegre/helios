@@ -80,9 +80,9 @@ int main(int argc, char **argv) {
 	/* Initialization - KEFF cycle */
 	double keff = 1.186;
 	double ave_keff = 0.0;
-	int neutrons = 10;
-	int skip = 0;
-	int cycles = 5;
+	int neutrons = 10000;
+	int skip = 50;
+	int cycles = 250;
 
 	/* Initialize simulation */
 	OpenMp::KeffSimulation simulation(r,&environment,keff,neutrons);
