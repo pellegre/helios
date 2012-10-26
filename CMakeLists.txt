@@ -13,12 +13,27 @@ set( ${PROJECT_NAME}_MINOR_VERSION 1 )
 
 # ---- Compiler settings for different builds
 
-if(CMAKE_BUILD_TYPE STREQUAL "release")
-  set(CMAKE_CXX_FLAGS_RELEASE "-ansi -pedantic -Wall -fopenmp -O3")
-  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
-else(CMAKE_BUILD_TYPE STREQUAL "debug")
-  set(CMAKE_CXX_FLAGS_DEBUG "-g -ansi -pedantic -Wall -fopenmp -O0")
-  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	message("-- Setting flags for gnu/g++ compiler")
+	# Using GNU compiler
+	if(CMAKE_BUILD_TYPE STREQUAL "release")
+	  set(CMAKE_CXX_FLAGS_RELEASE "-ansi -pedantic -Wall -fopenmp -O3")
+	  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+	else(CMAKE_BUILD_TYPE STREQUAL "debug")
+	  set(CMAKE_CXX_FLAGS_DEBUG "-g -ansi -pedantic -Wall -fopenmp -O0")
+	  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+	endif()
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+	message("-- Setting flags for intel compiler")
+	# Using intel compiler
+	if(CMAKE_BUILD_TYPE STREQUAL "release")
+	  set(CMAKE_AR xiar)
+	  set(CMAKE_CXX_FLAGS_RELEASE "-ansi -openmp -xHOST -O3 -ipo -no-prec-div -static-intel") 
+	  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+	else(CMAKE_BUILD_TYPE STREQUAL "debug")
+	  set(CMAKE_CXX_FLAGS_DEBUG "-ansi -g -O0 -Wall")
+	  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+	endif()
 endif()
 
 # ---- Configuration stuff
