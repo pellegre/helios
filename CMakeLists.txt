@@ -85,7 +85,9 @@ set(MCFILES Common/Common.cpp
             Common/Log/Log.cpp
             Environment/McEnvironment.cpp   
             Environment/McModule.cpp
-            Environment/Simulation.cpp                                  
+            Environment/Simulation.cpp 
+            Environment/OpenMpSimulation.cpp
+            Environment/TbbSimulation.cpp                                                    
             Transport/Particle.cpp
             Transport/Distribution/Distribution.cpp
             Transport/ParticleSource.cpp                       
@@ -148,7 +150,7 @@ target_link_libraries(plottermc++ mc++ ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Blitz_
 
 add_executable(helios++ Main.cpp)
                
-target_link_libraries(helios++ mc++ ${Blitz_LIBRARY} ${TRNG_LIBRARY})
+target_link_libraries(helios++ mc++ ${Blitz_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
 
 # ---- Instal stuff
 

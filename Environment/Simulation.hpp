@@ -57,34 +57,73 @@ public:
 	virtual ~Simulation() {/* */};
 };
 
-/*
- * KEFF simulation
- *
- * Apart of accumulate the user defined tallies, this class also creates a bank
- * of particles representing the source fission (as a result of this simulation).
- * Is caller responsibility do whatever he/she wants with it.
- */
-class KeffSimulation : public Simulation {
-	/* Population after the simulation */
-	double keff;
-	/* Particles per cycle */
-	size_t particles_number;
-	/* Global particle bank for this simulation */
-	std::vector<CellParticle> fission_bank;
-	/* Reference to the geometry of the problem */
-	Geometry* geometry;
-public:
-	/* Initialize simulation */
-	KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
 
-	/* Launch a simulation */
-	void launch();
+namespace OpenMp {
 
-	/* Get multiplication factor */
-	double getKeff() const {return keff;}
+	/*
+	 * KEFF simulation (using OpenMp)
+	 *
+	 * Apart of accumulate the user defined tallies, this class also creates a bank
+	 * of particles representing the source fission (as a result of this simulation).
+	 * Is caller responsibility do whatever he/she wants with it.
+	 */
+	class KeffSimulation : public Simulation {
+		/* Population after the simulation */
+		double keff;
+		/* Particles per cycle */
+		size_t particles_number;
+		/* Global particle bank for this simulation */
+		std::vector<CellParticle> fission_bank;
+		/* Reference to the geometry of the problem */
+		Geometry* geometry;
+	public:
+		/* Initialize simulation */
+		KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
 
-	virtual ~KeffSimulation() {/* */};
-};
+		/* Launch a simulation */
+		void launch();
+
+		/* Get multiplication factor */
+		double getKeff() const {return keff;}
+
+		virtual ~KeffSimulation() {/* */};
+	};
+
+}
+
+namespace IntelTbb {
+
+	/*
+	 * KEFF simulation (using OpenMp)
+	 *
+	 * Apart of accumulate the user defined tallies, this class also creates a bank
+	 * of particles representing the source fission (as a result of this simulation).
+	 * Is caller responsibility do whatever he/she wants with it.
+	 */
+	class KeffSimulation : public Simulation {
+		/* Population after the simulation */
+		double keff;
+		/* Particles per cycle */
+		size_t particles_number;
+		/* Global particle bank for this simulation */
+		std::vector<CellParticle> fission_bank;
+		/* Reference to the geometry of the problem */
+		Geometry* geometry;
+	public:
+		/* Initialize simulation */
+		KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
+
+		/* Launch a simulation */
+		void launch();
+
+		/* Get multiplication factor */
+		double getKeff() const {return keff;}
+
+		virtual ~KeffSimulation() {/* */};
+	};
+
+
+}
 
 } /* namespace Helios */
 #endif /* SIMULATION_HPP_ */
