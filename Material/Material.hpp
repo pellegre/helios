@@ -85,7 +85,7 @@ namespace Helios {
 		 * Based on particle's energy, this functions returns the index on the energy grid with
 		 * information contained on the child class.
 		 */
-		virtual EnergyIndex getEnergyIndex(const Energy& energy) const = 0;
+		virtual void setEnergyIndex(const Energy& energy, EnergyIndex& index) const = 0;
 
 		 /* Get the total cross section (using the energy index of the particle) */
 		virtual double getMeanFreePath(const EnergyIndex& index) const = 0;

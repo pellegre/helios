@@ -33,10 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Simulation.hpp"
 
 using namespace std;
-
-namespace Helios {
-
-namespace IntelTbb {
+using namespace Helios;
+using namespace IntelTbb;
 
 class SourceSimulator {
 	/* Base random number stream */
@@ -243,17 +241,16 @@ void KeffSimulation::launch() {
 	/* Jump on random number generation */
 	base.getEngine().jump(fission_bank.size() * max_rng_per_history);
 
-	/* --- Calculate multiplication factor for this cycle */
+	/* Calculate multiplication factor for this cycle */
 	keff = power_step.local_population / (double) particles_number;
 
-	/* --- Clear particle bank*/
+	/* Clear particle bank*/
 	fission_bank.clear();
 
 	/* --- Re-populate the particle bank with the new source */
-	while(!local_fission_bank.empty()) {
+	for(size_t i = 0 ; i < local_fission_bank.size() ; ++i) {
 		/* Get banked particle */
-		Simulation::CellParticle banked_particle = local_fission_bank.back();
-		local_fission_bank.pop_back();
+		Simulation::CellParticle banked_particle = local_fission_bank[i];
 		if(banked_particle.second.sta() != Particle::BANK) continue;
 
 		/* Split particle */
@@ -269,8 +266,6 @@ void KeffSimulation::launch() {
 
 }
 
-}
-}
 
 
 

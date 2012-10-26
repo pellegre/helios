@@ -29,10 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Simulation.hpp"
 
 using namespace std;
-
-namespace Helios {
-
-namespace OpenMp {
+using namespace Helios;
+using namespace OpenMp;
 
 KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
 		Simulation(_random,_environment), keff(keff), particles_number(_particles_number) {
@@ -66,71 +64,58 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 void KeffSimulation::launch() {
 
 	/* --- Population */
-	vector<double> population;
-	double pop = 0;
+	double population = 0.0;
 
-	/* --- Local particle bank for for this simulation */
+	/* --- Local particle bank for this simulation */
 	vector<CellParticle> local_fission_bank(fission_bank);
 
 	#pragma omp parallel
 	{
-		/* --- Initialize geometry stuff */
+		/* Initialize some auxiliary variables */
 		Surface* surface(0);  /* Surface pointer */
 		bool sense(true);     /* Sense of the surface we are crossing */
 		double distance(0.0); /* Distance to closest surface */
 
-		/* Thread id */
-		int bank_id = 0;
-
-		/* Update local containers */
-		#pragma omp critical
-		{
-			/* Initialize local thread data */
-			population.push_back(0.0);
-			/* Get id of this thread */
-			bank_id = population.size() - 1;
-		}
+		/* Local counter */
+		double local_population = 0.0;
 
 		#pragma omp for
 		for(size_t i = 0 ; i < fission_bank.size() ; ++i) {
 
-			/* --- Random number */
+			/* Random number stream for this particle */
 			Random r(base);
 			r.getEngine().jump(i * max_rng_per_history);
-
-			/* Get particle from the user supplied bank */
-			CellParticle pc = fission_bank[i];
-			const Cell* cell = geometry->getCells()[pc.first];
-			Particle particle = pc.second;
 
 			/* Flag if particle is out of the system */
 			bool out = false;
 
+			/* 1. ---- Initialize particle from source (get particle from the bank) */
+			CellParticle pc = fission_bank[i];
+			const Cell* cell = geometry->getCells()[pc.first];
+			Particle particle = pc.second;
+
 			while(true) {
 
-				/* Get next surface and distance */
+				/* 2. ---- Get material */
+				const Material* material = cell->getMaterial();
+				/* Update energy index of the particle */
+				material->setEnergyIndex(particle.evs(), particle.eix());
+				/* Get total cross section */
+				double mfp = material->getMeanFreePath(particle.eix());
+
+				/* 3. ---- Get next surface's distance */
 				cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
 
-				/* Energy index of the particle */
-				EnergyIndex energy_index = particle.eix();
-				/* Get material */
-				const Material* material = cell->getMaterial();
-				/* Get total cross section */
-				double mfp = material->getMeanFreePath(energy_index);
-
-				/* Get collision distance */
+				/* 4. ---- Get collision distance */
 				double collision_distance = -log(r.uniform())*mfp;
 
+				/* 5. ---- Get next collision point */
 				while(collision_distance > distance) {
-					/* Cut on a vacuum surface */
-					if(surface->getFlags() & Surface::VACUUM) {
-						out = true;
-						break;
-					}
 
-					/* Transport the particle to the surface */
+					/* 5.1 ---- Transport the particle to the surface */
 					particle.pos() = particle.pos() + distance * particle.dir();
 
+					/* 5.2 ---- Cross the surface (checking boundary conditions) */
 					if(surface->getFlags() & Surface::REFLECTING) {
 						/* Get normal */
 						Direction normal;
@@ -140,13 +125,12 @@ void KeffSimulation::launch() {
 						/* Calculate the new direction */
 						double projection = 2 * dot(particle.dir(), normal);
 						particle.dir() = particle.dir() - projection * normal;
+					} else if(surface->getFlags() & Surface::VACUUM) {
+						out = true;
+						break;
 					} else {
 						/* Now get next cell */
 						surface->cross(particle.pos(),sense,cell);
-						if(!cell) {
-							cout << particle << endl;
-							cout << *surface << endl;
-						}
 						/* Cut if the cell is dead */
 						if(cell->getFlag() & Cell::DEADCELL) {
 							out = true;
@@ -154,14 +138,15 @@ void KeffSimulation::launch() {
 						}
 					}
 
-					/* Calculate new distance to the closest surface */
+					/* 5.3 ---- Get material */
+					material = cell->getMaterial();
+					/* Mean free path (the particle didn't change the energy) */
+					mfp = material->getMeanFreePath(particle.eix());
+
+					/* 5.4 ---- Get next surface's distance */
 					cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
 
-					/* Update material */
-					material = cell->getMaterial();
-					mfp = material->getMeanFreePath(energy_index);
-
-					/* And the new collision distance */
+					/* 5.5 ---- Get collision distance */
 					collision_distance = -log(r.uniform())*mfp;
 				}
 
@@ -177,31 +162,34 @@ void KeffSimulation::launch() {
 				if(particle.sta() == Particle::DEAD) break;
 				if(particle.sta() == Particle::BANK) {
 					/* Update local particle bank */
-					population[bank_id] += particle.wgt();
+					local_population += particle.wgt();
 					local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);
 					break;
 				}
 			}
 		}
+
+		/* Update global population counter */
+		#pragma omp critical
+		{
+			population += local_population;
+		}
+
 	}
 
 	/* Jump on random number generation */
 	base.getEngine().jump(fission_bank.size() * max_rng_per_history);
 
 	/* --- Calculate multiplication factor for this cycle */
-
-	for(size_t i = 0 ; i < population.size() ; ++i)
-		pop += population[i];
-	keff = pop / (double) particles_number;
+	keff = population / (double) particles_number;
 
 	/* --- Clear particle bank*/
 	fission_bank.clear();
 
 	/* --- Re-populate the particle bank with the new source */
-	while(!local_fission_bank.empty()) {
+	for(size_t i = 0 ; i < local_fission_bank.size() ; ++i) {
 		/* Get banked particle */
-		Simulation::CellParticle banked_particle = local_fission_bank.back();
-		local_fission_bank.pop_back();
+		Simulation::CellParticle banked_particle = local_fission_bank[i];
 		if(banked_particle.second.sta() != Particle::BANK) continue;
 
 		/* Split particle */
@@ -217,9 +205,6 @@ void KeffSimulation::launch() {
 
 }
 
-}
-
-}
 
 
 
