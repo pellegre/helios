@@ -232,7 +232,7 @@ class PngPlotter {
 		void operator() (const tbb::blocked_range<int>& range) const {
 			/* Jump random number generator */
 			Helios::Random r_local(r);
-			r_local.getEngine().jump(100*range.begin());
+			r_local.jump(100*range.begin());
 			/* Sample particles and set the color matrix */
 			for(int i = range.begin() ; i < range.end() ; ++i) {
 				Helios::Particle sampleParticle = source->sample(r_local);

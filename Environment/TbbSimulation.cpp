@@ -38,7 +38,7 @@ KeffSimulation::SourceSimulator::SourceSimulator(const McEnvironment* environmen
 void KeffSimulation::SourceSimulator::operator() (const tbb::blocked_range<size_t>& range) const {
 	for(size_t i = range.begin() ; i < range.end() ; ++i) {
 		Random r_local(base);
-		r_local.getEngine().jump(i * max_rng);
+		r_local.jump(i * max_rng);
 		/* Sample particle */
 		Particle particle = source->sample(r_local);
 		const Cell* cell(geometry->findCell(particle.pos()));
@@ -80,7 +80,7 @@ void KeffSimulation::PowerStepSimulator::operator() (const tbb::blocked_range<si
 
 		/* Random number stream for this particle */
 		Random r(base);
-		r.getEngine().jump(i * max_rng);
+		r.jump(i * max_rng);
 
 		/* Flag if particle is out of the system */
 		bool outside = false;
@@ -133,22 +133,34 @@ void KeffSimulation::PowerStepSimulator::operator() (const tbb::blocked_range<si
 
 			if(outside) break;
 
-			/* 6. Move the particle to the collision point */
+			/* 6. ---- Move the particle to the collision point */
 			particle.pos() = particle.pos() + collision_distance * particle.dir();
 
-			/* 7. Sample reaction (if the material contains isotopes, they will be sampled inside the material) */
-			Reaction* reaction = material->getReaction(particle.eix(),r);
-			(*reaction)(particle,r);
+			/* 7. ---- Sample isotope */
+			const Isotope* isotope = material->getIsotope(particle.erg(),r);
 
-			/* 8. Check state of the particle after the reaction sampling */
-			if(particle.sta() == Particle::DEAD) {
+			/* 8. ---- Sample reaction with the isotope */
+
+			/* 8.1 ---- Check the type of reaction reaction */
+			double absorption = isotope->getAbsorptionProb(particle.erg());
+			double prob = r.uniform();
+			if(prob < absorption) {
+				/* Absorption reaction , we should check if this is a fission reaction */
+				if(isotope->isFissile()) {
+					double fission = isotope->getFissionProb(particle.erg());
+					if(prob > (absorption - fission)) {
+						/* We should bank the particle state after simulating the fission reaction */
+						isotope->fission(particle,r);
+						particle.sta() = Particle::BANK;
+						population += particle.wgt();
+						local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);
+					}
+				}
+				/* Kill the particle, this is an analog simulation */
 				break;
-			} else if(particle.sta() == Particle::BANK) {
-				/* Update local particle bank */
-				population += particle.wgt();
-				local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);
-				break;
-			}
+			} else
+				/* Scatter with isotope */
+				isotope->scatter(particle,r);
 		}
 	}
 
@@ -164,20 +176,20 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 	geometry = environment->getModule<Geometry>();
 
 	/* Reserve space for the particle bank */
-	fission_bank.reserve(2 * particles_number);
+	fission_bank.reserve(particles_number);
 	fission_bank.resize(particles_number);
 
 	/* Populate the particle bank with the initial source */
 	tbb::parallel_for(tbb::blocked_range<size_t>(0,particles_number),SourceSimulator(environment,base,fission_bank,max_rng_per_source));
 
 	/* Jump on base stream of RNGs */
-	base.getEngine().jump(particles_number * max_rng_per_source);
+	base.jump(particles_number * max_rng_per_source);
 }
 
 void KeffSimulation::launch() {
 
 	/* --- Local particle bank for for this simulation */
-	vector<CellParticle> local_fission_bank(fission_bank);
+	vector<CellParticle> local_fission_bank(fission_bank.size());
 
 	PowerStepSimulator power_step(environment,base,max_rng_per_history,fission_bank,local_fission_bank);
 
@@ -185,7 +197,7 @@ void KeffSimulation::launch() {
 	tbb::parallel_reduce(tbb::blocked_range<size_t>(0, fission_bank.size()), power_step);
 
 	/* Jump on random number generation */
-	base.getEngine().jump(fission_bank.size() * max_rng_per_history);
+	base.jump(fission_bank.size() * max_rng_per_history);
 
 	/* Calculate multiplication factor for this cycle */
 	keff = power_step.local_population / (double) particles_number;

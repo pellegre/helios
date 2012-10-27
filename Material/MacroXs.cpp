@@ -31,6 +31,79 @@ using namespace std;
 
 namespace Helios {
 
+/* -- Fission */
+
+MacroXsReaction::Fission::Fission(const std::vector<double>& nu, const std::vector<double>& chi) : nu(nu) {
+	/* Set map for the spectrum sampler */
+	std::map<int,double> m;
+	for(size_t i = 0 ; i < chi.size() ; ++i)
+		m[i] = chi[i];
+	spectrum = new Sampler<int>(m);
+}
+
+MacroXsReaction::Fission::~Fission() {
+	delete spectrum;
+}
+
+/* -- Scattering*/
+
+MacroXsReaction::Scattering::Scattering(const std::vector<double>& sigma_scat, size_t ngroups) {
+	/* Set map for the spectrum sampler, we got the scattering matrix */
+	std::map<int,std::vector<double> > m;
+	std::vector<double> v(ngroups);
+	for(size_t i = 0 ; i < ngroups ; ++i) {
+		for(size_t j = 0 ; j < ngroups ; ++j)
+			v[j] = sigma_scat[j * ngroups + i];
+		m[i] = v;
+	}
+	spectrum = new Sampler<int>(m);
+}
+
+MacroXsReaction::Scattering::~Scattering() {
+	delete spectrum;
+}
+
+/* -- Macro-XS isotope */
+MacroXsIsotope::MacroXsIsotope(map<string,vector<double> >& constant, const std::vector<double>& sigma_t) :
+		absorption_prob(sigma_t.size()), fission_prob(sigma_t.size()) {
+	/* ---- Capture reaction */
+	vector<double> sigma_f = constant["sigma_f"];
+	vector<double> sigma_a = constant["sigma_a"];
+
+	/* ---- Number of groups */
+	size_t ngroups = sigma_a.size();
+
+	/* ---- Calculate probabilities */
+	for(size_t i = 0 ; i < ngroups ; ++i) {
+		absorption_prob[i] = sigma_a[i] / sigma_t[i];
+		fission_prob[i] = sigma_f[i] / sigma_t[i];
+	}
+
+	/* ---- Scattering reaction */
+	vector<double> scattering_matrix = constant["sigma_s"];
+	scattering_reaction = new MacroXsReaction::Scattering(scattering_matrix,ngroups);
+
+	/* ---- Fission reaction */
+	vector<double> nu(ngroups);
+	vector<double> nu_sigma_f = constant["nu_sigma_f"];
+	for(size_t i = 0 ; i < ngroups ; ++i)
+		nu[i] = nu_sigma_f[i] / sigma_f[i];
+	fission_reaction = new MacroXsReaction::Fission(nu,constant["chi"]);
+
+	/* We should find out if the isotope is fissile */
+	for(size_t i = 0 ; i < sigma_f.size() ; ++i)
+		if(!compareFloating(sigma_f[i],0.0)) {
+			fissile = true;
+			break;
+		}
+}
+
+MacroXsIsotope::~MacroXsIsotope() {
+	delete fission_reaction;
+	delete scattering_reaction;
+}
+
+/* Macro-XS*/
 MacroXs::MacroXs(const MacroXsObject* definition, int number_groups) :
 		         Material(definition), ngroups(number_groups), mfp(number_groups) {
 	/* Get constants */
@@ -55,16 +128,8 @@ MacroXs::MacroXs(const MacroXsObject* definition, int number_groups) :
 		}
 	}
 
-	/* Now set the reactions */
-	map<Reaction*,vector<double> > reaction_map;
-
 	/* ---- Capture reaction */
-	vector<double> sigma_f = constant["sigma_f"];
 	vector<double> sigma_a = constant["sigma_a"];
-	vector<double> sigma_c(ngroups);
-	for(size_t i = 0 ; i < ngroups ; ++i)
-		sigma_c[i] = sigma_a[i] - sigma_f[i];
-	reaction_map[new Absorption()] = sigma_c;
 
 	/* ---- Scattering cross section */
 	vector<double> sigma_s(ngroups);
@@ -75,28 +140,22 @@ MacroXs::MacroXs(const MacroXsObject* definition, int number_groups) :
 			total_scat += scattering_matrix[i*ngroups + j];
 		sigma_s[i] = total_scat;
 	}
-	reaction_map[new Scattering(scattering_matrix,ngroups)] = sigma_s;
 
-	/* ---- Fission cross section */
-	vector<double> nu(ngroups);
-	vector<double> nu_sigma_f = constant["nu_sigma_f"];
-	for(size_t i = 0 ; i < ngroups ; ++i)
-		nu[i] = nu_sigma_f[i] / sigma_f[i];
-	reaction_map[new Fission(nu,constant["chi"])] = sigma_f;
-
-	for(size_t i = 0 ; i < ngroups ; ++i)
+	/* ---- Calculate mean free path */
+	vector<double> sigma_t(ngroups);
+	for(size_t i = 0 ; i < ngroups ; ++i) {
 		mfp[i] = 1.0 / (sigma_a[i] + sigma_s[i]);
+		sigma_t[i] = sigma_a[i] + sigma_s[i];
+	}
 
-	/* Setup the reaction sampler */
-	reaction_sampler = new Sampler<Reaction*>(reaction_map);
+	/* ---- Create the isotope */
+	isotope = new MacroXsIsotope(constant,sigma_t);
 }
 
 void MacroXs::print(std::ostream& out) const {/* */}
 
 MacroXs::~MacroXs() {
-	vector<Reaction*> reactions = reaction_sampler->getReactions();
-	purgePointers(reactions);
-	delete reaction_sampler;
+	delete isotope;
 }
 
 vector<Material*> MacroXsFactory::createMaterials(const vector<MaterialObject*>& definitions) const {

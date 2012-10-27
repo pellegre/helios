@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
 	/* Initialization - Random number */
 	trng::lcg64 random;
 	Random r(random);
-	r.getEngine().seed((long unsigned int)1);
+	r.seed(1);
 	/* Set the source of the problem */
 	int nparticles = 100000;
 

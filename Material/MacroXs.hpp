@@ -37,38 +37,24 @@ namespace Helios {
 
 	class MacroXsObject;
 
-	class MacroXs: public Helios::Material {
+	/* ---- Reactions related to macroscopic cross sections */
 
-		/* Number of groups */
-		size_t ngroups;
-		/* Total cross section */
-		std::vector<double> mfp;
+	namespace MacroXsReaction {
 
-		/* ---- Reactions related to macroscopic cross sections */
-
-		class Absorption : public Reaction {
-		public:
-			Absorption() {/* */}
-			void operator() (Particle& particle, Random& r) const {particle.sta() = Particle::DEAD;};
-			~Absorption() {/* */}
-		};
-
+		/*
+		 * -- Fission reaction
+		 *   - NU is sampled and the weight of the particle is multiplied by NU.
+		 *   - Isotropic direction on LAB system (macro XS don't have AWR information)
+		 *   - Energy sampled from the CHI spectrum.
+		 */
 		class Fission : public Reaction {
 			/* NU value for each group */
 			std::vector<double> nu;
 			/* Spectrum sampler */
 			Sampler<int>* spectrum;
 		public:
-			Fission(const std::vector<double>& nu, const std::vector<double>& chi) : nu(nu) {
-				/* Set map for the spectrum sampler */
-				std::map<int,double> m;
-				for(size_t i = 0 ; i < chi.size() ; ++i)
-					m[i] = chi[i];
-				spectrum = new Sampler<int>(m);
-			}
+			Fission(const std::vector<double>& nu, const std::vector<double>& chi);
 			void operator() (Particle& particle, Random& r) const {
-				/* The state should be banked */
-				particle.sta() = Particle::BANK;
 				/* Get number of particles */
 				double nubar = nu[particle.eix()];
 				/* Integer part */
@@ -81,40 +67,76 @@ namespace Helios {
 				/* New group */
 				particle.eix() = spectrum->sample(0,r.uniform());
 			};
-			~Fission() {
-				delete spectrum;
-			}
+			~Fission();
 		};
 
+		/*
+		 * -- Scattering reaction
+		 *   - Isotropic direction on LAB system (macro XS don't have AWR information)
+		 *   - Energy sampled from the SIGMA-S matrix.
+		 */
 		class Scattering : public Reaction {
 			/* Spectrum sampler */
 			Sampler<int>* spectrum;
 		public:
-			Scattering(const std::vector<double>& sigma_scat, size_t ngroups) {
-				/* Set map for the spectrum sampler, we got the scattering matrix */
-				std::map<int,std::vector<double> > m;
-				std::vector<double> v(ngroups);
-				for(size_t i = 0 ; i < ngroups ; ++i) {
-					for(size_t j = 0 ; j < ngroups ; ++j)
-						v[j] = sigma_scat[j * ngroups + i];
-					m[i] = v;
-				}
-				spectrum = new Sampler<int>(m);
-			}
-			void operator() (Particle& particle, Random& r) const {
+			Scattering(const std::vector<double>& sigma_scat, size_t ngroups);
+			void operator() (Particle& particle, Random& r) const{
 				/* New direction */
 				isotropicDirection(particle.dir(),r);
 				/* New group */
 				particle.eix() = spectrum->sample(particle.eix(),r.uniform());
 			};
-			~Scattering() {
-				delete spectrum;
-			}
+			~Scattering();
 		};
 
-		/* Reaction sampler */
-		Sampler<Reaction*>* reaction_sampler;
+	}
 
+	/*
+	 * Isotope related to macroscopic cross section. Actually, a macro-xs is just
+	 * one isotope.
+	 */
+
+	class MacroXsIsotope : public Isotope {
+		/* Fission reaction */
+		MacroXsReaction::Fission* fission_reaction;
+		/* Scattering reaction */
+		MacroXsReaction::Scattering* scattering_reaction;
+
+		/* Probabilities */
+		std::vector<double> absorption_prob;
+		std::vector<double> fission_prob;
+	public:
+		MacroXsIsotope(map<string,vector<double> >& constant, const std::vector<double>& sigma_t);
+
+		double getAbsorptionProb(const EnergyPair& pair) const {
+			return absorption_prob[pair.first];
+		}
+
+		double getFissionProb(const EnergyPair& pair) const {
+			return fission_prob[pair.first];
+		}
+
+		/* Fission reaction */
+		void fission(Particle& particle, Random& random) const {
+			(*fission_reaction)(particle,random);
+		}
+
+		/* Just one scattering reaction (from the scattering matrix) */
+		void scatter(Particle& particle, Random& random) const {
+			(*scattering_reaction)(particle,random);
+		}
+
+		~MacroXsIsotope();
+	};
+
+	class MacroXs: public Material {
+
+		/* Number of groups */
+		size_t ngroups;
+		/* Total cross section */
+		std::vector<double> mfp;
+		/* Just one isotope */
+		MacroXsIsotope* isotope;
 	public:
 
 		/* Name of this object */
@@ -131,11 +153,8 @@ namespace Helios {
 		 /* Get the total cross section (using the energy index of the particle) */
 		double getMeanFreePath(const EnergyIndex& index) const {return mfp[index];};
 
-		/* Get reaction (based on a random generator and a energy index) */
-		Reaction* getReaction(const EnergyIndex& index, Random& random) const {
-			double value = random.uniform();
-			return reaction_sampler->sample(index,value);
-		}
+		/* Macro-XS materials only have one "isotope" */
+		const Isotope* getIsotope(const EnergyPair& pair, Random& random) const {return isotope;};
 
 		/* Print material information */
 		void print(std::ostream& out) const;

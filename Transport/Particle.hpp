@@ -88,6 +88,7 @@ namespace Helios {
 		double& wgt() {return weight;}
 		EnergyIndex& eix() {return energy.first;}
 		Energy& evs() {return energy.second;}
+		EnergyPair& erg() {return energy;}
 		State& sta() {return state;}
 
 	private:

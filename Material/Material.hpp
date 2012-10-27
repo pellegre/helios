@@ -32,18 +32,9 @@
 #include <vector>
 
 #include "MaterialObject.hpp"
-#include "../Common/Common.hpp"
-#include "../Transport/Particle.hpp"
+#include "Isotope.hpp"
 
 namespace Helios {
-
-	/* A reaction is simply a functor that change the state of a particle (based on a random number generator) */
-	class Reaction {
-	public:
-		Reaction() {/* */}
-		virtual void operator() (Particle& particle, Random& r) const = 0;
-		virtual ~Reaction() {/* */}
-	};
 
 	/* Class that represents a material filling a cell */
 	class Material {
@@ -69,7 +60,7 @@ namespace Helios {
 			~BadMaterialCreation() throw() {/* */};
 		};
 
-		/* Print internal parameters of the surface */
+		/* Print internal parameters of the material */
 		virtual void print(std::ostream& out) const = 0;
 
 		/* Return the material ID. */
@@ -90,8 +81,12 @@ namespace Helios {
 		 /* Get the total cross section (using the energy index of the particle) */
 		virtual double getMeanFreePath(const EnergyIndex& index) const = 0;
 
-		/* Get reaction (based on a random generator and a energy index) */
-		virtual Reaction* getReaction(const EnergyIndex& index, Random& random) const = 0;
+		/*
+		 * Get an isotope, based on a random generator and a energy pair (index plus
+		 * value). The index should be correctly settled by a previous call of the
+		 * setEnergyIndex method.
+		 */
+		virtual const Isotope* getIsotope(const EnergyPair& pair, Random& random) const = 0;
 
 		/* "Sample" the next reaction */
 		virtual ~Material() {/* */};

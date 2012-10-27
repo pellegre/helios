@@ -50,7 +50,7 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 	for(size_t i = 0 ; i < particles_number ; ++i) {
 		/* Jump random number generator */
 		Random random(base);
-		random.getEngine().jump(i * max_rng_per_source);
+		random.jump(i * max_rng_per_source);
 		/* Sample particle */
 		Particle particle = source->sample(random);
 		const Cell* cell(geometry->findCell(particle.pos()));
@@ -58,13 +58,13 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 	}
 
 	/* Jump on base stream of RNGs */
-	base.getEngine().jump(particles_number * max_rng_per_source);
+	base.jump(particles_number * max_rng_per_source);
 }
 
 void KeffSimulation::launch() {
 
 	/* --- Population */
-	double population = 0.0;
+	double total_population = 0.0;
 
 	/* --- Local particle bank for this simulation */
 	vector<CellParticle> local_fission_bank(fission_bank);
@@ -77,14 +77,14 @@ void KeffSimulation::launch() {
 		double distance(0.0); /* Distance to closest surface */
 
 		/* Local counter */
-		double local_population = 0.0;
+		double population = 0.0;
 
 		#pragma omp for
 		for(size_t i = 0 ; i < fission_bank.size() ; ++i) {
 
 			/* Random number stream for this particle */
 			Random r(base);
-			r.getEngine().jump(i * max_rng_per_history);
+			r.jump(i * max_rng_per_history);
 
 			/* Flag if particle is out of the system */
 			bool outside = false;
@@ -140,35 +140,47 @@ void KeffSimulation::launch() {
 				/* 6. Move the particle to the collision point */
 				particle.pos() = particle.pos() + collision_distance * particle.dir();
 
-				/* 7. Sample reaction (if the material contains isotopes, they will be sampled inside the material) */
-				Reaction* reaction = material->getReaction(particle.eix(),r);
-				(*reaction)(particle,r);
+				/* 7. ---- Sample isotope */
+				const Isotope* isotope = material->getIsotope(particle.erg(),r);
 
-				/* 8. Check state of the particle after the reaction sampling */
-				if(particle.sta() == Particle::DEAD) {
+				/* 8. ---- Sample reaction with the isotope */
+
+				/* 8.1 ---- Check the type of reaction reaction */
+				double absorption = isotope->getAbsorptionProb(particle.erg());
+				double prob = r.uniform();
+				if(prob < absorption) {
+					/* Absorption reaction , we should check if this is a fission reaction */
+					if(isotope->isFissile()) {
+						double fission = isotope->getFissionProb(particle.erg());
+						if(prob > (absorption - fission)) {
+							/* We should bank the particle state after simulating the fission reaction */
+							isotope->fission(particle,r);
+							particle.sta() = Particle::BANK;
+							population += particle.wgt();
+							local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);
+						}
+					}
+					/* Kill the particle, this is an analog simulation */
 					break;
-				} else if(particle.sta() == Particle::BANK) {
-					/* Update local particle bank */
-					local_population += particle.wgt();
-					local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);
-					break;
-				}
+				} else
+					/* Scatter with isotope */
+					isotope->scatter(particle,r);
 			}
 		}
 
 		/* Update global population counter */
 		#pragma omp critical
 		{
-			population += local_population;
+			total_population += population;
 		}
 
 	}
 
 	/* Jump on random number generation */
-	base.getEngine().jump(fission_bank.size() * max_rng_per_history);
+	base.jump(fission_bank.size() * max_rng_per_history);
 
 	/* --- Calculate multiplication factor for this cycle */
-	keff = population / (double) particles_number;
+	keff = total_population / (double) particles_number;
 
 	/* --- Clear particle bank*/
 	fission_bank.clear();

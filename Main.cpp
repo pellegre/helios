@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 
 	/* Initialization - Random number */
 	Random r;
-	r.getEngine().seed((long unsigned int)1);
+	r.seed(1);
 
 	/* Initialization - KEFF cycle */
 	double keff = 1.186;

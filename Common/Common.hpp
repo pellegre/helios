@@ -148,8 +148,14 @@ namespace Helios {
 		Random(const trng::lcg64& r) : r(r) {this->r.seed((long unsigned int)1);}
 		Random(const trng::lcg64& r,long unsigned int seed) : r(r) {this->r.seed(seed);}
 		Random(const Random& other) : r(other.r), u(other.u) {/* */}
+		/* Uniform sampling */
 		double uniform() {return u(r);}
-		trng::lcg64& getEngine() {return r;}
+		/* Jump on sequence */
+		void jump(size_t value) {r.jump(value);}
+		/* Split sequence */
+		void split(size_t size, size_t stream) {r.split(size,stream);}
+		/* Seed the generator */
+		void seed(size_t s) {r.seed((long unsigned int)s);}
 		~Random(){/* */}
 	};
 
