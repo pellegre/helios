@@ -36,6 +36,7 @@
 #include <fstream>
 
 #include "../Common/Common.hpp"
+#include "../Transport/Particle.hpp"
 #include "GeometryObject.hpp"
 
 namespace Helios {
@@ -114,6 +115,23 @@ namespace Helios {
 
 		/* Cross a surface, i.e. find next cell. Of course, this should be called on a position located on the surface */
 		void cross(const Coordinate& position, const bool& sense, const Cell*& cell) const ;
+
+		/*
+		 * Cross a surface, i.e. find next cell.
+		 *
+		 * This method takes as a parameter a particle, and depending on the type of surface
+		 * will change the phase space parameters of the particle.
+		 *
+		 * For example, if the surface is reflective, the next cell won't be searched and the
+		 * direction of the particle will be changed accordingly.
+		 * Finally a boundary condition checking is done. The function will return 'false'
+		 * if the particle is getting out of the system.
+		 *
+		 * The cell pointer provided, on normal conditions, SHOULD be different
+		 * from NULL. If the Cell pointer is NULL is symptom of a geometry error
+		 * and should be correctly handled by the caller.
+		 */
+		bool cross(Particle& particle, const bool& sense, const Cell*& cell) const ;
 
 		/*
 		 * Return a new instance of the surface translated (same flags and userId)

@@ -24,192 +24,138 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include <omp.h>
-#include <tbb/task_scheduler_init.h>
-#include <tbb/parallel_for.h>
-#include <tbb/parallel_reduce.h>
-#include <tbb/blocked_range.h>
-
 #include "Simulation.hpp"
 
 using namespace std;
 using namespace Helios;
 using namespace IntelTbb;
 
-class SourceSimulator {
-	/* Base random number stream */
-	const Random& base;
-	/* Reference to particle container */
-	vector<Simulation::CellParticle>& particles;
-	/* Upper bound random numbers on source generation */
-	size_t max_rng;
 
-	/* Stuff got from the environment */
-	const Source* source;       /* Source defined on the problem */
-	const Geometry* geometry;   /* Geometry of the problem */
-public:
-
-	SourceSimulator(const McEnvironment* environment, const Random& base, vector<Simulation::CellParticle>& particles,
+KeffSimulation::SourceSimulator::SourceSimulator(const McEnvironment* environment, const Random& base, vector<Simulation::CellParticle>& particles,
 			const size_t& max_rng) : base(base), particles(particles), max_rng(max_rng),
 			source(environment->getModule<Source>()), geometry(environment->getModule<Geometry>()) {/* */}
 
-	void operator() (const tbb::blocked_range<size_t>& range) const {
-		for(size_t i = range.begin() ; i < range.end() ; ++i) {
-			Random r_local(base);
-			r_local.getEngine().jump(i * max_rng);
-			/* Sample particle */
-			Particle particle = source->sample(r_local);
-			const Cell* cell(geometry->findCell(particle.pos()));
-			particles[i] = Simulation::CellParticle(cell->getInternalId(),particle);
-		}
+void KeffSimulation::SourceSimulator::operator() (const tbb::blocked_range<size_t>& range) const {
+	for(size_t i = range.begin() ; i < range.end() ; ++i) {
+		Random r_local(base);
+		r_local.getEngine().jump(i * max_rng);
+		/* Sample particle */
+		Particle particle = source->sample(r_local);
+		const Cell* cell(geometry->findCell(particle.pos()));
+		particles[i] = Simulation::CellParticle(cell->getInternalId(),particle);
 	}
+}
 
-	virtual ~SourceSimulator() {/* */}
-};
+KeffSimulation::PowerStepSimulator::PowerStepSimulator(const McEnvironment* environment, const Random& base,
+		const size_t& max_rng,vector<CellParticle>& current_bank,vector<CellParticle>& after_bank) :
+		base(base), max_rng(max_rng), current_bank(current_bank),
+		after_bank(after_bank), geometry(environment->getModule<Geometry>()), local_population(0.0)
+		{/* */}
 
-class PowerStepSimulator {
-	/* Base random number stream */
-	const Random& base;
-	/* Upper bound random numbers on source generation */
-	size_t max_rng;
-	/* Current particle bank (source of last step) */
-	vector<Simulation::CellParticle>& current_bank;
-	/* Particle local bank container (save particles states after the simulation) */
-	vector<Simulation::CellParticle>& after_bank;
-	/* Stuff got from the environment */
-	const Geometry* geometry;   /* Geometry of the problem */
-public:
-	/* Population after the simulation */
-	double local_population;
+KeffSimulation::PowerStepSimulator::PowerStepSimulator(PowerStepSimulator& right, tbb::split) : base(right.base),
+		max_rng(right.max_rng), current_bank(right.current_bank), after_bank(right.after_bank), geometry(right.geometry),
+		local_population(0.0) {/* */}
 
-	PowerStepSimulator(const McEnvironment* environment, const Random& base, const size_t& max_rng,
-			vector<Simulation::CellParticle>& current_bank,vector<Simulation::CellParticle>& after_bank) :
-			base(base), max_rng(max_rng), current_bank(current_bank),
-			after_bank(after_bank), geometry(environment->getModule<Geometry>()), local_population(0.0)
-			{/* */}
+void KeffSimulation::PowerStepSimulator::join(PowerStepSimulator& right) {
+	local_population += right.local_population;
+}
 
-	PowerStepSimulator(PowerStepSimulator& right, tbb::split) : base(right.base), max_rng(right.max_rng),
-			current_bank(right.current_bank), after_bank(right.after_bank), geometry(right.geometry),
-			local_population(0.0) {/* */}
+void KeffSimulation::PowerStepSimulator::operator() (const tbb::blocked_range<size_t>& range) {
 
-	void join(PowerStepSimulator& right) {
-		local_population += right.local_population;
-	}
+	/* Get population */
+	double population = local_population;
 
-	void operator() (const tbb::blocked_range<size_t>& range) {
+	/* Local bank */
+	vector<CellParticle>& local_fission_bank = after_bank;
 
-		/* Get population */
-		double population = local_population;
+	/* Bank to be simulated */
+	vector<CellParticle>& fission_bank = current_bank;
 
-		/* Local bank */
-		vector<Simulation::CellParticle>& local_fission_bank = after_bank;
+	/* Geometry stuff */
+	Surface* surface(0);  /* Surface pointer */
+	bool sense(true);     /* Sense of the surface we are crossing */
+	double distance(0.0); /* Distance to closest surface */
 
-		/* Bank to be simulated */
-		vector<Simulation::CellParticle>& fission_bank = current_bank;
+	for(size_t i = range.begin() ; i < range.end() ; ++i) {
 
-		/* Geometry stuff */
-		Surface* surface(0);  /* Surface pointer */
-		bool sense(true);     /* Sense of the surface we are crossing */
-		double distance(0.0); /* Distance to closest surface */
+		/* Random number stream for this particle */
+		Random r(base);
+		r.getEngine().jump(i * max_rng);
 
-		for(size_t i = range.begin() ; i < range.end() ; ++i) {
+		/* Flag if particle is out of the system */
+		bool outside = false;
 
-			Random r_local(base);
-			r_local.getEngine().jump(i * max_rng);
+		/* 1. ---- Initialize particle from source (get particle from the bank) */
+		CellParticle pc = fission_bank[i];
+		const Cell* cell = geometry->getCells()[pc.first];
+		Particle particle = pc.second;
 
-			/* Get particle from the user supplied bank */
-			Simulation::CellParticle pc = fission_bank[i];
-			const Cell* cell = geometry->getCells()[pc.first];
-			Particle particle = pc.second;
+		while(true) {
 
-			/* Flag if particle is out of the system */
-			bool out = false;
+			/* 2. ---- Get material */
+			const Material* material = cell->getMaterial();
+			/*
+			 * Update energy index of the particle. Using the energy of the particle,
+			 * the index (EIX) will be updated with internal information of the material.
+			 */
+			material->setEnergyIndex(particle.evs(), particle.eix());
+			/* Get total cross section */
+			double mfp = material->getMeanFreePath(particle.eix());
 
-			while(true) {
+			/* 3. ---- Get next surface's distance */
+			cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
 
-				/* Get next surface and distance */
+			/* 4. ---- Get collision distance */
+			double collision_distance = -log(r.uniform())*mfp;
+
+			/* 5. ---- Check sampled distance against closest surface distance */
+			while(collision_distance > distance) {
+
+				/* 5.1 ---- Transport the particle to the surface */
+				particle.pos() = particle.pos() + distance * particle.dir();
+
+				/* 5.2 ---- Cross the surface (checking boundary conditions) */
+				outside = not surface->cross(particle,sense,cell);
+				assert(cell != 0);
+				if(outside) break;
+
+				/* 5.3 ---- Get material of the current cell (after crossing the surface) */
+				material = cell->getMaterial();
+				/* Mean free path (the particle didn't change the energy) */
+				mfp = material->getMeanFreePath(particle.eix());
+
+				/* 5.4 ---- Get next surface's distance */
 				cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
 
-				/* Energy index of the particle */
-				EnergyIndex energy_index = particle.eix();
-				/* Get material */
-				const Material* material = cell->getMaterial();
-				/* Get total cross section */
-				double mfp = material->getMeanFreePath(energy_index);
+				/* 5.5 ---- Get collision distance */
+				collision_distance = -log(r.uniform())*mfp;
+			}
 
-				/* Get collision distance */
-				double collision_distance = -log(r_local.uniform())*mfp;
+			if(outside) break;
 
-				while(collision_distance > distance) {
-					/* Cut on a vacuum surface */
-					if(surface->getFlags() & Surface::VACUUM) {
-						out = true;
-						break;
-					}
+			/* 6. Move the particle to the collision point */
+			particle.pos() = particle.pos() + collision_distance * particle.dir();
 
-					/* Transport the particle to the surface */
-					particle.pos() = particle.pos() + distance * particle.dir();
+			/* 7. Sample reaction (if the material contains isotopes, they will be sampled inside the material) */
+			Reaction* reaction = material->getReaction(particle.eix(),r);
+			(*reaction)(particle,r);
 
-					if(surface->getFlags() & Surface::REFLECTING) {
-						/* Get normal */
-						Direction normal;
-						surface->normal(particle.pos(),normal);
-						/* Reverse if necessary */
-						if(sense == false) normal = -normal;
-						/* Calculate the new direction */
-						double projection = 2 * dot(particle.dir(), normal);
-						particle.dir() = particle.dir() - projection * normal;
-					} else {
-						/* Now get next cell */
-						surface->cross(particle.pos(),sense,cell);
-						if(!cell) {
-							cout << particle << endl;
-							cout << *surface << endl;
-						}
-						/* Cut if the cell is dead */
-						if(cell->getFlag() & Cell::DEADCELL) {
-							out = true;
-							break;
-						}
-					}
-
-					/* Calculate new distance to the closest surface */
-					cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
-
-					/* Update material */
-					material = cell->getMaterial();
-					mfp = material->getMeanFreePath(energy_index);
-
-					/* And the new collision distance */
-					collision_distance = -log(r_local.uniform())*mfp;
-				}
-
-				if(out) break;
-
-				/* If we are out, we reach some point inside a cell were a collision should occur */
-				particle.pos() = particle.pos() + collision_distance * particle.dir();
-
-				/* get and apply reaction to the particle */
-				Reaction* reaction = material->getReaction(particle.eix(),r_local);
-				(*reaction)(particle,r_local);
-
-				if(particle.sta() == Particle::DEAD) break;
-				if(particle.sta() == Particle::BANK) {
-					/* Update local particle bank */
-					population += particle.wgt();
-					local_fission_bank[i] = Simulation::CellParticle(cell->getInternalId(),particle);
-					break;
-				}
+			/* 8. Check state of the particle after the reaction sampling */
+			if(particle.sta() == Particle::DEAD) {
+				break;
+			} else if(particle.sta() == Particle::BANK) {
+				/* Update local particle bank */
+				population += particle.wgt();
+				local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);
+				break;
 			}
 		}
-
-		/* Save new population */
-		local_population = population;
-
 	}
 
-	virtual ~PowerStepSimulator() {/* */}
-};
+	/* Save new population */
+	local_population = population;
+
+}
 
 KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
 		Simulation(_random,_environment), keff(keff), particles_number(_particles_number) {

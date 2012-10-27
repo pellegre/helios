@@ -87,7 +87,7 @@ void KeffSimulation::launch() {
 			r.getEngine().jump(i * max_rng_per_history);
 
 			/* Flag if particle is out of the system */
-			bool out = false;
+			bool outside = false;
 
 			/* 1. ---- Initialize particle from source (get particle from the bank) */
 			CellParticle pc = fission_bank[i];
@@ -98,7 +98,10 @@ void KeffSimulation::launch() {
 
 				/* 2. ---- Get material */
 				const Material* material = cell->getMaterial();
-				/* Update energy index of the particle */
+				/*
+				 * Update energy index of the particle. Using the energy of the particle,
+				 * the index (EIX) will be updated with internal information of the material.
+				 */
 				material->setEnergyIndex(particle.evs(), particle.eix());
 				/* Get total cross section */
 				double mfp = material->getMeanFreePath(particle.eix());
@@ -109,36 +112,18 @@ void KeffSimulation::launch() {
 				/* 4. ---- Get collision distance */
 				double collision_distance = -log(r.uniform())*mfp;
 
-				/* 5. ---- Get next collision point */
+				/* 5. ---- Check sampled distance against closest surface distance */
 				while(collision_distance > distance) {
 
 					/* 5.1 ---- Transport the particle to the surface */
 					particle.pos() = particle.pos() + distance * particle.dir();
 
 					/* 5.2 ---- Cross the surface (checking boundary conditions) */
-					if(surface->getFlags() & Surface::REFLECTING) {
-						/* Get normal */
-						Direction normal;
-						surface->normal(particle.pos(),normal);
-						/* Reverse if necessary */
-						if(sense == false) normal = -normal;
-						/* Calculate the new direction */
-						double projection = 2 * dot(particle.dir(), normal);
-						particle.dir() = particle.dir() - projection * normal;
-					} else if(surface->getFlags() & Surface::VACUUM) {
-						out = true;
-						break;
-					} else {
-						/* Now get next cell */
-						surface->cross(particle.pos(),sense,cell);
-						/* Cut if the cell is dead */
-						if(cell->getFlag() & Cell::DEADCELL) {
-							out = true;
-							break;
-						}
-					}
+					outside = not surface->cross(particle,sense,cell);
+					assert(cell != 0);
+					if(outside) break;
 
-					/* 5.3 ---- Get material */
+					/* 5.3 ---- Get material of the current cell (after crossing the surface) */
 					material = cell->getMaterial();
 					/* Mean free path (the particle didn't change the energy) */
 					mfp = material->getMeanFreePath(particle.eix());
@@ -150,17 +135,19 @@ void KeffSimulation::launch() {
 					collision_distance = -log(r.uniform())*mfp;
 				}
 
-				if(out) break;
+				if(outside) break;
 
-				/* If we are out, we reach some point inside a cell were a collision should occur */
+				/* 6. Move the particle to the collision point */
 				particle.pos() = particle.pos() + collision_distance * particle.dir();
 
-				/* get and apply reaction to the particle */
+				/* 7. Sample reaction (if the material contains isotopes, they will be sampled inside the material) */
 				Reaction* reaction = material->getReaction(particle.eix(),r);
 				(*reaction)(particle,r);
 
-				if(particle.sta() == Particle::DEAD) break;
-				if(particle.sta() == Particle::BANK) {
+				/* 8. Check state of the particle after the reaction sampling */
+				if(particle.sta() == Particle::DEAD) {
+					break;
+				} else if(particle.sta() == Particle::BANK) {
 					/* Update local particle bank */
 					local_population += particle.wgt();
 					local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);

@@ -28,6 +28,12 @@
 #ifndef SIMULATION_HPP_
 #define SIMULATION_HPP_
 
+#include <omp.h>
+#include <tbb/task_scheduler_init.h>
+#include <tbb/parallel_for.h>
+#include <tbb/parallel_reduce.h>
+#include <tbb/blocked_range.h>
+
 #include "McEnvironment.hpp"
 
 namespace Helios {
@@ -119,9 +125,51 @@ namespace IntelTbb {
 		/* Get multiplication factor */
 		double getKeff() const {return keff;}
 
-		virtual ~KeffSimulation() {/* */};
-	};
+		/* ---- Source simulator */
 
+		class SourceSimulator {
+			/* Base random number stream */
+			const Random& base;
+			/* Reference to particle container */
+			vector<CellParticle>& particles;
+			/* Upper bound random numbers on source generation */
+			size_t max_rng;
+			/* Stuff got from the environment */
+			const Source* source;       /* Source defined on the problem */
+			const Geometry* geometry;   /* Geometry of the problem */
+		public:
+			SourceSimulator(const McEnvironment* environment, const Random& base, vector<CellParticle>& particles,
+					const size_t& max_rng);
+			void operator() (const tbb::blocked_range<size_t>& range) const;
+			virtual ~SourceSimulator() {/* */}
+		};
+
+		virtual ~KeffSimulation() {/* */};
+
+		/* ---- Power step simulator */
+
+		class PowerStepSimulator {
+			/* Base random number stream */
+			const Random& base;
+			/* Upper bound random numbers on source generation */
+			size_t max_rng;
+			/* Current particle bank (source of last step) */
+			vector<CellParticle>& current_bank;
+			/* Particle local bank container (save particles states after the simulation) */
+			vector<CellParticle>& after_bank;
+			/* Stuff got from the environment */
+			const Geometry* geometry;   /* Geometry of the problem */
+		public:
+			/* Population after the simulation */
+			double local_population;
+			PowerStepSimulator(const McEnvironment* environment, const Random& base, const size_t& max_rng,
+					vector<CellParticle>& current_bank, vector<CellParticle>& after_bank);
+			PowerStepSimulator(PowerStepSimulator& right, tbb::split);
+			void join(PowerStepSimulator& right);
+			void operator() (const tbb::blocked_range<size_t>& range);
+			virtual ~PowerStepSimulator() {/* */}
+		};
+	};
 
 }
 

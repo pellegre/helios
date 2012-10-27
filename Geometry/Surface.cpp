@@ -63,6 +63,36 @@ void Surface::cross(const Coordinate& position, const bool& sense, const Cell*& 
 	}
 }
 
+bool Surface::cross(Particle& particle, const bool& sense, const Cell*& cell) const {
+	/* Check reflecting surface */
+	if(getFlags() & REFLECTING) {
+		/* Get normal */
+		Direction vnormal;
+		normal(particle.pos(),vnormal);
+		/* Reverse if necessary */
+		if(sense == false) vnormal = -vnormal;
+		/* Calculate the new direction */
+		double projection = 2 * dot(particle.dir(), vnormal);
+		particle.dir() = particle.dir() - projection * vnormal;
+		return true;
+	} else if (getFlags() & VACUUM) {
+		/* Reach a boundary */
+		return false;
+	}
+
+	/* Just a normal surface, cross and get new cell*/
+	cross(particle.pos(),sense,cell);
+
+	/* Now check if we reach a dead cell, i.e. outside the geometry */
+	if(cell) /* God save the caller if this is not true... */ {
+		if(cell->getFlag() & Cell::DEADCELL)
+			return false;
+	}
+
+	/* We are inside the geometry */
+	return true;
+}
+
 SurfaceFactory::SurfaceFactory() {
 	/* Surface registering */
 	registerSurface(PlaneNormal<xaxis>());          /* px - coeffs */
