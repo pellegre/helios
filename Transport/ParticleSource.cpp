@@ -40,7 +40,7 @@ unsigned long int ParticleSampler::max_samples = 1000000;
 
 ParticleSampler::ParticleSampler(const ParticleSamplerObject* definition, const Source* source) :
 		user_id(definition->getSamplerid()), position(definition->getPosition()),
-		direction(definition->getDirection()), energy(1.0), weight(1.0), state(Particle::ALIVE) {
+		direction(definition->getDirection()), energy(Energy(0,1.0)), weight(1.0), state(Particle::ALIVE) {
 
 	/* Get distributions */
 	vector<DistributionId> distribution_ids = definition->getDistributionIds();
@@ -117,8 +117,7 @@ void ParticleCellSampler::operator() (Particle& particle,Random& r) const {
 	}
 	/* Once the position is set, set phase space coordinates of this sampler */
 	particle.dir() = direction;
-	particle.evs() = energy;
-	particle.eix() = 0;
+	particle.erg() = energy;
 	particle.wgt() = weight;
 	particle.sta() = state;
 	/* Apply distributions (if any) */

@@ -84,9 +84,9 @@ namespace Helios {
 	typedef InternalId InternalSamplerId;
 
 	/* Energy stuff */
-	typedef double Energy;                             /* Energy of the particle in eVs */
-	typedef unsigned int EnergyIndex;                  /* Index used to access energies grids */
-	typedef std::pair<EnergyIndex,Energy> EnergyPair;  /* Pair of energy value and the closest (lower) index on the grid */
+	typedef double EnergyValue;                        /* Energy of the particle in eVs */
+	typedef size_t EnergyIndex;                        /* Index used to access energies grids (or group number) */
+	typedef std::pair<EnergyIndex,EnergyValue> Energy; /* Pair of energy value and the closest (lower) index on the grid */
 
 	/* Get a value from a string */
 	template<typename T>

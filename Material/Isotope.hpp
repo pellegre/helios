@@ -56,13 +56,13 @@ namespace Helios {
 		 *
 		 * Not disappearance, this include fission if is present on the isotope
 		 */
-		virtual double getAbsorptionProb(const EnergyPair& pair) const = 0;
+		virtual double getAbsorptionProb(Energy& energy) const = 0;
 
 		/* -- Check if the isotope is fissile */
 		bool isFissile() const {return fissile;}
 
 		/* -- Get fission probability */
-		virtual double getFissionProb(const EnergyPair& pair) const = 0;
+		virtual double getFissionProb(Energy& energy) const = 0;
 
 		/*
 		 * -- Fission.

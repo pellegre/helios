@@ -56,7 +56,7 @@ namespace Helios {
 			Fission(const std::vector<double>& nu, const std::vector<double>& chi);
 			void operator() (Particle& particle, Random& r) const {
 				/* Get number of particles */
-				double nubar = nu[particle.eix()];
+				double nubar = nu[particle.erg().first];
 				/* Integer part */
 				int nu = (int) nubar;
 				if (r.uniform() < nubar - (double)nu)
@@ -65,7 +65,7 @@ namespace Helios {
 				/* New direction */
 				isotropicDirection(particle.dir(),r);
 				/* New group */
-				particle.eix() = spectrum->sample(0,r.uniform());
+				particle.erg().first = spectrum->sample(0,r.uniform());
 			};
 			~Fission();
 		};
@@ -84,7 +84,7 @@ namespace Helios {
 				/* New direction */
 				isotropicDirection(particle.dir(),r);
 				/* New group */
-				particle.eix() = spectrum->sample(particle.eix(),r.uniform());
+				particle.erg().first = spectrum->sample(particle.erg().first,r.uniform());
 			};
 			~Scattering();
 		};
@@ -108,12 +108,12 @@ namespace Helios {
 	public:
 		MacroXsIsotope(map<string,vector<double> >& constant, const std::vector<double>& sigma_t);
 
-		double getAbsorptionProb(const EnergyPair& pair) const {
-			return absorption_prob[pair.first];
+		double getAbsorptionProb(Energy& energy) const {
+			return absorption_prob[energy.first];
 		}
 
-		double getFissionProb(const EnergyPair& pair) const {
-			return fission_prob[pair.first];
+		double getFissionProb(Energy& energy) const {
+			return fission_prob[energy.first];
 		}
 
 		/* Fission reaction */
@@ -144,17 +144,11 @@ namespace Helios {
 
 		MacroXs(const MacroXsObject* definition, int number_groups);
 
-		/*
-		 * Based on particle's energy, this functions setup the index on the energy grid with
-		 * information contained on the child class.
-		 */
-		void setEnergyIndex(const Energy& energy, EnergyIndex& index) const {/* MultiGroup index, nothing to do */};
-
 		 /* Get the total cross section (using the energy index of the particle) */
-		double getMeanFreePath(const EnergyIndex& index) const {return mfp[index];};
+		double getMeanFreePath(Energy& energy) const {return mfp[energy.first];};
 
 		/* Macro-XS materials only have one "isotope" */
-		const Isotope* getIsotope(const EnergyPair& pair, Random& random) const {return isotope;};
+		const Isotope* getIsotope(Energy& energy, Random& random) const {return isotope;};
 
 		/* Print material information */
 		void print(std::ostream& out) const;

@@ -72,21 +72,15 @@ namespace Helios {
 
 		/* ---- Interaction of the material with a particle */
 
-		/*
-		 * Based on particle's energy, this functions returns the index on the energy grid with
-		 * information contained on the child class.
-		 */
-		virtual void setEnergyIndex(const Energy& energy, EnergyIndex& index) const = 0;
-
 		 /* Get the total cross section (using the energy index of the particle) */
-		virtual double getMeanFreePath(const EnergyIndex& index) const = 0;
+		virtual double getMeanFreePath(Energy& energy) const = 0;
 
 		/*
 		 * Get an isotope, based on a random generator and a energy pair (index plus
 		 * value). The index should be correctly settled by a previous call of the
 		 * setEnergyIndex method.
 		 */
-		virtual const Isotope* getIsotope(const EnergyPair& pair, Random& random) const = 0;
+		virtual const Isotope* getIsotope(Energy& energy, Random& random) const = 0;
 
 		/* "Sample" the next reaction */
 		virtual ~Material() {/* */};

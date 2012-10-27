@@ -58,5 +58,9 @@ std::ostream& operator<<(std::ostream& out, const Particle& q) {
 	out << "state = " << q.state;
 	return out;
 }
+std::ostream& operator<<(std::ostream& out, const Energy& q) {
+	out << "(" << q.first << " , " << q.first << ")";
+	return out;
+}
 
 } /* namespace Helios */

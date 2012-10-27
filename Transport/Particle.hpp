@@ -42,9 +42,9 @@ namespace Helios {
 			BANK  = 2  /* The particle state should be banked on next step */
 		};
 
-		Particle() : position(Coordinate(0,0,0)), direction(Direction(0,0,0)), energy(EnergyPair(0,1.0)),
+		Particle() : position(Coordinate(0,0,0)), direction(Direction(0,0,0)), energy(Energy(0,1.0)),
 					 weight(1.0), state(ALIVE) {/* */}
-		Particle(const Coordinate& position, const Direction& direction, const EnergyPair& energy,const double& weight) :
+		Particle(const Coordinate& position, const Direction& direction, const Energy& energy,const double& weight) :
 				 position(position), direction(direction), energy(energy), weight(weight), state(ALIVE) {/* */}
 
 		~Particle() {/* */};
@@ -58,11 +58,11 @@ namespace Helios {
 			this->direction = direction;
 		}
 
-		EnergyPair getEnergy() const {
+		Energy getEnergy() const {
 			return energy;
 		}
 
-		void setEnergy(EnergyPair energy) {
+		void setEnergy(Energy energy) {
 			this->energy = energy;
 		}
 
@@ -86,9 +86,7 @@ namespace Helios {
 		Coordinate& pos() {return position;}
 		Direction& dir() {return direction;}
 		double& wgt() {return weight;}
-		EnergyIndex& eix() {return energy.first;}
-		Energy& evs() {return energy.second;}
-		EnergyPair& erg() {return energy;}
+		Energy& erg() {return energy;}
 		State& sta() {return state;}
 
 	private:
@@ -103,7 +101,7 @@ namespace Helios {
 		Direction direction;
 
 		/* Energy pair (index and value). Sometimes both are used, sometimes only one */
-		EnergyPair energy;
+		Energy energy;
 
 		/* Weight of the particle */
 		double weight;
@@ -115,6 +113,8 @@ namespace Helios {
 
 	/* Print a particle */
 	std::ostream& operator<<(std::ostream& out, const Particle& q);
+	/* Output surface information */
+	std::ostream& operator<<(std::ostream& out, const Energy& q);
 
 	/* Set an isotropic angle to the particle */
 	void isotropicDirection(Direction& dir, Random& r);

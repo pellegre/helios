@@ -96,15 +96,9 @@ void KeffSimulation::launch() {
 
 			while(true) {
 
-				/* 2. ---- Get material */
+				/* 2. ---- Get material and mean free path */
 				const Material* material = cell->getMaterial();
-				/*
-				 * Update energy index of the particle. Using the energy of the particle,
-				 * the index (EIX) will be updated with internal information of the material.
-				 */
-				material->setEnergyIndex(particle.evs(), particle.eix());
-				/* Get total cross section */
-				double mfp = material->getMeanFreePath(particle.eix());
+				double mfp = material->getMeanFreePath(particle.erg());
 
 				/* 3. ---- Get next surface's distance */
 				cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
@@ -126,7 +120,7 @@ void KeffSimulation::launch() {
 					/* 5.3 ---- Get material of the current cell (after crossing the surface) */
 					material = cell->getMaterial();
 					/* Mean free path (the particle didn't change the energy) */
-					mfp = material->getMeanFreePath(particle.eix());
+					mfp = material->getMeanFreePath(particle.erg());
 
 					/* 5.4 ---- Get next surface's distance */
 					cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);

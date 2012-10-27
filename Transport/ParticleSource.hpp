@@ -52,7 +52,7 @@ namespace Helios {
 		/* Reference direction of the sampler */
 		Direction direction;
 		/* Energy of the initial particle (1 MeV by default) */
-		double energy;
+		Energy energy;
 		/* Initial weight */
 		double weight;
 		/* Initial state of the particle */
@@ -93,8 +93,7 @@ namespace Helios {
 			/* Set phase space coordinates of this sampler */
 			particle.pos() = position;
 			particle.dir() = direction;
-			particle.evs() = energy;
-			particle.eix() = 0;
+			particle.erg() = energy;
 			particle.wgt() = weight;
 			particle.sta() = state;
 			/* Apply distributions (if any) */
