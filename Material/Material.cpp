@@ -26,7 +26,7 @@
  */
 
 #include "Material.hpp"
-#include "MacroXs.hpp"
+#include "MacroXs/MacroXs.hpp"
 
 using namespace std;
 

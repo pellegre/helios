@@ -30,8 +30,8 @@
 
 #include <map>
 
-#include "Material.hpp"
-#include "../Common/Sampler.hpp"
+#include "../Material.hpp"
+#include "../../Common/Sampler.hpp"
 
 namespace Helios {
 

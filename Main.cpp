@@ -34,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Geometry/Geometry.hpp"
 #include "Geometry/Cell.hpp"
 #include "Material/Materials.hpp"
-#include "Material/MacroXs.hpp"
 #include "Transport/Particle.hpp"
 #include "Transport/Source.hpp"
 #include "Common/Common.hpp"

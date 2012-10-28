@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 
 #include "XmlParser.hpp"
-#include "../../Material/MacroXs.hpp"
+#include "../../Material/MacroXs/MacroXs.hpp"
 
 using namespace std;
 
