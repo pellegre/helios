@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* Return a random number between 0.0 and 1.0, JUST FOR TESTING AND DEBUG */
 static inline double randomNumber() {
-	static Helios::Random r;
+	static Helios::Random r(10);
 	return r.uniform();
 }
 /* Return a random number between a and b, JUST FOR TESTING AND DEBUG */

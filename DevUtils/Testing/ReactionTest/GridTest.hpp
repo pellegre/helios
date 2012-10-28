@@ -24,26 +24,56 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-//#include "GeometryTest/GeometryTests.hpp"
-//#include "ReactionTest/ReactionTests.hpp"
-#include "ReactionTest/GridTest.hpp"
-//#include "SourceTest/SourceTest.hpp"
 
-InputPath InputPath::inputpath;
+#ifndef GRIDTEST_HPP_
+#define GRIDTEST_HPP_
 
-int main(int argc, char **argv) {
-	::testing::InitGoogleTest(&argc, argv);
+#include <string>
 
-	/* Check number of arguments */
-	if(argc < 2) {
-		Helios::Log::error() << "Usage : " << argv[0] << " path/to/test" << Helios::Log::endl;
-		exit(1);
+#include "../../../Common/Common.hpp"
+#include "../../../Material/Grid/MasterGrid.hpp"
+#include "../../Utils.hpp"
+#include "../TestCommon.hpp"
+
+#include "gtest/gtest.h"
+
+class SimpleGridTest : public ::testing::Test {
+protected:
+	static std::vector<double> random_values;
+
+	SimpleGridTest() {/* */}
+	virtual ~SimpleGridTest() {/* */}
+	void SetUp() {/* */}
+	void TearDown() {/* */}
+	Helios::MasterGrid grid;
+};
+
+static inline std::vector<double> initRandom() {
+	size_t times = 20000000;
+	std::vector<double> values(times);
+	for(size_t i = 0 ; i < times ; ++i)
+		values[i] = randomNumber(1.00e-11,20.00e+06);
+	return values;
+}
+std::vector<double> SimpleGridTest::random_values = initRandom();
+
+TEST_F(SimpleGridTest, OrderingValues) {
+	grid.pushGrid(random_values.begin(),random_values.end());
+	grid.setup();
+
+	size_t checks = 2000000;
+	for(size_t i = 0 ; i < checks ; ++i) {
+		double value = randomNumber(1.00e-11,20.00e+06);
+		std::pair<size_t,double> pair_value(0,value);
+		grid.interpolate(pair_value);
+		if(pair_value.first)
+			EXPECT_GE(value,grid[pair_value.first]);
+		else
+			EXPECT_LE(value,grid[pair_value.first]);
+		if(pair_value.first + 1 != grid.size() - 1)
+			EXPECT_LE(value,grid[pair_value.first + 1]);
 	}
-
-	InputPath::access().setPath(argv[1]);
-
-	return RUN_ALL_TESTS();
 }
 
 
-
+#endif /* GRIDTEST_HPP_ */

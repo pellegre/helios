@@ -116,7 +116,8 @@ set(MCFILES Common/Common.cpp
             Geometry/Surfaces/CylinderOnAxisOrigin.cpp
             Material/Material.cpp
             Material/Materials.cpp
-            Material/MacroXs/MacroXs.cpp                                                        
+            Material/MacroXs/MacroXs.cpp  
+            Material/Grid/MasterGrid.cpp                                                                  
             Parser/Parser.cpp
             Parser/XMLParser/tinystr.cpp
             Parser/XMLParser/tinyxml.cpp                  
