@@ -101,7 +101,7 @@ void KeffSimulation::launch() {
 				double mfp = material->getMeanFreePath(particle.erg());
 
 				/* 3. ---- Get next surface's distance */
-				cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
+				cell->intersect(particle.pos(), particle.dir(), surface, sense, distance);
 
 				/* 4. ---- Get collision distance */
 				double collision_distance = -log(r.uniform())*mfp;
@@ -123,7 +123,7 @@ void KeffSimulation::launch() {
 					mfp = material->getMeanFreePath(particle.erg());
 
 					/* 5.4 ---- Get next surface's distance */
-					cell->intersect(particle.pos(),particle.dir(),surface,sense,distance);
+					cell->intersect(particle.pos(), particle.dir(), surface, sense, distance);
 
 					/* 5.5 ---- Get collision distance */
 					collision_distance = -log(r.uniform())*mfp;

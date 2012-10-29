@@ -145,6 +145,7 @@ protected:
 
 	/* Master grid */
 	Helios::MasterGrid* grid;
+	/* Parameters for linear function */
 	double a,b;
 	/* --- User grid */
 	std::vector<double> user_grid;
@@ -175,6 +176,91 @@ TEST_F(InterpolationGridTest, RandomLinearInterpolation) {
 		size_t idx = grid->index(random_values[i],factor);
 		double inter = factor * (new_values[idx + 1] - new_values[idx]) + new_values[idx];
 		EXPECT_NEAR(eval,inter,5e8*std::numeric_limits<double>::epsilon());
+	}
+}
+
+class ChildGridTest : public ::testing::Test {
+
+protected:
+
+	double linear_function(const double& x) {
+		return (a + b * x);
+	}
+
+	ChildGridTest() {/* */}
+	virtual ~ChildGridTest() {/* */}
+
+	void SetUp() {
+		/* Create grid */
+		grid = new Helios::MasterGrid();
+		/* Values for the linear function */
+		a = 10.00;
+		b = 25.00;
+
+		/* Number of grids */
+		size_t ngrids = 5;
+		size_t max_points = 10;
+		for(size_t j = 0 ; j < ngrids ; ++j) {
+			/* Check interpolation */
+			size_t user_points = rand()%max_points + 1;
+			/* --- User grid */
+			std::vector<double> user_grid = std::vector<double>(user_points + 1);
+			/* Linear values over the grid */
+			std::vector<double> user_function = std::vector<double>(user_points + 1);
+			/* Delta */
+			double delta_x = (max_value - min_value) / (double)user_points;
+			/* Set the user grid */
+			for(size_t i = 0 ; i <= user_points ; ++i) {
+				double x = (double) i * delta_x + min_value;
+				user_grid[i] = x;
+				user_function[i] = linear_function(x);
+			}
+			user_functions.push_back(user_function);
+			/* Push child grid into the master grid */
+			child_grids.push_back(grid->pushGrid(user_grid.begin(), user_grid.end()));
+		}
+
+		/* Setup master grid */
+		grid->setup();
+	}
+
+	void TearDown() {
+		delete grid;
+	}
+
+	/* Master grid */
+	Helios::MasterGrid* grid;
+	/* Parameters for linear function */
+	double a,b;
+	/* Linear values over the grid */
+	std::vector<std::vector<double> > user_functions;
+	/* Child grids */
+	std::vector<Helios::ChildGrid*> child_grids;
+};
+
+TEST_F(ChildGridTest, LinearInterpolation) {
+	for(std::vector<Helios::ChildGrid*>::const_iterator it = child_grids.begin() ;  it != child_grids.end() ; ++it) {
+		(*it)->print(std::cout);
+		std::cout << std::endl;
+	}
+
+	for(size_t j = 0 ; j < child_grids.size() ; ++j) {
+		Helios::ChildGrid* child_grid = child_grids[j];
+		std::vector<double> user_function = user_functions[j];
+
+		double factor;
+		std::pair<size_t,double> pair_value(0,random_values[i]);
+		size_t idx = child_grid->index(pair_value,factor);
+
+		//		/* Check the interpolated values */
+//		for(size_t i = 0 ; i < random_values.size() ; ++i) {
+//			double eval = linear_function(random_values[i]);
+//			double factor = 0.0;
+//			std::pair<size_t,double> pair_value(0,random_values[i]);
+//			size_t idx = child_grid->index(pair_value,factor);
+//			double inter = factor * (user_function[idx + 1] - user_function[idx]) + user_function[idx];
+//			EXPECT_NEAR(eval,inter,5e8*std::numeric_limits<double>::epsilon());
+//		}
 	}
 }
 

@@ -37,16 +37,30 @@ namespace Helios {
 /* By default, 10000 points are reserved for the grid */
 size_t MasterGrid::reserve_grid = 10000;
 
-MasterGrid::MasterGrid() {
+MasterGrid::MasterGrid(){
 	/* Reserve space for the grids */
 	master_grid.reserve(reserve_grid);
 };
 
 void MasterGrid::setup() {
-	/* --- Setup MASTER grid */
+	/* Setup MASTER grid */
 	sort(master_grid.begin(), master_grid.end());
 	vector<double>::const_iterator it_master = unique(master_grid.begin(), master_grid.end());
 	master_grid.resize(it_master - master_grid.begin());
+
+	/* Setup child grids */
+	for(vector<ChildGrid*>::const_iterator it = child_grids.begin() ; it != child_grids.end() ; ++it) {
+		vector<size_t> master_pointers(master_grid.size());
+		/* Index on master grid */
+		size_t child_idx = 0;
+		for(size_t i = 0 ; i < size() ; ++i) {
+			double child_value = (*(*it))[child_idx];
+			master_pointers[i] = child_idx;
+			if(child_value == master_grid[i]) child_idx++;
+		}
+		/* Setup master pointer */
+		(*it)->setup(master_pointers);
+	}
 }
 
 double MasterGrid::interpolate(pair<size_t,double>& pair_value) const {
@@ -94,7 +108,41 @@ double MasterGrid::interpolate(pair<size_t,double>& pair_value) const {
 	}
 }
 
-size_t MasterGrid::index(const double& value, double& factor) const{
+void MasterGrid::setIndex(std::pair<size_t,double>& pair_value) const {
+	/* Maximum and minimum values for energy */
+	double min_energy = master_grid[0];
+	double max_energy = master_grid[master_grid.size() - 1];
+
+	/* Energy value */
+	double energy = pair_value.second;
+
+	/* First check if the given energy is out of bound */
+	if(energy <= min_energy) {
+		pair_value.first = 0;
+		return;
+	} else if(energy >= max_energy) {
+		pair_value.first = master_grid.size() - 2;
+		return;
+	}
+
+	/* Bug catcher, in normal conditions this shouldn't happen */
+	assert(pair_value.first <= master_grid.size() - 2);
+
+	/* Energy bounds */
+	double low_energy = master_grid[pair_value.first];
+	double high_energy = master_grid[pair_value.first + 1];
+
+	/* Check if the index is in the right place */
+	if(not (energy >= low_energy && energy < high_energy)) {
+		/* Search boundaries */
+		vector<double>::const_iterator begin = master_grid.begin();
+		vector<double>::const_iterator end = master_grid.end();
+		/* Update index */
+		pair_value.first = upper_bound(begin, end, energy) - master_grid.begin() - 1;
+	}
+}
+
+size_t MasterGrid::index(const double& value, double& factor) const {
 	pair<size_t,double> pair_value(0,value);
 	factor = interpolate(pair_value);
 	return pair_value.first;
@@ -132,6 +180,39 @@ void MasterGrid::print(ostream& out) const {
 	out << Log::ident(2) << " - Size of the master grid : " << master_grid.size() << endl;
 	out << Log::ident(1) << "Master grid : " << scientific << endl;
 	copy(master_grid.begin(), master_grid.end(), ostream_iterator<double>(out," , "));
+}
+
+MasterGrid::~MasterGrid() {
+	for(vector<ChildGrid*>::const_iterator it = child_grids.begin() ; it != child_grids.end() ; ++it)
+		delete (*it);
+};
+
+void ChildGrid::setup(const std::vector<size_t>& _master_pointers) {
+	master_pointers.reserve(_master_pointers.size());
+	/* Copy data */
+	master_pointers.insert(master_pointers.end(), _master_pointers.begin(), _master_pointers.end());
+}
+
+size_t ChildGrid::index(std::pair<size_t,double>& pair_value, double& factor) const {
+	master_grid->setIndex(pair_value);
+	size_t child_index = master_pointers[pair_value.first];
+	/* Energy bounds */
+	double low_energy = child_grid[child_index];
+	double high_energy = child_grid[child_index + 1];
+	/* Set the interpolation factor */
+	return (pair_value.second - low_energy) / (high_energy - low_energy);
+	/* Return index on child grid */
+	return child_index;
+}
+
+void ChildGrid::print(std::ostream& out) const {
+	out << Log::ident(1) << "Child grid" << endl;
+	out << Log::ident(2) << " - Size of the child grid : " << child_grid.size() << endl;
+	out << Log::ident(1) << "Child grid : " << scientific << endl;
+	copy(child_grid.begin(), child_grid.end(), ostream_iterator<double>(out," , "));
+	out << endl;
+	out << Log::ident(1) << "Master pointers : " << dec << endl;
+	copy(master_pointers.begin(), master_pointers.end(), ostream_iterator<size_t>(out," , "));
 }
 
 } /* namespace Helios */

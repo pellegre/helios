@@ -100,7 +100,7 @@ namespace OpenMp {
 namespace IntelTbb {
 
 	/*
-	 * KEFF simulation (using OpenMp)
+	 * KEFF simulation (using Intel Threading Building Blocks)
 	 *
 	 * Apart of accumulate the user defined tallies, this class also creates a bank
 	 * of particles representing the source fission (as a result of this simulation).
