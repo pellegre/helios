@@ -72,10 +72,10 @@ public:
 
 	/* Set index on the pair and return interpolation factor */
 	double interpolate(std::pair<size_t,double>& pair_value) const;
-	/* Given just a value, returns the interpolation factor */
-	double interpolate(const double& value) const;
+	/* Given just a value, returns the interpolation factor and the index */
+	size_t index(const double& value, double& factor) const;
 	/* Given a grid and values on it, returns interpolated values to be used with this grid */
-	std::vector<double> interpolate(std::vector<double>& grid, std::vector<double>& values) const;
+	std::vector<double> interpolate(const std::vector<double>& grid, const std::vector<double>& values) const;
 
 	/* Print grid information */
 	void print(std::ostream& out) const;

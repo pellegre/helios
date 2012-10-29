@@ -38,42 +38,144 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "gtest/gtest.h"
 
 class SimpleGridTest : public ::testing::Test {
+
 protected:
-	static std::vector<double> random_values;
 
 	SimpleGridTest() {/* */}
 	virtual ~SimpleGridTest() {/* */}
-	void SetUp() {/* */}
-	void TearDown() {/* */}
-	Helios::MasterGrid grid;
+	void SetUp() {
+		/* Create grid */
+		grid = new Helios::MasterGrid();
+	}
+	void TearDown() {
+		delete grid;
+	}
+
+	/* Master grid */
+	Helios::MasterGrid* grid;
 };
 
+/* Limits */
+static double min_value = 01.00e-11;
+static double max_value = 20.00e+06;
+
 static inline std::vector<double> initRandom() {
-	size_t times = 20000000;
+	size_t times = 2000000;
 	std::vector<double> values(times);
 	for(size_t i = 0 ; i < times ; ++i)
-		values[i] = randomNumber(1.00e-11,20.00e+06);
+		values[i] = randomNumber(min_value,max_value);
 	return values;
 }
-std::vector<double> SimpleGridTest::random_values = initRandom();
+/* Random values */
+std::vector<double> random_values = initRandom();
 
 TEST_F(SimpleGridTest, OrderingValues) {
-	grid.pushGrid(random_values.begin(),random_values.end());
-	grid.setup();
+	/* Push random values into the grid */
+	grid->pushGrid(random_values.begin(),random_values.end());
+	grid->setup();
 
-	size_t checks = 2000000;
+	/* Check interpolation */
+	size_t checks = 100000;
 	for(size_t i = 0 ; i < checks ; ++i) {
-		double value = randomNumber(1.00e-11,20.00e+06);
+		double value = randomNumber(min_value,max_value);
 		std::pair<size_t,double> pair_value(0,value);
-		grid.interpolate(pair_value);
+		grid->interpolate(pair_value);
 		if(pair_value.first)
-			EXPECT_GE(value,grid[pair_value.first]);
+			EXPECT_GE(value,(*grid)[pair_value.first]);
 		else
-			EXPECT_LE(value,grid[pair_value.first]);
-		if(pair_value.first + 1 != grid.size() - 1)
-			EXPECT_LE(value,grid[pair_value.first + 1]);
+			EXPECT_LE(value,(*grid)[pair_value.first]);
+
+		if(pair_value.first + 1 != grid->size() - 1)
+			EXPECT_LE(value,(*grid)[pair_value.first + 1]);
 	}
 }
 
+class InterpolationGridTest : public ::testing::Test {
+
+protected:
+
+	double linear_function(const double& x) {
+		return (a + b * x);
+	}
+
+	InterpolationGridTest() {/* */}
+	virtual ~InterpolationGridTest() {/* */}
+
+	void SetUp() {
+		/* Create grid */
+		grid = new Helios::MasterGrid();
+		/* Values for the linear function */
+		a = 10.00;
+		b = 25.00;
+
+		/* Check interpolation */
+		size_t user_points = 1000;
+		size_t grid_points = 12345 * user_points;
+
+		/* --- User grid */
+		user_grid = std::vector<double>(user_points + 1);
+		/* Linear values over the grid */
+		user_function = std::vector<double>(user_points + 1);
+		/* Delta */
+		double delta_x = (max_value - min_value) / (double)user_points;
+		/* Set the user grid */
+		for(size_t i = 0 ; i <= user_points ; ++i) {
+			double x = (double) i * delta_x + min_value;
+			user_grid[i] = x;
+			user_function[i] = linear_function(x);
+		}
+
+		/* --- Master grid */
+		delta_x = (max_value - min_value) / (double)grid_points;
+		std::vector<double> master_grid(grid_points + 1);
+		for(size_t i = 0 ; i <= grid_points ; ++i) {
+			double x = (double) i * delta_x + min_value;
+			master_grid[i] = x;
+		}
+
+		/* Setup the master grid */
+		grid->pushGrid(master_grid.begin(), master_grid.end());
+		grid->setup();
+
+	}
+
+	void TearDown() {
+		delete grid;
+	}
+
+	/* Master grid */
+	Helios::MasterGrid* grid;
+	double a,b;
+	/* --- User grid */
+	std::vector<double> user_grid;
+	/* Linear values over the grid */
+	std::vector<double> user_function;
+};
+
+TEST_F(InterpolationGridTest, LinearInterpolation) {
+	/* Interpolate values on master grid */
+	std::vector<double> new_values = grid->interpolate(user_grid,user_function);
+
+	/* Check the interpolated values */
+	for(size_t i = 0 ; i < new_values.size() ; ++i) {
+		double eval = linear_function((*grid)[i]);
+		double inter = new_values[i];
+		EXPECT_NEAR(eval,inter,5e8*std::numeric_limits<double>::epsilon());
+	}
+}
+
+TEST_F(InterpolationGridTest, RandomLinearInterpolation) {
+	/* Interpolate values on master grid */
+	std::vector<double> new_values = grid->interpolate(user_grid,user_function);
+
+	/* Check the interpolated values */
+	for(size_t i = 0 ; i < random_values.size() ; ++i) {
+		double eval = linear_function(random_values[i]);
+		double factor = 0.0;
+		size_t idx = grid->index(random_values[i],factor);
+		double inter = factor * (new_values[idx + 1] - new_values[idx]) + new_values[idx];
+		EXPECT_NEAR(eval,inter,5e8*std::numeric_limits<double>::epsilon());
+	}
+}
 
 #endif /* GRIDTEST_HPP_ */

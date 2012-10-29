@@ -34,8 +34,6 @@ using namespace std;
 
 namespace Helios {
 
-/* By default the coarse mesh is half the master grid */
-size_t MasterGrid::coarse_grid_factor = 2;
 /* By default, 10000 points are reserved for the grid */
 size_t MasterGrid::reserve_grid = 10000;
 
@@ -74,16 +72,12 @@ double MasterGrid::interpolate(pair<size_t,double>& pair_value) const {
 	/* Energy bounds */
 	double low_energy = master_grid[pair_value.first];
 	double high_energy = master_grid[pair_value.first + 1];
-	/* Interpolation factor */
-	double factor = (energy - low_energy) / (high_energy - low_energy);
 
 	/* Check if the index is in the right place */
 	if(energy >= low_energy && energy < high_energy) {
 		/* Don't touch the index and return the factor */
-		return factor;
-
+		return (energy - low_energy) / (high_energy - low_energy);
 	} else {
-
 		/* Search boundaries */
 		vector<double>::const_iterator begin = master_grid.begin();
 		vector<double>::const_iterator end = master_grid.end();
@@ -91,17 +85,22 @@ double MasterGrid::interpolate(pair<size_t,double>& pair_value) const {
 		/* Update index */
 		pair_value.first = upper_bound(begin, end, energy) - master_grid.begin() - 1;
 
+		/* Energy bounds */
+		double low_energy = master_grid[pair_value.first];
+		double high_energy = master_grid[pair_value.first + 1];
+
 		/* Return factor */
-		return factor;
+		return (energy - low_energy) / (high_energy - low_energy);
 	}
 }
 
-double MasterGrid::interpolate(const double& value) const {
+size_t MasterGrid::index(const double& value, double& factor) const{
 	pair<size_t,double> pair_value(0,value);
-	return interpolate(pair_value);
+	factor = interpolate(pair_value);
+	return pair_value.first;
 }
 
-vector<double> MasterGrid::interpolate(vector<double>& grid, vector<double>& values) const {
+vector<double> MasterGrid::interpolate(const vector<double>& grid, const vector<double>& values) const {
 	/* Sanity check */
 	assert(grid.size() == values.size());
 	/* New container for interpolated values */
@@ -122,7 +121,7 @@ vector<double> MasterGrid::interpolate(vector<double>& grid, vector<double>& val
 		/* Get interpolation factor */
 		double factor = temp_grid.interpolate(pair_value);
 		/* Set new value */
-		new_values[i] = factor * values[pair_value.first];
+		new_values[i] = factor * (values[pair_value.first + 1] - values[pair_value.first]) + values[pair_value.first];
 	}
 
 	return new_values;
