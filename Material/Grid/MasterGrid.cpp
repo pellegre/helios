@@ -50,11 +50,11 @@ void MasterGrid::setup() {
 
 	/* Setup child grids */
 	for(vector<ChildGrid*>::const_iterator it = child_grids.begin() ; it != child_grids.end() ; ++it) {
-		vector<size_t> master_pointers(master_grid.size());
+		vector<size_t> master_pointers(size());
 		/* Index on master grid */
 		size_t child_idx = 0;
 		for(size_t i = 0 ; i < size() ; ++i) {
-			double child_value = (*(*it))[child_idx];
+			double child_value = (*(*it))[child_idx + 1];
 			master_pointers[i] = child_idx;
 			if(child_value == master_grid[i]) child_idx++;
 		}
@@ -200,8 +200,7 @@ size_t ChildGrid::index(std::pair<size_t,double>& pair_value, double& factor) co
 	double low_energy = child_grid[child_index];
 	double high_energy = child_grid[child_index + 1];
 	/* Set the interpolation factor */
-	return (pair_value.second - low_energy) / (high_energy - low_energy);
-	/* Return index on child grid */
+	factor = (pair_value.second - low_energy) / (high_energy - low_energy);
 	return child_index;
 }
 

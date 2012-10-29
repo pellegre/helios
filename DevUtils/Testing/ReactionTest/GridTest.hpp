@@ -199,7 +199,7 @@ protected:
 
 		/* Number of grids */
 		size_t ngrids = 5;
-		size_t max_points = 10;
+		size_t max_points = 500;
 		for(size_t j = 0 ; j < ngrids ; ++j) {
 			/* Check interpolation */
 			size_t user_points = rand()%max_points + 1;
@@ -239,28 +239,19 @@ protected:
 };
 
 TEST_F(ChildGridTest, LinearInterpolation) {
-	for(std::vector<Helios::ChildGrid*>::const_iterator it = child_grids.begin() ;  it != child_grids.end() ; ++it) {
-		(*it)->print(std::cout);
-		std::cout << std::endl;
-	}
-
 	for(size_t j = 0 ; j < child_grids.size() ; ++j) {
 		Helios::ChildGrid* child_grid = child_grids[j];
 		std::vector<double> user_function = user_functions[j];
 
-		double factor;
-		std::pair<size_t,double> pair_value(0,random_values[i]);
-		size_t idx = child_grid->index(pair_value,factor);
-
-		//		/* Check the interpolated values */
-//		for(size_t i = 0 ; i < random_values.size() ; ++i) {
-//			double eval = linear_function(random_values[i]);
-//			double factor = 0.0;
-//			std::pair<size_t,double> pair_value(0,random_values[i]);
-//			size_t idx = child_grid->index(pair_value,factor);
-//			double inter = factor * (user_function[idx + 1] - user_function[idx]) + user_function[idx];
-//			EXPECT_NEAR(eval,inter,5e8*std::numeric_limits<double>::epsilon());
-//		}
+		/* Check the interpolated values */
+		for(size_t i = 0 ; i < random_values.size() ; ++i) {
+			double eval = linear_function(random_values[i]);
+			double factor = 0.0;
+			std::pair<size_t,double> pair_value(0,random_values[i]);
+			size_t idx = child_grid->index(pair_value,factor);
+			double inter = factor * (user_function[idx + 1] - user_function[idx]) + user_function[idx];
+			EXPECT_NEAR(eval,inter,5e8*std::numeric_limits<double>::epsilon());
+		}
 	}
 }
 
