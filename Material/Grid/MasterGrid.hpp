@@ -66,7 +66,7 @@ namespace Helios {
 		ChildGrid* pushGrid(InputIterator first, InputIterator last);
 
 		/* Access value on the grid (constant reference because a client can't modify the grid from here) */
-		const double& operator[](size_t index) const {return master_grid[index];}
+		double operator[](size_t index) const {return master_grid[index];}
 
 		/* --- Setup master grid
 		 *
@@ -121,7 +121,7 @@ namespace Helios {
 		size_t size() const {return child_grid.size();}
 
 		/* Access value on the grid (constant reference because a client can't modify the grid from here). */
-		const double& operator[](size_t index) const {return child_grid[index];}
+		double operator[](size_t index) const {return child_grid[index];}
 
 		/* Set MASTER index on the pair, return the index and set interpolation factor on the child grid */
 		size_t index(std::pair<size_t,double>& pair_value, double& factor) const;

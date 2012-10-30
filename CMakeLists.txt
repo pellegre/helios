@@ -117,7 +117,25 @@ set(MCFILES Common/Common.cpp
             Material/Material.cpp
             Material/Materials.cpp
             Material/MacroXs/MacroXs.cpp  
-            Material/Grid/MasterGrid.cpp                                                                  
+            Material/Grid/MasterGrid.cpp
+			Material/AceTable/AceReader/ACETable.cpp
+			Material/AceTable/AceReader/ACEReader.cpp
+			Material/AceTable/AceReader/CrossSection.cpp
+			Material/AceTable/AceReader/Blocks/NUBlock.cpp
+			Material/AceTable/AceReader/Blocks/DLWBlock.cpp
+			Material/AceTable/AceReader/Blocks/ANDBlock.cpp
+			Material/AceTable/AceReader/Blocks/ACEBlock.cpp
+			Material/AceTable/AceReader/Blocks/ESZBlock.cpp
+			Material/AceTable/AceReader/Blocks/NRBlock.cpp
+			Material/AceTable/AceReader/NeutronReaction.cpp
+			Material/AceTable/AceReader/Utils.cpp
+			Material/AceTable/AceReader/Conf.cpp
+			Material/AceTable/AceReader/NeutronTable.cpp
+			Material/AceTable/AceReader/TyrDistribution.cpp
+			Material/AceTable/AceReader/NRContainer.cpp
+			Material/AceTable/AceReader/PrintMessage.cpp
+			Material/AceTable/AceReader/EnergyDistribution.cpp
+			Material/AceTable/AceReader/AngularDistribution.cpp                                                                              
             Parser/Parser.cpp
             Parser/XMLParser/tinystr.cpp
             Parser/XMLParser/tinyxml.cpp                  
