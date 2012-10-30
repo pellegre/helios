@@ -70,6 +70,9 @@ public:
 
 	int getType() const {return NeutronTable::AND;};
 
+	static std::string name() {return "ANDBlock";}
+	std::string blockName() const {return name();};
+
 	virtual ~ANDBlock() {/* */};
 };
 

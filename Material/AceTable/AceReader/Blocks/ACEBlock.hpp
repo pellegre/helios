@@ -74,6 +74,8 @@ namespace ACE {
 			return raw_data;
 		}
 
+		std::string blockName() const {return "rawblock";};
+
 		virtual ~RawBlock() {/* */};
 
 	};
@@ -99,6 +101,8 @@ namespace ACE {
 		int getSize() const {return raw_data.size();};
 
 		int getType() const {return 0;};
+
+		static std::string name() {return "genericblock";}
 
 		virtual ~GenericBlock() {/* */};
 

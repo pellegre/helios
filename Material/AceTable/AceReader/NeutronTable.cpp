@@ -214,38 +214,41 @@ NeutronTable::NeutronTable(const std::string& _table_name, const std::string& fu
 
 	/* Generic double block */
 	blocks.push_back(new ESZBlock(nxs,jxs,xss,this));
-	blocks.push_back(new NUBlock(nxs,jxs,xss,this));
+	if(jxs[NU])
+		blocks.push_back(new NUBlock(nxs,jxs,xss,this));
 
-	vector<int> tyrs;
-	vector<int> mats;
+	NRBlock* nr_block = 0;
 	if(nxs[NeutronTable::NTR]) {
 		blocks.push_back(new NRBlock(nxs,jxs,xss,this));
-		tyrs = dynamic_cast<NRBlock*>(blocks[2])->tyr_block.getData();
-		mats = dynamic_cast<NRBlock*>(blocks[2])->mtr_block.getData();
+		nr_block = getBlock<NRBlock>();
 	}
 
 	blocks.push_back(new ANDBlock(nxs,jxs,xss,this));
-	if(nxs[NeutronTable::NR])
+
+	vector<int> tyrs;
+	vector<int> mats;
+	if(nxs[NeutronTable::NR]) {
+		tyrs = nr_block->tyr_block.getData();
+		mats = nr_block->mtr_block.getData();
 		blocks.push_back(new DLWBlock(nxs,jxs,xss,this,tyrs,mats));
+	}
 
 	/* AND block */
-	ANDBlock* and_block = dynamic_cast<ANDBlock*>(blocks[3]);
+	ANDBlock* and_block = getBlock<ANDBlock>();
 	/* DLW block */
 	DLWBlock* dlw_block = 0;
-
 	if(nxs[NeutronTable::NR])
-		dlw_block = dynamic_cast<DLWBlock*>(blocks[4]);
+		dlw_block = getBlock<DLWBlock>();
 
 	/* Set the energy grid */
-	Reactions.set_grid(getEnergyGrid());
+	reactions.set_grid(getEnergyGrid());
 	/* Create elastic scattering reaction */
-	Reactions.push_back(NeutronReaction(2,0.0,TyrDistribution(1),getElastic(),and_block->and_dist[0],EnergyDistribution(EnergyDistribution::no_data)));
+	reactions.push_back(NeutronReaction(2,0.0,TyrDistribution(1),getElastic(),and_block->and_dist[0],EnergyDistribution(EnergyDistribution::no_data)));
 
 	/* Set the reactions */
 	int nrea = nxs[NeutronTable::NTR];
 
 	if(nrea) {
-		NRBlock* nr_block = dynamic_cast<NRBlock*>(blocks[2]);
 
 		/* Number of secondary neutrons reactions (excluding elastic) */
 		int nsec = nxs[NeutronTable::NR];
@@ -258,12 +261,12 @@ NeutronTable::NeutronTable(const std::string& _table_name, const std::string& fu
 
 			if(i < nsec) {
 				if(abs(tyr) > 100)
-					Reactions.push_back(NeutronReaction(mt,q,dlw_block->tyr_dist[mt],nr_block->sig_block.xs[i],and_block->and_dist[i+1],dlw_block->energy_dist[i]));
+					reactions.push_back(NeutronReaction(mt,q,dlw_block->tyr_dist[mt],nr_block->sig_block.xs[i],and_block->and_dist[i+1],dlw_block->energy_dist[i]));
 				else
-					Reactions.push_back(NeutronReaction(mt,q,TyrDistribution(tyr),nr_block->sig_block.xs[i],and_block->and_dist[i+1],dlw_block->energy_dist[i]));
+					reactions.push_back(NeutronReaction(mt,q,TyrDistribution(tyr),nr_block->sig_block.xs[i],and_block->and_dist[i+1],dlw_block->energy_dist[i]));
 			}
 			else {
-				Reactions.push_back(NeutronReaction(mt,q,TyrDistribution(tyr),nr_block->sig_block.xs[i],
+				reactions.push_back(NeutronReaction(mt,q,TyrDistribution(tyr),nr_block->sig_block.xs[i],
 						           AngularDistribution(AngularDistribution::no_data),
 						           EnergyDistribution(EnergyDistribution::no_data)));
 			}
@@ -273,21 +276,8 @@ NeutronTable::NeutronTable(const std::string& _table_name, const std::string& fu
 }
 
 void NeutronTable::updateData() {
-	Reactions.update_xs();
-
-	if(nxs[NeutronTable::NR])
-		/* Update energy distributions */
-		dynamic_cast<DLWBlock*>(blocks[4])->updateData();
-
-	/* Update angular distributions */
-	dynamic_cast<ANDBlock*>(blocks[3])->updateData();
-
-	if(nxs[NeutronTable::NTR])
-		/* Update reaction blocks */
-		dynamic_cast<NRBlock*>(blocks[2])->updateData();
-
-	/* Update ESZ block */
-	dynamic_cast<ESZBlock*>(blocks[0])->updateData();
+	reactions.update_xs();
+	ACETable::updateData();
 }
 
 void NeutronTable::printTableInfo(std::ostream& out) const {
@@ -306,7 +296,7 @@ void NeutronTable::printTableInfo(std::ostream& out) const {
 	NRContainer::const_iterator it_rea;
 
 	out << tab << "[@] Neutron Reactions                   : " << endl;
-	for(it_rea = Reactions.begin() ; it_rea != Reactions.end() ; it_rea++) {
+	for(it_rea = reactions.begin() ; it_rea != reactions.end() ; it_rea++) {
 		int mt = (*it_rea).getMT();
 		if(mts_reactions.find(mt) != mts_reactions.end())
 			out << tab << "[+] " << mts_reactions[mt] << " : " << endl;

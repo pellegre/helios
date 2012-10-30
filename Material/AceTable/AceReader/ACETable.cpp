@@ -157,9 +157,9 @@ void ACETable::printInformation(std::ostream& out) const {
 }
 
 void ACETable::updateData() {
-	vector<ACEBlock*>::iterator it_block;
+	vector<ACEBlock*>::reverse_iterator it_block;
 
-	for(it_block = blocks.begin() ; it_block != blocks.end() ; it_block++)
+	for(it_block = blocks.rbegin() ; it_block != blocks.rend() ; it_block++)
 		(*it_block)->updateData();
 }
 
@@ -234,8 +234,6 @@ void ACETable::dump(std::ostream& out) {
 		if ((*it_rest).size() > 0)
 			out << (*it_rest) << endl;
 	}
-
-	//out << endl;
 }
 
 ACETable::~ACETable() {

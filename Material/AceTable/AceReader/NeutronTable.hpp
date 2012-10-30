@@ -49,7 +49,7 @@ class NeutronTable : public ACETable {
 	void updateData();
 
 	/* Map of MT numbers with the neutron reaction */
-	NRContainer Reactions;
+	NRContainer reactions;
 
 	NeutronTable(const std::string& _table_name, const std::string& full_path, size_t address);
 
@@ -104,18 +104,31 @@ public:
 	friend class ACEReader;
 
 	/* Get the reactions containers */
-	NRContainer& getReactions() {return Reactions;};
-	const NRContainer& getReactions() const {return Reactions;};
+	NRContainer& getReactions() {return reactions;};
+	const NRContainer& getReactions() const {return reactions;};
 
 	/* Get the energy grid a main cross sections */
 	std::vector<double> getEnergyGrid() const;
-	CrossSection getTotal() const;
-	CrossSection getAbsorption() const;
-	CrossSection getElastic() const;
+	CrossSection getTotal() const;      /* Total cross section */
+	CrossSection getAbsorption() const; /* Disappearance cross section */
+	CrossSection getElastic() const;    /* Elastic cross section */
+
+	/* Get block */
+	template<class Block>
+	Block* getBlock() const;
 
 	virtual ~NeutronTable();
 
 };
+
+template<class Block>
+Block* NeutronTable::getBlock() const {
+	std::string name = Block::name();
+	for(std::vector<ACEBlock*>::const_iterator it = blocks.begin() ; it != blocks.end() ; ++it)
+		if(name == (*it)->blockName())
+			return dynamic_cast<Block*>((*it));
+	throw(AceTableError(this,"Cannot find block " + name));
+}
 
 } /* namespace ACE */
 

@@ -73,6 +73,9 @@ public:
 
 	int getType() const {return NeutronTable::DLW;};
 
+	static std::string name() {return "DLWBlock";}
+	std::string blockName() const {return name();};
+
 	virtual ~DLWBlock() {/* */};
 
 };

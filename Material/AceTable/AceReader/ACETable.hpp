@@ -102,6 +102,8 @@ namespace ACE {
 
 			virtual int getType() const = 0;
 
+			virtual std::string blockName() const = 0;
+
 			virtual ~ACEBlock();
 
 		};
@@ -154,6 +156,19 @@ namespace ACE {
 
 	public:
 
+		/* Exception */
+		class AceTableError : public std::exception {
+			std::string reason;
+		public:
+			AceTableError(const ACETable* ace_table, const std::string& msg) {
+				reason  = "Error on Ace Table " + ace_table->getName() + " : " + msg;
+			}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			~AceTableError() throw() {/* */};
+		};
+
 		/* Friendly reader */
 		friend class ACEReader;
 
@@ -165,6 +180,9 @@ namespace ACE {
 
 		/* Print general information of the library */
 		void printInformation(std::ostream& out = std::cout) const;
+
+		/* Get name of the table */
+		std::string getName() const {return table_name;}
 
 		virtual ~ACETable();
 	};

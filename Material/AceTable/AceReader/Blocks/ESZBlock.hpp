@@ -64,6 +64,9 @@ public:
 
 	int getType() const;
 
+	static std::string name() {return "ESZBlock";}
+	std::string blockName() const {return name();};
+
 	virtual ~ESZBlock();
 };
 

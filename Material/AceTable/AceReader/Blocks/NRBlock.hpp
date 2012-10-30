@@ -89,6 +89,9 @@ class NRBlock: public ACETable::ACEBlock {
 
 		int getType() const {return NeutronTable::SIG;};
 
+		static std::string name() {return "SIGBlock";}
+		std::string blockName() const {return name();};
+
 		virtual ~SIGBlock() {/* */};
 	};
 
@@ -118,6 +121,9 @@ public:
 	int getSize() const;
 
 	int getType() const;
+
+	static std::string name() {return "NRBlock";}
+	std::string blockName() const {return name();};
 
 	virtual ~NRBlock();
 };

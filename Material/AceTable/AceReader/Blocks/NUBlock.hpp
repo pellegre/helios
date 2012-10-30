@@ -44,6 +44,8 @@ namespace ACE {
 			virtual void dump(std::ostream& xss) = 0;
 			virtual int getSize() const = 0;
 			virtual int getType() const = 0;
+			static std::string name() {return "NUData";}
+			std::string blockName() const {return name();};
 			virtual ~NUData() {/* */};
 		};
 
@@ -90,6 +92,9 @@ namespace ACE {
 		int getSize() const;
 
 		int getType() const;
+
+		static std::string name() {return "NUBlock";}
+		std::string blockName() const {return name();};
 
 		virtual ~NUBlock();
 
