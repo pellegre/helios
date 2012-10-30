@@ -161,7 +161,7 @@ TEST_F(InterpolationGridTest, LinearInterpolation) {
 	for(size_t i = 0 ; i < new_values.size() ; ++i) {
 		double eval = linear_function((*grid)[i]);
 		double inter = new_values[i];
-		EXPECT_NEAR(eval,inter,5e8*std::numeric_limits<double>::epsilon());
+		EXPECT_NEAR(eval,inter,5e10*std::numeric_limits<double>::epsilon());
 	}
 }
 
@@ -175,7 +175,7 @@ TEST_F(InterpolationGridTest, RandomLinearInterpolation) {
 		double factor = 0.0;
 		size_t idx = grid->index(random_values[i],factor);
 		double inter = factor * (new_values[idx + 1] - new_values[idx]) + new_values[idx];
-		EXPECT_NEAR(eval,inter,5e8*std::numeric_limits<double>::epsilon());
+		EXPECT_NEAR(eval,inter,5e10*std::numeric_limits<double>::epsilon());
 	}
 }
 
@@ -250,7 +250,7 @@ TEST_F(ChildGridTest, LinearInterpolation) {
 			std::pair<size_t,double> pair_value(0,random_values[i]);
 			size_t idx = child_grid->index(pair_value,factor);
 			double inter = factor * (user_function[idx + 1] - user_function[idx]) + user_function[idx];
-			EXPECT_NEAR(eval,inter,5e8*std::numeric_limits<double>::epsilon());
+			EXPECT_NEAR(eval,inter,5e10*std::numeric_limits<double>::epsilon());
 		}
 	}
 }

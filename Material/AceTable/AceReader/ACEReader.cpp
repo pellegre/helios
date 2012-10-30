@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ACEReader.hpp"
 #include "PrintMessage.hpp"
 #include "Conf.hpp"
-#include "Utils.hpp"
+#include "AceUtils.hpp"
 
 /* Different ACE tables */
 #include "NeutronTable.hpp"
@@ -62,7 +62,6 @@ ACETable* ACEReader::getTable(const std::string& table_name) {
 
 		while ( !is.eof() ) {
 			is >> str;
-
 			/* Obtain information for construct an ACETable Object */
 			if ( str.find(table_name) != string::npos ) {
 				double A; is >> A;

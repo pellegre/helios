@@ -29,10 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ACETESTS_HPP_
 
 #include <string>
+#include <algorithm>
 
 #include "../../../Common/Common.hpp"
 #include "../../../Material/AceTable/AceReader/Ace.hpp"
-#include "../../../Material/AceTable/AceReader/Utils.hpp"
+#include "../../../Material/AceTable/AceReader/AceUtils.hpp"
 #include "../../../Material/AceTable/AceReader/Conf.hpp"
 #include "../../Utils.hpp"
 #include "../TestCommon.hpp"
@@ -55,6 +56,7 @@ TEST_F(SimpleAceTest, SumReactions) {
 	/* Library to check */
 	std::string library = "c";
 	/* Set XSDIR path */
+	Conf::DATAPATH = "/users/larry/IB/CalCod/SERPENT/xsdata/endfb7/data/";
 	std::string xsdir = Conf::DATAPATH + "/xsdir";
 
 	/* Container of isotopes */
@@ -65,7 +67,7 @@ TEST_F(SimpleAceTest, SumReactions) {
 	if (is.is_open()) {
 		while ( is.good() ) {
 			getline(is,str);
-			if (ACE::iStringCompare(str,"directory")) break;
+			if (iStringCompare(str,"directory")) break;
 		}
 		while ( !is.eof() ) {
 			getline(is,str);
@@ -74,6 +76,7 @@ TEST_F(SimpleAceTest, SumReactions) {
 				std::istringstream s(str);
 				string t;
 				s >> t;
+				std::remove_if(t.begin(), t.end(), ::isspace);
 				isotopes.push_back(t);
 			}
 		}

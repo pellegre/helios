@@ -87,7 +87,7 @@ void XmlParser::rootNode(TiXmlNode* pParent, const string& filename) {
 	/* Loop over children */
 	for (pChild = pParent->FirstChild(); pChild != 0; pChild = pChild->NextSibling()) {
 
-		if (t == TiXmlNode::TINYXML_ELEMENT) {
+		if (t == TiXmlNode::ELEMENT) {
 			/* Element value */
 			string element_value(pParent->Value());
 			map<string,NodeParser>::const_iterator it_root = root_map.find(element_value);
@@ -118,12 +118,14 @@ void XmlParser::rootNode(TiXmlNode* pParent, const string& filename) {
 
 void XmlParser::parseInputFile(const string& file) {
 	/* Open document */
-	TiXmlDocument doc(file.c_str());
-	bool loadOkay = doc.LoadFile();
-	if (loadOkay)
-		rootNode(&doc,file);
-	else
-		throw(ParserError("File " + file + " : " + doc.ErrorDesc()));
+	ticpp::Document doc(file.c_str());
+	try {
+		/* Load document */
+		doc.LoadFile();
+		rootNode(doc.GetTiXmlPointer(),file);
+	} catch(ticpp::Exception& ex) {
+		throw(ParserError(ex.what()));
+	}
 }
 
 XmlParser::XmlParser() {

@@ -48,7 +48,7 @@ public:
 	void dump(std::ostream& xss) const;
 	int getSize() const {return (xs_data.size() + 2);};
 
-	double operator[](size_t index) const {
+	double operator[](int index) const {
 		if(index < (ie - 1))
 			return 0.0;
 		else

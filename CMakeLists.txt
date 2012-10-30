@@ -128,7 +128,7 @@ set(MCFILES Common/Common.cpp
 			Material/AceTable/AceReader/Blocks/ESZBlock.cpp
 			Material/AceTable/AceReader/Blocks/NRBlock.cpp
 			Material/AceTable/AceReader/NeutronReaction.cpp
-			Material/AceTable/AceReader/Utils.cpp
+			Material/AceTable/AceReader/AceUtils.cpp
 			Material/AceTable/AceReader/Conf.cpp
 			Material/AceTable/AceReader/NeutronTable.cpp
 			Material/AceTable/AceReader/TyrDistribution.cpp
@@ -140,7 +140,9 @@ set(MCFILES Common/Common.cpp
             Parser/XMLParser/tinystr.cpp
             Parser/XMLParser/tinyxml.cpp                  
             Parser/XMLParser/tinyxmlerror.cpp                  
-            Parser/XMLParser/tinyxmlparser.cpp  
+            Parser/XMLParser/tinyxmlparser.cpp
+            Parser/XMLParser/ticpp.cpp  
+            Parser/XMLParser/tinyxmlparser.cpp                
             Parser/XMLParser/XmlParser.cpp    
             Parser/XMLParser/XmlParserGeometry.cpp
             Parser/XMLParser/XmlParserMaterial.cpp 

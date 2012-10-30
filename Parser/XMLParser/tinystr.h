@@ -1,5 +1,6 @@
 /*
 www.sourceforge.net/projects/tinyxml
+Original file by Yves Berquin.
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any
@@ -21,12 +22,30 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
+/*
+ * THIS FILE WAS ALTERED BY Tyge Lovset, 7. April 2005.
+ *
+ * - completely rewritten. compact, clean, and fast implementation.
+ * - sizeof(TiXmlString) = pointer size (4 bytes on 32-bit systems)
+ * - fixed reserve() to work as per specification.
+ * - fixed buggy compares operator==(), operator<(), and operator>()
+ * - fixed operator+=() to take a const ref argument, following spec.
+ * - added "copy" constructor with length, and most compare operators.
+ * - added swap(), clear(), size(), capacity(), operator+().
+ */
+
+ /*
+ * THIS FILE WAS ALTERED BY Matt Janisz, 12. October 2012.
+ *
+ * - added ticppapi.h include and TICPP_API dll-interface to support building DLL using VS200X
+ */
 
 #ifndef TIXML_USE_STL
 
 #ifndef TIXML_STRING_INCLUDED
 #define TIXML_STRING_INCLUDED
 
+#include "ticppapi.h"
 #include <assert.h>
 #include <string.h>
 
@@ -52,7 +71,7 @@ distribution.
    The buffer allocation is made by a simplistic power of 2 like mechanism : if we increase
    a string and there's no more room, we allocate a buffer twice as big as we need.
 */
-class TiXmlString
+class TICPP_API TiXmlString
 {
   public :
 	// The size type used
@@ -94,11 +113,13 @@ class TiXmlString
 		quit();
 	}
 
+	// = operator
 	TiXmlString& operator = (const char * copy)
 	{
 		return assign( copy, (size_type)strlen(copy));
 	}
 
+	// = operator
 	TiXmlString& operator = (const TiXmlString & copy)
 	{
 		return assign(copy.start(), copy.length());
@@ -281,7 +302,7 @@ TiXmlString operator + (const char* a, const TiXmlString & b);
    TiXmlOutStream is an emulation of std::ostream. It is based on TiXmlString.
    Only the operators that we need for TinyXML have been developped.
 */
-class TiXmlOutStream : public TiXmlString
+class TICPP_API TiXmlOutStream : public TiXmlString
 {
 public :
 

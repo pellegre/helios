@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "XmlParser.hpp"
 
 using namespace std;
+using namespace ticpp;
 
 namespace Helios {
 
@@ -220,7 +221,7 @@ void XmlParser::srcNode(TiXmlNode* pParent) {
 	TiXmlNode* pChild;
 	for (pChild = pParent->FirstChild(); pChild != 0; pChild = pChild->NextSibling()) {
 		int t = pChild->Type();
-		if (t == TiXmlNode::TINYXML_ELEMENT) {
+		if (t == TiXmlNode::ELEMENT) {
 			string element_value(pChild->Value());
 			if (element_value == "dist")
 				objects.push_back(distAttrib(pChild->ToElement()));

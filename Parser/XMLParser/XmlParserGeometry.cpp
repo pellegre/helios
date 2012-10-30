@@ -144,7 +144,7 @@ void XmlParser::geoNode(TiXmlNode* pParent) {
 	TiXmlNode* pChild;
 	for (pChild = pParent->FirstChild(); pChild != 0; pChild = pChild->NextSibling()) {
 		int t = pChild->Type();
-		if (t == TiXmlNode::TINYXML_ELEMENT) {
+		if (t == TiXmlNode::ELEMENT) {
 			string element_value(pChild->Value());
 			if (element_value == "surface")
 				objects.push_back(surfaceAttrib(pChild->ToElement()));

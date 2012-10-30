@@ -32,7 +32,7 @@
 #include <set>
 #include <string>
 
-#include "tinyxml.h"
+#include "ticpp.h"
 #include "../Parser.hpp"
 
 namespace Helios {
@@ -108,7 +108,7 @@ namespace Helios {
 			/* Found attribute, get value */
 			std::string value = (*it_att).second;
 			typename std::map<std::string,T>::const_iterator it_val = values.find(value);
-			if(it_val != values.end()) {
+			if(it_val != values.end() || values.size() == 0) {
 				return (*it_val).second;
 			} else {
 				/* And also we should print the available options into the screen */

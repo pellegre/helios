@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 
 #include "ACEBlock.hpp"
-#include "../Utils.hpp"
+#include "../AceUtils.hpp"
 
 using namespace std;
 using namespace ACE;

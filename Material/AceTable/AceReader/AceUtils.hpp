@@ -25,8 +25,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef UTILS_HPP_
-#define UTILS_HPP_
+#ifndef ACEUTILS_HPP_
+#define ACEUTILS_HPP_
 
 #include <string>
 #include <fstream>
@@ -104,4 +104,4 @@ namespace ACE {
 }
 
 
-#endif /* UTILS_HPP_ */
+#endif /* ACEUTILS_HPP_ */
