@@ -49,74 +49,121 @@ protected:
 
 };
 
+//TEST_F(SimpleAceTest, SumReactions) {
+//	using namespace std;
+//	using namespace ACE;
+//
+//	/* Library to check */
+//	std::string library = "c";
+//	/* Set XSDIR path */
+//	Conf::DATAPATH = "/users/larry/IB/CalCod/SERPENT/xsdata/endfb7/data/";
+//	std::string xsdir = Conf::DATAPATH + "/xsdir";
+//
+//	/* Container of isotopes */
+//	vector<string> isotopes;
+//	/* Open XSDIR file*/
+//	ifstream is(xsdir.c_str());
+//	string str="";
+//	if (is.is_open()) {
+//		while ( is.good() ) {
+//			getline(is,str);
+//			if (iStringCompare(str,"directory")) break;
+//		}
+//		while ( !is.eof() ) {
+//			getline(is,str);
+//			/* Obtain information for construct an ACETable Object */
+//			if ( str.find(library) != string::npos ) {
+//				std::istringstream s(str);
+//				string t;
+//				s >> t;
+//				std::remove_if(t.begin(), t.end(), ::isspace);
+//				isotopes.push_back(t);
+//			}
+//		}
+//	}
+//
+//	for(vector<string>::const_iterator it = isotopes.begin() ; it != isotopes.end() ; ++it) {
+//		/* Get table */
+//		NeutronTable* ace_table = dynamic_cast<NeutronTable*>(ACEReader::getTable((*it)));
+//
+//		Helios::Log::bok() << " - Checking " << (*it) << Helios::Log::endl;
+//		/* Check cross section MTs calculations */
+//		CrossSection old_st = ace_table->getTotal();
+//		CrossSection old_el = ace_table->getElastic();
+//		CrossSection old_ab = ace_table->getAbsorption();
+//
+//		NRContainer old_rea = ace_table->getReactions();
+//
+//		ace_table->updateBlocks();
+//
+//		NRContainer new_rea = ace_table->getReactions();
+//
+//		/* Check MAIN cross sections */
+//		double max_total = checkXS(old_st,ace_table->getTotal());
+//		double max_ela = checkXS(old_el,ace_table->getElastic());
+//		double max_abs = checkXS(old_ab,ace_table->getAbsorption());
+//		double _max_diff = max(max_total,max_abs);
+//		double max_diff = max(_max_diff,max_ela);
+//		EXPECT_NEAR(0.0,max_diff,1e12*numeric_limits<double>::epsilon());
+//
+//		size_t nrea = new_rea.size();
+//
+//		for(size_t i = 0 ; i < nrea ; i++) {
+//			double diff = checkXS(old_rea[i].getXS(),new_rea[i].getXS());
+//			EXPECT_NEAR(0.0,diff,1e12*numeric_limits<double>::epsilon());
+//		}
+//
+//		delete ace_table;
+//	}
+//
+//}
+
 TEST_F(SimpleAceTest, SumReactions) {
 	using namespace std;
 	using namespace ACE;
 
-	/* Library to check */
-	std::string library = "c";
 	/* Set XSDIR path */
 	Conf::DATAPATH = "/users/larry/IB/CalCod/SERPENT/xsdata/endfb7/data/";
-	std::string xsdir = Conf::DATAPATH + "/xsdir";
 
-	/* Container of isotopes */
-	vector<string> isotopes;
-	/* Open XSDIR file*/
-	ifstream is(xsdir.c_str());
-	string str="";
-	if (is.is_open()) {
-		while ( is.good() ) {
-			getline(is,str);
-			if (iStringCompare(str,"directory")) break;
-		}
-		while ( !is.eof() ) {
-			getline(is,str);
-			/* Obtain information for construct an ACETable Object */
-			if ( str.find(library) != string::npos ) {
-				std::istringstream s(str);
-				string t;
-				s >> t;
-				std::remove_if(t.begin(), t.end(), ::isspace);
-				isotopes.push_back(t);
-			}
-		}
+	/* Get table */
+	NeutronTable* ace_table = dynamic_cast<NeutronTable*>(ACEReader::getTable("62000.06c"));
+
+	/* Check cross section MTs calculations */
+	CrossSection old_st = ace_table->getTotal();
+	CrossSection old_el = ace_table->getElastic();
+	CrossSection old_ab = ace_table->getAbsorption();
+
+	NRContainer old_rea = ace_table->getReactions();
+
+	ace_table->updateBlocks();
+
+	NRContainer new_rea = ace_table->getReactions();
+
+	/* Check MAIN cross sections */
+	double max_total = checkXS(old_st,ace_table->getTotal());
+	vector<double> total_diff = getXsDifference(old_st,ace_table->getTotal());
+
+	double max_ela = checkXS(old_el,ace_table->getElastic());
+	double max_abs = checkXS(old_ab,ace_table->getAbsorption());
+
+	cout << scientific << "total = " << max_total << endl;
+	cout << "ela = " << max_ela << endl;
+	cout << "abs = " << max_abs << endl;
+
+	size_t nrea = new_rea.size();
+
+	for(size_t i = 0 ; i < nrea ; i++) {
+		double diff = checkXS(old_rea[i].getXS(),new_rea[i].getXS());
+		EXPECT_NEAR(0.0,diff,1e12*numeric_limits<double>::epsilon());
 	}
 
-	for(vector<string>::const_iterator it = isotopes.begin() ; it != isotopes.end() ; ++it) {
-		/* Get table */
-		NeutronTable* ace_table = dynamic_cast<NeutronTable*>(ACEReader::getTable((*it)));
-
-		Helios::Log::bok() << " - Checking " << (*it) << Helios::Log::endl;
-		/* Check cross section MTs calculations */
-		CrossSection old_st = ace_table->getTotal();
-		CrossSection old_el = ace_table->getElastic();
-		CrossSection old_ab = ace_table->getAbsorption();
-
-		NRContainer old_rea = ace_table->getReactions();
-
-		ace_table->updateBlocks();
-
-		NRContainer new_rea = ace_table->getReactions();
-
-		/* Check MAIN cross sections */
-		double max_total = checkXS(old_st,ace_table->getTotal());
-		double max_ela = checkXS(old_el,ace_table->getElastic());
-		double max_abs = checkXS(old_ab,ace_table->getAbsorption());
-		double _max_diff = max(max_total,max_abs);
-		double max_diff = max(_max_diff,max_ela);
-		EXPECT_NEAR(0.0,max_diff,1e12*numeric_limits<double>::epsilon());
-
-		size_t nrea = new_rea.size();
-
-		for(size_t i = 0 ; i < nrea ; i++) {
-			double diff = checkXS(old_rea[i].getXS(),new_rea[i].getXS());
-			EXPECT_NEAR(0.0,diff,1e12*numeric_limits<double>::epsilon());
-		}
-
-		delete ace_table;
-	}
+//	vector<double> energy = ace_table->getEnergyGrid();
+//	for(size_t i = 0 ; i < total_diff.size() ; ++i) {
+//		cout << energy[i] << " " << ace_table->getAbsorption()[i] << " " << old_ab[i] << " "  << new_rea.get_xs(102)[i] << " "
+//				<< ace_table->getElastic()[i] << " " << old_el[i] << " " << ace_table->getTotal()[i] << " " << endl;
+//	}
+	delete ace_table;
 
 }
-
 
 #endif /* ACETESTS_HPP_ */

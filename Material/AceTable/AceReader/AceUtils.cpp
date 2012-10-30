@@ -164,3 +164,28 @@ double ACE::checkXS(const CrossSection& xs1, const CrossSection& xs2) {
 	return sqrt(inner_product(diff.begin(),diff.end(),diff.begin(),0.0));
 }
 
+vector<double> ACE::getXsDifference(const CrossSection& xs1, const CrossSection& xs2) {
+	/* Sanity check, the XS should be referring to the same energy grid */
+	if( (xs1.ie != xs2.ie) || (xs1.xs_data.size() != xs2.xs_data.size()) ) {
+		printMessage(PrintCodes::PrintError,"CheckXS()",
+					 "Cross sections aren't of the same size. Aborting. ");
+
+		cerr << "<<<<<<<<<<<<<<<<<<<<<<<<<<<< left " << endl;
+		xs1.dump(cerr);
+		cerr << endl;
+		cerr << ">>>>>>>>>>>>>>>>>>>>>>>>>>>> right " << endl;
+		xs2.dump(cerr);
+		cerr << endl;
+
+		exit(1);
+	}
+
+	vector<double> diff(xs1.xs_data.size());
+
+	for(size_t i = 0 ; i < xs1.xs_data.size() ; i++) {
+		double minus = (xs1.xs_data[i] - xs2.xs_data[i]);
+		diff[i] = minus * minus;
+	}
+
+	return diff;
+}

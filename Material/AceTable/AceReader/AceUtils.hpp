@@ -101,6 +101,8 @@ namespace ACE {
 
 	/* Check the MAX difference on a value of two XS */
 	double checkXS(const CrossSection& xs1, const CrossSection& xs2);
+	std::vector<double> getXsDifference(const CrossSection& xs1, const CrossSection& xs2);
+
 }
 
 
