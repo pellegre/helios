@@ -33,15 +33,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include "../ACETable.hpp"
 
-namespace ACE {
+namespace Ace {
 
 	/* Generic block */
 	template<class T, const int JXS>
-	class RawBlock : public ACETable::ACEBlock {
+	class RawBlock : public AceTable::ACEBlock {
 
 		std::vector<T> raw_data;
 
-		RawBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, const int table_length, ACETable* ace_table)
+		RawBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, const int table_length, AceTable* ace_table)
 		: ACEBlock(xss,ace_table) {
 			/* Begin of the block */
 			setBegin(xss.begin() + (jxs[JXS] - 1));
@@ -80,11 +80,11 @@ namespace ACE {
 
 	};
 
-	class GenericBlock : public ACETable::ACEBlock {
+	class GenericBlock : public AceTable::ACEBlock {
 
 		std::vector<std::string> raw_data;
 
-		GenericBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, const int table_begin, ACETable* ace_table);
+		GenericBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, const int table_begin, AceTable* ace_table);
 
 		void updatePointers(int nxs[nxs_size], const int jxs_old[jxs_size], int jxs_new[jxs_size]) const {};
 	public:

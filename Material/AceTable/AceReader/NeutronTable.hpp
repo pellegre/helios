@@ -32,14 +32,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include "ACETable.hpp"
 #include "NeutronReaction.hpp"
-#include "NRContainer.hpp"
+#include "ReactionContainer.hpp"
 
-namespace ACE {
+namespace Ace {
 
-class NeutronTable : public ACETable {
+class NeutronTable : public AceTable {
 
 	/* Constructor */
-	static ACETable* NewTable(const std::string& _table_name, const std::string& full_path, size_t address) {
+	static AceTable* NewTable(const std::string& _table_name, const std::string& full_path, size_t address) {
 		return new NeutronTable(_table_name,full_path,address);
 	}
 
@@ -49,7 +49,7 @@ class NeutronTable : public ACETable {
 	void updateData();
 
 	/* Map of MT numbers with the neutron reaction */
-	NRContainer reactions;
+	ReactionContainer reactions;
 
 	NeutronTable(const std::string& _table_name, const std::string& full_path, size_t address);
 
@@ -101,11 +101,11 @@ public:
 	static const int DNED  = 26; /* Location of energy distributions */
 
 	/* Friendly reader */
-	friend class ACEReader;
+	friend class AceReader;
 
 	/* Get the reactions containers */
-	NRContainer& getReactions() {return reactions;};
-	const NRContainer& getReactions() const {return reactions;};
+	ReactionContainer& getReactions() {return reactions;};
+	const ReactionContainer& getReactions() const {return reactions;};
 
 	/* Get the energy grid a main cross sections */
 	const std::vector<double>& getEnergyGrid() const;

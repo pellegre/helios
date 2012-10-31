@@ -38,18 +38,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "NeutronTable.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
-namespace ACE {
+namespace Ace {
 	/* Static instance of the reader */
-	ACEReader ACEReader::ar;
+	AceReader AceReader::ar;
 }
 
-ACEReader::ACEReader() {
+AceReader::AceReader() {
 	constructor_table["c"] = NeutronTable::NewTable;
 }
 
-ACETable* ACEReader::getTable(const std::string& table_name) {
+AceTable* AceReader::getTable(const std::string& table_name) {
 	string filename = Conf::DATAPATH + "/xsdir";
 	ifstream is( filename.c_str() );
 	string str="";

@@ -31,7 +31,7 @@
 #include "AceUtils.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
 TyrDistribution::TyrDistribution(const TyrDistribution& tyrr)
          : type(tyrr.type) {

@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "NeutronReaction.hpp"
 #include "CrossSection.hpp"
 
-namespace ACE {
+namespace Ace {
 
 	template<typename T>
 	T fromString(const std::string& s) {
@@ -94,7 +94,7 @@ namespace ACE {
 	}
 
 	/* Generic JXS shift function */
-	void shiftJXSArray(const int jxs_old[ACETable::jxs_size], int jxs_new[ACETable::jxs_size], int block_id, int value);
+	void shiftJXSArray(const int jxs_old[AceTable::jxs_size], int jxs_new[AceTable::jxs_size], int block_id, int value);
 
 	/* Parse a string of a range of numbers */
 	std::set<int> getNumbers(const std::string& argv);

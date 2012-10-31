@@ -10,7 +10,7 @@
 
 #include <string>
 
-namespace ACE {
+namespace Ace {
 
 	class Conf {
 

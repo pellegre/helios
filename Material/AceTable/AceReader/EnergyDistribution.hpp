@@ -36,7 +36,7 @@
 
 #include "AngularDistribution.hpp"
 
-namespace ACE {
+namespace Ace {
 
 class EnergyDistribution {
 

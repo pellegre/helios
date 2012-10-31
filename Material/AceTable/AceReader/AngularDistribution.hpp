@@ -32,7 +32,7 @@
 #include <fstream>
 #include <vector>
 
-namespace ACE {
+namespace Ace {
 
 class AngularDistribution {
 

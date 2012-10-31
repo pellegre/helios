@@ -25,24 +25,15 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef PRINTMESSAGE_HPP_
-#define PRINTMESSAGE_HPP_
+#include "Isotope.hpp"
 
-#include <iostream>
-#include <string>
-#include <cstdio>
+namespace Helios {
 
-namespace Ace {
-
-	namespace PrintCodes {
-		const int PrintMessage = 0;
-		const int PrintWarning = 1;
-		const int PrintError = 2;
-	}
-
-	/* Return a string with a message from some routine o the library */
-	void printMessage(int code, const std::string& routine, const std::string& message = "");
+/* Output isotope information */
+std::ostream& operator<<(std::ostream& out, const Isotope& q) {
+	q.print(out);
+	return out;
 }
 
+}
 
-#endif /* PRINTMESSAGE_HPP_ */

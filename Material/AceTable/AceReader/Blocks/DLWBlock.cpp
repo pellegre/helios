@@ -31,10 +31,10 @@
 #include "../AceUtils.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
 DLWBlock::DLWBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss,
-		           ACETable* ace_table, const vector<int>& tyrs, const vector<int>& mats)
+		           AceTable* ace_table, const vector<int>& tyrs, const vector<int>& mats)
     : ACEBlock(xss,ace_table), LDLWBlock(nxs,jxs,xss,nxs[NeutronTable::NR],ace_table) {
 
 	/* Get the number of MT numbers (i.e. of tabulated cross sections) */
@@ -58,13 +58,13 @@ DLWBlock::DLWBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::v
 	}
 }
 
-NRContainer& DLWBlock::reas() const {return dynamic_cast<NeutronTable*>(ace_table)->getReactions();};
+ReactionContainer& DLWBlock::reas() const {return dynamic_cast<NeutronTable*>(ace_table)->getReactions();};
 
 void DLWBlock::updateData() {
 	energy_dist.clear();
 	tyr_dist.clear();
 
-	NRContainer::iterator it_rea;
+	ReactionContainer::iterator it_rea;
 
 	for(it_rea = reas().begin() + 1; it_rea != reas().end() ; it_rea++) {
 		/* The first reaction with no data for the angular distribution defines the end of the NR array */

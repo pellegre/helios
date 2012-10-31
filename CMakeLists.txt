@@ -116,8 +116,10 @@ set(MCFILES Common/Common.cpp
             Geometry/Surfaces/CylinderOnAxisOrigin.cpp
             Material/Material.cpp
             Material/Materials.cpp
+            Material/Isotope.cpp            
             Material/MacroXs/MacroXs.cpp  
             Material/Grid/MasterGrid.cpp
+            Material/AceTable/AceMaterial.cpp              
 			Material/AceTable/AceReader/ACETable.cpp
 			Material/AceTable/AceReader/ACEReader.cpp
 			Material/AceTable/AceReader/CrossSection.cpp
@@ -132,7 +134,7 @@ set(MCFILES Common/Common.cpp
 			Material/AceTable/AceReader/Conf.cpp
 			Material/AceTable/AceReader/NeutronTable.cpp
 			Material/AceTable/AceReader/TyrDistribution.cpp
-			Material/AceTable/AceReader/NRContainer.cpp
+			Material/AceTable/AceReader/ReactionContainer.cpp
 			Material/AceTable/AceReader/PrintMessage.cpp
 			Material/AceTable/AceReader/EnergyDistribution.cpp
 			Material/AceTable/AceReader/AngularDistribution.cpp                                                                              

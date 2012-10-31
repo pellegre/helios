@@ -25,8 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NRCONTAINER_HPP_
-#define NRCONTAINER_HPP_
+#ifndef REACTIONCONTAINER_HPP_
+#define REACTIONCONTAINER_HPP_
 
 #include <iostream>
 #include <string>
@@ -35,9 +35,9 @@
 #include "CrossSection.hpp"
 #include "NeutronReaction.hpp"
 
-namespace ACE {
+namespace Ace {
 
-class NRContainer {
+class ReactionContainer {
 	/* --- Information about the isotope */
 
 	/* Name of the table */
@@ -76,11 +76,11 @@ public:
 
 	friend class NeutronTable;
 
-	NRContainer(const std::string& table_name, const double& aweight, const double& temperature) :
+	ReactionContainer(const std::string& table_name, const double& aweight, const double& temperature) :
 				 table_name(table_name), aweight(aweight), temperature(temperature) {/* */};
-	NRContainer(const std::string& table_name, const double& aweight, const double& temperature, const std::vector<double>& energy) :
+	ReactionContainer(const std::string& table_name, const double& aweight, const double& temperature, const std::vector<double>& energy) :
 				table_name(table_name), aweight(aweight), temperature(temperature), energy(energy) { /* */ };
-	NRContainer(const std::string& table_name, const double& aweight, const double& temperature,
+	ReactionContainer(const std::string& table_name, const double& aweight, const double& temperature,
 			    const std::vector<double>& energy, const std::vector<NeutronReaction>& rea_cont) :
 				table_name(table_name), aweight(aweight), temperature(temperature), energy(energy), rea_cont(rea_cont) { /* */ };
 
@@ -131,8 +131,8 @@ public:
 	/* Get temperature (this is in Mevs) of the isotope */
 	double temp() const {return temperature;}
 
-	virtual ~NRContainer() {/* */};
+	virtual ~ReactionContainer() {/* */};
 };
 
 } /* namespace ACE */
-#endif /* NRCONTAINER_HPP_ */
+#endif /* REACTIONCONTAINER_HPP_ */

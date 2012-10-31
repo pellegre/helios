@@ -35,7 +35,7 @@
 #include "EnergyDistribution.hpp"
 #include "TyrDistribution.hpp"
 
-namespace ACE {
+namespace Ace {
 
 	class NeutronReaction {
 

@@ -32,7 +32,7 @@
 #include <iostream>
 #include <fstream>
 
-namespace ACE {
+namespace Ace {
 
 class TyrDistribution {
 	/* Tabular data form of NU array */

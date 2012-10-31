@@ -29,7 +29,7 @@
 #include "AceUtils.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
 
 AngularDistribution::AngularDistribution(const AngularDistribution& ad) : energy(ad.energy), lc(ad.lc) {

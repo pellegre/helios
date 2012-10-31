@@ -29,7 +29,7 @@
 #include "NeutronReaction.hpp"
 #include "AceUtils.hpp"
 
-using namespace ACE;
+using namespace Ace;
 using namespace std;
 
 static const string& tab = "   ";

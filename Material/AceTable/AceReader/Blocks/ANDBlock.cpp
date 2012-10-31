@@ -29,9 +29,9 @@
 #include "../AceUtils.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
-ANDBlock::ANDBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, ACETable* ace_table)
+ANDBlock::ANDBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable* ace_table)
     : ACEBlock(xss,ace_table), LANDBlock(nxs,jxs,xss,nxs[NeutronTable::NR] + 1,ace_table) {
 
 	/* Get the number of MT numbers (i.e. of tabulated cross sections) */
@@ -62,7 +62,7 @@ ANDBlock::ANDBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::v
 	}
 }
 
-NRContainer& ANDBlock::reas() const {return dynamic_cast<NeutronTable*>(ace_table)->getReactions();};
+ReactionContainer& ANDBlock::reas() const {return dynamic_cast<NeutronTable*>(ace_table)->getReactions();};
 
 void ANDBlock::updateData() {
 	and_dist.clear();
@@ -70,7 +70,7 @@ void ANDBlock::updateData() {
 	/* The first one is the elastic reaction */
 	and_dist.push_back(reas()[0].getAND());
 
-	NRContainer::iterator it_rea;
+	ReactionContainer::iterator it_rea;
 
 	for(it_rea = reas().begin() + 1; it_rea != reas().end() ; it_rea++) {
 		/* The first reaction with no data for the angular distribution defines the end of the NR array */

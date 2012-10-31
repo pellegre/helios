@@ -29,7 +29,7 @@
 #include "AceUtils.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
 EnergyDistribution::InterScheme::InterScheme(std::vector<double>::const_iterator& it) {
 	getXSS(nr,it);

@@ -31,19 +31,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PrintMessage.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
 /* Initialization of static members of the Conf class */
-unsigned char ACE::Conf::ShowWarnings;
-string ACE::Conf::DATAPATH;
-size_t ACE::Conf::MAXLINESIZE;
+unsigned char Ace::Conf::ShowWarnings;
+string Ace::Conf::DATAPATH;
+size_t Ace::Conf::MAXLINESIZE;
 
 /* Create a global and unique instance of the configuration class */
-namespace ACE {
+namespace Ace {
 	Conf Conf::configuration;
 }
 
-ACE::Conf::Conf() {
+Ace::Conf::Conf() {
 	/* Initialization of static members of the Configuration class */
 	ShowWarnings = 1;
 	DATAPATH = ".";

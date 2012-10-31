@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../NeutronTable.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
-ESZBlock::ESZBlock(const int nxs[nxs_size], const int jxs[jxs_size], const vector<double>& xss, ACETable* ace_table) : ACEBlock(xss,ace_table) {
+ESZBlock::ESZBlock(const int nxs[nxs_size], const int jxs[jxs_size], const vector<double>& xss, AceTable* ace_table) : ACEBlock(xss,ace_table) {
 	/* Length of each table */
 	size_t table_length = nxs[NeutronTable::NES];
 	/* Begin of ESZ block */
@@ -45,7 +45,7 @@ ESZBlock::ESZBlock(const int nxs[nxs_size], const int jxs[jxs_size], const vecto
 	getXSS(heat,table_length);
 }
 
-NRContainer& ESZBlock::reas() {return dynamic_cast<NeutronTable*>(ace_table)->getReactions();};
+ReactionContainer& ESZBlock::reas() {return dynamic_cast<NeutronTable*>(ace_table)->getReactions();};
 
 void ESZBlock::dump(ostream& xss) {
 	putXSS(energy,xss);

@@ -70,6 +70,7 @@ pair<string,double> isoAttrib(TiXmlElement* pElement) {
 	matAttrib.checkAttributes(mapAttrib, "isotope");
 
 	string isotope = fromString<string>(mapAttrib["name"]);
+	/* Remove spaces on the name */
 	double fraction = fromString<double>(mapAttrib["fraction"]);
 	return pair<string,double>(isotope,fraction);
 }

@@ -32,18 +32,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <string>
 
-namespace ACE {
+namespace Ace {
 
-	class ACEReader {
+	class AceReader {
 
 		/* Static instance of the reader */
-		static ACEReader ar;
+		static AceReader ar;
 
 		/* Prevent construction */
-		ACEReader();
-		ACEReader(const ACEReader& ar) {/* */};
+		AceReader();
+		AceReader(const AceReader& ar) {/* */};
 
-		typedef std::map<std::string,ACETable::Constructor> table_type;
+		typedef std::map<std::string,AceTable::Constructor> table_type;
 		/* Map of a letter to table constructors */
 		table_type constructor_table;
 
@@ -63,9 +63,9 @@ namespace ACE {
 		};
 
 		/* Get a ACE table object */
-		static ACETable* getTable(const std::string& table_name);
+		static AceTable* getTable(const std::string& table_name);
 
-		virtual ~ACEReader() {/* */};
+		virtual ~AceReader() {/* */};
 	};
 
 } /* namespace ACE */

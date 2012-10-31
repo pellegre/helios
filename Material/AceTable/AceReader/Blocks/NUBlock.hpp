@@ -30,17 +30,17 @@
 
 #include "ACEBlock.hpp"
 
-namespace ACE {
+namespace Ace {
 
-	class NUBlock: public ACETable::ACEBlock {
+	class NUBlock: public AceTable::ACEBlock {
 
 		/* Flag of type of data */
 		static const int flag_pol =  1;
 		static const int flag_tab =  2;
 
-		class NUData : public ACETable::ACEBlock {
+		class NUData : public AceTable::ACEBlock {
 		public:
-			NUData(std::vector<double>::const_iterator _it, ACETable* ace_table) : ACEBlock(_it,ace_table) {/* */};
+			NUData(std::vector<double>::const_iterator _it, AceTable* ace_table) : ACEBlock(_it,ace_table) {/* */};
 			virtual void dump(std::ostream& xss) = 0;
 			virtual int getSize() const = 0;
 			virtual int getType() const = 0;
@@ -54,7 +54,7 @@ namespace ACE {
 			int ncoef;                 /* Number of coefficients */
 			std::vector<double> coef;  /* Coefficients */
 		public:
-			Polynomial(std::vector<double>::const_iterator _it, ACETable* ace_table);
+			Polynomial(std::vector<double>::const_iterator _it, AceTable* ace_table);
 			void dump(std::ostream& xss);
 			int getSize() const {return (1 + coef.size());};
 			int getType() const {return flag_pol;};
@@ -70,7 +70,7 @@ namespace ACE {
 			std::vector<double> energies; /* tabular energies points */
 			std::vector<double> nu;       /* Values of NU */
 		public:
-			Tabular(std::vector<double>::const_iterator _it, ACETable* ace_table);
+			Tabular(std::vector<double>::const_iterator _it, AceTable* ace_table);
 			void dump(std::ostream& xss);
 			int getSize() const {return (2 + nbt.size() + aint.size() + energies.size() + nu.size());};
 			int getType() const {return flag_tab;};
@@ -80,7 +80,7 @@ namespace ACE {
 		/* Containers of NU data */
 		std::vector<NUData*> PromptData; /* This one can have total NU data too. */
 
-		NUBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, ACETable* ace_table);
+		NUBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable* ace_table);
 
 	public:
 

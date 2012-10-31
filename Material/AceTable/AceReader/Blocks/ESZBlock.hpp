@@ -29,11 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ESZBLOCK_HPP_
 
 #include "ACEBlock.hpp"
-#include "../NRContainer.hpp"
+#include "../ReactionContainer.hpp"
 
-namespace ACE {
+namespace Ace {
 
-class ESZBlock: public ACETable::ACEBlock {
+class ESZBlock: public AceTable::ACEBlock {
 
 	/* Update internal data of each block */
 	void updateData();
@@ -48,10 +48,10 @@ class ESZBlock: public ACETable::ACEBlock {
 	std::vector<double> sigma_e;
 	std::vector<double> heat;
 
-	ESZBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, ACETable* ace_table);
+	ESZBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable* ace_table);
 
 	/* Access to the reaction container on the parent table */
-	NRContainer& reas();
+	ReactionContainer& reas();
 
 public:
 

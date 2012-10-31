@@ -40,11 +40,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace std;
 
-namespace ACE {
+namespace Ace {
 	size_t shift = 0;
 }
 
-bool ACE::iStringCompare( const std::string& str1, const std::string& str2 ) {
+bool Ace::iStringCompare( const std::string& str1, const std::string& str2 ) {
     string str1Cpy( str1 );
     string str2Cpy( str2 );
     transform( str1Cpy.begin(), str1Cpy.end(), str1Cpy.begin(), ::tolower );
@@ -52,13 +52,13 @@ bool ACE::iStringCompare( const std::string& str1, const std::string& str2 ) {
     return ( str1Cpy == str2Cpy );
 }
 
-void ACE::shiftJXSArray(const int jxs_old[ACETable::jxs_size], int jxs_new[ACETable::jxs_size], int block_id, int value) {
+void Ace::shiftJXSArray(const int jxs_old[AceTable::jxs_size], int jxs_new[AceTable::jxs_size], int block_id, int value) {
 	int old_ptr = jxs_old[block_id]; /* Before */
 	if(!old_ptr) return;
 
 	/* Get all shifts */
 	map<int,int> shifts;
-	for(int ipos = 0; ipos < ACETable::jxs_size ; ipos++) {
+	for(int ipos = 0; ipos < AceTable::jxs_size ; ipos++) {
 		int ptr = jxs_old[ipos];
 		if(ptr && (ipos != 20 ) && (ptr > old_ptr) )
 			/*
@@ -78,7 +78,7 @@ void ACE::shiftJXSArray(const int jxs_old[ACETable::jxs_size], int jxs_new[ACETa
 		return;
 	}
 
-	for(int i = 0; i < ACETable::jxs_size ; i++) {
+	for(int i = 0; i < AceTable::jxs_size ; i++) {
 		if(jxs_old[i] && (jxs_old[i] > old_ptr) ) {
 			jxs_new[i] += (value - size);
 		}
@@ -113,7 +113,7 @@ static void ParseNumbersInt(const string& argv, set<int>* port_values) {
         }
 }
 
-set<int> ACE::getNumbers(const string& argv) {
+set<int> Ace::getNumbers(const string& argv) {
 
         /* Set of values */
         set<int> port_values;
@@ -140,7 +140,7 @@ set<int> ACE::getNumbers(const string& argv) {
         return port_values;
 }
 
-double ACE::checkXS(const CrossSection& xs1, const CrossSection& xs2) {
+double Ace::checkXS(const CrossSection& xs1, const CrossSection& xs2) {
 	/* Sanity check, the XS should be referring to the same energy grid */
 	if( (xs1.getIndex() != xs2.getIndex()) || (xs1.getData().size() != xs2.getData().size()) )
 			 throw(Helios::GeneralError("ACE::checkXS() : Cross sections aren't of the same size. "));
@@ -158,7 +158,7 @@ double ACE::checkXS(const CrossSection& xs1, const CrossSection& xs2) {
 	return 0.0;
 }
 
-vector<double> ACE::getXsDifference(const CrossSection& xs1, const CrossSection& xs2) {
+vector<double> Ace::getXsDifference(const CrossSection& xs1, const CrossSection& xs2) {
 	/* Sanity check, the XS should be referring to the same energy grid */
 	if( (xs1.getIndex() != xs2.getIndex()) || (xs1.getData().size() != xs2.getData().size()) )
 		 throw(Helios::GeneralError("ACE::getXsDifference() : Cross sections aren't of the same size. "));

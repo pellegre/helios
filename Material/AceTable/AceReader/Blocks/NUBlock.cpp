@@ -30,9 +30,9 @@
 #include "../NeutronTable.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
-NUBlock::NUBlock(const int nxs[nxs_size], const int jxs[jxs_size], const vector<double>& xss, ACETable* ace_table) : ACEBlock(xss,ace_table) {
+NUBlock::NUBlock(const int nxs[nxs_size], const int jxs[jxs_size], const vector<double>& xss, AceTable* ace_table) : ACEBlock(xss,ace_table) {
 	/* Check if there is a NU block on the table */
 	int knu = jxs[NeutronTable::NU];
 	if(knu) {
@@ -79,7 +79,7 @@ NUBlock::NUBlock(const int nxs[nxs_size], const int jxs[jxs_size], const vector<
 	}
 }
 
-NUBlock::Polynomial::Polynomial(std::vector<double>::const_iterator _it, ACETable* ace_table) : NUBlock::NUData(_it,ace_table) {
+NUBlock::Polynomial::Polynomial(std::vector<double>::const_iterator _it, AceTable* ace_table) : NUBlock::NUData(_it,ace_table) {
 	getXSS(ncoef);
 	getXSS(coef,ncoef);
 }
@@ -89,7 +89,7 @@ void NUBlock::Polynomial::dump(std::ostream& xss) {
 	putXSS(coef,xss);
 }
 
-NUBlock::Tabular::Tabular(std::vector<double>::const_iterator _it, ACETable* ace_table) : NUBlock::NUData(_it,ace_table) {
+NUBlock::Tabular::Tabular(std::vector<double>::const_iterator _it, AceTable* ace_table) : NUBlock::NUData(_it,ace_table) {
 	getXSS(nr);
 	getXSS(nbt,nr);
 	getXSS(aint,nr);

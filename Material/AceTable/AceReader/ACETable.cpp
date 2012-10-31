@@ -37,9 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "AceUtils.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
-ACETable::ACETable(const string& _table_name, const string& full_path, size_t address, int last_table) : table_name(_table_name){
+AceTable::AceTable(const string& _table_name, const string& full_path, size_t address, int last_table) : table_name(_table_name){
 	/* File */
 	ifstream is(full_path.c_str());
 	size_t line_number = 0;
@@ -100,7 +100,7 @@ ACETable::ACETable(const string& _table_name, const string& full_path, size_t ad
 			}
 			/* Get all shifts */
 			vector<int> shifts;
-			for(int ipos = 0; ipos < ACETable::jxs_size ; ipos++) {
+			for(int ipos = 0; ipos < AceTable::jxs_size ; ipos++) {
 				int ptr = jxs[ipos];
 				if(ptr && (ipos != itable) && (ipos != 20 ) && (ptr >= old_ptr) )
 					/*
@@ -138,7 +138,7 @@ ACETable::ACETable(const string& _table_name, const string& full_path, size_t ad
 }
 
 /* Print general information of the library */
-void ACETable::printInformation(std::ostream& out) const {
+void AceTable::printInformation(std::ostream& out) const {
 	out << "[+]" << comment << endl;
 	out << "[@] Table name    : " << table_name << endl;
 	out << "[@] Atomic weight : " << aweight << endl;
@@ -147,14 +147,14 @@ void ACETable::printInformation(std::ostream& out) const {
 	printTableInfo(out);
 }
 
-void ACETable::updateData() {
+void AceTable::updateData() {
 	vector<ACEBlock*>::reverse_iterator it_block;
 
 	for(it_block = blocks.rbegin() ; it_block != blocks.rend() ; it_block++)
 		(*it_block)->updateData();
 }
 
-void ACETable::updateBlocks() {
+void AceTable::updateBlocks() {
 	updateData();
 
 	int jxs_new[jxs_size];
@@ -171,7 +171,7 @@ void ACETable::updateBlocks() {
 	updateData();
 }
 
-void ACETable::dump(std::ostream& out) {
+void AceTable::dump(std::ostream& out) {
 	out.setf(ios::uppercase);
 
 	/* First line */
@@ -227,15 +227,15 @@ void ACETable::dump(std::ostream& out) {
 	}
 }
 
-ACETable::~ACETable() {
+AceTable::~AceTable() {
 	vector<ACEBlock*>::iterator it;
 	for(it = blocks.begin() ; it != blocks.end() ; it++)
 		delete (*it);
 };
 
 /* Update pointers on the ACE table according  to data on this block */
-void ACETable::ACEBlock::updatePointers(int nxs[nxs_size], const int jxs_old[jxs_size], int jxs_new[jxs_size]) const {
+void AceTable::ACEBlock::updatePointers(int nxs[nxs_size], const int jxs_old[jxs_size], int jxs_new[jxs_size]) const {
 	shiftJXSArray(jxs_old,jxs_new,getType(),getSize());
 };
 
-ACETable::ACEBlock::~ACEBlock() {/* */};
+AceTable::ACEBlock::~ACEBlock() {/* */};

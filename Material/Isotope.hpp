@@ -48,7 +48,13 @@ namespace Helios {
 		 * By default is false.
 		 */
 		bool fissile;
+
+		/* Print isotope */
+		virtual void print(std::ostream& out) const {/* Nothing by default */}
+		friend std::ostream& operator<<(std::ostream& out, const Isotope& q);
+
 	public:
+
 		Isotope() : fissile(false) {/* */};
 
 		/*
@@ -85,6 +91,9 @@ namespace Helios {
 
 		virtual ~Isotope() {/* */};
 	};
+
+	/* Output isotope information */
+	std::ostream& operator<<(std::ostream& out, const Isotope& q);
 
 } /* namespace Helios */
 #endif /* ISOTOPE_HPP_ */

@@ -34,7 +34,7 @@
 #include "../../../Common/Common.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
 void CrossSection::dump(std::ostream& xss) const {
 	putXSS(ie,xss);
@@ -43,7 +43,7 @@ void CrossSection::dump(std::ostream& xss) const {
 	putXSS(xs_data,xss);
 }
 
-namespace ACE {
+namespace Ace {
 
 const CrossSection operator+(const CrossSection& left, const CrossSection& right) {
 	/* Check for "NULL" cross section */

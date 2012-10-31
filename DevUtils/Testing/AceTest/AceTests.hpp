@@ -51,7 +51,7 @@ protected:
 
 TEST_F(SimpleAceTest, SumReactions) {
 	using namespace std;
-	using namespace ACE;
+	using namespace Ace;
 
 	/* Library to check */
 	std::string library = "c";
@@ -82,7 +82,7 @@ TEST_F(SimpleAceTest, SumReactions) {
 
 	for(vector<string>::const_iterator it = isotopes.begin() ; it != isotopes.end() ; ++it) {
 		/* Get table */
-		NeutronTable* ace_table = dynamic_cast<NeutronTable*>(ACEReader::getTable((*it)));
+		NeutronTable* ace_table = dynamic_cast<NeutronTable*>(AceReader::getTable((*it)));
 
 		/* Check cross section MTs calculations */
 		CrossSection old_st = ace_table->getTotal();
@@ -90,12 +90,12 @@ TEST_F(SimpleAceTest, SumReactions) {
 		CrossSection old_ab = ace_table->getAbsorption();
 
 		/* Get original reactions */
-		NRContainer old_rea = ace_table->getReactions();
+		ReactionContainer old_rea = ace_table->getReactions();
 
 		ace_table->updateBlocks();
 
 		/* Get updated reactions */
-		NRContainer new_rea = ace_table->getReactions();
+		ReactionContainer new_rea = ace_table->getReactions();
 
 		Helios::Log::bok() << " - Checking " << new_rea.name() << Helios::Log::crst <<
 				" (awr = " << setw(9) << new_rea.awr() << " , temp = " << setw(9) << new_rea.temp() << ") " << Helios::Log::endl;

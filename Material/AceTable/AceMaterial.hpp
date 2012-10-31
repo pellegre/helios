@@ -28,16 +28,20 @@
 #ifndef ACEMATERIAL_HPP_
 #define ACEMATERIAL_HPP_
 
+#include "AceReader/ReactionContainer.hpp"
 #include "../Material.hpp"
 #include "../Grid/MasterGrid.hpp"
 #include "../../Common/Sampler.hpp"
 
 namespace Helios {
+	class AceMaterialObject;
+	class AceMaterialFactory;
 
 	/* Isotope related to an ACE table. */
 	class AceIsotope : public Isotope {
 
-		/* Constant reference to a neutron table */
+		/* Reference to a neutron table */
+		Ace::ReactionContainer reactions;
 
 		/* Atomic weight ratio */
 		double aweight;
@@ -52,7 +56,7 @@ namespace Helios {
 		std::vector<double> fission_prob;
 
 	public:
-		AceIsotope();
+		AceIsotope(const Ace::ReactionContainer& reactions, const ChildGrid* child_grid);
 
 		double getAbsorptionProb(Energy& energy) const {
 			double factor;
@@ -86,13 +90,32 @@ namespace Helios {
 		/* Constant reference to a MASTER grid (managed by the AceMaterialFactory) */
 		const MasterGrid* master_grid;
 
-		class AceMaterialObject;
+		/* Density of the material */
+		double atom;   /* atom/b-cm*/
+		double rho;    /* g/cm3 */
+
+		/* Data of an isotope contained in the material */
+		struct IsotopeData {
+			/* Mass fraction */
+			double mass_fraction;
+			/* Atomic fraction */
+			double atomic_fraction;
+			/* Pointer to the ACE isotope */
+			const AceIsotope* isotope;
+			IsotopeData(const double& mass_fraction, const double& atomic_fraction, const AceIsotope* isotope) :
+				mass_fraction(mass_fraction), atomic_fraction(atomic_fraction), isotope(isotope) {/* */}
+			~IsotopeData() {/* */}
+		};
+
+		/* Map of isotopes with their respective data in this material */
+		std::map<std::string,IsotopeData> isotope_map;
+
 	public:
 
 		/* Name of this object */
 		static std::string name() {return "material";}
 
-		AceMaterial(const AceMaterialObject* definition);
+		AceMaterial(const AceMaterialObject* definition, const AceMaterialFactory* factory);
 
 		 /* Get the total cross section (using the energy index of the particle) */
 		double getMeanFreePath(Energy& energy) const {
@@ -125,6 +148,7 @@ namespace Helios {
 		~AceMaterialObject() {/* */};
 	private:
 		friend class AceMaterial;
+		friend class AceMaterialFactory;
 
 		/* Data defined by the user */
 		MaterialId id;
@@ -138,13 +162,17 @@ namespace Helios {
 
 	/* Material Factory */
 	class AceMaterialFactory : public MaterialFactory {
-
+		MasterGrid* master_grid;
 	public:
 		/* Prevent construction or copy */
 		AceMaterialFactory() {/* */};
 		/* Create a new materials */
 		virtual std::vector<Material*> createMaterials(const std::vector<MaterialObject*>& definitions) const;
-		virtual ~AceMaterialFactory() {/* */}
+		/* Get master grid */
+		const MasterGrid* getMasterGrid() const {return master_grid;}
+		/* Get isotope pointer by name */
+		AceIsotope* getIsotope(const std::string& name) const {}
+		virtual ~AceMaterialFactory() {delete master_grid;}
 	};
 
 } /* namespace Helios */

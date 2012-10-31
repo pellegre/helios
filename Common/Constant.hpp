@@ -25,24 +25,17 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef PRINTMESSAGE_HPP_
-#define PRINTMESSAGE_HPP_
+#ifndef CONSTANT_HPP_
+#define CONSTANT_HPP_
 
-#include <iostream>
-#include <string>
-#include <cstdio>
-
-namespace Ace {
-
-	namespace PrintCodes {
-		const int PrintMessage = 0;
-		const int PrintWarning = 1;
-		const int PrintError = 2;
+namespace Helios {
+	/* Define common constants used on the program */
+	namespace Constant {
+		static const double boltz = 8.617E-11;              /* MeVs / kelvin : Bolztmann constant */
+		static const double avogadro = 0.59703109;          /* Affected for use with the AWR instead of the atomic mass */
+		static const double neutron_mass = 1.00866491578;   /* Neutron mass in AMU */
 	}
-
-	/* Return a string with a message from some routine o the library */
-	void printMessage(int code, const std::string& routine, const std::string& message = "");
 }
 
 
-#endif /* PRINTMESSAGE_HPP_ */
+#endif /* CONSTANT_HPP_ */

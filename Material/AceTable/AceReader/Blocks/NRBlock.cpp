@@ -30,10 +30,10 @@
 #include "../AceUtils.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
 
-NRBlock::NRBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, ACETable* ace_table)
+NRBlock::NRBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable* ace_table)
     : ACEBlock(xss,ace_table) ,
       mtr_block(nxs,jxs,xss,nxs[NeutronTable::NTR],ace_table),
       lqr_block(nxs,jxs,xss,nxs[NeutronTable::NTR],ace_table),
@@ -58,7 +58,7 @@ int NRBlock::getSize() const {
 	return size;
 };
 
-NRContainer& NRBlock::reas() const {return dynamic_cast<NeutronTable*>(ace_table)->getReactions();};
+ReactionContainer& NRBlock::reas() const {return dynamic_cast<NeutronTable*>(ace_table)->getReactions();};
 
 /* Update pointers on the ACE table according  to data on this block */
 void NRBlock::updatePointers(int nxs[nxs_size], const int jxs_old[jxs_size], int jxs_new[jxs_size]) const {
@@ -74,7 +74,7 @@ void NRBlock::updateData() {
 	/* We should update the data with the Reactions container */
 	int nrea = reas().size() - 1; /* (the first one is the elastic reaction) */
 
-	NRContainer::iterator it_rea;
+	ReactionContainer::iterator it_rea;
 
 	/* Prepare container for reactions information */
 	vector<int> new_mtr(nrea);
@@ -111,7 +111,7 @@ int NRBlock::getType() const {
 
 NRBlock::~NRBlock() { /* */ }
 
-NRBlock::SIGBlock::SIGBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, ACETable* ace_table)
+NRBlock::SIGBlock::SIGBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable* ace_table)
     : ACEBlock(xss,ace_table), LSIGBlock(nxs,jxs,xss,nxs[NeutronTable::NTR],ace_table) {
 
 	/* Get the number of MT numbers (i.e. of tabulated cross sections) */

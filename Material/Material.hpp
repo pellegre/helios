@@ -110,7 +110,7 @@ namespace Helios {
 		virtual ~MaterialFactory() {/* */}
 	};
 
-	/* Output surface information */
+	/* Output material information */
 	std::ostream& operator<<(std::ostream& out, const Material& q);
 
 } /* namespace Helios */

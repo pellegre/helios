@@ -31,7 +31,7 @@
 #include <vector>
 #include <fstream>
 
-namespace ACE {
+namespace Ace {
 
 class CrossSection {
 

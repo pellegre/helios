@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
 map<int,string> SetMT() {
 	map<int,string> m;
@@ -210,7 +210,7 @@ map<int,string> NeutronTable::mts_reactions = SetMT();
 
 static const string& tab = "   ";
 NeutronTable::NeutronTable(const std::string& _table_name, const std::string& full_path, size_t address) :
-	ACETable(_table_name,full_path,address), reactions(getName(), getAtomicRatio(), getTemperature()) {
+	AceTable(_table_name,full_path,address), reactions(getName(), getAtomicRatio(), getTemperature()) {
 
 	/* Generic double block */
 	blocks.push_back(new ESZBlock(nxs,jxs,xss,this));
@@ -277,7 +277,7 @@ NeutronTable::NeutronTable(const std::string& _table_name, const std::string& fu
 
 void NeutronTable::updateData() {
 	reactions.update_xs();
-	ACETable::updateData();
+	AceTable::updateData();
 }
 
 void NeutronTable::printTableInfo(std::ostream& out) const {
@@ -293,7 +293,7 @@ void NeutronTable::printTableInfo(std::ostream& out) const {
 	else
 		 out << "NOT PRESENT" << endl;
 
-	NRContainer::const_iterator it_rea;
+	ReactionContainer::const_iterator it_rea;
 
 	out << tab << "[@] Neutron Reactions                   : " << endl;
 	for(it_rea = reactions.begin() ; it_rea != reactions.end() ; it_rea++) {

@@ -35,9 +35,9 @@
 #include "../NeutronReaction.hpp"
 #include "../CrossSection.hpp"
 #include "../AngularDistribution.hpp"
-#include "../NRContainer.hpp"
+#include "../ReactionContainer.hpp"
 
-namespace ACE {
+namespace Ace {
 
 /*
  * This block manages all the ACE blocks related to neutron reactions (NRBlock = Neutron Reaction Block)
@@ -52,14 +52,14 @@ namespace ACE {
  * LDLW Block: List of energy distribution locators
  * DLW Block:  Energy distribution for all reactions
  */
-class NRBlock: public ACETable::ACEBlock {
+class NRBlock: public AceTable::ACEBlock {
 
 	typedef RawBlock<int,NeutronTable::MTR> MTRBlock;
 	typedef RawBlock<double,NeutronTable::LQR> LQRBlock;
 	typedef RawBlock<int,NeutronTable::TYR> TYRBlock;
 
 	/* Block where the cross section arrays are saved */
-	class SIGBlock : public ACETable::ACEBlock {
+	class SIGBlock : public AceTable::ACEBlock {
 
 	private:
 
@@ -75,7 +75,7 @@ class NRBlock: public ACETable::ACEBlock {
 		/* Container of XS */
 		std::vector<CrossSection> xs;
 
-		SIGBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, ACETable* ace_table);
+		SIGBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable* ace_table);
 
 	public:
 
@@ -108,9 +108,9 @@ class NRBlock: public ACETable::ACEBlock {
 	SIGBlock sig_block;
 
 	/* Access to the reaction container on the parent table */
-	NRContainer& reas() const;
+	ReactionContainer& reas() const;
 
-	NRBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, ACETable* ace_table);
+	NRBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable* ace_table);
 
 public:
 

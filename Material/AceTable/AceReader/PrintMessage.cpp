@@ -29,10 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../../Common/Common.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 using namespace Helios;
 
-namespace ACE {
+namespace Ace {
 
 	namespace Conf {
 		extern /* Verbose mode flag */
@@ -40,7 +40,7 @@ namespace ACE {
 	}
 }
 
-void ACE::printMessage(int code, const string& routine, const string& message) {
+void Ace::printMessage(int code, const string& routine, const string& message) {
 	string code_str;
 
 	switch(code) {

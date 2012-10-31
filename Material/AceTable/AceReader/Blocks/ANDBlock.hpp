@@ -34,12 +34,12 @@
 #include "../ACETable.hpp"
 #include "../NeutronTable.hpp"
 #include "../AngularDistribution.hpp"
-#include "../NRContainer.hpp"
+#include "../ReactionContainer.hpp"
 
-namespace ACE {
+namespace Ace {
 
 /* Block where the angular distribution of the cross section arrays are saved */
-class ANDBlock : public ACETable::ACEBlock {
+class ANDBlock : public AceTable::ACEBlock {
 
 private:
 
@@ -55,9 +55,9 @@ private:
 	std::vector<AngularDistribution> and_dist;
 
 	/* Access to the reaction container on the parent table */
-	NRContainer& reas() const;
+	ReactionContainer& reas() const;
 
-	ANDBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, ACETable* ace_table);
+	ANDBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable* ace_table);
 
 public:
 

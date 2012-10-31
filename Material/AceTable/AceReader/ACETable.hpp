@@ -34,9 +34,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <vector>
 
-namespace ACE {
+namespace Ace {
 
-	class ACETable {
+	class AceTable {
 
 	public:
 		/* Some size */
@@ -86,14 +86,14 @@ namespace ACE {
 			}
 
 			/* Pointer to the ACE table that contains this block */
-			ACETable* ace_table;
+			AceTable* ace_table;
 
-			ACEBlock(const std::vector<double>& xss, ACETable* ace_table) : it(xss.begin()), ace_table(ace_table) {/* */};
-			ACEBlock(std::vector<double>::const_iterator _it, ACETable* ace_table) : it(_it), ace_table(ace_table) {/* */};
+			ACEBlock(const std::vector<double>& xss, AceTable* ace_table) : it(xss.begin()), ace_table(ace_table) {/* */};
+			ACEBlock(std::vector<double>::const_iterator _it, AceTable* ace_table) : it(_it), ace_table(ace_table) {/* */};
 
 		public:
 
-			friend class ACETable; /* Because a table contains a lot of blocks (with up-casting) */
+			friend class AceTable; /* Because a table contains a lot of blocks (with up-casting) */
 
 			/* Dump the block, on a XSS stream */
 			virtual void dump(std::ostream& xss) = 0;
@@ -112,7 +112,7 @@ namespace ACE {
 		/* ---------- Construction of tables */
 
 		/* ACE Table constructor function */
-		typedef ACETable(*(*Constructor)(const std::string&, const std::string&, size_t));
+		typedef AceTable(*(*Constructor)(const std::string&, const std::string&, size_t));
 
 		/* ---------- Miscellaneous Variables on Data Tables */
 
@@ -152,7 +152,7 @@ namespace ACE {
 		virtual void updateData();
 
 		/* Constructor, from full path and address on that file */
-		ACETable(const std::string& _table_name, const std::string& full_path, size_t address, int last_table = 0);
+		AceTable(const std::string& _table_name, const std::string& full_path, size_t address, int last_table = 0);
 
 	public:
 
@@ -160,7 +160,7 @@ namespace ACE {
 		class AceTableError : public std::exception {
 			std::string reason;
 		public:
-			AceTableError(const ACETable* ace_table, const std::string& msg) {
+			AceTableError(const AceTable* ace_table, const std::string& msg) {
 				reason  = "Error on Ace Table " + ace_table->getName() + " : " + msg;
 			}
 			const char *what() const throw() {
@@ -170,7 +170,7 @@ namespace ACE {
 		};
 
 		/* Friendly reader */
-		friend class ACEReader;
+		friend class AceReader;
 
 		/* Write the cross section table */
 		void dump(std::ostream& out = std::cout);
@@ -196,7 +196,7 @@ namespace ACE {
 		/* Get comment */
 		std::string getComment() const {return comment;}
 
-		virtual ~ACETable();
+		virtual ~AceTable();
 	};
 
 } /* namespace ACE */

@@ -35,11 +35,11 @@
 #include "../ACETable.hpp"
 #include "../NeutronTable.hpp"
 #include "../EnergyDistribution.hpp"
-#include "../NRContainer.hpp"
+#include "../ReactionContainer.hpp"
 
-namespace ACE {
+namespace Ace {
 
-class DLWBlock: public ACE::ACETable::ACEBlock {
+class DLWBlock: public Ace::AceTable::ACEBlock {
 
 	/* Update internal data, in this case the LDLW block */
 	void updateData();
@@ -57,10 +57,10 @@ class DLWBlock: public ACE::ACETable::ACEBlock {
 	std::map<int,TyrDistribution> tyr_dist;
 
 	/* Access to the reaction container on the parent table */
-	NRContainer& reas() const;
+	ReactionContainer& reas() const;
 
 	DLWBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss,
-			ACETable* ace_table, const std::vector<int>& tyrs, const std::vector<int>& mats);
+			AceTable* ace_table, const std::vector<int>& tyrs, const std::vector<int>& mats);
 
 public:
 

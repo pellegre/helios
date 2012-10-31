@@ -31,9 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../AceUtils.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
-GenericBlock::GenericBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, const int table_begin, ACETable* ace_table)
+GenericBlock::GenericBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, const int table_begin, AceTable* ace_table)
 : ACEBlock(xss,ace_table) {
 	/* Begin of the block */
 	std::vector<double>::const_iterator beg = xss.begin() + table_begin;

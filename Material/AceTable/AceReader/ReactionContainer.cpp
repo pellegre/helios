@@ -25,14 +25,14 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "NRContainer.hpp"
+#include "ReactionContainer.hpp"
 #include "AceUtils.hpp"
 
 using namespace std;
-using namespace ACE;
+using namespace Ace;
 
-NRContainer::iterator NRContainer::get_mt(int mt) {
-	NRContainer::iterator it = rea_cont.begin();
+ReactionContainer::iterator ReactionContainer::get_mt(int mt) {
+	ReactionContainer::iterator it = rea_cont.begin();
 	while(it != rea_cont.end()) {
 		if ((*it).getMT() == mt)
 			return it;
@@ -41,8 +41,8 @@ NRContainer::iterator NRContainer::get_mt(int mt) {
 	return it;
 }
 
-NRContainer::const_iterator NRContainer::get_mt(int mt) const {
-	NRContainer::const_iterator it = rea_cont.begin();
+ReactionContainer::const_iterator ReactionContainer::get_mt(int mt) const {
+	ReactionContainer::const_iterator it = rea_cont.begin();
 	while(it != rea_cont.end()) {
 		if ((*it).getMT() == mt)
 			return it;
@@ -51,12 +51,12 @@ NRContainer::const_iterator NRContainer::get_mt(int mt) const {
 	return it;
 }
 
-CrossSection NRContainer::sum_mts(const std::string& range) const {
+CrossSection ReactionContainer::sum_mts(const std::string& range) const {
 	if(rea_cont.size() == 0) return CrossSection();
 
 	CrossSection xs_ret;
 
-	NRContainer::const_iterator it_rea;
+	ReactionContainer::const_iterator it_rea;
 	set<int> mt_numbers = getNumbers(range);
 
 	for(it_rea = rea_cont.begin(); it_rea != rea_cont.end() ; it_rea++) {
@@ -67,8 +67,8 @@ CrossSection NRContainer::sum_mts(const std::string& range) const {
 	return xs_ret;
 }
 
-bool NRContainer::check_any(const std::string& mts) const {
-	NRContainer::const_iterator it_rea;
+bool ReactionContainer::check_any(const std::string& mts) const {
+	ReactionContainer::const_iterator it_rea;
 	set<int> mt_numbers = getNumbers(mts);
 
 	for(it_rea = rea_cont.begin(); it_rea != rea_cont.end() ; it_rea++) {
@@ -79,8 +79,8 @@ bool NRContainer::check_any(const std::string& mts) const {
 	return true;
 }
 
-bool NRContainer::check_all(const std::string& mts) const {
-	NRContainer::const_iterator it_rea;
+bool ReactionContainer::check_all(const std::string& mts) const {
+	ReactionContainer::const_iterator it_rea;
 	set<int> mt_numbers = getNumbers(mts);
 
 	for(it_rea = rea_cont.begin(); it_rea != rea_cont.end() ; it_rea++) {
@@ -91,7 +91,7 @@ bool NRContainer::check_all(const std::string& mts) const {
 	return false;
 }
 
-std::string NRContainer::proton_xs() const {
+std::string ReactionContainer::proton_xs() const {
 	string proton = "";
 	if(get_mt(103) == end() || check_any("600-649"))
 		proton = "600-649";
@@ -100,7 +100,7 @@ std::string NRContainer::proton_xs() const {
 	return proton;
 }
 
-std::string NRContainer::deuteron_xs() const {
+std::string ReactionContainer::deuteron_xs() const {
 	string deuteron = "";
 	if(get_mt(104) == end() || check_any("650-699"))
 		deuteron = "650-699";
@@ -109,7 +109,7 @@ std::string NRContainer::deuteron_xs() const {
 	return deuteron;
 }
 
-std::string NRContainer::triton_xs() const {
+std::string ReactionContainer::triton_xs() const {
 	string triton = "";
 	if(get_mt(105) == end() || check_any("700-749"))
 		triton = "700-749";
@@ -118,7 +118,7 @@ std::string NRContainer::triton_xs() const {
 	return triton;
 }
 
-std::string NRContainer::he_xs() const {
+std::string ReactionContainer::he_xs() const {
 	string he;
 	if(get_mt(106) == end() || check_any("750-799"))
 		he = "750-799";
@@ -127,7 +127,7 @@ std::string NRContainer::he_xs() const {
 	return he;
 }
 
-std::string NRContainer::alpha_xs() const {
+std::string ReactionContainer::alpha_xs() const {
 	string alpha = "";
 	if(get_mt(107) == end() || check_any("750-799"))
 		alpha = "800-849";
@@ -136,7 +136,7 @@ std::string NRContainer::alpha_xs() const {
 	return alpha;
 }
 
-string NRContainer::fission_xs() const {
+string ReactionContainer::fission_xs() const {
 	/* Fission cross section */
 	string fission = "";
 	if(get_mt(18) == end() || check_all("19-21,38"))
@@ -146,18 +146,18 @@ string NRContainer::fission_xs() const {
 	return fission;
 }
 
-string NRContainer::disapp_xs() const {
+string ReactionContainer::disapp_xs() const {
 	/* Create the absorption cross section (fission not included) */
 	string total_abs = string("102,108-117") + "," + proton_xs() + "," + deuteron_xs() + "," + triton_xs() + "," + he_xs() + "," + alpha_xs();
 
 	return total_abs;
 }
 
-std::string NRContainer::nonelastic_xs() const {
+std::string ReactionContainer::nonelastic_xs() const {
 	return exitc_xs() + "," + "5,11,16-17,22-26,28-37,41-42,44-45" + "," +fission_xs() + "," + disapp_xs();
 }
 
-std::string NRContainer::exitc_xs() const {
+std::string ReactionContainer::exitc_xs() const {
 	/* Fission cross section */
 	string exitc = "";
 	if(get_mt(4) == end() || check_any("50-91"))
@@ -167,12 +167,12 @@ std::string NRContainer::exitc_xs() const {
 	return exitc;
 }
 
-string NRContainer::elastic_xs() const {
+string ReactionContainer::elastic_xs() const {
 	/* Elastic cross section */
 	return "2";
 }
 
-CrossSection NRContainer::get_xs(int mt) const {
+CrossSection ReactionContainer::get_xs(int mt) const {
 	if(mt == 1)
 		return sum_mts(nonelastic_xs() + "," + elastic_xs());
 	else if(mt == 2)
@@ -201,8 +201,8 @@ CrossSection NRContainer::get_xs(int mt) const {
 	return sum_mts(toString(mt));
 }
 
-void NRContainer::update_xs() {
-	NRContainer::iterator it;
+void ReactionContainer::update_xs() {
+	ReactionContainer::iterator it;
 
 	for(it = rea_cont.begin() ; it != rea_cont.end() ; it++) {
 		int mt = (*it).getMT();
