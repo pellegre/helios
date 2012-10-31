@@ -84,17 +84,21 @@ TEST_F(SimpleAceTest, SumReactions) {
 		/* Get table */
 		NeutronTable* ace_table = dynamic_cast<NeutronTable*>(ACEReader::getTable((*it)));
 
-		Helios::Log::bok() << " - Checking " << (*it) << Helios::Log::endl;
 		/* Check cross section MTs calculations */
 		CrossSection old_st = ace_table->getTotal();
 		CrossSection old_el = ace_table->getElastic();
 		CrossSection old_ab = ace_table->getAbsorption();
 
+		/* Get original reactions */
 		NRContainer old_rea = ace_table->getReactions();
 
 		ace_table->updateBlocks();
 
+		/* Get updated reactions */
 		NRContainer new_rea = ace_table->getReactions();
+
+		Helios::Log::bok() << " - Checking " << new_rea.name() << Helios::Log::crst <<
+				" (awr = " << setw(9) << new_rea.awr() << " , temp = " << setw(9) << new_rea.temp() << ") " << Helios::Log::endl;
 
 		/* Check MAIN cross sections */
 		double max_total = checkXS(old_st,ace_table->getTotal());

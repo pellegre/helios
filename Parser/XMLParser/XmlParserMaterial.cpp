@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "XmlParser.hpp"
 #include "../../Material/MacroXs/MacroXs.hpp"
+#include "../../Material/AceTable/AceMaterial.hpp"
 
 using namespace std;
 
@@ -43,7 +44,7 @@ static McObject* macroAttrib(TiXmlElement* pElement) {
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
-	matAttrib.checkAttributes(mapAttrib);
+	matAttrib.checkAttributes(mapAttrib, "macro-xs");
 	/* Constants */
 	std::map<std::string,std::vector<double> > constant;
 
@@ -59,17 +60,18 @@ static McObject* macroAttrib(TiXmlElement* pElement) {
 	return new MacroXsObject(mat_id,constant);
 }
 
-static void isoAttrib(TiXmlElement* pElement) {
+pair<string,double> isoAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[2] = {"name","fraction"};
 	static XmlParser::XmlAttributes matAttrib(vector<string>(required, required + 2), vector<string>());
 
 	/* Check user input */
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
-	matAttrib.checkAttributes(mapAttrib);
+	matAttrib.checkAttributes(mapAttrib, "isotope");
 
 	string isotope = fromString<string>(mapAttrib["name"]);
 	double fraction = fromString<double>(mapAttrib["fraction"]);
+	return pair<string,double>(isotope,fraction);
 }
 
 static map<string,string> initUnits() {
@@ -98,22 +100,39 @@ static McObject* aceAttrib(TiXmlElement* pElement) {
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
-	matAttrib.checkAttributes(mapAttrib);
+	matAttrib.checkAttributes(mapAttrib, "material");
 
 	/* Get attributes */
-	MaterialId mat_id = fromString<MaterialId>(mapAttrib["id"]);
+	MaterialId id = fromString<MaterialId>(mapAttrib["id"]);
 	double density = fromString<double>(mapAttrib["density"]);
 	std::string units = units_flag.getValue(mapAttrib);
 	std::string fraction = fraction_flag.getValue(mapAttrib);
 
 	/* Get isotopes */
 	TiXmlElement* pChild;
+	map<string,double> isotopes;
 	for (pChild = pElement->FirstChildElement(); pChild != 0; pChild = pChild->NextSiblingElement()) {
 		string element_value(pChild->Value());
-		isoAttrib(pChild);
+		pair<string,double> pair_value = isoAttrib(pChild);
+		string isotope = pair_value.first;
+		/* Check if the user is not duplicating the isotope name */
+		map<string,double>::iterator it = isotopes.find(isotope);
+		if(it == isotopes.end()) {
+			/* Push isotope */
+			isotopes.insert(pair_value);
+		} else {
+			/* Duplicated name of isotope */
+			std::vector<std::string> keywords;
+			XmlParser::AttribMap::const_iterator it_att = mapAttrib.begin();
+			for(; it_att != mapAttrib.end() ; ++it_att) {
+				keywords.push_back((*it_att).first);
+				keywords.push_back((*it_att).second);
+			}
+			throw Parser::KeywordParserError("Duplicated isotope with name " + isotope,keywords);
+		}
 	}
 	/* Return surface definition */
-	return 0;
+	return new AceMaterialObject(id, density, units, fraction, isotopes);
 }
 
 void XmlParser::matNode(TiXmlNode* pParent) {

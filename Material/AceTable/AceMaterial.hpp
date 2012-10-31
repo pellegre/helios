@@ -37,11 +37,18 @@ namespace Helios {
 	/* Isotope related to an ACE table. */
 	class AceIsotope : public Isotope {
 
+		/* Constant reference to a neutron table */
+
+		/* Atomic weight ratio */
+		double aweight;
+		/* Temperature at which the data were processed (in MeV) */
+		double temperature;
+
 		/* Constant reference to a CHILD grid */
 		const ChildGrid* child_grid;
-
-		/* Probabilities */
+		/* Absorption probability */
 		std::vector<double> absorption_prob;
+		/* Fission probability */
 		std::vector<double> fission_prob;
 
 	public:
@@ -79,12 +86,13 @@ namespace Helios {
 		/* Constant reference to a MASTER grid (managed by the AceMaterialFactory) */
 		const MasterGrid* master_grid;
 
+		class AceMaterialObject;
 	public:
 
 		/* Name of this object */
 		static std::string name() {return "material";}
 
-		AceMaterial(const AceMaterialObject* definition) {/* */};
+		AceMaterial(const AceMaterialObject* definition);
 
 		 /* Get the total cross section (using the energy index of the particle) */
 		double getMeanFreePath(Energy& energy) const {
@@ -104,15 +112,33 @@ namespace Helios {
 
 	/* Definition of an ace cross section */
 	class AceMaterialObject : public MaterialObject {
-
 	public:
-		AceMaterialObject() {/* */};
-
+		AceMaterialObject(const std::string& id, const double& density, const std::string& units,
+				const std::string& fraction, const std::map<std::string,double>& isotopes) :
+			 MaterialObject(AceMaterial::name(),id)
+			,id(id)
+			,density(density)
+			,units(units)
+			,fraction(fraction)
+			,isotopes(isotopes)
+		{/* */}
 		~AceMaterialObject() {/* */};
+	private:
+		friend class AceMaterial;
+
+		/* Data defined by the user */
+		MaterialId id;
+		double density;
+		std::string units;
+		std::string fraction;
+
+		/* Map of isotopes and each percentage */
+		std::map<std::string,double> isotopes;
 	};
 
 	/* Material Factory */
 	class AceMaterialFactory : public MaterialFactory {
+
 	public:
 		/* Prevent construction or copy */
 		AceMaterialFactory() {/* */};

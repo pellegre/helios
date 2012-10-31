@@ -35,7 +35,7 @@ using namespace std;
 
 namespace Helios {
 
-void XmlParser::XmlAttributes::checkAttributes(const XmlParser::AttribMap& attrib_map) {
+void XmlParser::XmlAttributes::checkAttributes(const XmlParser::AttribMap& attrib_map, const string& object) {
 	/* Check for required parameters */
 	vector<string>::iterator it_req;
 	for(it_req = required.begin() ; it_req != required.end() ; ++it_req) {
@@ -48,7 +48,7 @@ void XmlParser::XmlAttributes::checkAttributes(const XmlParser::AttribMap& attri
 				keywords.push_back((*it_att).first);
 				keywords.push_back((*it_att).second);
 			}
-			throw KeywordParserError("Missing <" + req_attrib + "> attribute",keywords);
+			throw KeywordParserError("Missing <" + req_attrib + "> attribute in " + object + " definition",keywords);
 		}
 	}
 
@@ -73,7 +73,7 @@ void XmlParser::XmlAttributes::checkAttributes(const XmlParser::AttribMap& attri
 					keywords.push_back((*it_att).first);
 					keywords.push_back((*it_att).second);
 				}
-				throw KeywordParserError("Bad attribute keyword <" + user_attrib + ">", keywords);
+				throw KeywordParserError("Bad attribute keyword <" + user_attrib + "> in " + object + " definition", keywords);
 			}
 
 		}

@@ -29,11 +29,6 @@
 
 namespace Helios {
 
-AceMaterial::AceMaterial() {
-	// TODO Auto-generated constructor stub
-
-}
-
 AceMaterial::~AceMaterial() {
 	// TODO Auto-generated destructor stub
 }

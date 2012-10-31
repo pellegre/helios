@@ -108,10 +108,13 @@ public:
 	const NRContainer& getReactions() const {return reactions;};
 
 	/* Get the energy grid a main cross sections */
-	std::vector<double> getEnergyGrid() const;
+	const std::vector<double>& getEnergyGrid() const;
 	CrossSection getTotal() const;      /* Total cross section */
 	CrossSection getAbsorption() const; /* Disappearance cross section */
 	CrossSection getElastic() const;    /* Elastic cross section */
+
+	/* Check if the table contains fission information */
+	bool isFissile() const {return jxs[NU];}
 
 	/* Get block */
 	template<class Block>

@@ -152,7 +152,9 @@ MacroXs::MacroXs(const MacroXsObject* definition, int number_groups) :
 	isotope = new MacroXsIsotope(constant,sigma_t);
 }
 
-void MacroXs::print(std::ostream& out) const {/* */}
+void MacroXs::print(std::ostream& out) const {
+	out << "number of groups = " << ngroups;
+}
 
 MacroXs::~MacroXs() {
 	delete isotope;

@@ -210,7 +210,7 @@ map<int,string> NeutronTable::mts_reactions = SetMT();
 
 static const string& tab = "   ";
 NeutronTable::NeutronTable(const std::string& _table_name, const std::string& full_path, size_t address) :
-	ACETable(_table_name,full_path,address) {
+	ACETable(_table_name,full_path,address), reactions(getName(), getAtomicRatio(), getTemperature()) {
 
 	/* Generic double block */
 	blocks.push_back(new ESZBlock(nxs,jxs,xss,this));
@@ -306,20 +306,20 @@ void NeutronTable::printTableInfo(std::ostream& out) const {
 	}
 }
 
-vector<double> NeutronTable::getEnergyGrid() const {
-	return dynamic_cast<ESZBlock*>(blocks[0])->energy;
+const vector<double>& NeutronTable::getEnergyGrid() const {
+	return getBlock<ESZBlock>()->energy;
 }
 
 CrossSection NeutronTable::getTotal() const {
-	return CrossSection(1,dynamic_cast<ESZBlock*>(blocks[0])->sigma_t);
+	return CrossSection(1,getBlock<ESZBlock>()->sigma_t);
 }
 
 CrossSection NeutronTable::getAbsorption() const {
-	return CrossSection(1,dynamic_cast<ESZBlock*>(blocks[0])->sigma_a);
+	return CrossSection(1,getBlock<ESZBlock>()->sigma_a);
 }
 
 CrossSection NeutronTable::getElastic() const {
-	return CrossSection(1,dynamic_cast<ESZBlock*>(blocks[0])->sigma_e);
+	return CrossSection(1,getBlock<ESZBlock>()->sigma_e);
 }
 
 

@@ -38,6 +38,15 @@
 namespace ACE {
 
 class NRContainer {
+	/* --- Information about the isotope */
+
+	/* Name of the table */
+	std::string table_name;
+	/* Atomic weight ratio */
+	double aweight;
+	/* Temperature at which the data were processed (in MeV) */
+	double temperature;
+
 	/* Energy grid where the XS of the reactions are evaluated */
 	std::vector<double> energy;
 
@@ -67,9 +76,13 @@ public:
 
 	friend class NeutronTable;
 
-	NRContainer() {/* */};
-	NRContainer(const std::vector<double>& energy) : energy(energy) { /* */ };
-	NRContainer(const std::vector<double>& energy, const std::vector<NeutronReaction>& rea_cont) : energy(energy), rea_cont(rea_cont) { /* */ };
+	NRContainer(const std::string& table_name, const double& aweight, const double& temperature) :
+				 table_name(table_name), aweight(aweight), temperature(temperature) {/* */};
+	NRContainer(const std::string& table_name, const double& aweight, const double& temperature, const std::vector<double>& energy) :
+				table_name(table_name), aweight(aweight), temperature(temperature), energy(energy) { /* */ };
+	NRContainer(const std::string& table_name, const double& aweight, const double& temperature,
+			    const std::vector<double>& energy, const std::vector<NeutronReaction>& rea_cont) :
+				table_name(table_name), aweight(aweight), temperature(temperature), energy(energy), rea_cont(rea_cont) { /* */ };
 
 	NeutronReaction& operator[](size_t x) {return rea_cont[x];}
 
@@ -108,6 +121,15 @@ public:
 
 	/* This function checks if ALL of the MTs provided is on the container */
 	bool check_all(const std::string& mts) const;
+
+	/* Get name of the table that contains this reactions */
+	std::string name() const {return table_name;}
+
+	/* Get atomic weight ratio of the isotope */
+	double awr() const {return aweight;}
+
+	/* Get temperature (this is in Mevs) of the isotope */
+	double temp() const {return temperature;}
 
 	virtual ~NRContainer() {/* */};
 };

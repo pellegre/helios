@@ -42,7 +42,7 @@ static FeatureObject* latticeAttrib(TiXmlElement* pElement) {
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
-	latAttrib.checkAttributes(mapAttrib);
+	latAttrib.checkAttributes(mapAttrib,"lattice");
 
 	/* Get attributes */
 	UniverseId id = fromString<UniverseId>(mapAttrib["id"]);
@@ -72,7 +72,7 @@ static SurfaceObject* surfaceAttrib(TiXmlElement* pElement) {
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
-	surAttrib.checkAttributes(mapAttrib);
+	surAttrib.checkAttributes(mapAttrib,"surface");
 
 	/* Get attributes */
 	SurfaceId id = fromString<SurfaceId>(mapAttrib["id"]);
@@ -110,7 +110,7 @@ static CellObject* cellAttrib(TiXmlElement* pElement) {
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
-	cellAttrib.checkAttributes(mapAttrib);
+	cellAttrib.checkAttributes(mapAttrib,"cell");
 
 	/* Get attributes */
 	CellId id = fromString<CellId>(mapAttrib["id"]);

@@ -184,6 +184,18 @@ namespace ACE {
 		/* Get name of the table */
 		std::string getName() const {return table_name;}
 
+		/* Get atomic weight ratio */
+		double getAtomicRatio() const {return aweight;}
+
+		/* Get temperature (this is in Mevs)*/
+		double getTemperature() const {return temperature;}
+
+		/* Get date of the table */
+		std::string getDate() const {return date;}
+
+		/* Get comment */
+		std::string getComment() const {return comment;}
+
 		virtual ~ACETable();
 	};
 

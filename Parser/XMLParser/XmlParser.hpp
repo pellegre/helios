@@ -73,7 +73,7 @@ namespace Helios {
 		public:
 			XmlAttributes(const std::vector<std::string>& required, const std::vector<std::string>& optional) : required(required), optional(optional) {/* */};
 			/* Checks attributes from the user specified map, this will throw an exception if something is wrong */
-			void checkAttributes(const AttribMap& attrib_map);
+			void checkAttributes(const AttribMap& attrib_map, const string& object);
 			~XmlAttributes() {/* */};
 		};
 

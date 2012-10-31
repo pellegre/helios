@@ -44,7 +44,7 @@ static SourceObject* boxAttrib(TiXmlElement* pElement) {
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
-	surAttrib.checkAttributes(mapAttrib);
+	surAttrib.checkAttributes(mapAttrib,"box distribution");
 
 	/* Get attributes */
 	DistributionId id = fromString<DistributionId>(mapAttrib["id"]);
@@ -74,7 +74,7 @@ static SourceObject* cylAttrib(TiXmlElement* pElement) {
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
-	surAttrib.checkAttributes(mapAttrib);
+	surAttrib.checkAttributes(mapAttrib,"cyl distribution");
 
 	/* Get attributes */
 	DistributionId id = fromString<DistributionId>(mapAttrib["id"]);
@@ -93,7 +93,7 @@ static SourceObject* isoAttrib(TiXmlElement* pElement) {
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
-	surAttrib.checkAttributes(mapAttrib);
+	surAttrib.checkAttributes(mapAttrib,"isotropic distribution");
 
 	/* Get attributes */
 	DistributionId id = fromString<DistributionId>(mapAttrib["id"]);
@@ -111,7 +111,7 @@ static SourceObject* customAttrib(TiXmlElement* pElement) {
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
-	surAttrib.checkAttributes(mapAttrib);
+	surAttrib.checkAttributes(mapAttrib, "custom distribution");
 
 	/* Get attributes */
 	DistributionId id = fromString<DistributionId>(mapAttrib["id"]);
@@ -164,7 +164,7 @@ static SourceObject* distAttrib(TiXmlElement* pElement) {
 			keywords.push_back((*it_att).first);
 			keywords.push_back((*it_att).second);
 		}
-		throw Parser::KeywordParserError("Attribute <type> is not defined",keywords);
+		throw Parser::KeywordParserError("Attribute <type> is not defined for a distribution",keywords);
 	}
 
 	string type = typeDist.getValue(mapAttrib);
@@ -184,7 +184,7 @@ static SourceObject* samplerAttrib(TiXmlElement* pElement) {
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
-	surAttrib.checkAttributes(mapAttrib);
+	surAttrib.checkAttributes(mapAttrib, "sampler");
 
 	/* Get attributes */
 	SamplerId id = fromString<DistributionId>(mapAttrib["id"]);
@@ -206,7 +206,7 @@ static SourceObject* sourceAttrib(TiXmlElement* pElement) {
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
-	surAttrib.checkAttributes(mapAttrib);
+	surAttrib.checkAttributes(mapAttrib, "source");
 
 	/* Get attributes */
 	double strength = fromString<double>(strengthAttrib.getString(mapAttrib));
