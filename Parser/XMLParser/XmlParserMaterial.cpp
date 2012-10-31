@@ -59,6 +59,63 @@ static McObject* macroAttrib(TiXmlElement* pElement) {
 	return new MacroXsObject(mat_id,constant);
 }
 
+static void isoAttrib(TiXmlElement* pElement) {
+	/* Initialize XML attribute checker */
+	static const string required[2] = {"name","fraction"};
+	static XmlParser::XmlAttributes matAttrib(vector<string>(required, required + 2), vector<string>());
+
+	/* Check user input */
+	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
+	matAttrib.checkAttributes(mapAttrib);
+
+	string isotope = fromString<string>(mapAttrib["name"]);
+	double fraction = fromString<double>(mapAttrib["fraction"]);
+}
+
+static map<string,string> initUnits() {
+	map<string,string> values_map;
+	values_map["g/cm3"] = "g/cm3";
+	values_map["atom/b-cm"] = "atom/b-cm";
+	return values_map;
+}
+
+static map<string,string> initFraction() {
+	map<string,string> values_map;
+	values_map["atom"] = "atom";
+	values_map["weight"] = "weight";
+	return values_map;
+}
+
+/* Parse cell attributes */
+static McObject* aceAttrib(TiXmlElement* pElement) {
+	/* Initialize XML attribute checker */
+	static const string required[4] = {"id","density","units","fraction"};
+	static XmlParser::XmlAttributes matAttrib(vector<string>(required, required + 4), vector<string>());
+
+	/* Check flags */
+	XmlParser::AttributeValue<string> units_flag("units","",initUnits());
+	XmlParser::AttributeValue<string> fraction_flag("fraction","",initFraction());
+
+	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
+	/* Check user input */
+	matAttrib.checkAttributes(mapAttrib);
+
+	/* Get attributes */
+	MaterialId mat_id = fromString<MaterialId>(mapAttrib["id"]);
+	double density = fromString<double>(mapAttrib["density"]);
+	std::string units = units_flag.getValue(mapAttrib);
+	std::string fraction = fraction_flag.getValue(mapAttrib);
+
+	/* Get isotopes */
+	TiXmlElement* pChild;
+	for (pChild = pElement->FirstChildElement(); pChild != 0; pChild = pChild->NextSiblingElement()) {
+		string element_value(pChild->Value());
+		isoAttrib(pChild);
+	}
+	/* Return surface definition */
+	return 0;
+}
+
 void XmlParser::matNode(TiXmlNode* pParent) {
 
 	TiXmlNode* pChild;
@@ -68,7 +125,10 @@ void XmlParser::matNode(TiXmlNode* pParent) {
 			string element_value(pChild->Value());
 			if (element_value == "macro-xs")
 				objects.push_back(macroAttrib(pChild->ToElement()));
-			else {
+			else if (element_value == "material") {
+				aceAttrib(pChild->ToElement());
+				cout << "ACE :-)" << endl;
+			} else {
 				vector<string> keywords;
 				keywords.push_back(element_value);
 				throw KeywordParserError("Unrecognized material keyword <" + element_value + ">",keywords);
