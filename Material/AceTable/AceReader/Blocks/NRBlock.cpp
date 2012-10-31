@@ -125,15 +125,15 @@ NRBlock::SIGBlock::SIGBlock(const int nxs[nxs_size], const int jxs[jxs_size],con
 		int loca = jxs[NeutronTable::SIG] + lsig_data[i] - 1;
 		/* Set the start point on the XSS table */
 		setBegin(xss.begin() + (loca - 1));
-		/* Number of energies */
+		/* Number of energies and cross section data */
 		int ne;
-		/* Cross section */
-		CrossSection _xs;
+		int index;
+		vector<double> xs_data;
 		/* Get cross section values */
-		getXSS(_xs.ie);
+		getXSS(index);
 		getXSS(ne);
-		getXSS(_xs.xs_data,ne);
-		xs[i] = _xs;
+		getXSS(xs_data,ne);
+		xs[i] = CrossSection(index,xs_data);
 	}
 
 }

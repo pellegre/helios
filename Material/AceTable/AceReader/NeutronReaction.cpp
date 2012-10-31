@@ -36,7 +36,7 @@ static const string& tab = "   ";
 
 void NeutronReaction::printInformation(std::ostream& out) const {
 	out << tab << tab << "[@] MT = " << getMT() << endl;
-	out << tab << tab << "[@] Number of energies  : " << getXS().xs_data.size() << endl;
+	out << tab << tab << "[@] Number of energies  : " << getXS().getData().size() << endl;
 	out << tab << tab << "[@] Reaction parameters : ";
 	out << "Q = " << fixed << getQ() << " MeV "<< " ; ";
 	int ty = tyr_dist.getTYR();

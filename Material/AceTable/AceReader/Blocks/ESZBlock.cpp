@@ -58,17 +58,17 @@ void ESZBlock::dump(ostream& xss) {
 void ESZBlock::updateData() {
 	/* Update the elastic cross section */
 	CrossSection elastic_xs = reas().get_xs(2);
-	sigma_e = elastic_xs.xs_data;
+	sigma_e = elastic_xs.getData();
 
 	CrossSection abs_xs = reas().get_xs(101); /* Disappearance (fission not included) */
-	if (abs_xs.xs_data.size() > 0)
-		sigma_a = abs_xs.xs_data;
+	if (abs_xs.getData().size() > 0)
+		sigma_a = abs_xs.getData();
 	else
-		sigma_a = CrossSection(sigma_e.size()).xs_data;
+		sigma_a = CrossSection(sigma_e.size()).getData();
 
 	/* Update the total cross section */
 	CrossSection total_xs = reas().get_xs(1);
-	sigma_t = total_xs.xs_data;
+	sigma_t = total_xs.getData();
 }
 
 void ESZBlock::updatePointers(int nxs[nxs_size], const int jxs_old[jxs_size], int jxs_new[jxs_size]) const {

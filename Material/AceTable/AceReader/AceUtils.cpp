@@ -36,6 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "AceUtils.hpp"
 #include "PrintMessage.hpp"
 
+#include "../../../Common/Common.hpp"
+
 using namespace std;
 
 namespace ACE {
@@ -140,50 +142,31 @@ set<int> ACE::getNumbers(const string& argv) {
 
 double ACE::checkXS(const CrossSection& xs1, const CrossSection& xs2) {
 	/* Sanity check, the XS should be referring to the same energy grid */
-	if( (xs1.ie != xs2.ie) || (xs1.xs_data.size() != xs2.xs_data.size()) ) {
-		printMessage(PrintCodes::PrintError,"CheckXS()",
-					 "Cross sections aren't of the same size. Aborting. ");
+	if( (xs1.getIndex() != xs2.getIndex()) || (xs1.getData().size() != xs2.getData().size()) )
+			 throw(Helios::GeneralError("ACE::checkXS() : Cross sections aren't of the same size. "));
 
-		cerr << "<<<<<<<<<<<<<<<<<<<<<<<<<<<< left " << endl;
-		xs1.dump(cerr);
-		cerr << endl;
-		cerr << ">>>>>>>>>>>>>>>>>>>>>>>>>>>> right " << endl;
-		xs2.dump(cerr);
-		cerr << endl;
+	vector<double> diff(xs1.getData().size());
 
-		exit(1);
-	}
-
-	vector<double> diff(xs1.xs_data.size());
-
-	for(size_t i = 0 ; i < xs1.xs_data.size() ; i++) {
-		double minus = (xs1.xs_data[i] - xs2.xs_data[i]);
+	for(size_t i = 0 ; i < xs1.getData().size() ; i++) {
+		double minus = (xs1.getData()[i] - xs2.getData()[i]);
 		diff[i] = minus * minus;
 	}
 
-	return sqrt(inner_product(diff.begin(),diff.end(),diff.begin(),0.0));
+	double norm = inner_product(xs1.getData().begin(),xs1.getData().end(),xs1.getData().begin(),0.0);
+	if(norm > 0.0)
+		return sqrt(inner_product(diff.begin(),diff.end(),diff.begin(),0.0) / norm);
+	return 0.0;
 }
 
 vector<double> ACE::getXsDifference(const CrossSection& xs1, const CrossSection& xs2) {
 	/* Sanity check, the XS should be referring to the same energy grid */
-	if( (xs1.ie != xs2.ie) || (xs1.xs_data.size() != xs2.xs_data.size()) ) {
-		printMessage(PrintCodes::PrintError,"CheckXS()",
-					 "Cross sections aren't of the same size. Aborting. ");
+	if( (xs1.getIndex() != xs2.getIndex()) || (xs1.getData().size() != xs2.getData().size()) )
+		 throw(Helios::GeneralError("ACE::getXsDifference() : Cross sections aren't of the same size. "));
 
-		cerr << "<<<<<<<<<<<<<<<<<<<<<<<<<<<< left " << endl;
-		xs1.dump(cerr);
-		cerr << endl;
-		cerr << ">>>>>>>>>>>>>>>>>>>>>>>>>>>> right " << endl;
-		xs2.dump(cerr);
-		cerr << endl;
+	vector<double> diff(xs1.getData().size());
 
-		exit(1);
-	}
-
-	vector<double> diff(xs1.xs_data.size());
-
-	for(size_t i = 0 ; i < xs1.xs_data.size() ; i++) {
-		double minus = (xs1.xs_data[i] - xs2.xs_data[i]);
+	for(size_t i = 0 ; i < xs1.getData().size() ; i++) {
+		double minus = (xs1.getData()[i] - xs2.getData()[i]);
 		diff[i] = minus * minus;
 	}
 

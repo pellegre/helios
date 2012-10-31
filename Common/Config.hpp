@@ -11,7 +11,7 @@
 #define BUILD_TYPE "release"
 #define COMPILER_NAME "/usr/bin/g++"
 #define COMPILER_FLAGS "-ansi -Wall -fopenmp -O3"
-#define GIT_SHA1 "1c19562539e9b11fded868181e8918a70a20014b"
-#define COMPILATION_DATE "10/30/2012 - 04:19:00 PM"
+#define GIT_SHA1 "2bd555be4718b3bc0e8cdd738bdf492b7a4adb1d"
+#define COMPILATION_DATE "10/30/2012 - 05:49:20 PM"
 
 #endif // CONFIG_H

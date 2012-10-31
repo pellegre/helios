@@ -49,6 +49,19 @@ namespace ACE {
 
 	public:
 
+		/* Exception */
+		class ACEReaderError : public std::exception {
+			std::string reason;
+		public:
+			ACEReaderError(const std::string& msg) {
+				reason  = "Error on Ace Reader  : " + msg;
+			}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			~ACEReaderError() throw() {/* */};
+		};
+
 		/* Get a ACE table object */
 		static ACETable* getTable(const std::string& table_name);
 

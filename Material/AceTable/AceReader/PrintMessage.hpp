@@ -38,8 +38,6 @@ namespace ACE {
 		const int PrintMessage = 0;
 		const int PrintWarning = 1;
 		const int PrintError = 2;
-		const int PrintPerror = 3;
-		const int PrintWarningPerror = 4;
 	}
 
 	/* Return a string with a message from some routine o the library */

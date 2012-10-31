@@ -34,25 +34,35 @@
 namespace ACE {
 
 class CrossSection {
-public:
+
 	/* Energy index for the reaction */
 	int ie;
 	/* Cross section */
 	std::vector<double> xs_data;
+
+public:
 
 	CrossSection() : ie(1) {/* default constructor */};
 	CrossSection(size_t size) : ie(1), xs_data(size,0.0) {/* default constructor */};
 	CrossSection(int ie, const std::vector<double>& xs_data) : ie(ie), xs_data(xs_data) {/* */};
 	CrossSection(const CrossSection& xs_copy) : ie(xs_copy.ie), xs_data(xs_copy.xs_data) {/* */};
 
+	/* Dump cross section (ACE format)*/
 	void dump(std::ostream& xss) const;
+	/* Size on ACE table */
 	int getSize() const {return (xs_data.size() + 2);};
 
+	/* Size (real one) */
+	size_t size() const {return xs_data.size() + (ie - 1);}
+
+	/* Get cross section data */
+	const std::vector<double>& getData() const {return xs_data;}
+	/* Get (FORTRAN) index */
+	int getIndex() const {return ie;}
+
 	double operator[](int index) const {
-		if(index < (ie - 1))
-			return 0.0;
-		else
-			return xs_data[index];
+		if(index < (ie - 1)) return 0.0;
+		else return xs_data[index];
 	}
 
 	friend const CrossSection operator+(const CrossSection& left, const CrossSection& right);

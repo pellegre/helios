@@ -31,6 +31,8 @@
 #include "AceUtils.hpp"
 #include "PrintMessage.hpp"
 
+#include "../../../Common/Common.hpp"
+
 using namespace std;
 using namespace ACE;
 
@@ -51,12 +53,8 @@ const CrossSection operator+(const CrossSection& left, const CrossSection& right
 			return left;
 
 	/* Sanity check, the XS should be referring to the same energy grid */
-	if( (left.ie + left.xs_data.size()) != (right.ie + right.xs_data.size()) ) {
-		printMessage(PrintCodes::PrintError,"CrossSection::operator+()",
-					 "Cross sections aren't of the same size. Aborting. ");
-
-		exit(1);
-	}
+	if( (left.ie + left.xs_data.size()) != (right.ie + right.xs_data.size()) )
+		 throw(Helios::GeneralError("ACE::CrossSection::operator+() : Cross sections aren't of the same size. "));
 
 	/* Get the minor index on both cross sections */
 	int min_ie = min(left.ie,right.ie);

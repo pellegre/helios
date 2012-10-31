@@ -26,9 +26,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "PrintMessage.hpp"
+#include "../../../Common/Common.hpp"
 
 using namespace std;
 using namespace ACE;
+using namespace Helios;
 
 namespace ACE {
 
@@ -44,25 +46,17 @@ void ACE::printMessage(int code, const string& routine, const string& message) {
 	switch(code) {
 		/* Just print some message */
 		case PrintCodes::PrintMessage :
-			code_str = "[@] MESSAGE ";
+			code_str = "Ace Module message ";
 			break;
 
 	    /* Print a warning */
 		case PrintCodes::PrintWarning :
-			code_str = "[@] WARNING ";
-			break;
-
-		/* Print a warning */
-		case PrintCodes::PrintWarningPerror :
-			code_str = "[@] WARNING ";
+			code_str = "Ace Module warning ";
 			break;
 
 		/* Print the error message */
 		case PrintCodes::PrintError :
-			code_str = "[@] ERROR ";
-			break;
-		case PrintCodes::PrintPerror :
-			code_str = "[@] ERROR ";
+			code_str = "Ace Module error ";
 			break;
 
 		default:
@@ -72,29 +66,19 @@ void ACE::printMessage(int code, const string& routine, const string& message) {
 	}
 
 	/* Print String */
-	string ret_str = code_str + " : " + routine + " -> " + message;
-
-	/* Check if we should use the perror routine */
-	if (code == PrintCodes::PrintPerror) {
-		perror(ret_str.c_str());
-		return;
-	} else if (code == PrintCodes::PrintWarningPerror) {
-		if(Conf::ShowWarnings)
-			perror(ret_str.c_str());
-		return;
-	}
+	string ret_str = code_str + " from " + routine + " : " + message;
 
 	if(code == PrintCodes::PrintMessage) {
-		cout << ret_str << endl;
-		return;
-	} else if (code == PrintCodes::PrintWarning) {
-		if(Conf::ShowWarnings)
-			cerr << ret_str << endl;
-		return;
-	} else {
-		cerr << ret_str << endl;
-		return;
+		Log::msg() << ret_str << Log::endl;
 	}
+	else if (code == PrintCodes::PrintWarning) {
+		if(Conf::ShowWarnings)
+			Log::warn() << ret_str << Log::endl;
+	}
+	else {
+		Log::error() << ret_str << Log::endl;
+	}
+
 }
 
 

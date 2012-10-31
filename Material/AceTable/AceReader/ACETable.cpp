@@ -53,19 +53,13 @@ ACETable::ACETable(const string& _table_name, const string& full_path, size_t ad
 			line_number++;
 		}
 
-		if( is.eof() ) {
-			printMessage(PrintCodes::PrintError,"ACETable::ACETable()",
-					     "Could not find the table name on file " + full_path);
-			exit(1);
-		}
+		if( is.eof() )
+			throw(AceTableError(this,"Could not find the table name on file " + full_path));
 
 		/* Verify the table name */
 		is >> line;
-		if (line.find(table_name) == string::npos) {
-			printMessage(PrintCodes::PrintError,"ACETable::ACETable()",
-					     "The address supply in xsdir doesn't match this isotope name");
-			exit(1);
-		}
+		if (line.find(table_name) == string::npos)
+			throw(AceTableError(this,"The address supply in xsdir doesn't match this isotope name. Found " + line + " instead of " + table_name));
 
 		/* Get atomic weight */
 		is >> aweight;
@@ -137,11 +131,8 @@ ACETable::ACETable(const string& _table_name, const string& full_path, size_t ad
 			}
 		}
 
-	} else {
-		printMessage(PrintCodes::PrintError,"ACETable::ACETable()",
-				     "Could not open the file " + full_path);
-		exit(1);
-	}
+	} else
+		throw(AceTableError(this,"Could not open the file " + full_path));
 
 	is.close();
 }

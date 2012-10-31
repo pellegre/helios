@@ -50,7 +50,7 @@ ACE::Conf::Conf() {
 	MAXLINESIZE = 80;
 
 	/* Get DATAPATH variable */
-	char* datapath = getenv("DATAPATH");
+	char* datapath = getenv("HELIOS_DATA");
 	/* Check if the DATAPATH variable is set */
 	if(datapath)
 		DATAPATH = string(datapath);

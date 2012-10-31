@@ -70,7 +70,6 @@ ACETable* ACEReader::getTable(const std::string& table_name) {
 				int file_type; is >> file_type;
 				size_t address; is >> address;
 				size_t table_length; is >> table_length;
-				/* TODO - Yeah, not safe */
 				string full_path = Conf::DATAPATH + "/" + file_name;
 
 				string letter = table_name.substr(table_name.size() - 1);
@@ -89,17 +88,10 @@ ACETable* ACEReader::getTable(const std::string& table_name) {
 			}
 		}
 
-	} else {
-		printMessage(PrintCodes::PrintError,"ACEReader::GetTable()",
-					 "Could not open the file " + filename);
-
-		exit(1);
-	}
+	} else
+		throw(ACEReaderError("Could not open the file " + filename));
 
 	is.close();
+	throw(ACEReaderError("Table  " + table_name + " could not be found on xsdir. "));
 
-	printMessage(PrintCodes::PrintWarning,"ACEReader::GetTable()",
-				 "Table  " + table_name + " could not be found on xsdir. ");
-
-	return 0;
 }
