@@ -34,6 +34,7 @@ namespace Helios {
 McEnvironment::McEnvironment(Parser* parser) : parser(parser) {
 	/* Register the module factories */
 	registerFactory(new MaterialsFactory(this));
+	registerFactory(new AceFactory(this));
 	registerFactory(new GeometryFactory(this));
 	registerFactory(new SourceFactory(this));
 }
@@ -54,7 +55,7 @@ void McEnvironment::parseFiles(const std::vector<std::string>& input_files) {
 		parser->parseFile((*it));
 	/* Get parsed objects */
 	vector<McObject*> objects = parser->getObjects();
-	/* Put the on the map */
+	/* Put the objects on the map */
 	for(vector<McObject*>::iterator it = objects.begin() ; it != objects.end() ; ++it) {
 		/* Set the environment where this object is passing through */
 		(*it)->setEnvironment(this);
@@ -78,7 +79,10 @@ McEnvironment::~McEnvironment() {
 }
 
 void McEnvironment::setup() {
-	/* First, we need to setup the materials (i.e. materials) */
+	/* Setup the Ace module */
+	setupModule<AceModule>();
+
+	/* Setup the materials */
 	setupModule<Materials>();
 
 	/* Once materials are setup, we need to setup the geometry (so cells can grab materials from the environment)*/

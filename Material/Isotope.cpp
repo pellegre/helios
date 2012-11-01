@@ -32,6 +32,8 @@ namespace Helios {
 /* Output isotope information */
 std::ostream& operator<<(std::ostream& out, const Isotope& q) {
 	q.print(out);
+	if(q.fissile) out << " (fission present)";
+	else out << " (no fission)";
 	return out;
 }
 

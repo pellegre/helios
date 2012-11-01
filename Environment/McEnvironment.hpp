@@ -43,6 +43,8 @@
 
 /* Materials */
 #include "../Material/Materials.hpp"
+/* Ace module */
+#include "../Material/AceTable/AceModule.hpp"
 
 /* Geometry */
 #include "../Geometry/Geometry.hpp"
@@ -76,6 +78,10 @@ namespace Helios {
 		 * parsed. Thrown an exception if the parser fails.
 		 */
 		void parseFiles(const std::vector<std::string>& input_files);
+
+		/* Push a set of definitions into the environment. */
+		template<class Iterator>
+		void pushObjects(Iterator begin, Iterator end);
 
 		/* ---- Modules management */
 
@@ -211,6 +217,17 @@ namespace Helios {
 			throw(GeneralError("The module *" + module + "* is not loaded on the environment"));
 		/* Now try to access the object on that module */
 		return modPtr->getObject<Object>(id);
+	}
+
+	template<class Iterator>
+	void McEnvironment::pushObjects(Iterator begin, Iterator end) {
+		/* Put the objects on the map */
+		while(begin != end) {
+			/* Set the environment where this object is passing through */
+			(*begin)->setEnvironment(this);
+			object_map[(*begin)->getModuleName()].push_back((*begin));
+			++begin;
+		}
 	}
 
 } /* namespace Helios */

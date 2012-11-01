@@ -44,7 +44,7 @@ namespace Helios {
 	class Isotope {
 	protected:
 		/*
-		 * Flag if the isotope is fissile, should be set on child's constructor
+		 * Flag if the isotope has fission information, should be set on child's constructor
 		 * By default is false.
 		 */
 		bool fissile;

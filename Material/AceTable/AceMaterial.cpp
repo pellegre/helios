@@ -26,7 +26,6 @@
  */
 
 #include "AceMaterial.hpp"
-#include "AceReader/NeutronTable.hpp"
 
 using namespace std;
 using namespace Ace;
@@ -34,28 +33,6 @@ using namespace Ace;
 namespace Helios {
 
 //virtual vector<Material*> AceMaterialFactory::createMaterials(const vector<MaterialObject*>& definitions) const {
-//	/* Map to hold the isotopes created */
-//	map<string,AceIsotope*> isotopes;
-//
-//	/* Loop over the definitions to create isotopes */
-//	for(vector<MaterialObject*>::const_iterator it = definitions.begin() ; it != definitions.end() ; ++it) {
-//		/* Cast to AceObject */
-//		AceMaterialObject* ace_material = dynamic_cast<AceMaterialObject*>(*it);
-//		map<std::string,double>::const_iterator iso = ace_material->isotopes.begin();
-//		for(; iso != ace_material->isotopes.end() ; ++iso) {
-//			string isotope = (*iso).first;
-//			if (isotopes.find(isotope) == isotopes.end()) {
-//				/* Get the neutron table using the AceReader */
-//				NeutronTable* table = dynamic_cast<NeutronTable*>(AceReader::getTable(isotope));
-//				/* Create child grid */
-//				const ChildGrid* child_grid = master_grid->pushGrid(table->getEnergyGrid().begin(), table->getEnergyGrid().end());
-//				/* Create isotope and update the map */
-//				isotopes[isotope] = new AceIsotope(table->getReactions(), child_grid);
-//				/* Delete table, we don't need it anymore */
-//				delete table;
-//			}
-//		}
-//	}
 //}
 
 } /* namespace Helios */

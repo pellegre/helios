@@ -28,56 +28,13 @@
 #ifndef ACEMATERIAL_HPP_
 #define ACEMATERIAL_HPP_
 
-#include "AceReader/ReactionContainer.hpp"
+#include "AceModule.hpp"
 #include "../Material.hpp"
-#include "../Grid/MasterGrid.hpp"
 #include "../../Common/Sampler.hpp"
 
 namespace Helios {
 	class AceMaterialObject;
 	class AceMaterialFactory;
-
-	/* Isotope related to an ACE table. */
-	class AceIsotope : public Isotope {
-
-		/* Reference to a neutron table */
-		Ace::ReactionContainer reactions;
-
-		/* Atomic weight ratio */
-		double aweight;
-		/* Temperature at which the data were processed (in MeV) */
-		double temperature;
-
-		/* Constant reference to a CHILD grid */
-		const ChildGrid* child_grid;
-		/* Absorption probability */
-		std::vector<double> absorption_prob;
-		/* Fission probability */
-		std::vector<double> fission_prob;
-
-	public:
-		AceIsotope(const Ace::ReactionContainer& reactions, const ChildGrid* child_grid);
-
-		double getAbsorptionProb(Energy& energy) const {
-			double factor;
-			size_t idx = child_grid->index(energy,factor);
-			return factor * (absorption_prob[idx + 1] - absorption_prob[idx]) + absorption_prob[idx];
-		}
-
-		double getFissionProb(Energy& energy) const {
-			double factor;
-			size_t idx = child_grid->index(energy,factor);
-			return factor * (fission_prob[idx + 1] - fission_prob[idx]) + fission_prob[idx];
-		}
-
-		/* Fission reaction */
-		void fission(Particle& particle, Random& random) const;
-
-		/* Just one scattering reaction (from the scattering matrix) */
-		void scatter(Particle& particle, Random& random) const;
-
-		~AceIsotope();
-	};
 
 	class AceMaterial : public Helios::Material {
 
@@ -135,7 +92,17 @@ namespace Helios {
 
 	/* Definition of an ace cross section */
 	class AceMaterialObject : public MaterialObject {
+		/* Data defined by the user */
+		MaterialId id;
+		double density;
+		std::string units;
+		std::string fraction;
+		/* Map of isotopes and each percentage */
+		std::map<std::string,double> isotopes;
 	public:
+		friend class AceMaterial;
+		friend class AceMaterialFactory;
+
 		AceMaterialObject(const std::string& id, const double& density, const std::string& units,
 				const std::string& fraction, const std::map<std::string,double>& isotopes) :
 			 MaterialObject(AceMaterial::name(),id)
@@ -146,18 +113,6 @@ namespace Helios {
 			,isotopes(isotopes)
 		{/* */}
 		~AceMaterialObject() {/* */};
-	private:
-		friend class AceMaterial;
-		friend class AceMaterialFactory;
-
-		/* Data defined by the user */
-		MaterialId id;
-		double density;
-		std::string units;
-		std::string fraction;
-
-		/* Map of isotopes and each percentage */
-		std::map<std::string,double> isotopes;
 	};
 
 	/* Material Factory */

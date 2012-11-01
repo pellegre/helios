@@ -108,12 +108,8 @@ namespace Helios {
 		/* Check if we are dealing with this kind of material */
 		if(Object::name() != material_type)
 			throw(MaterialError(id,"Material type *" + Object::name() + "* is not loaded into the system"));
-
-		/* Internal ID */
-		std::map<MaterialId, InternalMaterialId>::const_iterator it = material_map.find(id);
-		InternalMaterialId internalId = it->second;
 		/* Get pointer */
-		Object* object = dynamic_cast<Object*>(materials[internalId]);
+		Object* object = dynamic_cast<Object*>(getMaterial(id));
 		/* Construct container */
 		std::vector<Object*> objContainer;
 		objContainer.push_back(object);

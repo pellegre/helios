@@ -38,10 +38,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gtest/gtest.h"
 
-/*
- * The fixture for geometry testing class. Open and parse a geometry
- * file.
- */
 class SourceTest : public ::testing::Test {
 
 protected:
