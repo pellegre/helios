@@ -194,6 +194,23 @@ void ChildGrid::setup(const std::vector<size_t>& _master_pointers) {
 }
 
 size_t ChildGrid::index(std::pair<size_t,double>& pair_value, double& factor) const {
+	/* Maximum and minimum values for energy */
+	double min_energy = child_grid[0];
+	double max_energy = child_grid[child_grid.size() - 1];
+
+	/* Energy value */
+	double energy = pair_value.second;
+
+	/* First check if the given energy is out of bound */
+	if(energy <= min_energy) {
+		factor = 0.0;
+		return 0;
+	} else if(energy >= max_energy) {
+		factor = 1.0;
+		return child_grid.size() - 2;
+	}
+
+	/* Get index from master grid */
 	master_grid->setIndex(pair_value);
 	size_t child_index = master_pointers[pair_value.first];
 	/* Energy bounds */

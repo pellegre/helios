@@ -205,12 +205,14 @@ TEST_F(AceModuleTest, SumReactions) {
 		/* Get table from file */
 		NeutronTable* ace_table = dynamic_cast<NeutronTable*>(AceReader::getTable(name));
 		for(size_t j = 0 ; j < nrandom ; ++j) {
-			/* Get random energy */
-			double energy = randomNumber(min_value,max_value);
-			Energy pair_energy(0,energy);
 
 			/* Get energy grid */
 			vector<double> energy_grid = ace_table->getEnergyGrid();
+
+			/* Get random energy */
+			double energy = randomNumber(energy_grid[0], energy_grid[energy_grid.size() - 1]);
+			Energy pair_energy(0,energy);
+
 			/* Get disappearance */
 			CrossSection dissap_xs = ace_table->getAbsorption();
 			/* Get fission cross section */
@@ -232,6 +234,7 @@ TEST_F(AceModuleTest, SumReactions) {
 			double abs_prob = sigma_a / sigma_t;
 			/* Check against interpolated values */
 			double expected_abs = iso->getAbsorptionProb(pair_energy);
+			cout << energy << " ; " << abs_prob << " ; " << expected_abs << endl;
 			//EXPECT_NEAR(abs_prob,expected_abs,5e8*numeric_limits<double>::epsilon());
 
 			if(iso->isFissile()) {

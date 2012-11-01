@@ -11,7 +11,7 @@
 #define BUILD_TYPE "debug"
 #define COMPILER_NAME "/usr/bin/g++"
 #define COMPILER_FLAGS "-g -ansi -Wall -fopenmp -O1"
-#define GIT_SHA1 "81d5fd83c121dfdfe36a95fe3a82e518175663e2"
-#define COMPILATION_DATE "10/31/2012 - 10:04:58 PM"
+#define GIT_SHA1 "9fe6fc6e32a950ca4f815823e1c9a2949283f14b"
+#define COMPILATION_DATE "11/01/2012 - 05:49:26 PM"
 
 #endif // CONFIG_H

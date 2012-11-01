@@ -71,6 +71,18 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 
 }
 
+double AceIsotope::getAbsorptionProb(Energy& energy) const {
+	double factor;
+	size_t idx = child_grid->index(energy,factor);
+	return factor * (absorption_prob[idx + 1] - absorption_prob[idx]) + absorption_prob[idx];
+}
+
+double AceIsotope::getFissionProb(Energy& energy) const {
+	double factor;
+	size_t idx = child_grid->index(energy,factor);
+	return factor * (fission_prob[idx + 1] - fission_prob[idx]) + fission_prob[idx];
+}
+
 void AceIsotope::print(std::ostream& out) const {
 	out << "child grid size = " << setw(6) << child_grid->size() << " ; isotope = " <<  setw(9) << reactions.name()
 		<< " ; awr = " << setw(9) << aweight << " ; temperature = " << temperature / Constant::boltz << " K ";

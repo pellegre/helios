@@ -59,17 +59,11 @@ namespace Helios {
 	public:
 		AceIsotope(const Ace::ReactionContainer& reactions, const ChildGrid* child_grid);
 
-		double getAbsorptionProb(Energy& energy) const {
-			double factor;
-			size_t idx = child_grid->index(energy,factor);
-			return factor * (absorption_prob[idx + 1] - absorption_prob[idx]) + absorption_prob[idx];
-		}
+		/* Get absorption probability */
+		double getAbsorptionProb(Energy& energy) const;
 
-		double getFissionProb(Energy& energy) const {
-			double factor;
-			size_t idx = child_grid->index(energy,factor);
-			return factor * (fission_prob[idx + 1] - fission_prob[idx]) + fission_prob[idx];
-		}
+		/* Get fission probability */
+		double getFissionProb(Energy& energy) const;
 
 		/* Fission reaction */
 		void fission(Particle& particle, Random& random) const {/* */};
