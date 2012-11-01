@@ -38,7 +38,7 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 	reactions(_reactions), aweight(_reactions.awr()), temperature(_reactions.temp()), child_grid(_child_grid) {
 
 	/* Total microscopic cross section of this isotope */
-	CrossSection sigma_total = reactions.get_xs(1);
+	total_xs = reactions.get_xs(1);
 
 	/* Check if the isotope contains a fission cross section */
 	fissile = reactions.check_all("18");
@@ -47,40 +47,34 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 
 	/* Set the fission probability (in case the information is available) */
 	if(fissile) {
-		/* Resize the probability array */
-		fission_prob.resize(sigma_total.size());
 		/* Get fission cross section */
-		CrossSection fission_xs = reactions.get_xs(18);
+		fission_xs = reactions.get_xs(18);
 		/* Check size */
-		assert(fission_xs.size() == sigma_total.size());
-		/* Calculate the fission probabilities for each energy */
-		for(size_t i = 0 ; i < sigma_total.size() ; ++i)
-			fission_prob[i] = fission_xs[i] / sigma_total[i];
+		assert(fission_xs.size() == total_xs.size());
 	}
 
 	/* Set the absorption probability */
-	CrossSection absorption_xs = reactions.get_xs(27);
+	absorption_xs = reactions.get_xs(27);
 	/* Check size */
-	assert(absorption_xs.size() == sigma_total.size());
-	/* Resize the probability array */
-	absorption_prob.resize(sigma_total.size());
-
-	/* Calculate the absorption probabilities for each energy */
-	for(size_t i = 0 ; i < sigma_total.size() ; ++i)
-		absorption_prob[i] = absorption_xs[i] / sigma_total[i];
+	assert(absorption_xs.size() == total_xs.size());
 
 }
 
 double AceIsotope::getAbsorptionProb(Energy& energy) const {
 	double factor;
 	size_t idx = child_grid->index(energy,factor);
-	return factor * (absorption_prob[idx + 1] - absorption_prob[idx]) + absorption_prob[idx];
+	cout << "(lib) energy = " << energy.second << " index = " << idx << endl;
+	double abs = factor * (absorption_xs[idx + 1] - absorption_xs[idx]) + absorption_xs[idx];
+	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
+	return abs / total;
 }
 
 double AceIsotope::getFissionProb(Energy& energy) const {
 	double factor;
 	size_t idx = child_grid->index(energy,factor);
-	return factor * (fission_prob[idx + 1] - fission_prob[idx]) + fission_prob[idx];
+	double fission = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
+	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
+	return fission / total;
 }
 
 void AceIsotope::print(std::ostream& out) const {

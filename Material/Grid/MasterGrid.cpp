@@ -50,14 +50,28 @@ void MasterGrid::setup() {
 
 	/* Setup child grids */
 	for(vector<ChildGrid*>::const_iterator it = child_grids.begin() ; it != child_grids.end() ; ++it) {
+		/* Create master array of pointers */
 		vector<size_t> master_pointers(size());
-		/* Index on master grid */
-		size_t child_idx = 0;
+
+		/* Energy limits on child grid */
+		double min_energy = (*it)->child_grid[0];
+		double max_energy = (*it)->child_grid[(*it)->size() - 1];
+
 		for(size_t i = 0 ; i < size() ; ++i) {
-			double child_value = (*(*it))[child_idx + 1];
-			master_pointers[i] = child_idx;
-			if(child_value == master_grid[i]) child_idx++;
+			/* Energy value (on the master grid) */
+			double energy = master_grid[i];
+			/* First check if the given energy is out of bound */
+			if(energy <= min_energy)
+				/* Set the pointer to the beginning of the the grid */
+				master_pointers[i] = 0;
+			else if(energy >= max_energy)
+				/* Set the pointer to the end of the grid */
+				master_pointers[i] = (*it)->size() - 2;
+			else
+				/* Get the index on the child grid */
+				master_pointers[i] = upper_bound((*it)->child_grid.begin(), (*it)->child_grid.end(), energy) - (*it)->child_grid.begin() - 1;
 		}
+
 		/* Setup master pointer */
 		(*it)->setup(master_pointers);
 	}

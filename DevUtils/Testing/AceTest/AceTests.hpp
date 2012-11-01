@@ -208,24 +208,27 @@ TEST_F(AceModuleTest, SumReactions) {
 
 			/* Get energy grid */
 			vector<double> energy_grid = ace_table->getEnergyGrid();
-
-			/* Get random energy */
-			double energy = randomNumber(energy_grid[0], energy_grid[energy_grid.size() - 1]);
-			Energy pair_energy(0,energy);
-
+			/* Get total cross section */
+			CrossSection total_xs = ace_table->getTotal();
 			/* Get disappearance */
 			CrossSection dissap_xs = ace_table->getAbsorption();
 			/* Get fission cross section */
 			CrossSection fission_xs = ace_table->getReactions().get_xs(18);
 			/* Calculate absorption cross section */
 			CrossSection absorption_xs = dissap_xs + fission_xs;
-			/* Get total cross section */
-			CrossSection total_xs = ace_table->getTotal();
+
+			if(j == 0)
+				for(size_t i = 2400 ; i < 2700 ; ++i)
+					cout << i << scientific << " " << energy_grid[i] << " " << total_xs[i] << " " << absorption_xs[i] << endl;
+
+			/* Get random energy */
+			double energy = randomNumber(energy_grid[0], energy_grid[energy_grid.size() - 1]);
+			Energy pair_energy(0,energy);
 
 			/* Interpolate on energy grid */
 			size_t idx = upper_bound(energy_grid.begin(), energy_grid.end(), energy) - energy_grid.begin() - 1;
 			double factor = (energy - energy_grid[idx]) / (energy_grid[idx + 1] - energy_grid[idx]);
-
+			cout << "(tes) energy = " << energy << " index = " << idx << endl;
 			/* Get interpolated cross sections */
 			double sigma_t = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
 			double sigma_a = factor * (absorption_xs[idx + 1] - absorption_xs[idx]) + absorption_xs[idx];
@@ -235,13 +238,13 @@ TEST_F(AceModuleTest, SumReactions) {
 			/* Check against interpolated values */
 			double expected_abs = iso->getAbsorptionProb(pair_energy);
 			cout << energy << " ; " << abs_prob << " ; " << expected_abs << endl;
-			//EXPECT_NEAR(abs_prob,expected_abs,5e8*numeric_limits<double>::epsilon());
+			EXPECT_NEAR(abs_prob,expected_abs,5e8*numeric_limits<double>::epsilon());
 
 			if(iso->isFissile()) {
 				double sigma_f = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
 				double fis_prob = sigma_f / sigma_t;
 				double expected_fis = iso->getFissionProb(pair_energy);
-				//EXPECT_NEAR(fis_prob,expected_fis,5e8*numeric_limits<double>::epsilon());
+				EXPECT_NEAR(fis_prob,expected_fis,5e8*numeric_limits<double>::epsilon());
 			}
 
 		}
