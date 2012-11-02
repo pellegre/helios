@@ -62,6 +62,12 @@ namespace Helios {
 	public:
 		AceIsotope(const Ace::ReactionContainer& reactions, const ChildGrid* child_grid);
 
+		/* Get isotope information */
+		double getAwr() const {return aweight;}
+
+		/* Get temperature (in MeVs) */
+		double getTemperature() const {return temperature;}
+
 		/* Get absorption probability */
 		double getAbsorptionProb(Energy& energy) const;
 
@@ -108,6 +114,12 @@ namespace Helios {
 
 		/* Print descriptions of each isotope and grid information */
 		void printIsotopes(std::ostream& out) const;
+
+		/* Get isotope map */
+		std::map<std::string,AceIsotope*> getIsotopeMap() const {return isotope_map;}
+
+		/* Get master grid */
+		const MasterGrid* getMasterGrid() const {return master_grid;};
 
 		virtual ~AceModule();
 	};

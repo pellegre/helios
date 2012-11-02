@@ -82,13 +82,13 @@ void McEnvironment::setup() {
 	/* Setup the Ace module */
 	setupModule<AceModule>();
 
-	/* Setup the materials */
+	/* Setup the materials module */
 	setupModule<Materials>();
 
-	/* Once materials are setup, we need to setup the geometry (so cells can grab materials from the environment)*/
+	/* Once materials are setup, we need to setup the geometry module (so cells can grab materials from the environment)*/
 	setupModule<Geometry>();
 
-	/* Finally, we setup the source */
+	/* Finally, we setup the source module */
 	setupModule<Source>();
 }
 

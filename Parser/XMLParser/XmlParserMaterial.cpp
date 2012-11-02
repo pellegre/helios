@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "XmlParser.hpp"
 #include "../../Material/MacroXs/MacroXs.hpp"
 #include "../../Material/AceTable/AceMaterial.hpp"
+#include "../../Material/AceTable/AceModule.hpp"
 
 using namespace std;
 
@@ -90,7 +91,7 @@ static map<string,string> initFraction() {
 }
 
 /* Parse cell attributes */
-static McObject* aceAttrib(TiXmlElement* pElement) {
+static vector<McObject*> aceAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
 	static const string required[4] = {"id","density","units","fraction"};
 	static XmlParser::XmlAttributes matAttrib(vector<string>(required, required + 4), vector<string>());
@@ -109,6 +110,9 @@ static McObject* aceAttrib(TiXmlElement* pElement) {
 	std::string units = units_flag.getValue(mapAttrib);
 	std::string fraction = fraction_flag.getValue(mapAttrib);
 
+	/* Push all the ACE objects (including the isotopes) */
+	vector<McObject*> ace_objects;
+
 	/* Get isotopes */
 	TiXmlElement* pChild;
 	map<string,double> isotopes;
@@ -121,6 +125,7 @@ static McObject* aceAttrib(TiXmlElement* pElement) {
 		if(it == isotopes.end()) {
 			/* Push isotope */
 			isotopes.insert(pair_value);
+			ace_objects.push_back(new AceObject(pair_value.first));
 		} else {
 			/* Duplicated name of isotope */
 			std::vector<std::string> keywords;
@@ -133,7 +138,8 @@ static McObject* aceAttrib(TiXmlElement* pElement) {
 		}
 	}
 	/* Return surface definition */
-	return new AceMaterialObject(id, density, units, fraction, isotopes);
+	ace_objects.push_back(new AceMaterialObject(id, density, units, fraction, isotopes));
+	return ace_objects;
 }
 
 void XmlParser::matNode(TiXmlNode* pParent) {
@@ -146,8 +152,8 @@ void XmlParser::matNode(TiXmlNode* pParent) {
 			if (element_value == "macro-xs")
 				objects.push_back(macroAttrib(pChild->ToElement()));
 			else if (element_value == "material") {
-				aceAttrib(pChild->ToElement());
-				cout << "ACE :-)" << endl;
+				vector<McObject*> ace_objects = aceAttrib(pChild->ToElement());
+				objects.insert(objects.end(), ace_objects.begin(), ace_objects.end());
 			} else {
 				vector<string> keywords;
 				keywords.push_back(element_value);

@@ -79,7 +79,7 @@ double AceIsotope::getFissionProb(Energy& energy) const {
 }
 
 void AceIsotope::print(std::ostream& out) const {
-	out << "child grid size = " << setw(6) << child_grid->size() << " ; isotope = " <<  setw(9) << reactions.name()
+	out << "isotope = " <<  setw(9) << reactions.name()
 		<< " ; awr = " << setw(9) << aweight << " ; temperature = " << temperature / Constant::boltz << " K ";
 }
 

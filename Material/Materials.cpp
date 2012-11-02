@@ -27,6 +27,7 @@
 
 #include "Materials.hpp"
 #include "MacroXs/MacroXs.hpp"
+#include "AceTable/AceMaterial.hpp"
 
 using namespace std;
 
@@ -41,6 +42,16 @@ Materials::Materials(const vector<McObject*>& matDefinitions, const McEnvironmen
 	/* Get name of the first object */
 	string name = definition->getObjectName();
 
+	/* Detect the type of materials on the materials. We can't have a mix of materials on a problem */
+	if(name == MacroXs::name())
+		/* Macroscopic cross section factory */
+		factory = new MacroXsFactory;
+	else if (name == AceMaterial::name())
+		factory = new AceMaterialFactory;
+	else
+		throw Material::BadMaterialCreation(static_cast<MaterialObject*>(definition)->getMatid(),
+				"Material type " + definition->getObjectName() + " is not defined");
+
 	/* Container of material objects */
 	vector<MaterialObject*> objects;
 
@@ -53,14 +64,6 @@ Materials::Materials(const vector<McObject*>& matDefinitions, const McEnvironmen
 		objects.push_back(newObject);
 	}
 
-	/* Detect the type of materials on the materials. We can't have a mix of materials on a problem */
-	if(name == MacroXs::name())
-		/* Macroscopic cross section factory */
-		factory = new MacroXsFactory;
-	else
-		throw Material::BadMaterialCreation(static_cast<MaterialObject*>(definition)->getMatid(),
-				"Material type " + definition->getObjectName() + " is not defined");
-
 	/* Set name of the type of material */
 	material_type = name;
 
@@ -71,6 +74,9 @@ Materials::Materials(const vector<McObject*>& matDefinitions, const McEnvironmen
 	for(size_t i = 0; i < materials.size() ; ++i) {
 		/* Set internal / unique index */
 		materials[i]->setInternalId(i);
+		MaterialId id = materials[i]->getUserId();
+		if(material_map.find(id) != material_map.end())
+			throw Material::BadMaterialCreation(id, "Duplicated id");
 		/* Update material map */
 		material_map[materials[i]->getUserId()] = materials[i]->getInternalId();
 	}

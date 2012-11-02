@@ -72,6 +72,8 @@ int main(int argc, char **argv) {
 	/* Setup the problem */
 	environment.setup();
 
+	environment.getModule<Materials>()->printMaterials(cout);
+
 	/* Initialization - Random number */
 	Random r;
 	r.seed(1);

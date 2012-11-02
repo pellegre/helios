@@ -38,14 +38,14 @@ namespace Helios {
 
 	class AceMaterial : public Helios::Material {
 
+		/* Constant reference to a MASTER grid (managed by the AceModule) */
+		const MasterGrid* master_grid;
+
 		/* Total cross section */
 		std::vector<double> mfp;
 
 		/* Isotope sampler */
 		Sampler<AceIsotope*>* isotope_sampler;
-
-		/* Constant reference to a MASTER grid (managed by the AceModule) */
-		const MasterGrid* master_grid;
 
 		/* Density of the material */
 		double atom;   /* atom/b-cm*/
@@ -65,6 +65,9 @@ namespace Helios {
 			~IsotopeData() {/* */}
 		};
 
+		/* Set isotope map */
+		double setIsotopeMap(string& type, map<string,double> isotopes_fraction, const std::map<std::string,AceIsotope*>& isotopes);
+
 		/* Map of isotopes with their respective data in this material */
 		std::map<std::string,IsotopeData> isotope_map;
 
@@ -83,12 +86,12 @@ namespace Helios {
 		}
 
 		/* Sample the isotope */
-		const Isotope* getIsotope(Energy& energy, Random& random) const;
+		const Isotope* getIsotope(Energy& energy, Random& random) const {return 0;}
 
 		/* Print material information */
 		void print(std::ostream& out) const;
 
-		~AceMaterial();
+		~AceMaterial() {/* */};
 	};
 
 	/* Definition of an ace cross section */

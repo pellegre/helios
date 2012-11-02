@@ -26,13 +26,136 @@
  */
 
 #include "AceMaterial.hpp"
+#include "../../Environment/McEnvironment.hpp"
 
 using namespace std;
 using namespace Ace;
 
 namespace Helios {
 
-//virtual vector<Material*> AceMaterialFactory::createMaterials(const vector<MaterialObject*>& definitions) const {
-//}
+static void normalize(map<string,double>& isotopes_fraction) {
+	map<string,double>::iterator it = isotopes_fraction.begin();
+	double total = 0.0;
+	/* Get total */
+	for(; it != isotopes_fraction.end() ; ++it)
+		total += (*it).second;
+	/* Normalize values */
+	for(it = isotopes_fraction.begin(); it != isotopes_fraction.end() ; ++it)
+		(*it).second /= total;
+}
+
+/* Calculate the average atomic number, and set the isotope map on the material */
+double AceMaterial::setIsotopeMap(string& type, map<string,double> isotopes_fraction, const map<string,AceIsotope*>& isotopes) {
+	/* Normalize fractions */
+	normalize(isotopes_fraction);
+
+	/* Accumulator to calculate the average atomic number of the material */
+	double accum = 0.0;
+	std::map<std::string,double>::iterator it = isotopes_fraction.begin();
+	for(; it != isotopes_fraction.end() ; ++it) {
+		/* Get isotope name */
+		string name = (*it).first;
+		/* This shouldn't happen at this stage, but let's check anyway */
+		if(isotopes.find(name) == isotopes.end())
+			throw(Material::BadMaterialCreation(getUserId(),"Isotope " + name + " does not exist"));
+
+		/* Get isotope */
+		AceIsotope* ace_isotope = (*isotopes.find(name)).second;
+		/* Get fraction */
+		double fraction = isotopes_fraction[name];
+
+		/* Check the type of the fraction */
+		if(type == "atom") {
+			/* Accumulate */
+			accum += fraction * ace_isotope->getAwr();
+			/* Save isotope */
+			isotope_map.insert(pair<string,IsotopeData>(name,IsotopeData(0.0, fraction, ace_isotope)));
+		}
+		else if (type == "weight") {
+			/* Accumulate */
+			accum += fraction / ace_isotope->getAwr();
+			/* Save isotope */
+			isotope_map.insert(pair<string,IsotopeData>(name,IsotopeData(fraction, 0.0, ace_isotope)));
+		}
+		else
+			throw(Material::BadMaterialCreation(getUserId(),"Fraction type " + type + " not recognized"));
+	}
+
+	/* Calculate average atomic number */
+	double average_atomic = 0.0;
+	if(type == "atom")
+		average_atomic = accum;
+	else if(type == "weight")
+		average_atomic = 1.0 / accum;
+
+	/* Now update each isotope fraction */
+	std::map<std::string,IsotopeData>::iterator iso = isotope_map.begin();
+	for(; iso != isotope_map.end() ; ++iso) {
+		double awr = (*iso).second.isotope->getAwr();
+		if(type == "atom")
+			(*iso).second.mass_fraction = (*iso).second.atomic_fraction * awr / average_atomic;
+		else if(type == "weight")
+			(*iso).second.atomic_fraction = (*iso).second.mass_fraction * average_atomic / awr;
+	}
+
+	/* Return average atomic number */
+	return average_atomic;
+}
+
+AceMaterial::AceMaterial(const AceMaterialObject* definition) :
+		Material(definition), master_grid(definition->getEnvironment()->getModule<AceModule>()->getMasterGrid()) {
+	/* Type of isotope fractions */
+	string type = definition->fraction;
+	/* Isotope fractions */
+	map<string,double> isotope_fraction = definition->isotopes;
+	/* Get isotope map from the ACE module */
+	map<string,AceIsotope*> isotopes = definition->getEnvironment()->getModule<AceModule>()->getIsotopeMap();
+
+	/* Get average atomic number and set the isotope map */
+	double average_atomic = setIsotopeMap(type, isotope_fraction, isotopes);
+
+	/* Set densities */
+	string units = definition->units;
+	if(units == "g/cm3") {
+		/* Mass density */
+		rho = definition->density;
+		atom = rho * Constant::avogadro / average_atomic;
+	} else if(units == "atom/b-cm") {
+		/* Atomic density */
+		atom = definition->density;
+		rho = atom * average_atomic / Constant::avogadro;
+	} else
+		throw(Material::BadMaterialCreation(getUserId(),"Unit " + units + " not recognized in density"));
+
+}
+
+void AceMaterial::print(std::ostream& out) const {
+	out << scientific;
+	/* Print material information */
+	out << Log::ident(1) << " - density = " << setw(9) << rho << " g/cm3 " << endl;
+	out << Log::ident(1) << " - density = " << setw(9) << atom << " atom/b-cm " << endl;
+	/* Print isotope information */
+	std::map<std::string,IsotopeData>::const_iterator iso = isotope_map.begin();
+	for(; iso != isotope_map.end() ; ++iso)
+		out << Log::ident(2) << "(mass fraction = " << setw(9) << (*iso).second.mass_fraction << " ; "
+		<< "atomic fraction = " << setw(9) << (*iso).second.atomic_fraction << ") "
+		<< *(*iso).second.isotope << endl;
+
+}
+
+vector<Material*> AceMaterialFactory::createMaterials(const vector<MaterialObject*>& definitions) const {
+	/* Container of new materials */
+	vector<Material*> materials;
+
+	/* Push materials */
+	for(vector<MaterialObject*>::const_iterator it = definitions.begin() ;  it != definitions.end() ; ++it) {
+		const AceMaterialObject* new_ace = static_cast<const AceMaterialObject*>((*it));
+		AceMaterial* newMaterial = new AceMaterial(new_ace);
+		materials.push_back(newMaterial);
+	}
+
+	/* Return container */
+	return materials;
+}
 
 } /* namespace Helios */
