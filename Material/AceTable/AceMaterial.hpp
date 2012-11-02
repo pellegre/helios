@@ -44,7 +44,7 @@ namespace Helios {
 		/* Isotope sampler */
 		Sampler<AceIsotope*>* isotope_sampler;
 
-		/* Constant reference to a MASTER grid (managed by the AceMaterialFactory) */
+		/* Constant reference to a MASTER grid (managed by the AceModule) */
 		const MasterGrid* master_grid;
 
 		/* Density of the material */
@@ -59,6 +59,7 @@ namespace Helios {
 			double atomic_fraction;
 			/* Pointer to the ACE isotope */
 			const AceIsotope* isotope;
+			/* Constructor */
 			IsotopeData(const double& mass_fraction, const double& atomic_fraction, const AceIsotope* isotope) :
 				mass_fraction(mass_fraction), atomic_fraction(atomic_fraction), isotope(isotope) {/* */}
 			~IsotopeData() {/* */}
@@ -72,7 +73,7 @@ namespace Helios {
 		/* Name of this object */
 		static std::string name() {return "material";}
 
-		AceMaterial(const AceMaterialObject* definition, const AceMaterialFactory* factory);
+		AceMaterial(const AceMaterialObject* definition);
 
 		 /* Get the total cross section (using the energy index of the particle) */
 		double getMeanFreePath(Energy& energy) const {
@@ -117,17 +118,12 @@ namespace Helios {
 
 	/* Material Factory */
 	class AceMaterialFactory : public MaterialFactory {
-		MasterGrid* master_grid;
 	public:
 		/* Prevent construction or copy */
 		AceMaterialFactory() {/* */};
 		/* Create a new materials */
 		virtual std::vector<Material*> createMaterials(const std::vector<MaterialObject*>& definitions) const;
-		/* Get master grid */
-		const MasterGrid* getMasterGrid() const {return master_grid;}
-		/* Get isotope pointer by name */
-		AceIsotope* getIsotope(const std::string& name) const {}
-		virtual ~AceMaterialFactory() {delete master_grid;}
+		virtual ~AceMaterialFactory() {/* */}
 	};
 
 } /* namespace Helios */

@@ -165,90 +165,214 @@ protected:
 	void TearDown() {
 		delete environment;
 	}
-	/* Environment */
-	Helios::McEnvironment* environment;
-};
 
-/* Limits */
-static double min_value = 01.00e-11;
-static double max_value = 20.00e+06;
+	void checkProbs(size_t begin, size_t end) {
+		using namespace Helios;
+		using namespace Ace;
+		using namespace std;
 
-TEST_F(AceModuleTest, SumReactions) {
-	using namespace Helios;
-	using namespace Ace;
-	using namespace std;
+		double eps = 5e9*numeric_limits<double>::epsilon();
+		cout << "Using epsilon = " << scientific << eps << endl;
 
-	vector<McObject*> ace_objects;
-	vector<string> test_isotopes;
-	for(size_t i = 0 ; i < isotopes.size() ; ++i) {
-		string name = isotopes[i];
-		string first = name.substr(0);
-		/* Check only heavy isotopes */
-		if(first.find("92232") != string::npos) {
-			test_isotopes.push_back(isotopes[i]);
-			ace_objects.push_back(new AceObject(isotopes[i]));
+		vector<McObject*> ace_objects;
+		vector<string> test_isotopes;
+
+		/* Number of isotopes */
+		for(size_t i = begin ; i < end; ++i) {
+			string name = isotopes[i];
+			test_isotopes.push_back(name);
+			ace_objects.push_back(new AceObject(name));
 		}
-	}
 
-	/* Setup environment */
-	environment->pushObjects(ace_objects.begin(), ace_objects.end());
-	environment->setup();
+		/* Setup environment */
+		environment->pushObjects(ace_objects.begin(), ace_objects.end());
+		environment->setup();
 
-	/* Number of random energies */
-	size_t nrandom = 100;
+		/* Number of random energies */
+		size_t nrandom = 100;
 
-	for(size_t i = 0 ; i < test_isotopes.size() ; ++i) {
-		string name = test_isotopes[i];
-		Log::bok() << " - Checking " << name << Log::endl;
-		/* Get isotope from environment */
-		AceIsotope* iso = environment->getObject<AceModule,AceIsotope>(name)[0];
-		/* Get table from file */
-		NeutronTable* ace_table = dynamic_cast<NeutronTable*>(AceReader::getTable(name));
-		for(size_t j = 0 ; j < nrandom ; ++j) {
+		for(size_t i = 0 ; i < test_isotopes.size() ; ++i) {
+			string name = test_isotopes[i];
+			Log::bok() << " - Checking " << name << Log::endl;
+			/* Get isotope from environment */
+			AceIsotope* iso = environment->getObject<AceModule,AceIsotope>(name)[0];
+			/* Get table from file */
+			NeutronTable* ace_table = dynamic_cast<NeutronTable*>(AceReader::getTable(name));
 
-			/* Get energy grid */
-			vector<double> energy_grid = ace_table->getEnergyGrid();
-			/* Get total cross section */
-			CrossSection total_xs = ace_table->getTotal();
 			/* Get disappearance */
 			CrossSection dissap_xs = ace_table->getAbsorption();
 			/* Get fission cross section */
 			CrossSection fission_xs = ace_table->getReactions().get_xs(18);
 			/* Calculate absorption cross section */
 			CrossSection absorption_xs = dissap_xs + fission_xs;
+			/* Get total cross section */
+			CrossSection total_xs = ace_table->getTotal();
 
-			if(j == 0)
-				for(size_t i = 2400 ; i < 2700 ; ++i)
-					cout << i << scientific << " " << energy_grid[i] << " " << total_xs[i] << " " << absorption_xs[i] << endl;
+			Log::bok() << Log::ident(1) << " - Uniform sampling " << Log::endl;
+			/* Sample inside the energy range of the isotope */
+			for(size_t j = 0 ; j < nrandom ; ++j) {
 
-			/* Get random energy */
-			double energy = randomNumber(energy_grid[0], energy_grid[energy_grid.size() - 1]);
-			Energy pair_energy(0,energy);
+				/* Get energy grid */
+				vector<double> energy_grid = ace_table->getEnergyGrid();
 
-			/* Interpolate on energy grid */
-			size_t idx = upper_bound(energy_grid.begin(), energy_grid.end(), energy) - energy_grid.begin() - 1;
-			double factor = (energy - energy_grid[idx]) / (energy_grid[idx + 1] - energy_grid[idx]);
-			cout << "(tes) energy = " << energy << " index = " << idx << endl;
-			/* Get interpolated cross sections */
-			double sigma_t = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
-			double sigma_a = factor * (absorption_xs[idx + 1] - absorption_xs[idx]) + absorption_xs[idx];
+				/* Get random energy */
+				double energy = randomNumber(energy_grid[0], energy_grid[energy_grid.size() - 1]);
+				Energy pair_energy(0,energy);
 
-			/* Get probabilities */
-			double abs_prob = sigma_a / sigma_t;
-			/* Check against interpolated values */
-			double expected_abs = iso->getAbsorptionProb(pair_energy);
-			cout << energy << " ; " << abs_prob << " ; " << expected_abs << endl;
-			EXPECT_NEAR(abs_prob,expected_abs,5e8*numeric_limits<double>::epsilon());
+				/* Interpolate on energy grid */
+				size_t idx = upper_bound(energy_grid.begin(), energy_grid.end(), energy) - energy_grid.begin() - 1;
+				double factor = (energy - energy_grid[idx]) / (energy_grid[idx + 1] - energy_grid[idx]);
 
-			if(iso->isFissile()) {
-				double sigma_f = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
-				double fis_prob = sigma_f / sigma_t;
-				double expected_fis = iso->getFissionProb(pair_energy);
-				EXPECT_NEAR(fis_prob,expected_fis,5e8*numeric_limits<double>::epsilon());
+				/* Get interpolated cross sections */
+				double sigma_t = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
+				double sigma_a = factor * (absorption_xs[idx + 1] - absorption_xs[idx]) + absorption_xs[idx];
+
+				/* Get probabilities */
+				double abs_prob = sigma_a / sigma_t;
+				double expected_abs = iso->getAbsorptionProb(pair_energy);
+
+				/* Check against interpolated values */
+				EXPECT_NEAR(abs_prob,expected_abs,eps);
+
+				/* Check fission if the isotope is fissile */
+				if(iso->isFissile()) {
+					double sigma_f = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
+					double fis_prob = sigma_f / sigma_t;
+					double expected_fis = iso->getFissionProb(pair_energy);
+					/* Check against interpolated values */
+					EXPECT_NEAR(fis_prob,expected_fis,eps);
+				}
+
 			}
 
+			Log::bok() << Log::ident(1) << " - Low sampling " << Log::endl;
+
+			/* Sample lower values */
+			for(size_t j = 0 ; j < nrandom ; ++j) {
+
+				/* Get energy grid */
+				vector<double> energy_grid = ace_table->getEnergyGrid();
+
+				double low_energy = energy_grid[0];
+
+				/* Get random energy */
+				double energy = randomNumber(low_energy/10, low_energy);
+				Energy pair_energy(0,energy);
+
+				/* Get probabilities */
+				double abs_prob = absorption_xs[0] / total_xs[0];
+				double expected_abs = iso->getAbsorptionProb(pair_energy);
+
+				/* Check against interpolated values */
+				EXPECT_NEAR(abs_prob,expected_abs,eps);
+
+				/* Check fission if the isotope is fissile */
+				if(iso->isFissile()) {
+					double fis_prob = fission_xs[0] / total_xs[0];
+					double expected_fis = iso->getFissionProb(pair_energy);
+					/* Check against interpolated values */
+					EXPECT_NEAR(fis_prob,expected_fis,eps);
+				}
+
+			}
+
+			Log::bok() << Log::ident(1) << " - High sampling " << Log::endl;
+
+			/* Sample high values */
+			for(size_t j = 0 ; j < nrandom ; ++j) {
+
+				/* Get energy grid */
+				vector<double> energy_grid = ace_table->getEnergyGrid();
+
+				size_t last_idx = energy_grid.size() - 1;
+				double max_energy = energy_grid[last_idx];
+
+				/* Get random energy */
+				double energy = randomNumber(max_energy, 10 * max_energy);
+				Energy pair_energy(0,energy);
+
+				/* Get probabilities */
+				double abs_prob = absorption_xs[last_idx] / total_xs[last_idx];
+				double expected_abs = iso->getAbsorptionProb(pair_energy);
+
+				/* Check against interpolated values */
+				EXPECT_NEAR(abs_prob,expected_abs,eps);
+
+				/* Check fission if the isotope is fissile */
+				if(iso->isFissile()) {
+					double fis_prob = fission_xs[last_idx] / total_xs[last_idx];
+					double expected_fis = iso->getFissionProb(pair_energy);
+					/* Check against interpolated values */
+					EXPECT_NEAR(fis_prob,expected_fis,eps);
+				}
+
+			}
+
+			delete ace_table;
 		}
 	}
+	/* Environment */
+	Helios::McEnvironment* environment;
+};
+
+TEST_F(AceModuleTest, CheckProbabilities1) {
+	size_t begin = 0;
+	size_t end = (1.0/10.0) * (double) isotopes.size();
+	checkProbs(begin,end);
+}
+
+TEST_F(AceModuleTest, CheckProbabilities2) {
+	size_t begin = (1.0/10.0) * (double) isotopes.size();
+	size_t end = (2.0/10.0) * (double) isotopes.size();
+	checkProbs(begin,end);
+}
+
+TEST_F(AceModuleTest, CheckProbabilities3) {
+	size_t begin = (2.0/10.0) * (double) isotopes.size();
+	size_t end = (3.0/10.0) * (double) isotopes.size();
+	checkProbs(begin,end);
+}
+
+TEST_F(AceModuleTest, CheckProbabilities4) {
+	size_t begin = (3.0/10.0) * (double) isotopes.size();
+	size_t end = (4.0/10.0) * (double) isotopes.size();
+	checkProbs(begin,end);
+}
+
+TEST_F(AceModuleTest, CheckProbabilities5) {
+	size_t begin = (4.0/10.0) * (double) isotopes.size();
+	size_t end = (5.0/10.0) * (double) isotopes.size();
+	checkProbs(begin,end);
+}
+
+TEST_F(AceModuleTest, CheckProbabilities6) {
+	size_t begin = (5.0/10.0) * (double) isotopes.size();
+	size_t end = (6.0/10.0) * (double) isotopes.size();
+	checkProbs(begin,end);
+}
+
+TEST_F(AceModuleTest, CheckProbabilities7) {
+	size_t begin = (6.0/10.0) * (double) isotopes.size();
+	size_t end = (7.0/10.0) * (double) isotopes.size();
+	checkProbs(begin,end);
+}
+
+TEST_F(AceModuleTest, CheckProbabilities8) {
+	size_t begin = (7.0/10.0) * (double) isotopes.size();
+	size_t end = (8.0/10.0) * (double) isotopes.size();
+	checkProbs(begin,end);
+}
+
+TEST_F(AceModuleTest, CheckProbabilities9) {
+	size_t begin = (8.0/10.0) * (double) isotopes.size();
+	size_t end = (9.0/10.0) * (double) isotopes.size();
+	checkProbs(begin,end);
+}
+
+TEST_F(AceModuleTest, CheckProbabilities10) {
+	size_t begin = (9.0/10.0) * (double) isotopes.size();
+	size_t end = isotopes.size();
+	checkProbs(begin,end);
 }
 
 #endif /* ACETESTS_HPP_ */

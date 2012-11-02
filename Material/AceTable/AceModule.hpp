@@ -50,8 +50,11 @@ namespace Helios {
 		/* Constant reference to a CHILD grid */
 		const ChildGrid* child_grid;
 
+		/* Total cross section */
 		Ace::CrossSection total_xs;
+		/* Fission cross section */
 		Ace::CrossSection fission_xs;
+		/* Absorption cross section */
 		Ace::CrossSection absorption_xs;
 
 		void print(std::ostream& out) const;

@@ -56,14 +56,15 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 	/* Set the absorption probability */
 	absorption_xs = reactions.get_xs(27);
 	/* Check size */
-	assert(absorption_xs.size() == total_xs.size());
-
+	if(absorption_xs.size() != 0)
+		assert(absorption_xs.size() == total_xs.size());
+	else
+		absorption_xs = CrossSection(total_xs.size());
 }
 
 double AceIsotope::getAbsorptionProb(Energy& energy) const {
 	double factor;
 	size_t idx = child_grid->index(energy,factor);
-	cout << "(lib) energy = " << energy.second << " index = " << idx << endl;
 	double abs = factor * (absorption_xs[idx + 1] - absorption_xs[idx]) + absorption_xs[idx];
 	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
 	return abs / total;

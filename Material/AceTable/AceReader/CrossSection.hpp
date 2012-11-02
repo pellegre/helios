@@ -62,7 +62,7 @@ public:
 
 	double operator[](int index) const {
 		if(index < (ie - 1)) return 0.0;
-		else return xs_data[index];
+		else return xs_data[index - (ie - 1)];
 	}
 
 	friend const CrossSection operator+(const CrossSection& left, const CrossSection& right);
