@@ -105,7 +105,7 @@ double AceMaterial::setIsotopeMap(string& type, map<string,double> isotopes_frac
 AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 		 Material(definition)
 		,master_grid(definition->getEnvironment()->getModule<AceModule>()->getMasterGrid())
-		,mfp(master_grid->size(),0.0) {
+		,total_xs(master_grid->size(),0.0) {
 
 	/* Type of isotope fractions */
 	string type = definition->fraction;
@@ -158,22 +158,31 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 			/* Set the energy and leave the index alone (faster interpolation) */
 			energy.second = (*master_grid)[i];
 			/* Set isotope cross section on this material */
-			double total_xs = density * ace_isotope->getTotalXs(energy);
-			xs_array[counter][i] = total_xs;
+			double total = density * ace_isotope->getTotalXs(energy);
+			xs_array[counter][i] = total;
 			/* Contribution to the mean free path */
-			mfp[i] += total_xs;
+			total_xs[i] += total;
 		}
 		/* Increment isotope */
 		++counter;
 	}
 
 	/* Set the isotope sampler */
-	isotope_sampler = new Sampler<AceIsotope*>(isotope_array, xs_array, mfp);
+	isotope_sampler = new Sampler<AceIsotope*>(isotope_array, xs_array, total_xs);
 
-	/* Finally, calculate mean free path */
-	for(size_t i = 0 ; i < master_grid->size() ; ++i)
-		mfp[i] = 1.0 / mfp[i];
+}
 
+double AceMaterial::getMeanFreePath(Energy& energy) const {
+	double factor = master_grid->interpolate(energy);
+	size_t idx = energy.first;
+	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
+	return 1.0 / total;
+}
+
+const Isotope* AceMaterial::getIsotope(Energy& energy, Random& random) const {
+	double factor = master_grid->interpolate(energy);
+	size_t idx = energy.first;
+	return isotope_sampler->sample(idx,random.uniform());
 }
 
 AceMaterial::~AceMaterial() {

@@ -68,6 +68,9 @@ namespace Helios {
 		/* Get temperature (in MeVs) */
 		double getTemperature() const {return temperature;}
 
+		/* Get user ID of the isotope */
+		std::string getUserId() const {return reactions.name();}
+
 		/* Get absorption probability */
 		double getAbsorptionProb(Energy& energy) const;
 

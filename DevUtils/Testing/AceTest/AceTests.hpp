@@ -194,7 +194,7 @@ protected:
 
 		for(size_t i = 0 ; i < test_isotopes.size() ; ++i) {
 			string name = test_isotopes[i];
-			Log::bok() << " - Checking " << name << Log::endl;
+			Log::bok() << " - Checking probabilities for" << name << Log::endl;
 			/* Get isotope from environment */
 			AceIsotope* iso = environment->getObject<AceModule,AceIsotope>(name)[0];
 			/* Get table from file */
@@ -356,10 +356,8 @@ protected:
 		environment->pushObjects(ace_objects.begin(), ace_objects.end());
 		environment->setup();
 
-		environment->getModule<Materials>()->printMaterials(cout);
-
 		/* Number of random energies */
-		size_t nrandom = 2;
+		size_t nrandom = 200;
 
 		/* Get master grid */
 		const MasterGrid* master_grid = environment->getModule<AceModule>()->getMasterGrid();
@@ -389,9 +387,93 @@ protected:
 			double mfp = 1.0 / total_xs;
 			/* Get mean free path from the material */
 			double expected_mfp = material->getMeanFreePath(energy);
+			/* Relative error */
+			double rel = fabs((mfp - expected_mfp) / mfp);
 
-			cout << mfp << " " << expected_mfp << endl;
+			EXPECT_NEAR(0.0,rel,eps);
 		}
+	}
+
+	void checkIsotopeSampler(size_t begin, size_t end) {
+		using namespace Helios;
+		using namespace Ace;
+		using namespace std;
+
+		double eps = 5e9*numeric_limits<double>::epsilon();
+		cout << "Using epsilon = " << scientific << eps << endl;
+
+		map<string,double> isotopes_fraction;
+
+		/* Same fraction to all isotopes */
+		double fraction = 1.0 / (end - begin);
+		/* Atomic density equal to 1.0 */
+		double atomic = 1.0;
+
+		/* Create material */
+		vector<McObject*> ace_objects;
+
+		/* Number of isotopes */
+		for(size_t i = begin ; i < end; ++i) {
+			string name = isotopes[i];
+			isotopes_fraction[name] = fraction;
+			ace_objects.push_back(new AceObject(name));
+		}
+
+		ace_objects.push_back(new AceMaterialObject("test", atomic, "atom/b-cm", "atom", isotopes_fraction));
+
+		/* Setup environment */
+		environment->pushObjects(ace_objects.begin(), ace_objects.end());
+		environment->setup();
+
+		/* Number of random energies */
+		size_t nrandom = 200;
+
+		/* Get master grid */
+		const MasterGrid* master_grid = environment->getModule<AceModule>()->getMasterGrid();
+
+		/* Get isotope map of the system (we know there is only one material that contains all the isotopes) */
+		map<string,AceIsotope*> isotopes = environment->getModule<AceModule>()->getIsotopeMap();
+
+		/* Get material */
+		AceMaterial* material = environment->getObject<Materials,AceMaterial>("test")[0];
+
+		/* Get energy */
+		double energy_value = (*master_grid)[rand()%master_grid->size()];
+		Energy energy(0,energy_value);
+
+		/* Total cross section at this energy */
+		double total_xs = 0.0;
+		/* Occurrence of each isotope */
+		map<string,double> isotopes_prob;
+
+		/* Loop over the isotopes */
+		for(map<string,AceIsotope*>::iterator it = isotopes.begin() ; it != isotopes.end() ; ++it) {
+			double total = fraction * atomic * (*it).second->getTotalXs(energy);
+			total_xs += total;
+			isotopes_prob[(*it).first] = total;
+		}
+
+		/* Calculate probabilities */
+		for(map<string,double>::iterator it = isotopes_prob.begin() ; it != isotopes_prob.end() ; ++it)
+			(*it).second /= total_xs;
+
+		Random random;
+		size_t samples = 50000000;
+		map<string,double> isotope_samples;
+
+		for(size_t j = 0 ; j < samples ; ++j) {
+			const AceIsotope* isotope = dynamic_cast<const AceIsotope*>(material->getIsotope(energy,random));
+			isotope_samples[isotope->getUserId()]++;
+		}
+
+		map<string,double>::iterator it_expected = isotopes_prob.begin();
+		for(map<string,double>::iterator it = isotope_samples.begin() ; it != isotope_samples.end() ; ++it) {
+			(*it).second /= (double)samples;
+			cout << (*it).first << " " << (*it).second << " " << (*it_expected).second
+				 << " " << fabs((*it_expected).second - (*it).second) << endl;
+			++it_expected;
+		}
+
 	}
 
 	/* Environment */
@@ -458,10 +540,67 @@ protected:
 //	checkProbs(begin,end);
 //}
 
-TEST_F(AceModuleTest, CheckMeanFreePath1) {
-	size_t begin = 0 * (double) isotopes.size();
-	size_t end = (1.0/10.0) * (double) isotopes.size();
-	checkMeanFreePath(begin, end);
-}
+//TEST_F(AceModuleTest, CheckMeanFreePath1) {
+//	size_t begin = 0;
+//	size_t end = (1.0/10.0) * (double) isotopes.size();
+//	checkMeanFreePath(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckMeanFreePath2) {
+//	size_t begin = (1.0/10.0) * (double) isotopes.size();
+//	size_t end = (2.0/10.0) * (double) isotopes.size();
+//	checkMeanFreePath(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckMeanFreePath3) {
+//	size_t begin = (2.0/10.0) * (double) isotopes.size();
+//	size_t end = (3.0/10.0) * (double) isotopes.size();
+//	checkMeanFreePath(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckMeanFreePath4) {
+//	size_t begin = (3.0/10.0) * (double) isotopes.size();
+//	size_t end = (4.0/10.0) * (double) isotopes.size();
+//	checkMeanFreePath(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckMeanFreePath5) {
+//	size_t begin = (4.0/10.0) * (double) isotopes.size();
+//	size_t end = (5.0/10.0) * (double) isotopes.size();
+//	checkMeanFreePath(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckMeanFreePath6) {
+//	size_t begin = (5.0/10.0) * (double) isotopes.size();
+//	size_t end = (6.0/10.0) * (double) isotopes.size();
+//	checkMeanFreePath(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckMeanFreePath7) {
+//	size_t begin = (6.0/10.0) * (double) isotopes.size();
+//	size_t end = (7.0/10.0) * (double) isotopes.size();
+//	checkMeanFreePath(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckMeanFreePath8) {
+//	size_t begin = (7.0/10.0) * (double) isotopes.size();
+//	size_t end = (8.0/10.0) * (double) isotopes.size();
+//	checkMeanFreePath(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckMeanFreePath9) {
+//	size_t begin = (8.0/10.0) * (double) isotopes.size();
+//	size_t end = (9.0/10.0) * (double) isotopes.size();
+//	checkMeanFreePath(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckMeanFreePath10) {
+//	size_t begin = (9.0/10.0) * (double) isotopes.size();
+//	size_t end = isotopes.size();
+//	checkMeanFreePath(begin,end);
+//}
 
+TEST_F(AceModuleTest, IsotopeSampler1) {
+	checkIsotopeSampler(0,10);
+}
 #endif /* ACETESTS_HPP_ */

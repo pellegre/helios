@@ -42,7 +42,7 @@ namespace Helios {
 		const MasterGrid* master_grid;
 
 		/* Total cross section */
-		std::vector<double> mfp;
+		std::vector<double> total_xs;
 
 		/* Isotope sampler */
 		Sampler<AceIsotope*>* isotope_sampler;
@@ -79,14 +79,10 @@ namespace Helios {
 		AceMaterial(const AceMaterialObject* definition);
 
 		 /* Get the total cross section (using the energy index of the particle) */
-		double getMeanFreePath(Energy& energy) const {
-			double factor = master_grid->interpolate(energy);
-			size_t idx = energy.first;
-			return factor * (mfp[idx + 1] - mfp[idx]) + mfp[idx];
-		}
+		double getMeanFreePath(Energy& energy) const;
 
 		/* Sample the isotope */
-		const Isotope* getIsotope(Energy& energy, Random& random) const {return 0;}
+		const Isotope* getIsotope(Energy& energy, Random& random) const;
 
 		/* Print material information */
 		void print(std::ostream& out) const;
