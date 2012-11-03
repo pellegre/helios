@@ -444,30 +444,30 @@ protected:
 		/* Total cross section at this energy */
 		double total_xs = 0.0;
 		/* Occurrence of each isotope */
-		map<string,double> isotopes_prob;
+		map<InternalIsotopeId,double> isotopes_prob;
 
 		/* Loop over the isotopes */
 		for(map<string,AceIsotope*>::iterator it = isotopes.begin() ; it != isotopes.end() ; ++it) {
 			double total = fraction * atomic * (*it).second->getTotalXs(energy);
 			total_xs += total;
-			isotopes_prob[(*it).first] = total;
+			isotopes_prob[(*it).second->getInternalId()] = total;
 		}
 
 		/* Calculate probabilities */
-		for(map<string,double>::iterator it = isotopes_prob.begin() ; it != isotopes_prob.end() ; ++it)
+		for(map<InternalIsotopeId,double>::iterator it = isotopes_prob.begin() ; it != isotopes_prob.end() ; ++it)
 			(*it).second /= total_xs;
 
 		Random random;
-		size_t samples = 50000000;
-		map<string,double> isotope_samples;
+		size_t samples = 100000000;
+		map<InternalIsotopeId,double> isotope_samples;
 
 		for(size_t j = 0 ; j < samples ; ++j) {
 			const AceIsotope* isotope = dynamic_cast<const AceIsotope*>(material->getIsotope(energy,random));
-			isotope_samples[isotope->getUserId()]++;
+			isotope_samples[isotope->getInternalId()]++;
 		}
 
-		map<string,double>::iterator it_expected = isotopes_prob.begin();
-		for(map<string,double>::iterator it = isotope_samples.begin() ; it != isotope_samples.end() ; ++it) {
+		map<InternalIsotopeId,double>::iterator it_expected = isotopes_prob.begin();
+		for(map<InternalIsotopeId,double>::iterator it = isotope_samples.begin() ; it != isotope_samples.end() ; ++it) {
 			(*it).second /= (double)samples;
 			cout << (*it).first << " " << (*it).second << " " << (*it_expected).second
 				 << " " << fabs((*it_expected).second - (*it).second) << endl;

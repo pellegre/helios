@@ -42,6 +42,9 @@ namespace Helios {
 		/* Reference to a neutron table */
 		Ace::ReactionContainer reactions;
 
+		/* Internal identification of this isotope */
+		InternalIsotopeId internal_id;
+
 		/* Atomic weight ratio */
 		double aweight;
 		/* Temperature at which the data were processed (in MeV) */
@@ -62,6 +65,11 @@ namespace Helios {
 	public:
 		AceIsotope(const Ace::ReactionContainer& reactions, const ChildGrid* child_grid);
 
+		/* Set internal / unique identifier for the isotope */
+		void setInternalId(const InternalMaterialId& internal) {internal_id = internal;}
+		/* Return the internal ID associated with this isotope. */
+		const InternalMaterialId& getInternalId() const {return internal_id;}
+
 		/* Get isotope information */
 		double getAwr() const {return aweight;}
 
@@ -69,7 +77,7 @@ namespace Helios {
 		double getTemperature() const {return temperature;}
 
 		/* Get user ID of the isotope */
-		std::string getUserId() const {return reactions.name();}
+		IsotopeId getUserId() const {return reactions.name();}
 
 		/* Get absorption probability */
 		double getAbsorptionProb(Energy& energy) const;
@@ -90,10 +98,19 @@ namespace Helios {
 	};
 
 	class AceModule: public Helios::McModule {
+
 		/* Master grid shared by all the isotopes created on this module */
 		MasterGrid* master_grid;
+
 		/* Map of isotopes created */
-		std::map<std::string,AceIsotope*> isotope_map;
+		std::map<IsotopeId,AceIsotope*> isotope_map;
+
+		/* Map internal index to user index */
+		std::map<IsotopeId, InternalIsotopeId> internal_isotope_map;
+
+		/* Container of isotopes */
+		std::vector<AceIsotope*> isotopes;
+
 	public:
 		/* Name of the module */
 		static std::string name() {return "ace-table";}
@@ -104,7 +121,7 @@ namespace Helios {
 		class AceError : public std::exception {
 			std::string reason;
 		public:
-			AceError(const std::string& id, const std::string& msg) {
+			AceError(const IsotopeId& id, const std::string& msg) {
 				reason = "Cannot access to isotope " + id + " : " + msg;
 			}
 			const char *what() const throw() {
@@ -122,7 +139,7 @@ namespace Helios {
 		void printIsotopes(std::ostream& out) const;
 
 		/* Get isotope map */
-		std::map<std::string,AceIsotope*> getIsotopeMap() const {return isotope_map;}
+		std::map<IsotopeId,AceIsotope*> getIsotopeMap() const {return isotope_map;}
 
 		/* Get master grid */
 		const MasterGrid* getMasterGrid() const {return master_grid;};

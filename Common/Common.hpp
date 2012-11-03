@@ -51,7 +51,7 @@ namespace Helios {
 	/* Matrix of integers */
 	typedef Array<int,2> IntMatrix;
 
-	/* User IDs are ALWAYS a string */
+	/* User IDs are ALWAYS strings */
 	typedef std::string UserId;
 
 	/* Surface ID defined by the user */
@@ -66,8 +66,10 @@ namespace Helios {
 	typedef UserId DistributionId;
 	/* Sampler ID defined by the user */
 	typedef UserId SamplerId;
+	/* Isotope ID defined by the user */
+	typedef UserId IsotopeId;
 
-	/* Internal IDs are ALWAYS a unsigned integers */
+	/* Internal IDs are ALWAYS unsigned integers */
 	typedef unsigned int InternalId;
 
 	/* Surface ID used internally */
@@ -80,8 +82,10 @@ namespace Helios {
 	typedef InternalId InternalMaterialId;
 	/* Distribution ID used internally */
 	typedef InternalId InternalDistributionId;
-	/* Sampler ID defined used internally */
+	/* Sampler ID used internally */
 	typedef InternalId InternalSamplerId;
+	/* Isotope ID used internally */
+	typedef InternalId InternalIsotopeId;
 
 	/* Energy stuff */
 	typedef double EnergyValue;                        /* Energy of the particle in eVs */

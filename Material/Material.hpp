@@ -95,7 +95,7 @@ namespace Helios {
 
 		/* Cell id choose by the user */
 		MaterialId user_id;
-		/* Internal identification of this surface */
+		/* Internal identification of this material */
 		InternalMaterialId internal_id;
 
 	};

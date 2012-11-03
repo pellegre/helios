@@ -103,14 +103,28 @@ AceModule::AceModule(const std::vector<McObject*>& aceObjects, const McEnvironme
 			NeutronTable* table = dynamic_cast<NeutronTable*>(AceReader::getTable(isotope));
 			/* Create child grid */
 			const ChildGrid* child_grid = master_grid->pushGrid(table->getEnergyGrid().begin(), table->getEnergyGrid().end());
-			/* Create isotope and update the map */
-			isotope_map[isotope] = new AceIsotope(table->getReactions(), child_grid);
+			/* Create isotope */
+			AceIsotope* new_isotope = new AceIsotope(table->getReactions(), child_grid);
+			/* Update the map */
+			isotope_map[isotope] = new_isotope;
+			/* Push isotope into the container */
+			isotopes.push_back(new_isotope);
 			/* Delete table, we don't need it anymore */
 			delete table;
 		}
 	}
 	/* Setup master grid */
 	master_grid->setup();
+
+	/* Update maps */
+	for(size_t i = 0; i < isotopes.size() ; ++i) {
+		/* Set internal / unique index */
+		isotopes[i]->setInternalId(i);
+		IsotopeId id = isotopes[i]->getUserId();
+		/* Update material map */
+		internal_isotope_map[isotopes[i]->getUserId()] = isotopes[i]->getInternalId();
+	}
+
 }
 
 template<>
@@ -128,13 +142,13 @@ std::vector<AceIsotope*> AceModule::getObject<AceIsotope>(const UserId& id) cons
 void AceModule::printIsotopes(std::ostream& out) const {
 	out << "Ace Module  " << endl;
 	out << " - Master grid size :" << master_grid->size() << endl;
-	for(map<string,AceIsotope*>::const_iterator it = isotope_map.begin() ; it != isotope_map.end() ; ++it)
+	for(map<IsotopeId,AceIsotope*>::const_iterator it = isotope_map.begin() ; it != isotope_map.end() ; ++it)
 		out << " - " << *(*it).second << endl;
 }
 
 AceModule::~AceModule() {
 	/* Delete isotopes */
-	for(map<string,AceIsotope*>::iterator it = isotope_map.begin() ; it != isotope_map.end() ; ++it)
+	for(map<IsotopeId,AceIsotope*>::iterator it = isotope_map.begin() ; it != isotope_map.end() ; ++it)
 		delete (*it).second;
 	/* Delete master grid */
 	delete master_grid;
