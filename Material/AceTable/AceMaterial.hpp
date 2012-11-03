@@ -58,9 +58,9 @@ namespace Helios {
 			/* Atomic fraction */
 			double atomic_fraction;
 			/* Pointer to the ACE isotope */
-			const AceIsotope* isotope;
+			AceIsotope* isotope;
 			/* Constructor */
-			IsotopeData(const double& mass_fraction, const double& atomic_fraction, const AceIsotope* isotope) :
+			IsotopeData(const double& mass_fraction, const double& atomic_fraction, AceIsotope* isotope) :
 				mass_fraction(mass_fraction), atomic_fraction(atomic_fraction), isotope(isotope) {/* */}
 			~IsotopeData() {/* */}
 		};
@@ -91,7 +91,7 @@ namespace Helios {
 		/* Print material information */
 		void print(std::ostream& out) const;
 
-		~AceMaterial() {/* */};
+		~AceMaterial();
 	};
 
 	/* Definition of an ace cross section */

@@ -8,10 +8,10 @@
 
 #define PROJECT "Helios++"
 #define PROJECT_VERSION "0.1"
-#define BUILD_TYPE "debug"
+#define BUILD_TYPE "release"
 #define COMPILER_NAME "/usr/bin/g++"
-#define COMPILER_FLAGS "-g -ansi -Wall -fopenmp -O1"
-#define GIT_SHA1 "75f57f3cec9392d5274cff64761edb14f5517101"
-#define COMPILATION_DATE "11/02/2012 - 04:36:53 PM"
+#define COMPILER_FLAGS "-ansi -Wall -fopenmp -O3"
+#define GIT_SHA1 "147256efe51e730ef7a2704d3c889f03b3f954ac"
+#define COMPILATION_DATE "11/02/2012 - 10:00:41 PM"
 
 #endif // CONFIG_H

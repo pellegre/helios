@@ -103,11 +103,18 @@ double AceMaterial::setIsotopeMap(string& type, map<string,double> isotopes_frac
 }
 
 AceMaterial::AceMaterial(const AceMaterialObject* definition) :
-		Material(definition), master_grid(definition->getEnvironment()->getModule<AceModule>()->getMasterGrid()) {
+		 Material(definition)
+		,master_grid(definition->getEnvironment()->getModule<AceModule>()->getMasterGrid())
+		,mfp(master_grid->size(),0.0) {
+
 	/* Type of isotope fractions */
 	string type = definition->fraction;
 	/* Isotope fractions */
 	map<string,double> isotope_fraction = definition->isotopes;
+
+	if(isotope_fraction.size() == 0)
+		throw(Material::BadMaterialCreation(getUserId(),"Material does not contain any isotope"));
+
 	/* Get isotope map from the ACE module */
 	map<string,AceIsotope*> isotopes = definition->getEnvironment()->getModule<AceModule>()->getIsotopeMap();
 
@@ -127,7 +134,51 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 	} else
 		throw(Material::BadMaterialCreation(getUserId(),"Unit " + units + " not recognized in density"));
 
+	/* -- Setup the isotope sampler and the mean free path of the material */
+
+	/* Array for the isotope sampler */
+	vector<AceIsotope*> isotope_array(isotope_map.size());
+	/* Arrays of XS of each isotope*/
+	vector<vector<double> > xs_array(isotope_map.size(), vector<double>(master_grid->size(),0.0));
+
+	/* Process data of each isotope */
+	std::map<std::string,IsotopeData>::iterator iso = isotope_map.begin();
+	/* Isotope counter */
+	size_t counter = 0;
+	for(; iso != isotope_map.end() ; ++iso) {
+		/* Get isotope */
+		AceIsotope* ace_isotope = (*iso).second.isotope;
+		/* Get atomic density */
+		double density = (*iso).second.atomic_fraction * atom;
+		/* Push isotope to the array*/
+		isotope_array[counter] = ace_isotope;
+		/* Set the XS array for this isotope */
+		Energy energy(0,0.0);
+		for(size_t i = 0 ; i < master_grid->size() ; ++i) {
+			/* Set the energy and leave the index alone (faster interpolation) */
+			energy.second = (*master_grid)[i];
+			/* Set isotope cross section on this material */
+			double total_xs = density * ace_isotope->getTotalXs(energy);
+			xs_array[counter][i] = total_xs;
+			/* Contribution to the mean free path */
+			mfp[i] += total_xs;
+		}
+		/* Increment isotope */
+		++counter;
+	}
+
+	/* Set the isotope sampler */
+	isotope_sampler = new Sampler<AceIsotope*>(isotope_array, xs_array, mfp);
+
+	/* Finally, calculate mean free path */
+	for(size_t i = 0 ; i < master_grid->size() ; ++i)
+		mfp[i] = 1.0 / mfp[i];
+
 }
+
+AceMaterial::~AceMaterial() {
+	delete isotope_sampler;
+};
 
 void AceMaterial::print(std::ostream& out) const {
 	out << scientific;

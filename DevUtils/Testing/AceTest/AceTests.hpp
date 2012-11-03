@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../../../Common/Common.hpp"
 #include "../../../Material/AceTable/AceModule.hpp"
+#include "../../../Material/AceTable/AceMaterial.hpp"
 #include "../../../Material/AceTable/AceReader/Ace.hpp"
 #include "../../../Material/AceTable/AceReader/AceUtils.hpp"
 #include "../../../Material/AceTable/AceReader/Conf.hpp"
@@ -227,6 +228,10 @@ protected:
 				double sigma_t = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
 				double sigma_a = factor * (absorption_xs[idx + 1] - absorption_xs[idx]) + absorption_xs[idx];
 
+				/* Check the total cross section */
+				double rel = fabs((sigma_t - iso->getTotalXs(pair_energy)) / sigma_t);
+				EXPECT_NEAR(0.0,rel,eps);
+
 				/* Get probabilities */
 				double abs_prob = sigma_a / sigma_t;
 				double expected_abs = iso->getAbsorptionProb(pair_energy);
@@ -263,6 +268,10 @@ protected:
 				double abs_prob = absorption_xs[0] / total_xs[0];
 				double expected_abs = iso->getAbsorptionProb(pair_energy);
 
+				/* Check the total cross section */
+				double rel = fabs((total_xs[0] - iso->getTotalXs(pair_energy)) / total_xs[0]);
+				EXPECT_NEAR(0.0,rel,eps);
+
 				/* Check against interpolated values */
 				EXPECT_NEAR(abs_prob,expected_abs,eps);
 
@@ -295,6 +304,10 @@ protected:
 				double abs_prob = absorption_xs[last_idx] / total_xs[last_idx];
 				double expected_abs = iso->getAbsorptionProb(pair_energy);
 
+				/* Check the total cross section */
+				double rel = fabs((total_xs[last_idx] - iso->getTotalXs(pair_energy)) / total_xs[last_idx]);
+				EXPECT_NEAR(0.0,rel,eps);
+
 				/* Check against interpolated values */
 				EXPECT_NEAR(abs_prob,expected_abs,eps);
 
@@ -311,68 +324,109 @@ protected:
 			delete ace_table;
 		}
 	}
+
+	void checkMeanFreePath(size_t begin, size_t end) {
+		using namespace Helios;
+		using namespace Ace;
+		using namespace std;
+
+		double eps = 5e9*numeric_limits<double>::epsilon();
+		cout << "Using epsilon = " << scientific << eps << endl;
+
+		map<string,double> isotopes_fraction;
+
+		/* Same fraction to all isotopes */
+		double fraction = 1.0 / (end - begin);
+		/* Atomic density equal to 1.0 */
+		double atomic = 1.0;
+
+		/* Create material */
+		vector<McObject*> ace_objects;
+
+		/* Number of isotopes */
+		for(size_t i = begin ; i < end; ++i) {
+			string name = isotopes[i];
+			isotopes_fraction[name] = fraction;
+			ace_objects.push_back(new AceObject(name));
+		}
+
+		ace_objects.push_back(new AceMaterialObject("test", atomic, "atom/b-cm", "atom", isotopes_fraction));
+
+		/* Setup environment */
+		environment->pushObjects(ace_objects.begin(), ace_objects.end());
+		environment->setup();
+
+		environment->getModule<Materials>()->printMaterials(cout);
+	}
+
 	/* Environment */
 	Helios::McEnvironment* environment;
 };
 
-TEST_F(AceModuleTest, CheckProbabilities1) {
-	size_t begin = 0;
+//TEST_F(AceModuleTest, CheckProbabilities1) {
+//	size_t begin = 0;
+//	size_t end = (1.0/10.0) * (double) isotopes.size();
+//	checkProbs(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckProbabilities2) {
+//	size_t begin = (1.0/10.0) * (double) isotopes.size();
+//	size_t end = (2.0/10.0) * (double) isotopes.size();
+//	checkProbs(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckProbabilities3) {
+//	size_t begin = (2.0/10.0) * (double) isotopes.size();
+//	size_t end = (3.0/10.0) * (double) isotopes.size();
+//	checkProbs(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckProbabilities4) {
+//	size_t begin = (3.0/10.0) * (double) isotopes.size();
+//	size_t end = (4.0/10.0) * (double) isotopes.size();
+//	checkProbs(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckProbabilities5) {
+//	size_t begin = (4.0/10.0) * (double) isotopes.size();
+//	size_t end = (5.0/10.0) * (double) isotopes.size();
+//	checkProbs(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckProbabilities6) {
+//	size_t begin = (5.0/10.0) * (double) isotopes.size();
+//	size_t end = (6.0/10.0) * (double) isotopes.size();
+//	checkProbs(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckProbabilities7) {
+//	size_t begin = (6.0/10.0) * (double) isotopes.size();
+//	size_t end = (7.0/10.0) * (double) isotopes.size();
+//	checkProbs(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckProbabilities8) {
+//	size_t begin = (7.0/10.0) * (double) isotopes.size();
+//	size_t end = (8.0/10.0) * (double) isotopes.size();
+//	checkProbs(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckProbabilities9) {
+//	size_t begin = (8.0/10.0) * (double) isotopes.size();
+//	size_t end = (9.0/10.0) * (double) isotopes.size();
+//	checkProbs(begin,end);
+//}
+//
+//TEST_F(AceModuleTest, CheckProbabilities10) {
+//	size_t begin = (9.0/10.0) * (double) isotopes.size();
+//	size_t end = isotopes.size();
+//	checkProbs(begin,end);
+//}
+
+TEST_F(AceModuleTest, CheckMeanFreePath1) {
+	size_t begin = 0 * (double) isotopes.size();
 	size_t end = (1.0/10.0) * (double) isotopes.size();
-	checkProbs(begin,end);
-}
-
-TEST_F(AceModuleTest, CheckProbabilities2) {
-	size_t begin = (1.0/10.0) * (double) isotopes.size();
-	size_t end = (2.0/10.0) * (double) isotopes.size();
-	checkProbs(begin,end);
-}
-
-TEST_F(AceModuleTest, CheckProbabilities3) {
-	size_t begin = (2.0/10.0) * (double) isotopes.size();
-	size_t end = (3.0/10.0) * (double) isotopes.size();
-	checkProbs(begin,end);
-}
-
-TEST_F(AceModuleTest, CheckProbabilities4) {
-	size_t begin = (3.0/10.0) * (double) isotopes.size();
-	size_t end = (4.0/10.0) * (double) isotopes.size();
-	checkProbs(begin,end);
-}
-
-TEST_F(AceModuleTest, CheckProbabilities5) {
-	size_t begin = (4.0/10.0) * (double) isotopes.size();
-	size_t end = (5.0/10.0) * (double) isotopes.size();
-	checkProbs(begin,end);
-}
-
-TEST_F(AceModuleTest, CheckProbabilities6) {
-	size_t begin = (5.0/10.0) * (double) isotopes.size();
-	size_t end = (6.0/10.0) * (double) isotopes.size();
-	checkProbs(begin,end);
-}
-
-TEST_F(AceModuleTest, CheckProbabilities7) {
-	size_t begin = (6.0/10.0) * (double) isotopes.size();
-	size_t end = (7.0/10.0) * (double) isotopes.size();
-	checkProbs(begin,end);
-}
-
-TEST_F(AceModuleTest, CheckProbabilities8) {
-	size_t begin = (7.0/10.0) * (double) isotopes.size();
-	size_t end = (8.0/10.0) * (double) isotopes.size();
-	checkProbs(begin,end);
-}
-
-TEST_F(AceModuleTest, CheckProbabilities9) {
-	size_t begin = (8.0/10.0) * (double) isotopes.size();
-	size_t end = (9.0/10.0) * (double) isotopes.size();
-	checkProbs(begin,end);
-}
-
-TEST_F(AceModuleTest, CheckProbabilities10) {
-	size_t begin = (9.0/10.0) * (double) isotopes.size();
-	size_t end = isotopes.size();
-	checkProbs(begin,end);
+	checkMeanFreePath(isotopes.size()-35, isotopes.size() - 20);
 }
 
 #endif /* ACETESTS_HPP_ */

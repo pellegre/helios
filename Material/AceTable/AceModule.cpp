@@ -78,6 +78,13 @@ double AceIsotope::getFissionProb(Energy& energy) const {
 	return fission / total;
 }
 
+double AceIsotope::getTotalXs(Energy& energy) const {
+	double factor;
+	size_t idx = child_grid->index(energy,factor);
+	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
+	return total;
+}
+
 void AceIsotope::print(std::ostream& out) const {
 	out << "isotope = " <<  setw(9) << reactions.name()
 		<< " ; awr = " << setw(9) << aweight << " ; temperature = " << temperature / Constant::boltz << " K ";

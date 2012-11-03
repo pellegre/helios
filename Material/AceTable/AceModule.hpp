@@ -74,6 +74,9 @@ namespace Helios {
 		/* Get fission probability */
 		double getFissionProb(Energy& energy) const;
 
+		/* Get total cross section */
+		double getTotalXs(Energy& energy) const;
+
 		/* Fission reaction */
 		void fission(Particle& particle, Random& random) const {/* */};
 
