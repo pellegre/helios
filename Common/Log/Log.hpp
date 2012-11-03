@@ -34,8 +34,6 @@
 #include <ostream>
 #include <string>
 
-#include "../Config.hpp"
-
 namespace Helios {
 
 class Log {

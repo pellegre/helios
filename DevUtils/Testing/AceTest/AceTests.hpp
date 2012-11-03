@@ -357,6 +357,41 @@ protected:
 		environment->setup();
 
 		environment->getModule<Materials>()->printMaterials(cout);
+
+		/* Number of random energies */
+		size_t nrandom = 2;
+
+		/* Get master grid */
+		const MasterGrid* master_grid = environment->getModule<AceModule>()->getMasterGrid();
+		/* Get energy limits for this problem */
+		double min_energy = (*master_grid)[0];
+		double max_energy = (*master_grid)[master_grid->size() - 1];
+
+		/* Get isotope map of the system (we know there is only one material that contains all the isotopes) */
+		map<string,AceIsotope*> isotopes = environment->getModule<AceModule>()->getIsotopeMap();
+
+		/* Get material */
+		AceMaterial* material = environment->getObject<Materials,AceMaterial>("test")[0];
+
+		for(size_t i = 0 ; i < nrandom ; ++i) {
+			/* Energy value */
+			double energy_value = randomNumber(min_energy,max_energy);
+			Energy energy(0,energy_value);
+
+			/* Total cross section at this energy */
+			double total_xs = 0.0;
+
+			/* Loop over the isotopes */
+			for(map<string,AceIsotope*>::iterator it = isotopes.begin() ; it != isotopes.end() ; ++it)
+				total_xs += fraction * atomic * (*it).second->getTotalXs(energy);
+
+			/* Mean free path at this energy */
+			double mfp = 1.0 / total_xs;
+			/* Get mean free path from the material */
+			double expected_mfp = material->getMeanFreePath(energy);
+
+			cout << mfp << " " << expected_mfp << endl;
+		}
 	}
 
 	/* Environment */
@@ -426,7 +461,7 @@ protected:
 TEST_F(AceModuleTest, CheckMeanFreePath1) {
 	size_t begin = 0 * (double) isotopes.size();
 	size_t end = (1.0/10.0) * (double) isotopes.size();
-	checkMeanFreePath(isotopes.size()-35, isotopes.size() - 20);
+	checkMeanFreePath(begin, end);
 }
 
 #endif /* ACETESTS_HPP_ */
