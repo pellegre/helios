@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 #include <algorithm>
+#include <omp.h>
 
 #include "../../../Common/Common.hpp"
 #include "../../../Material/AceTable/AceModule.hpp"
@@ -346,6 +347,7 @@ protected:
 		/* Number of isotopes */
 		for(size_t i = begin ; i < end; ++i) {
 			string name = isotopes[i];
+			Log::bok() << " - Add isotope " << name << " to material" <<  Log::endl;
 			isotopes_fraction[name] = fraction;
 			ace_objects.push_back(new AceObject(name));
 		}
@@ -392,89 +394,6 @@ protected:
 
 			EXPECT_NEAR(0.0,rel,eps);
 		}
-	}
-
-	void checkIsotopeSampler(size_t begin, size_t end) {
-		using namespace Helios;
-		using namespace Ace;
-		using namespace std;
-
-		double eps = 5e9*numeric_limits<double>::epsilon();
-		cout << "Using epsilon = " << scientific << eps << endl;
-
-		map<string,double> isotopes_fraction;
-
-		/* Same fraction to all isotopes */
-		double fraction = 1.0 / (end - begin);
-		/* Atomic density equal to 1.0 */
-		double atomic = 1.0;
-
-		/* Create material */
-		vector<McObject*> ace_objects;
-
-		/* Number of isotopes */
-		for(size_t i = begin ; i < end; ++i) {
-			string name = isotopes[i];
-			isotopes_fraction[name] = fraction;
-			ace_objects.push_back(new AceObject(name));
-		}
-
-		ace_objects.push_back(new AceMaterialObject("test", atomic, "atom/b-cm", "atom", isotopes_fraction));
-
-		/* Setup environment */
-		environment->pushObjects(ace_objects.begin(), ace_objects.end());
-		environment->setup();
-
-		/* Number of random energies */
-		size_t nrandom = 200;
-
-		/* Get master grid */
-		const MasterGrid* master_grid = environment->getModule<AceModule>()->getMasterGrid();
-
-		/* Get isotope map of the system (we know there is only one material that contains all the isotopes) */
-		map<string,AceIsotope*> isotopes = environment->getModule<AceModule>()->getIsotopeMap();
-
-		/* Get material */
-		AceMaterial* material = environment->getObject<Materials,AceMaterial>("test")[0];
-
-		/* Get energy */
-		size_t index = rand()%(master_grid->size() - 1);
-		double energy_value = (50.0 / 100.0) * ((*master_grid)[index + 1] - (*master_grid)[index]) + (*master_grid)[index];
-		Energy energy(0,energy_value);
-
-		/* Total cross section at this energy */
-		double total_xs = 0.0;
-		/* Occurrence of each isotope */
-		map<InternalIsotopeId,double> isotopes_prob;
-
-		/* Loop over the isotopes */
-		for(map<string,AceIsotope*>::iterator it = isotopes.begin() ; it != isotopes.end() ; ++it) {
-			double total = fraction * atomic * (*it).second->getTotalXs(energy);
-			total_xs += total;
-			isotopes_prob[(*it).second->getInternalId()] = total;
-		}
-
-		/* Calculate probabilities */
-		for(map<InternalIsotopeId,double>::iterator it = isotopes_prob.begin() ; it != isotopes_prob.end() ; ++it)
-			(*it).second /= total_xs;
-
-		Random random;
-		size_t samples = 100000000;
-		map<InternalIsotopeId,double> isotope_samples;
-
-		for(size_t j = 0 ; j < samples ; ++j) {
-			const AceIsotope* isotope = dynamic_cast<const AceIsotope*>(material->getIsotope(energy,random));
-			isotope_samples[isotope->getInternalId()]++;
-		}
-
-		map<InternalIsotopeId,double>::iterator it_expected = isotopes_prob.begin();
-		for(map<InternalIsotopeId,double>::iterator it = isotope_samples.begin() ; it != isotope_samples.end() ; ++it) {
-			(*it).second /= (double)samples;
-			cout << (*it).first << " " << (*it).second << " " << (*it_expected).second
-				 << " " << fabs((*it_expected).second - (*it).second) / (*it_expected).second << endl;
-			++it_expected;
-		}
-
 	}
 
 	/* Environment */
@@ -601,7 +520,136 @@ protected:
 //	checkMeanFreePath(begin,end);
 //}
 
-TEST_F(AceModuleTest, IsotopeSampler1) {
-	checkIsotopeSampler(0,10);
+class AceSamplerTest : public SimpleAceTest {
+protected:
+	AceSamplerTest() {/* */}
+	virtual ~AceSamplerTest() {/* */}
+
+	void SetUp() {/* */}
+	void TearDown() {/* */}
+
+	void checkIsotopeSampler(size_t begin, size_t end) {
+		using namespace Helios;
+		using namespace Ace;
+		using namespace std;
+
+		/* Environment */
+		Helios::McEnvironment* environment = new Helios::McEnvironment();
+
+		/* Tolerance (in percentage) of the relative error for samples */
+		double tolerance = 5.0;
+		cout << "Using tolerance = % " << tolerance << endl;
+
+		map<string,double> isotopes_fraction;
+
+		/* Same fraction to all isotopes */
+		double fraction = 1.0 / (end - begin);
+		/* Atomic density equal to 1.0 */
+		double atomic = 1.0;
+
+		/* Create material */
+		vector<McObject*> ace_objects;
+
+		/* Number of isotopes */
+		for(size_t i = begin ; i < end; ++i) {
+			string name = isotopes[i];
+			Log::bok() << " - Add isotope " << name << " to material" <<  Log::endl;
+			isotopes_fraction[name] = fraction;
+			ace_objects.push_back(new AceObject(name));
+		}
+
+		ace_objects.push_back(new AceMaterialObject("test", atomic, "atom/b-cm", "atom", isotopes_fraction));
+
+		/* Setup environment */
+		environment->pushObjects(ace_objects.begin(), ace_objects.end());
+		environment->setup();
+
+		/* Number of random energies */
+		size_t nrandom = 5;
+		/* Number of samples */
+		size_t samples = 100000000;
+		/* Base random number */
+		Random random(1);
+
+		/* Get master grid */
+		const MasterGrid* master_grid = environment->getModule<AceModule>()->getMasterGrid();
+
+		/* Get isotope map of the system (we know there is only one material that contains all the isotopes) */
+		map<string,AceIsotope*> isotopes = environment->getModule<AceModule>()->getIsotopeMap();
+
+		/* Get material */
+		AceMaterial* material = environment->getObject<Materials,AceMaterial>("test")[0];
+
+		for(size_t i = 0 ; i < nrandom ; ++i) {
+			/* Get energy */
+			size_t index = rand()%(master_grid->size() - 1);
+			/* Get a interpolated value */
+			double energy_value = random.uniform() * ((*master_grid)[index + 1] - (*master_grid)[index]) + (*master_grid)[index];
+			Energy energy(0,energy_value);
+
+			/* Total cross section at this energy */
+			double total_xs = 0.0;
+			/* Occurrence of each isotope */
+			map<InternalIsotopeId,double> isotopes_prob;
+
+			/* Loop over the isotopes */
+			for(map<string,AceIsotope*>::iterator it = isotopes.begin() ; it != isotopes.end() ; ++it) {
+				double total = fraction * atomic * (*it).second->getTotalXs(energy);
+				total_xs += total;
+				isotopes_prob[(*it).second->getInternalId()] = total;
+			}
+
+			/* Calculate probabilities */
+			for(map<InternalIsotopeId,double>::iterator it = isotopes_prob.begin() ; it != isotopes_prob.end() ; ++it)
+				(*it).second /= total_xs;
+
+			map<InternalIsotopeId,double> isotope_samples;
+
+			#pragma omp parallel
+			{
+				Random local_random(random);
+			    int size=omp_get_num_threads();
+			    int rank=omp_get_thread_num();
+			    local_random.jump(rank*samples/size);
+			    map<InternalIsotopeId,double> isotope_local_samples;
+
+			    /* Sampling loop */
+				#pragma omp for
+				for(size_t j = 0 ; j < samples ; ++j) {
+					const AceIsotope* isotope = dynamic_cast<const AceIsotope*>(material->getIsotope(energy,local_random));
+					isotope_local_samples[isotope->getInternalId()]++;
+				}
+
+				/* Sum contributions */
+				#pragma omp critical
+				{
+					for(map<InternalIsotopeId,double>::const_iterator it = isotope_local_samples.begin() ;
+							it != isotope_local_samples.end() ; ++it) isotope_samples[(*it).first] += (*it).second;
+				}
+			}
+
+			/* Collect samples and check results */
+			map<InternalIsotopeId,double>::iterator it_expected = isotopes_prob.begin();
+			for(map<InternalIsotopeId,double>::iterator it = isotope_samples.begin() ; it != isotope_samples.end() ; ++it) {
+				(*it).second /= (double)samples;
+				/* Get relative error (percentage) */
+				double error = 100.0* fabs((*it_expected).second - (*it).second) / (*it_expected).second;
+				EXPECT_NEAR(0.0,error,tolerance);
+				++it_expected;
+			}
+
+		}
+
+		delete environment;
+	}
+
+};
+
+TEST_F(AceSamplerTest, IsotopeSampler) {
+	size_t partition = 10;
+	size_t delta = isotopes.size() / partition;
+	for(size_t  i = 0 ; i < delta ; ++i)
+		checkIsotopeSampler(i * partition,(i + 1) * partition);
 }
+
 #endif /* ACETESTS_HPP_ */
