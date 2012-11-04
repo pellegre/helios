@@ -438,7 +438,8 @@ protected:
 		AceMaterial* material = environment->getObject<Materials,AceMaterial>("test")[0];
 
 		/* Get energy */
-		double energy_value = (*master_grid)[rand()%master_grid->size()];
+		size_t index = rand()%(master_grid->size() - 1);
+		double energy_value = (50.0 / 100.0) * ((*master_grid)[index + 1] - (*master_grid)[index]) + (*master_grid)[index];
 		Energy energy(0,energy_value);
 
 		/* Total cross section at this energy */
@@ -470,7 +471,7 @@ protected:
 		for(map<InternalIsotopeId,double>::iterator it = isotope_samples.begin() ; it != isotope_samples.end() ; ++it) {
 			(*it).second /= (double)samples;
 			cout << (*it).first << " " << (*it).second << " " << (*it_expected).second
-				 << " " << fabs((*it_expected).second - (*it).second) << endl;
+				 << " " << fabs((*it_expected).second - (*it).second) / (*it_expected).second << endl;
 			++it_expected;
 		}
 

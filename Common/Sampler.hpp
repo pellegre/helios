@@ -34,9 +34,13 @@
 
 namespace Helios {
 
+	/*
+	 * Generic class to sample objects with probabilities defined by a cross section.
+	 */
 	template<class TypeReaction>
-
 	class Sampler {
+
+	protected:
 
 		/* Dimension of the matrix */
 		int nreaction;
@@ -62,6 +66,12 @@ namespace Helios {
 
 		/* Get the index of the reaction after a binary search */
 		int getIndex(const double* dat, double val);
+		int getIndex(const double* dat, double val, double factor);
+
+		/* Sample a reaction using an interpolation factor */
+		const double* interpolate_lower_bound(const double* lo, const double* hi, double value, double factor);
+		/* Get a value from the reaction matrix using an interpolation factor */
+		const double interpolateValue(const double* ptr, double factor);
 
 		/* Get value in an index from different containers types */
 		static inline double getArrayIndex(int index,const std::vector<double>& stl_array) {
@@ -162,7 +172,7 @@ namespace Helios {
 		}
 
 		template<class ProbTable>
-		Sampler(const std::vector<TypeReaction>& reactions, const std::vector<ProbTable>& xs_container) :
+		Sampler(const std::vector<TypeReaction>& reactions, const std::vector<ProbTable>& xs_container, bool normalize = true) :
             nreaction(reactions.size()),
             nenergy(getArraySize(*xs_container.begin())),
             reactions(reactions) {
@@ -175,17 +185,26 @@ namespace Helios {
 
 			/* Once we separate the reactions from the cross sections, we need to construct the reaction matrix */
 			for(int nerg = 0 ; nerg < nenergy ; ++nerg) {
-				/* First get the total cross section (of this reactions) at this energy */
+
+				/* Check if we have to normalize the probabilities */
 				double total_xs = 0.0;
-				for(int nrea = 0 ; nrea < nreaction ; ++nrea)
-					total_xs += getArrayIndex(nerg,xs_container[nrea]);
+				if(normalize) {
+					/* First get the total cross section (of this reactions) at this energy */
+					for(int nrea = 0 ; nrea < nreaction ; ++nrea)
+						total_xs += getArrayIndex(nerg,xs_container[nrea]);
+				}
 
 				/* Exclusive scan, to construct the accumulated probability table at this energy */
 				double partial_sum = 0;
 				for(int nrea = 0 ; nrea < nreaction - 1; ++nrea) {
 					partial_sum += getArrayIndex(nerg,xs_container[nrea]);
-					reaction_matrix[nerg*(nreaction - 1) + nrea] = partial_sum / total_xs;
+					/* Put the value on the reaction matrix */
+					if(normalize)
+						reaction_matrix[nerg*(nreaction - 1) + nrea] = partial_sum / total_xs;
+					else
+						reaction_matrix[nerg*(nreaction - 1) + nrea] = partial_sum;
 				}
+
 			}
 		}
 
@@ -213,12 +232,22 @@ namespace Helios {
 			}
 		}
 
+		/* Base constructor (usually used with derived classes) */
+		template<class ProbTable>
+		Sampler(const std::vector<TypeReaction>& reactions, int nenergy) :
+            nreaction(reactions.size()), nenergy(nenergy), reactions(reactions) {
+			/* Allocate reaction matrix */
+			reaction_matrix = new double[(nreaction - 1) * nenergy];
+		}
+
 		/*
 		 * Sample a reaction
 		 * index : row on the reaction matrix
-		 * value : number between 0.0 and 1.0 to sample a reaction.
+		 * value : number between xs_min and xs_max to sample a reaction. If the XS table
+		 * is normalized, xs_min = 0.0 and xs_max = 1.0
 		 */
 		TypeReaction sample(int index, double value);
+		TypeReaction sample(int index, double value, double factor);
 
 		/* Get reaction container */
 		const std::vector<TypeReaction>& getReactions() const {return reactions;}
@@ -240,14 +269,54 @@ namespace Helios {
 		const double* hi = dat + (nreaction - 2);
 		if(val < *lo) return 0;
 		if(val > *hi) return nreaction - 1;
-		const double* value = std::lower_bound(lo,hi + 1,val);
+		const double* value = std::lower_bound(lo, hi + 1, val);
+		return value - lo;
+	}
+
+	template<class TypeReaction>
+	const double Sampler<TypeReaction>::interpolateValue(const double* ptr, double factor) {
+		double min = *ptr;
+		double max = *(ptr + (nreaction - 1));
+		return factor * (max - min) + min;
+	}
+
+	template<class TypeReaction>
+	const double* Sampler<TypeReaction>::interpolate_lower_bound(const double* first,
+			const double* last, double value, double factor) {
+		const double* it;
+		size_t count, step;
+		count = last - first;
+		while (count>0) {
+			it = first; step=count/2; it += step;
+			if (interpolateValue(it, factor) < value) {
+				first=++it; count-=step+1;
+			} else count=step;
+		}
+		return first;
+	}
+
+	template<class TypeReaction>
+	int Sampler<TypeReaction>::getIndex(const double* dat, double val, double factor) {
+		/* Initial boundaries */
+		const double* lo = dat;
+		const double* hi = dat + (nreaction - 2);
+		if(val < interpolateValue(lo, factor)) return 0;
+		if(val > interpolateValue(hi, factor)) return nreaction - 1;
+		const double* value = interpolate_lower_bound(lo, hi + 1, val, factor);
 		return value - lo;
 	}
 
 	template<class TypeReaction>
 	TypeReaction Sampler<TypeReaction>::sample(int index, double value) {
 		if(nreaction == 1) return reactions[0];
-		int nrea = getIndex(reaction_matrix + index * (nreaction - 1),value);
+		int nrea = getIndex(reaction_matrix + index * (nreaction - 1), value);
+		return reactions[nrea];
+	}
+
+	template<class TypeReaction>
+	TypeReaction Sampler<TypeReaction>::sample(int index, double value, double factor) {
+		if(nreaction == 1) return reactions[0];
+		int nrea = getIndex(reaction_matrix + index * (nreaction - 1), value, factor);
 		return reactions[nrea];
 	}
 

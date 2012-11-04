@@ -168,7 +168,7 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 	}
 
 	/* Set the isotope sampler */
-	isotope_sampler = new Sampler<AceIsotope*>(isotope_array, xs_array, total_xs);
+	isotope_sampler = new Sampler<AceIsotope*>(isotope_array, xs_array, false);
 
 }
 
@@ -182,7 +182,8 @@ double AceMaterial::getMeanFreePath(Energy& energy) const {
 const Isotope* AceMaterial::getIsotope(Energy& energy, Random& random) const {
 	double factor = master_grid->interpolate(energy);
 	size_t idx = energy.first;
-	return isotope_sampler->sample(idx,random.uniform());
+	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
+	return isotope_sampler->sample(idx,total * random.uniform(), factor);
 }
 
 AceMaterial::~AceMaterial() {
