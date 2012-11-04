@@ -64,8 +64,8 @@ MacroXsReaction::Scattering::~Scattering() {
 }
 
 /* -- Macro-XS isotope */
-MacroXsIsotope::MacroXsIsotope(map<string,vector<double> >& constant, const std::vector<double>& sigma_t) :
-		absorption_prob(sigma_t.size()), fission_prob(sigma_t.size()) {
+MacroXsIsotope::MacroXsIsotope(const IsotopeId& user_id, map<string,vector<double> >& constant, const std::vector<double>& sigma_t) :
+		Isotope(user_id), absorption_prob(sigma_t.size()), fission_prob(sigma_t.size()) {
 	/* ---- Capture reaction */
 	vector<double> sigma_f = constant["sigma_f"];
 	vector<double> sigma_a = constant["sigma_a"];
@@ -149,7 +149,7 @@ MacroXs::MacroXs(const MacroXsObject* definition, int number_groups) :
 	}
 
 	/* ---- Create the isotope */
-	isotope = new MacroXsIsotope(constant,sigma_t);
+	isotope = new MacroXsIsotope(getUserId(), constant, sigma_t);
 }
 
 void MacroXs::print(std::ostream& out) const {

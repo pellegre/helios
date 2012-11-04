@@ -53,9 +53,15 @@ namespace Helios {
 		virtual void print(std::ostream& out) const {/* Nothing by default */}
 		friend std::ostream& operator<<(std::ostream& out, const Isotope& q);
 
+		/* Internal identification of this isotope */
+		InternalIsotopeId internal_id;
+
+		/* User identification of this isotope */
+		IsotopeId user_id;
+
 	public:
 
-		Isotope() : fissile(false) {/* */};
+		Isotope(const IsotopeId& user_id) : fissile(false), user_id(user_id) {/* */};
 
 		/*
 		 * -- Get absorption probability
@@ -88,6 +94,14 @@ namespace Helios {
 		 * distribution.
 		 */
 		virtual void scatter(Particle& particle, Random& random) const = 0;
+
+		/* Set internal / unique identifier for the isotope */
+		void setInternalId(const InternalMaterialId& internal) {internal_id = internal;}
+		/* Return the internal ID associated with this isotope. */
+		const InternalMaterialId& getInternalId() const {return internal_id;}
+
+		/* Get user ID of the isotope */
+		IsotopeId getUserId() const {return user_id;}
 
 		virtual ~Isotope() {/* */};
 	};

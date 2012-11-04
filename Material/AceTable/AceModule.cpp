@@ -34,7 +34,7 @@ using namespace Ace;
 
 namespace Helios {
 
-AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid* _child_grid) :
+AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid* _child_grid) : Isotope(_reactions.name()),
 	reactions(_reactions), aweight(_reactions.awr()), temperature(_reactions.temp()), child_grid(_child_grid) {
 
 	/* Total microscopic cross section of this isotope */

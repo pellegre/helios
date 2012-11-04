@@ -106,7 +106,7 @@ namespace Helios {
 		std::vector<double> absorption_prob;
 		std::vector<double> fission_prob;
 	public:
-		MacroXsIsotope(map<string,vector<double> >& constant, const std::vector<double>& sigma_t);
+		MacroXsIsotope(const IsotopeId& user_id, map<string,vector<double> >& constant, const std::vector<double>& sigma_t);
 
 		double getAbsorptionProb(Energy& energy) const {
 			return absorption_prob[energy.first];

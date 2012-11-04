@@ -616,7 +616,7 @@ protected:
 			    /* Sampling loop */
 				#pragma omp for
 				for(size_t j = 0 ; j < samples ; ++j) {
-					const AceIsotope* isotope = dynamic_cast<const AceIsotope*>(material->getIsotope(energy,local_random));
+					const Isotope* isotope = material->getIsotope(energy,local_random);
 					isotope_local_samples[isotope->getInternalId()]++;
 				}
 

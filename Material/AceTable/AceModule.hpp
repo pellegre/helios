@@ -42,9 +42,6 @@ namespace Helios {
 		/* Reference to a neutron table */
 		Ace::ReactionContainer reactions;
 
-		/* Internal identification of this isotope */
-		InternalIsotopeId internal_id;
-
 		/* Atomic weight ratio */
 		double aweight;
 		/* Temperature at which the data were processed (in MeV) */
@@ -65,19 +62,11 @@ namespace Helios {
 	public:
 		AceIsotope(const Ace::ReactionContainer& reactions, const ChildGrid* child_grid);
 
-		/* Set internal / unique identifier for the isotope */
-		void setInternalId(const InternalMaterialId& internal) {internal_id = internal;}
-		/* Return the internal ID associated with this isotope. */
-		const InternalMaterialId& getInternalId() const {return internal_id;}
-
 		/* Get isotope information */
 		double getAwr() const {return aweight;}
 
 		/* Get temperature (in MeVs) */
 		double getTemperature() const {return temperature;}
-
-		/* Get user ID of the isotope */
-		IsotopeId getUserId() const {return reactions.name();}
 
 		/* Get absorption probability */
 		double getAbsorptionProb(Energy& energy) const;
