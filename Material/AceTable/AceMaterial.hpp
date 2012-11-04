@@ -30,7 +30,7 @@
 
 #include "AceModule.hpp"
 #include "../Material.hpp"
-#include "../../Common/Sampler.hpp"
+#include "../../Common/FactorSampler.hpp"
 
 namespace Helios {
 	class AceMaterialObject;
@@ -45,7 +45,7 @@ namespace Helios {
 		std::vector<double> total_xs;
 
 		/* Isotope sampler */
-		Sampler<AceIsotope*>* isotope_sampler;
+		FactorSampler<AceIsotope*>* isotope_sampler;
 
 		/* Density of the material */
 		double atom;   /* atom/b-cm*/

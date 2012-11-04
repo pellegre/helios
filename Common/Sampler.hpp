@@ -52,7 +52,7 @@ namespace Helios {
 		/*
 		 * How reactions are specified
 		 *
-		 *   ---------> Accumulated probability for each reaction
+		 *   ---------> Accumulated probability (or XS) for each reaction
 		 * |       [r-0] [r-1] [r-2] [r-3] .... [r-n]
 		 * | [e-0]  0.1   0.2   0.35  0.5  ....  0.98
 		 * | [e-1]  0.2   0.3   0.45  0.6  ....  0.98
@@ -66,12 +66,6 @@ namespace Helios {
 
 		/* Get the index of the reaction after a binary search */
 		int getIndex(const double* dat, double val);
-		int getIndex(const double* dat, double val, double factor);
-
-		/* Sample a reaction using an interpolation factor */
-		const double* interpolate_lower_bound(const double* lo, const double* hi, double value, double factor);
-		/* Get a value from the reaction matrix using an interpolation factor */
-		const double interpolateValue(const double* ptr, double factor);
 
 		/* Get value in an index from different containers types */
 		static inline double getArrayIndex(int index,const std::vector<double>& stl_array) {
@@ -232,7 +226,7 @@ namespace Helios {
 			}
 		}
 
-		/* Base constructor (usually used with derived classes) */
+		/* Base constructor (normally used with derived classes) */
 		template<class ProbTable>
 		Sampler(const std::vector<TypeReaction>& reactions, int nenergy) :
             nreaction(reactions.size()), nenergy(nenergy), reactions(reactions) {
@@ -247,7 +241,6 @@ namespace Helios {
 		 * is normalized, xs_min = 0.0 and xs_max = 1.0
 		 */
 		TypeReaction sample(int index, double value);
-		TypeReaction sample(int index, double value, double factor);
 
 		/* Get reaction container */
 		const std::vector<TypeReaction>& getReactions() const {return reactions;}
@@ -274,49 +267,9 @@ namespace Helios {
 	}
 
 	template<class TypeReaction>
-	const double Sampler<TypeReaction>::interpolateValue(const double* ptr, double factor) {
-		double min = *ptr;
-		double max = *(ptr + (nreaction - 1));
-		return factor * (max - min) + min;
-	}
-
-	template<class TypeReaction>
-	const double* Sampler<TypeReaction>::interpolate_lower_bound(const double* first,
-			const double* last, double value, double factor) {
-		const double* it;
-		size_t count, step;
-		count = last - first;
-		while (count>0) {
-			it = first; step=count/2; it += step;
-			if (interpolateValue(it, factor) < value) {
-				first=++it; count-=step+1;
-			} else count=step;
-		}
-		return first;
-	}
-
-	template<class TypeReaction>
-	int Sampler<TypeReaction>::getIndex(const double* dat, double val, double factor) {
-		/* Initial boundaries */
-		const double* lo = dat;
-		const double* hi = dat + (nreaction - 2);
-		if(val < interpolateValue(lo, factor)) return 0;
-		if(val > interpolateValue(hi, factor)) return nreaction - 1;
-		const double* value = interpolate_lower_bound(lo, hi + 1, val, factor);
-		return value - lo;
-	}
-
-	template<class TypeReaction>
 	TypeReaction Sampler<TypeReaction>::sample(int index, double value) {
 		if(nreaction == 1) return reactions[0];
 		int nrea = getIndex(reaction_matrix + index * (nreaction - 1), value);
-		return reactions[nrea];
-	}
-
-	template<class TypeReaction>
-	TypeReaction Sampler<TypeReaction>::sample(int index, double value, double factor) {
-		if(nreaction == 1) return reactions[0];
-		int nrea = getIndex(reaction_matrix + index * (nreaction - 1), value, factor);
 		return reactions[nrea];
 	}
 

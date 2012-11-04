@@ -168,7 +168,7 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 	}
 
 	/* Set the isotope sampler */
-	isotope_sampler = new Sampler<AceIsotope*>(isotope_array, xs_array, false);
+	isotope_sampler = new FactorSampler<AceIsotope*>(isotope_array, xs_array, false);
 
 }
 
