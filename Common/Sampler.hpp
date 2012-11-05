@@ -71,7 +71,7 @@ namespace Helios {
 		static inline double getArrayIndex(int index,const std::vector<double>& stl_array) {
 			return stl_array[index];
 		}
-		static inline double getArrayIndex(int index,const std::vector<double>*& stl_array_ptr) {
+		static inline double getArrayIndex(int index,const std::vector<double>* stl_array_ptr) {
 			return stl_array_ptr->at(index);
 		}
 		/* In case is not a container (just a value) */
@@ -84,7 +84,7 @@ namespace Helios {
 		static inline int getArraySize(const std::vector<double>& stl_array) {
 			return stl_array.size();
 		}
-		static inline int getArraySize(const std::vector<double>*& stl_array_ptr) {
+		static inline int getArraySize(const std::vector<double>* stl_array_ptr) {
 			return stl_array_ptr->size();
 		}
 		/* In case is not a container (just a value) */

@@ -30,24 +30,63 @@
 namespace Helios {
 
 /* Set an isotropic angle to the particle */
-void isotropicDirection(Direction& dir, Random& r) {
+void isotropicDirection(Direction& dir, Random& random) {
 	double rand1, rand2, rand3, c1, c2;
 
 	/* Use the rejection method described in Lux & Koblinger, pp. 21-22. */
 	do {
-		rand1 = 2.0*r.uniform() - 1.0;
-		rand2 = 2.0*r.uniform() - 1.0;
+		rand1 = 2.0*random.uniform() - 1.0;
+		rand2 = 2.0*random.uniform() - 1.0;
 		c1 = rand1*rand1 + rand2*rand2;
     }
 	while (c1 > 1.0);
 
-	rand3 = 2.0*r.uniform() - 1.0;
+	rand3 = 2.0*random.uniform() - 1.0;
 
 	c2 = sqrt(1 - rand3*rand3);
 
 	dir[0] = c2*(rand1*rand1 - rand2*rand2)/c1;
 	dir[1] = c2*2.0*rand1*rand2/c1;
 	dir[2] = rand3;
+}
+
+void azimutalRotation(double mu, Direction& dir, Random& random) {
+	/* Remember incident direction cosines */
+	Direction diro(dir);
+	/* Auxiliary variables */
+	double c1, c2, rnd1, rnd2;
+
+	/* Sample like in MCNP (MCNP4C manual p. 2-38). */
+	if ((c1 = 1.0 - diro[zaxis]*diro[zaxis]) > 1.0e-09) {
+
+		/* Select two random numbers using the rejection criterion. */
+		do {
+			rnd1 = 1.0 - 2.0*random.uniform();
+			rnd2 = 1.0 - 2.0*random.uniform();
+		} while ((c2 = rnd1*rnd1 + rnd2*rnd2) > 1.0);
+
+		double c3 = sqrt((1.0 - mu*mu)/(c1*c2));
+
+		dir[xaxis] = diro[xaxis]*mu + c3*(rnd1*diro[xaxis]*diro[zaxis] - rnd2*diro[yaxis]);
+		dir[yaxis] = diro[yaxis]*mu + c3*(rnd1*diro[yaxis]*diro[zaxis] + rnd2*diro[xaxis]);
+		dir[zaxis] = diro[zaxis]*mu - rnd1*c1*c3;
+
+	} else {
+		/* Same as previous but swap v and w */
+		c1 = 1.0 - diro[yaxis]*diro[yaxis];
+
+		/* Select two random numbers using the rejection criterion. */
+		do {
+			rnd1 = 1.0 - 2.0*random.uniform();
+			rnd2 = 1.0 - 2.0*random.uniform();
+		} while ((c2 = rnd1*rnd1 + rnd2*rnd2) > 1.0);
+
+		double c3 = sqrt((1.0 - mu*mu)/(c1*c2));
+
+		dir[xaxis] = diro[xaxis]*mu + c3*(rnd1*diro[xaxis]*diro[yaxis] - rnd2*diro[zaxis]);
+		dir[yaxis] = diro[zaxis]*mu + c3*(rnd1*diro[zaxis]*diro[yaxis] + rnd2*diro[xaxis]);
+		dir[zaxis] = diro[yaxis]*mu - rnd1*c1*c3;
+	}
 }
 
 std::ostream& operator<<(std::ostream& out, const Particle& q) {

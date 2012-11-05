@@ -116,8 +116,11 @@ namespace Helios {
 	/* Output surface information */
 	std::ostream& operator<<(std::ostream& out, const Energy& q);
 
-	/* Set an isotropic angle to the particle */
-	void isotropicDirection(Direction& dir, Random& r);
+	/* Set an isotropic angle to the particle. Adapted from SERPENT */
+	void isotropicDirection(Direction& dir, Random& random);
+
+    /* Sample like in MCNP (MCNP4C manual p. 2-38). Adapted from SERPENT */
+	void azimutalRotation(double mu, Direction& dir, Random& random);
 
 } /* namespace Helios */
 #endif /* PARTICLE_HPP_ */
