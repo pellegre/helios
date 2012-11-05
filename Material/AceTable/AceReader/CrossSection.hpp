@@ -60,8 +60,10 @@ public:
 	/* Get (FORTRAN) index */
 	int getIndex() const {return ie;}
 
+	/* Check both limits on the table */
 	double operator[](int index) const {
 		if(index < (ie - 1)) return 0.0;
+		else if((index - ie) > (int)xs_data.size()) return 0.0;
 		else return xs_data[index - (ie - 1)];
 	}
 
