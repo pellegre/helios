@@ -40,7 +40,7 @@ namespace AceReaction {
 		double awr;
 		/* Temperature (in MeVs) */
 		double temperature;
-		/* Sample target velocity. Adapted from SERPENT */
+		/* Sample target velocity. */
 		void targetVelocity(double energy, Direction direction, Direction& velocity, Random& random);
 	public:
 		/* Threshold values */
@@ -54,6 +54,8 @@ namespace AceReaction {
 
 		virtual ~ElasticScattering() {/* */};
 	};
+
+
 
 }
 

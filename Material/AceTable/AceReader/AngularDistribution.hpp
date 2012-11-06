@@ -40,46 +40,52 @@ public:
 
 	friend class ANDBlock;
 
+	typedef int TableType;
+	/* Type of scattering cosine tables */
+	const static TableType isotropic_table = 0;
+	const static TableType equibins_table = 0;
+	const static TableType tabular_table = 0;
+
 	/* Array where the distribution is defined (32 equiprobable bins, tabular or isotropic) */
-	class AngularArray {
-	public:
+	struct AngularArray {
 		AngularArray() {/* */};
 		virtual void dump(std::ostream& out) const = 0;
 		virtual int size() const = 0;
 		virtual AngularArray* clone() const = 0;
+		virtual TableType getType() const = 0;
 		virtual ~AngularArray() {/* */};
 	};
 
 	/* If LC(J)=0, isotropic and no further information is needed. */
-	class Isotropic : public AngularArray {
-	public:
+	struct Isotropic : public AngularArray {
 		Isotropic() {/* */};
 		void dump(std::ostream& out) const {/**/};
 		int size() const {return 0;};
+		TableType getType() const {return isotropic_table;};
 		virtual AngularArray* clone() const {return new Isotropic();};
 	};
 
 	/* If LC(J) is positive, it points to a 32 equiprobable bin distribution. */
-	class EquiBins : public AngularArray {
+	struct EquiBins : public AngularArray {
 		std::vector<double> bins;
-	public:
 		EquiBins(const std::vector<double>& bins) : bins(bins) {/* */};
 		void dump(std::ostream& out) const;
 		int size() const {return bins.size();};
+		TableType getType() const {return equibins_table;};
 		virtual AngularArray* clone() const {return new EquiBins(bins);};
 	};
 
 	/* If LC(J) is negative, it points to a tabular angular distribution. */
-	class Tabular : public AngularArray {
+	struct Tabular : public AngularArray {
 		int iflag;                 /* 1 = histogram, 2 = lin-lin */
 		std::vector<double> csout; /* Cosine scattering angular grid */
 		std::vector<double> pdf;   /* Probability density function */
 		std::vector<double> cdf;   /* Cumulative density function */
-	public:
 		Tabular(int iflag, const std::vector<double>& csout,const std::vector<double>& pdf,const std::vector<double>& cdf) :
 			    iflag(iflag), csout(csout), pdf(pdf), cdf(cdf) {/* */};
 		void dump(std::ostream& out) const;
 		int size() const {return (3 * csout.size() + 2);};
+		TableType getType() const {return tabular_table;};
 		virtual AngularArray* clone() const {return new Tabular(iflag,csout,pdf,cdf);};
 	};
 
@@ -118,10 +124,6 @@ public:
 
 	virtual ~AngularDistribution();
 
-private:
-
-	AngularDistribution(std::vector<double>::const_iterator it);
-
 	/* Energies at which the distributions are tabulated */
 	std::vector<double> energy;
 	/* Location of energy distributions (relative to JXS(9)) */
@@ -130,6 +132,10 @@ private:
 	std::vector<AngularArray*> adist;
 	/* Kind of data included on the distribution */
 	int kind;
+
+private:
+
+	AngularDistribution(std::vector<double>::const_iterator it);
 
 };
 
