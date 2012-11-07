@@ -60,6 +60,11 @@ namespace Helios {
 		void print(std::ostream& out) const;
 
 	public:
+
+		/* Threshold values */
+		static double energy_freegas_threshold;
+		static double awr_freegas_threshold;
+
 		AceIsotope(const Ace::ReactionContainer& reactions, const ChildGrid* child_grid);
 
 		/* Get isotope information */

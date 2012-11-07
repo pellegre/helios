@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../../Common/Interpolate.hpp"
 #include "../../../Transport/Particle.hpp"
 #include "../AceReader/AngularDistribution.hpp"
+#include "../AceReader/NeutronReaction.hpp"
 
 namespace Helios {
 
@@ -152,7 +153,7 @@ namespace AceReaction {
 		MuTable(const Ace::AngularDistribution& ace_data);
 
 		/* Sample scattering cosine */
-		void operator()(double energy, Random& random, double& mu) const {
+		void setCosine(double energy, Random& random, double& mu) const {
 			/* Get interpolation data */
 			std::pair<size_t,double> res = interpolate(energies.begin(), energies.end(), energy);
 			/* Index */
@@ -180,7 +181,7 @@ namespace AceReaction {
 		MuIsotropic(const Ace::AngularDistribution& ace_data) {/* */};
 
 		/* Sample scattering cosine */
-		void operator()(double energy, Random& random, double& mu) const {
+		void setCosine(double energy, Random& random, double& mu) const {
 			mu = isotropic(random);
 		}
 
@@ -197,7 +198,7 @@ namespace AceReaction {
 	public:
 		MuNull(const Ace::AngularDistribution& ace_data) {/* */};
 		/* Sample scattering cosine */
-		void operator()(double energy, Random& random, double& mu) const {/* */}
+		void setCosine(double energy, Random& random, double& mu) const {/* */}
 		~MuNull() {/* */}
 	};
 
@@ -207,12 +208,12 @@ namespace AceReaction {
 	template<class SamplingPolicy>
 	class MuSampler : public SamplingPolicy {
 	public:
-		MuSampler(const Ace::AngularDistribution& ace_data) : SamplingPolicy(ace_data) {/* */}
+		MuSampler(const Ace::NeutronReaction& neutron_reaction) : SamplingPolicy(neutron_reaction.getAngular()) {/* */}
 		void operator()(const Particle& particle, Random& random, double& mu) const {
 			/* Get energy */
 			double energy = particle.getEnergy().second;
 			/* Apply policy */
-			SamplingPolicy(energy, random, mu);
+			SamplingPolicy::setCosine(energy, random, mu);
 		}
 		~MuSampler() {/* */}
 	};

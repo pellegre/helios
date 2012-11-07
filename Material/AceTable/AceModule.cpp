@@ -34,6 +34,9 @@ using namespace Ace;
 
 namespace Helios {
 
+double AceIsotope::energy_freegas_threshold = 400.0; /* By default, 400.0 kT*/
+double AceIsotope::awr_freegas_threshold = 1.0;      /* By default, only H */
+
 AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid* _child_grid) : Isotope(_reactions.name()),
 	reactions(_reactions), aweight(_reactions.awr()), temperature(_reactions.temp()), child_grid(_child_grid) {
 

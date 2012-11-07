@@ -297,7 +297,7 @@ void NeutronTable::printTableInfo(std::ostream& out) const {
 
 	out << tab << "[@] Neutron Reactions                   : " << endl;
 	for(it_rea = reactions.begin() ; it_rea != reactions.end() ; it_rea++) {
-		int mt = (*it_rea).getMT();
+		int mt = (*it_rea).getMt();
 		if(mts_reactions.find(mt) != mts_reactions.end())
 			out << tab << "[+] " << mts_reactions[mt] << " : " << endl;
 		else

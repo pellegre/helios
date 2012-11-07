@@ -145,7 +145,7 @@ TEST_F(SimpleAceTest, SumReactions) {
 		size_t nrea = new_rea.size();
 
 		for(size_t i = 0 ; i < nrea ; i++) {
-			double diff = checkXS(old_rea[i].getXS(),new_rea[i].getXS());
+			double diff = checkXS(old_rea[i].getXs(),new_rea[i].getXs());
 			EXPECT_NEAR(0.0,diff,5e8*numeric_limits<double>::epsilon());
 		}
 

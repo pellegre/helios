@@ -69,20 +69,20 @@ namespace Ace {
 			mt(mt), q(q), xs(xs), adist(adist), edist(edist), tyr_dist(tyr_dist) {/* */};
 
 		/* Get Reaction values */
-		int getMT() const {return mt;};
+		int getMt() const {return mt;};
 		double getQ() const {return q;};
 
-		const TyrDistribution& getTYR() const {return tyr_dist;};
-		TyrDistribution& getTYR() {return tyr_dist;};
+		const TyrDistribution& getTyr() const {return tyr_dist;};
+		TyrDistribution& getTyr() {return tyr_dist;};
 
-		const CrossSection& getXS() const {return xs;};
-		CrossSection& getXS() {return xs;};
+		const CrossSection& getXs() const {return xs;};
+		CrossSection& getXs() {return xs;};
 
-		const AngularDistribution& getAND() const {return adist;};
-		AngularDistribution& getAND() {return adist;};
+		const AngularDistribution& getAngular() const {return adist;};
+		AngularDistribution& getAngular() {return adist;};
 
-		const EnergyDistribution& getDLW() const {return edist;};
-		EnergyDistribution& getDLW() {return edist;};
+		const EnergyDistribution& getEnergy() const {return edist;};
+		EnergyDistribution& getEnergy() {return edist;};
 
 		void printInformation(std::ostream& out) const;
 

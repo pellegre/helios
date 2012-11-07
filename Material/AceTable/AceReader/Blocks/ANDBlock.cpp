@@ -68,14 +68,14 @@ void ANDBlock::updateData() {
 	and_dist.clear();
 
 	/* The first one is the elastic reaction */
-	and_dist.push_back(reas()[0].getAND());
+	and_dist.push_back(reas()[0].getAngular());
 
 	ReactionContainer::iterator it_rea;
 
 	for(it_rea = reas().begin() + 1; it_rea != reas().end() ; it_rea++) {
 		/* The first reaction with no data for the angular distribution defines the end of the NR array */
-		if((*it_rea).getAND().getKind() == AngularDistribution::no_data) break;
-		and_dist.push_back((*it_rea).getAND());
+		if((*it_rea).getAngular().getKind() == AngularDistribution::no_data) break;
+		and_dist.push_back((*it_rea).getAngular());
 	}
 
 	/* New array to hold the location of the tabulated angular distributions */

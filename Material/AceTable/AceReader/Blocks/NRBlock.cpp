@@ -86,10 +86,10 @@ void NRBlock::updateData() {
 	for(it_rea = reas().begin() + 1; it_rea != reas().end() ; it_rea++) {
 		/* Get this neutron reaction */
 		NeutronReaction rea = (*it_rea);
-		new_mtr[cntrea] = rea.getMT();
+		new_mtr[cntrea] = rea.getMt();
 		new_lqr[cntrea] = rea.getQ();
-		new_tyr[cntrea] = rea.getTYR().getTYR();
-		new_xs[cntrea] = rea.getXS();
+		new_tyr[cntrea] = rea.getTyr().getTYR();
+		new_xs[cntrea] = rea.getXs();
 		cntrea++;
 	}
 

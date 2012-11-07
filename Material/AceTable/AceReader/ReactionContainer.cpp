@@ -34,7 +34,7 @@ using namespace Ace;
 ReactionContainer::iterator ReactionContainer::get_mt(int mt) {
 	ReactionContainer::iterator it = rea_cont.begin();
 	while(it != rea_cont.end()) {
-		if ((*it).getMT() == mt)
+		if ((*it).getMt() == mt)
 			return it;
 		it++;
 	}
@@ -44,7 +44,7 @@ ReactionContainer::iterator ReactionContainer::get_mt(int mt) {
 ReactionContainer::const_iterator ReactionContainer::get_mt(int mt) const {
 	ReactionContainer::const_iterator it = rea_cont.begin();
 	while(it != rea_cont.end()) {
-		if ((*it).getMT() == mt)
+		if ((*it).getMt() == mt)
 			return it;
 		it++;
 	}
@@ -60,8 +60,8 @@ CrossSection ReactionContainer::sum_mts(const std::string& range) const {
 	set<int> mt_numbers = getNumbers(range);
 
 	for(it_rea = rea_cont.begin(); it_rea != rea_cont.end() ; it_rea++) {
-		if(mt_numbers.find((*it_rea).getMT()) != mt_numbers.end())
-			xs_ret = xs_ret + (*it_rea).getXS();
+		if(mt_numbers.find((*it_rea).getMt()) != mt_numbers.end())
+			xs_ret = xs_ret + (*it_rea).getXs();
 	}
 
 	return xs_ret;
@@ -72,7 +72,7 @@ bool ReactionContainer::check_any(const std::string& mts) const {
 	set<int> mt_numbers = getNumbers(mts);
 
 	for(it_rea = rea_cont.begin(); it_rea != rea_cont.end() ; it_rea++) {
-		if(mt_numbers.find((*it_rea).getMT()) == mt_numbers.end())
+		if(mt_numbers.find((*it_rea).getMt()) == mt_numbers.end())
 			return false;
 	}
 
@@ -84,7 +84,7 @@ bool ReactionContainer::check_all(const std::string& mts) const {
 	set<int> mt_numbers = getNumbers(mts);
 
 	for(it_rea = rea_cont.begin(); it_rea != rea_cont.end() ; it_rea++) {
-		if(mt_numbers.find((*it_rea).getMT()) != mt_numbers.end())
+		if(mt_numbers.find((*it_rea).getMt()) != mt_numbers.end())
 			return true;
 	}
 
@@ -205,30 +205,30 @@ void ReactionContainer::update_xs() {
 	ReactionContainer::iterator it;
 
 	for(it = rea_cont.begin() ; it != rea_cont.end() ; it++) {
-		int mt = (*it).getMT();
+		int mt = (*it).getMt();
 
 		if(mt == 1)
-			(*it).getXS() = sum_mts(nonelastic_xs() + "," + elastic_xs());
+			(*it).getXs() = sum_mts(nonelastic_xs() + "," + elastic_xs());
 		else if(mt == 3)
-			(*it).getXS() = sum_mts(nonelastic_xs());
+			(*it).getXs() = sum_mts(nonelastic_xs());
 		else if(mt == 4)
-			(*it).getXS() = sum_mts(exitc_xs());
+			(*it).getXs() = sum_mts(exitc_xs());
 		else if(mt == 27)
-			(*it).getXS() = sum_mts(disapp_xs() + "," + fission_xs());
+			(*it).getXs() = sum_mts(disapp_xs() + "," + fission_xs());
 		else if(mt == 101)
-			(*it).getXS() = sum_mts(disapp_xs());
+			(*it).getXs() = sum_mts(disapp_xs());
 		else if(mt == 18)
-			(*it).getXS() = sum_mts(fission_xs());
+			(*it).getXs() = sum_mts(fission_xs());
 		else if(mt == 103)
-			(*it).getXS() = sum_mts(proton_xs());
+			(*it).getXs() = sum_mts(proton_xs());
 		else if(mt == 104)
-			(*it).getXS() = sum_mts(deuteron_xs());
+			(*it).getXs() = sum_mts(deuteron_xs());
 		else if(mt == 105)
-			(*it).getXS() = sum_mts(triton_xs());
+			(*it).getXs() = sum_mts(triton_xs());
 		else if(mt == 106)
-			(*it).getXS() = sum_mts(he_xs());
+			(*it).getXs() = sum_mts(he_xs());
 		else if(mt == 107)
-			(*it).getXS() = sum_mts(alpha_xs());
+			(*it).getXs() = sum_mts(alpha_xs());
 
 	}
 }

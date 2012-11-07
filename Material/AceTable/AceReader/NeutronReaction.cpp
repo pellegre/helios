@@ -35,8 +35,8 @@ using namespace std;
 static const string& tab = "   ";
 
 void NeutronReaction::printInformation(std::ostream& out) const {
-	out << tab << tab << "[@] MT = " << getMT() << endl;
-	out << tab << tab << "[@] Number of energies  : " << getXS().getData().size() << endl;
+	out << tab << tab << "[@] MT = " << getMt() << endl;
+	out << tab << tab << "[@] Number of energies  : " << getXs().getData().size() << endl;
 	out << tab << tab << "[@] Reaction parameters : ";
 	out << "Q = " << fixed << getQ() << " MeV "<< " ; ";
 	int ty = tyr_dist.getTYR();

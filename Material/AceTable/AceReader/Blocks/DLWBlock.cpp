@@ -68,10 +68,10 @@ void DLWBlock::updateData() {
 
 	for(it_rea = reas().begin() + 1; it_rea != reas().end() ; it_rea++) {
 		/* The first reaction with no data for the angular distribution defines the end of the NR array */
-		if((*it_rea).getDLW().getKind() == EnergyDistribution::no_data) break;
-		energy_dist.push_back((*it_rea).getDLW());
-		if ((*it_rea).getTYR().getType() == TyrDistribution::distribution)
-			tyr_dist[(*it_rea).getMT()] = (*it_rea).getTYR();
+		if((*it_rea).getEnergy().getKind() == EnergyDistribution::no_data) break;
+		energy_dist.push_back((*it_rea).getEnergy());
+		if ((*it_rea).getTyr().getType() == TyrDistribution::distribution)
+			tyr_dist[(*it_rea).getMt()] = (*it_rea).getTyr();
 	}
 
 	/* New array to hold the location of the tabulated angular distributions */
