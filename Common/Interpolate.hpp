@@ -25,35 +25,43 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "MuSampler.hpp"
+#ifndef INTERPOLATE_HPP_
+#define INTERPOLATE_HPP_
+
+#include <algorithm>
 
 namespace Helios {
 
-using namespace AceReaction;
+	/* Interpolate a value and returns the interpolation factor (floating point) and the index (unsigned integer) */
+	template<class Iterator, class T>
+	std::pair<size_t, double> interpolate(Iterator begin, Iterator end, const T& value) {
+		typedef typename std::iterator_traits<Iterator>::value_type ValueType;
+		typedef typename std::iterator_traits<Iterator>::difference_type DistanceType;
 
-/* Cosine table builder */
-CosineTable* MuTable::tableBuilder(const AceAngular* ace_array) {
-	typedef Ace::AngularDistribution Ang;
-	typedef Ang::TableType TableType;
-	TableType type = ace_array->getType();
-	if(type == Ang::isotropic_table)
-		return new Isotropic();
-	else if(type == Ang::equibins_table)
-		return new EquiBins(static_cast<const AceEquiBins*>(ace_array));
-	else if(type == Ang::tabular_table)
-		return new Tabular(static_cast<const AceTabular*>(ace_array));
-	return 0;
+		/* Maximum and minimum values */
+		ValueType min_value = *begin;
+		ValueType max_value = *(end - 1);
+
+		/* Size of the grid */
+		DistanceType size = end - begin;
+
+		/* First check if the given energy is out of bound */
+		if(value <= min_value)
+			return std::pair<size_t,double>(0,0.0);
+		else if(value >= max_value)
+			return std::pair<size_t,double>(size - 2,1.0);
+
+		/* Get lower index */
+		DistanceType idx = std::upper_bound(begin, end, value) - begin - 1;
+
+		/* Energy bounds */
+		ValueType low = *(begin + idx);
+		ValueType high = *(begin + idx + 1);
+
+		/* Return factor */
+		return std::pair<size_t,double>(idx,(value - low) / (high - low));
+	}
+
 }
 
-/* Constructor */
-MuTable::MuTable(const Ace::AngularDistribution& ace_data) : energies(ace_data.energy) {
-	/* Sanity check */
-	assert(ace_data.adist.size() == energies.size());
-	/* Create the tables */
-	for(vector<AceAngular*>::const_iterator it = ace_data.adist.begin() ; it != ace_data.adist.end() ; ++it)
-		cosine_table.push_back(tableBuilder(*it));
-}
-
-}
-
-
+#endif /* INTERPOLATE_HPP_ */

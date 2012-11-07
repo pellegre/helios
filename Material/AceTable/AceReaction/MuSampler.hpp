@@ -32,13 +32,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <cassert>
 
+#include "../../../Common/Common.hpp"
+#include "../../../Common/Interpolate.hpp"
+#include "../../../Transport/Particle.hpp"
+#include "../AceReader/AngularDistribution.hpp"
+
 namespace Helios {
 
 namespace AceReaction {
 
 	/* Tables for sampling scattering cosine obtained from an ACE cross section library */
 	typedef Ace::AngularDistribution::AngularArray AceAngular;
-	typedef Ace::AngularDistribution::Isotropic AceIsotropic;
 	typedef Ace::AngularDistribution::EquiBins AceEquiBins;
 	typedef Ace::AngularDistribution::Tabular AceTabular;
 
@@ -46,14 +50,14 @@ namespace AceReaction {
 	class CosineTable {
 	public:
 		CosineTable() {/* */}
-		virtual double operator()(Random& random) = 0;
+		virtual double operator()(Random& random) const = 0;
 		virtual ~CosineTable() {/* */}
 	};
 
 	/* Sample isotropic scattering cosine */
 	class Isotropic : public CosineTable {
 	public:
-		Isotropic(const AceAngular* ace_angular) {/* */}
+		Isotropic() {/* */}
 
 		double operator()(Random& random) const {
 			/* Return value */
@@ -107,10 +111,11 @@ namespace AceReaction {
 			/* Get random number */
 			double chi = random.uniform();
 			/* Sample the bin on the cumulative */
-			size_t idx = std::upper_bound(cdf.begin(), cdf.end(), chi) - cdf.begin();
+			size_t idx = std::upper_bound(cdf.begin(), cdf.end(), chi) - cdf.begin() - 1;
 
 			/* Histogram interpolation */
 			if(iflag == 1) {
+				/* Return cosine */
 				return csout[idx] + (chi - cdf[idx]) / pdf[idx];
 
 			/* Linear-Linear interpolation */
@@ -125,17 +130,17 @@ namespace AceReaction {
 			return 0.0;
 		}
 
-		virtual ~Tabular() {/* */}
+		~Tabular() {/* */}
 	};
 
 	/*
-	 * Generic cosine sampler.
+	 * Cosine table sampler.
 	 *
 	 * This class have a sampler table for each incident energy tabulated.
 	 * Before sampling a scattering cosine, the class samples the cosine table
 	 * using the incident particle energy.
 	 */
-	class MuSampler {
+	class MuTable {
 		/* Tabulated incident energies */
 		std::vector<double> energies;
 		/* Cosine table for each tabulated energy */
@@ -144,15 +149,74 @@ namespace AceReaction {
 		/* Cosine table builder */
 		static CosineTable* tableBuilder(const AceAngular* ace_array);
 	public:
-		MuSampler(const Ace::AngularDistribution& ace_data);
+		MuTable(const Ace::AngularDistribution& ace_data);
 
-		/* Sample cosine */
-		double operator()(double energy, Random& random) {
-
+		/* Sample scattering cosine */
+		void operator()(double energy, Random& random, double& mu) const {
+			/* Get interpolation data */
+			std::pair<size_t,double> res = interpolate(energies.begin(), energies.end(), energy);
+			/* Index */
+			size_t idx = res.first;
+			/* Interpolation factor */
+			double factor = res.second;
+			/* Sample bin and return cosine */
+			double chi = random.uniform();
+			if(chi < factor) mu = (*cosine_table[idx + 1])(random);
+			else mu = (*cosine_table[idx])(random);
 		}
 
+		~MuTable() {/* */}
+	};
+
+	/*
+	 * Cosine isotropic sampler.
+	 *
+	 * In this case, no angular distribution data are given for this reaction,
+	 * and isotropic scattering is assumed in either the LAB or CM system.
+	 */
+	class MuIsotropic {
+		Isotropic isotropic;
+	public:
+		MuIsotropic(const Ace::AngularDistribution& ace_data) {/* */};
+
+		/* Sample scattering cosine */
+		void operator()(double energy, Random& random, double& mu) const {
+			mu = isotropic(random);
+		}
+
+		~MuIsotropic() {/* */}
+	};
+
+	/*
+	 * Null cosine sampler.
+	 *
+	 * No angular distribution data are given for this reaction in the AND Block. Angular
+	 * distribution data are specified through LAW=44 in the DLW Block.
+	 */
+	class MuNull {
+	public:
+		MuNull(const Ace::AngularDistribution& ace_data) {/* */};
+		/* Sample scattering cosine */
+		void operator()(double energy, Random& random, double& mu) const {/* */}
+		~MuNull() {/* */}
+	};
+
+	/*
+	 * Cosine sampler, using one of the above policies
+	 */
+	template<class SamplingPolicy>
+	class MuSampler : public SamplingPolicy {
+	public:
+		MuSampler(const Ace::AngularDistribution& ace_data) : SamplingPolicy(ace_data) {/* */}
+		void operator()(const Particle& particle, Random& random, double& mu) const {
+			/* Get energy */
+			double energy = particle.getEnergy().second;
+			/* Apply policy */
+			SamplingPolicy(energy, random, mu);
+		}
 		~MuSampler() {/* */}
 	};
+
 }
 
 }

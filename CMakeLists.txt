@@ -118,9 +118,11 @@ set(MCFILES Common/Common.cpp
             Material/Materials.cpp
             Material/Isotope.cpp            
             Material/MacroXs/MacroXs.cpp  
-            Material/Grid/MasterGrid.cpp
+            Material/Grid/MasterGrid.cpp         
             Material/AceTable/AceMaterial.cpp  
-            Material/AceTable/AceModule.cpp                        
+            Material/AceTable/AceModule.cpp
+            Material/AceTable/AceReaction/ElasticScattering.cpp  
+            Material/AceTable/AceReaction/MuSampler.cpp                                         
 			Material/AceTable/AceReader/ACETable.cpp
 			Material/AceTable/AceReader/ACEReader.cpp
 			Material/AceTable/AceReader/CrossSection.cpp

@@ -31,8 +31,8 @@ namespace Helios {
 
 using namespace AceReaction;
 
-static double ElasticScattering::energy_freegas_threshold = 400.0; /* By default, 400.0 kT*/
-static double ElasticScattering::awr_freegas_threshold = 1.0;      /* By default, only H */
+double ElasticScattering::energy_freegas_threshold = 400.0; /* By default, 400.0 kT*/
+double ElasticScattering::awr_freegas_threshold = 1.0;      /* By default, only H */
 
 void ElasticScattering::targetVelocity(double energy, Direction direction, Direction& velocity, Random& random) {
 
