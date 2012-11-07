@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //#include "AceTest/AceTests.hpp"
 #include "AceTest/ReactionTest.hpp"
 
+#include "../../Tallies/Histogram.hpp"
+
 InputPath InputPath::inputpath;
 
 int main(int argc, char **argv) {
@@ -45,7 +47,16 @@ int main(int argc, char **argv) {
 
 	InputPath::access().setPath(argv[1]);
 
-	return RUN_ALL_TESTS();
+	using namespace Helios;
+	using namespace std;
+
+	Histogram<LinearHistogram> histo(0.0, 1.0, 5);
+
+	histo(0.5);
+
+	cout << histo << endl;
+
+	//return RUN_ALL_TESTS();
 }
 
 
