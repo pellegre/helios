@@ -26,16 +26,29 @@
  */
 
 #include "Histogram.hpp"
+#include "../Common/Common.hpp"
 
 namespace Helios {
 
 using namespace std;
 
-std::ostream& operator<<(std::ostream& out, const LinearHistogram& q) {
+void LinearBins::print(std::ostream& out) const {
+	out << "# -- Linear Histogram " << endl;
+	out << "# Number of bins : " << (int)values.size() << endl;
+	out << "# Limits         : "  << scientific << min << " - " << max << endl;
+	out << "# Delta          : "  << scientific << delta << endl;
 	/* Print lower - upper and value of each bin */
-	for(size_t i = 0 ; i < q.values.size() ; ++i)
-		out << (q.min + i * q.delta) << " " << (q.min + (i + 1) * q.delta) << " " << q.values[i] << endl;
-	return out;
+	out << "#" << setw(14) << "Low" << setw(15) << "High" << setw(15) << "Value" << endl;
+	for(size_t i = 0 ; i < values.size() ; ++i)
+		out << scientific << setw(15) << (min + i * delta) <<
+		setw(15) << (min + (i + 1) * delta) <<
+		setw(15) << values[i] << endl;
+}
+
+void LinearBins::normalize() {
+	for(size_t i = 0 ; i < values.size() ; ++i)
+		if(not compareFloating(values[i],0.0))
+			values[i] /= total;
 }
 
 } /* namespace Helios */

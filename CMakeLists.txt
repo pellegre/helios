@@ -140,7 +140,8 @@ set(MCFILES Common/Common.cpp
 			Material/AceTable/AceReader/ReactionContainer.cpp
 			Material/AceTable/AceReader/PrintMessage.cpp
 			Material/AceTable/AceReader/EnergyDistribution.cpp
-			Material/AceTable/AceReader/AngularDistribution.cpp                                                                              
+			Material/AceTable/AceReader/AngularDistribution.cpp 
+			Tallies/Histogram.cpp                                                                             
             Parser/Parser.cpp
             Parser/XMLParser/tinystr.cpp
             Parser/XMLParser/tinyxml.cpp                  

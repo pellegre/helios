@@ -38,6 +38,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../../Material/AceTable/AceReader/AceUtils.hpp"
 #include "../../../Material/AceTable/AceReader/Conf.hpp"
 #include "../../../Material/AceTable/AceReaction/ElasticScattering.hpp"
+#include "../../../Tallies/Histogram.hpp"
+
 #include "../../Utils.hpp"
 #include "../TestCommon.hpp"
 
@@ -51,31 +53,6 @@ protected:
 	void TearDown() {/* */}
 };
 
-class Histogram {
-	std::vector<double> bins;
-	std::vector<double> limits;
-	double min, max, total, delta;
-public:
-	Histogram(size_t nbins, double min, double max) : bins(nbins,0.0), limits(nbins + 1), min(min), max(max), total(0.0) {
-		delta = (max - min) / (double)(bins.size());
-		for(size_t i = 0 ; i < limits.size() ; ++i)
-			limits[i] = min + (double)i * delta;
-	}
-	void put(double value) {
-		if(value < limits[0]) bins[0]++;
-		else if(value > limits[limits.size() - 1]) bins[bins.size()]++;
-		else {
-			size_t idx = std::upper_bound(limits.begin(), limits.end(), value) - limits.begin() - 1;
-			bins[idx]++;
-		}
-	}
-	void print() {
-		for(size_t i = 0 ; i < bins.size() ; ++i) {
-			std::cout << std::scientific << limits[i] << " " << bins[i] << std::endl;
-		}
-	}
-	~Histogram() {/* */}
-};
 
 TEST_F(SimpleReactionTest, CheckReaction) {
 	using namespace std;
@@ -86,18 +63,21 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	NeutronTable* ace_table = dynamic_cast<NeutronTable*>(AceReader::getTable("1001.03c"));
 
 	ReactionContainer reactions = ace_table->getReactions();
-	NeutronReaction& elastic_reaction = *reactions.get_mt(1);
-	ElasticScattering<MuIsotropic> elastic(reactions.awr(), reactions.temp(), elastic_reaction.getAngular());
+	NeutronReaction& elastic_reaction = *reactions.get_mt(2);
+	ElasticScattering<MuTable> elastic(1.0, reactions.temp(), elastic_reaction.getAngular());
 
-	Histogram histo(20,5E-13,5E-6);
+	Histogram<LinearBins> histo(-2.0,2.0,50);
 	Particle particle;
 	Random random(1);
-	for(size_t i = 0 ; i < 100000000 ; ++i) {
+	for(size_t i = 0 ; i < 50000000 ; ++i) {
+		Direction last = particle.dir();
 		elastic(particle,random);
-		histo.put(particle.erg().second);
+		histo(dot(particle.dir(), last));
 	}
 
-	histo.print();
+	cout << dot(particle.dir(),particle.dir()) << endl;
+	histo.normalize();
+	cout << histo;
 
 	delete ace_table;
 }

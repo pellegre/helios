@@ -28,11 +28,12 @@
 #ifndef HISTOGRAM_HPP_
 #define HISTOGRAM_HPP_
 
+#include <iostream>
 #include <vector>
 
 namespace Helios {
 
-class LinearHistogram {
+class LinearBins {
 	/* Accumulated values */
 	std::vector<double> values;
 	/* Limits on the histogram */
@@ -41,16 +42,13 @@ class LinearHistogram {
 	double total;
 public:
 
-	/* Print operator */
-	friend std::ostream& operator<<(std::ostream& out, const LinearHistogram& q);
-
-	LinearHistogram(double min, double max, size_t nbins) :
-		min(min), max(max), delta(max - min / (double)nbins), values(nbins, 0.0), total(0.0) {/* */}
+	LinearBins(double min, double max, size_t nbins) :
+		values(nbins, 0.0), min(min), max(max), delta((max - min) / (double)nbins), total(0.0) {/* */}
 
 	/* Accumulate value */
 	void accum(double value) {
 		/* Check limits */
-		if(value >= min && value <= max) {
+		if(value > min && value < max) {
 			/* Accumulate value on histogram bin */
 			double diff = (value - min);
 			/* Calculate bin position */
@@ -62,12 +60,22 @@ public:
 		}
 	}
 
-	virtual ~LinearHistogram() {/* */}
+	/* Normalize bins */
+	void normalize();
+
+	/* Print bins */
+	void print(std::ostream& out) const;
+
+	~LinearBins() {/* */}
 };
 
 template<class Accumulator>
-class Histogram {
+class Histogram : public Accumulator {
 public:
+	/* Print operator */
+	template<class accum>
+	friend std::ostream& operator<<(std::ostream& out, const Histogram<accum>& q);
+
 	/* Constructor (linear) */
 	Histogram(double min, double max, size_t nbins) : Accumulator(min, max, nbins) {/* */};
 
@@ -76,8 +84,18 @@ public:
 		Accumulator::accum(value);
 	}
 
+	void print(std::ostream& out) const {
+		Accumulator::print(out);
+	}
+
 	~Histogram() {/* */};
 };
+
+template<class accum>
+std::ostream& operator<<(std::ostream& out, const Histogram<accum>& q) {
+	q.print(out);
+	return out;
+}
 
 } /* namespace Helios */
 #endif /* HISTOGRAM_HPP_ */

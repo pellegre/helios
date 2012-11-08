@@ -131,7 +131,7 @@ namespace AceReaction {
 		Direction vc = (vp + awr * vt) / (awr + 1.0);
 
 		/* Particle velocities in CM */
-		vp = vp - vc;
+		vp -= vc;
 		velp = sqrt(dot(vp,vp));
 
 		/* Sample scattering cosine in CM */
@@ -146,7 +146,7 @@ namespace AceReaction {
 		vp = particle.dir() * velp;
 
 		/* Particle velocities in LAB */
-		vp = vp + vc;
+		vp += vc;
 		velp = sqrt(dot(vp,vp));
 
 		/* Particle energy */
