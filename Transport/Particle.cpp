@@ -84,8 +84,8 @@ void azimutalRotation(double mu, Direction& dir, Random& random) {
 		double c3 = sqrt((1.0 - mu*mu)/(c1*c2));
 
 		dir[xaxis] = diro[xaxis]*mu + c3*(rnd1*diro[xaxis]*diro[yaxis] - rnd2*diro[zaxis]);
-		dir[yaxis] = diro[zaxis]*mu + c3*(rnd1*diro[zaxis]*diro[yaxis] + rnd2*diro[xaxis]);
-		dir[zaxis] = diro[yaxis]*mu - rnd1*c1*c3;
+		dir[zaxis] = diro[zaxis]*mu + c3*(rnd1*diro[zaxis]*diro[yaxis] + rnd2*diro[xaxis]);
+		dir[yaxis] = diro[yaxis]*mu - rnd1*c1*c3;
 	}
 }
 

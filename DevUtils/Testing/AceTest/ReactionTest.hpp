@@ -69,13 +69,13 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	Histogram<LinearBins> histo(-2.0,2.0,50);
 	Particle particle;
 	Random random(1);
+
 	for(size_t i = 0 ; i < 50000000 ; ++i) {
 		Direction last = particle.dir();
 		elastic(particle,random);
-		histo(dot(particle.dir(), last));
+		histo(particle.erg().second);
 	}
 
-	cout << dot(particle.dir(),particle.dir()) << endl;
 	histo.normalize();
 	cout << histo;
 
