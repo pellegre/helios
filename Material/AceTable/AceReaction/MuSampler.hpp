@@ -135,13 +135,23 @@ namespace AceReaction {
 	};
 
 	/*
+	 * Base class to deal with cosine samplers
+	 */
+	class MuSampler {
+	public:
+		MuSampler(const Ace::AngularDistribution& ace_data) {/* */}
+		virtual void setCosine(const Particle& particle, Random& random, double& mu) const = 0;
+		virtual ~MuSampler() {/* */}
+	};
+
+	/*
 	 * Cosine table sampler.
 	 *
 	 * This class have a sampler table for each incident energy tabulated.
 	 * Before sampling a scattering cosine, the class samples the cosine table
 	 * using the incident particle energy.
 	 */
-	class MuTable {
+	class MuTable : public MuSampler {
 		/* Tabulated incident energies */
 		std::vector<double> energies;
 		/* Cosine table for each tabulated energy */
@@ -153,7 +163,9 @@ namespace AceReaction {
 		MuTable(const Ace::AngularDistribution& ace_data);
 
 		/* Sample scattering cosine */
-		void setCosine(double energy, Random& random, double& mu) const {
+		void setCosine(const Particle& particle, Random& random, double& mu) const {
+			/* Get particle energy */
+			double energy = particle.getEnergy().second;
 			/* Get interpolation data */
 			std::pair<size_t,double> res = interpolate(energies.begin(), energies.end(), energy);
 			/* Index */
@@ -175,47 +187,17 @@ namespace AceReaction {
 	 * In this case, no angular distribution data are given for this reaction,
 	 * and isotropic scattering is assumed in either the LAB or CM system.
 	 */
-	class MuIsotropic {
+	class MuIsotropic : public MuSampler {
 		Isotropic isotropic;
 	public:
-		MuIsotropic(const Ace::AngularDistribution& ace_data) {/* */};
+		MuIsotropic(const Ace::AngularDistribution& ace_data) : MuSampler(ace_data) {/* */};
 
 		/* Sample scattering cosine */
-		void setCosine(double energy, Random& random, double& mu) const {
+		void setCosine(const Particle& particle, Random& random, double& mu) const {
 			mu = isotropic(random);
 		}
 
 		~MuIsotropic() {/* */}
-	};
-
-	/*
-	 * Null cosine sampler.
-	 *
-	 * No angular distribution data are given for this reaction in the AND Block. Angular
-	 * distribution data are specified through LAW=44 in the DLW Block.
-	 */
-	class MuNull {
-	public:
-		MuNull(const Ace::AngularDistribution& ace_data) {/* */};
-		/* Sample scattering cosine */
-		void setCosine(double energy, Random& random, double& mu) const {/* */}
-		~MuNull() {/* */}
-	};
-
-	/*
-	 * Cosine sampler, using one of the above policies
-	 */
-	template<class SamplingPolicy>
-	class MuSampler : public SamplingPolicy {
-	public:
-		MuSampler(const Ace::NeutronReaction& neutron_reaction) : SamplingPolicy(neutron_reaction.getAngular()) {/* */}
-		void operator()(const Particle& particle, Random& random, double& mu) const {
-			/* Get energy */
-			double energy = particle.getEnergy().second;
-			/* Apply policy */
-			SamplingPolicy::setCosine(energy, random, mu);
-		}
-		~MuSampler() {/* */}
 	};
 
 }

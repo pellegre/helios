@@ -88,6 +88,21 @@ double AceIsotope::getTotalXs(Energy& energy) const {
 	return total;
 }
 
+Reaction* AceIsotope::getReaction(int mt) const {
+	/* Get the reaction from the container */
+	ReactionContainer::const_iterator it_reaction = reactions.get_mt(mt);
+
+	if(it_reaction != reactions .end()) {
+		/* Reaction exist */
+		const NeutronReaction& ace_reaction = (*it_reaction);
+		return 0;
+	} else {
+		/* Reaction can't be found */
+		throw(AceModule::AceError(reactions.name(),"Reaction mt " + toString(mt) + " does not exist"));
+	}
+
+}
+
 void AceIsotope::print(std::ostream& out) const {
 	out << "isotope = " <<  setw(9) << reactions.name()
 		<< " ; awr = " << setw(9) << aweight << " ; temperature = " << temperature / Constant::boltz << " K ";

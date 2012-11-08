@@ -39,7 +39,7 @@ namespace Helios {
 	/* Isotope related to an ACE table. */
 	class AceIsotope : public Isotope {
 
-		/* Reference to a neutron table */
+		/* Reference to a neutron container (obtained from the AceReader) */
 		Ace::ReactionContainer reactions;
 
 		/* Atomic weight ratio */
@@ -87,6 +87,12 @@ namespace Helios {
 
 		/* Just one scattering reaction (from the scattering matrix) */
 		void scatter(Particle& particle, Random& random) const {/* */};
+
+		/*
+		 * Get reaction from an MT number (thrown an exception if the reaction number does not exist)
+		 * Is client responsibility to delete the reaction after is done with it.
+		 */
+		Reaction* getReaction(int mt) const;
 
 		~AceIsotope() {/* */};
 	};

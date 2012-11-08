@@ -29,8 +29,11 @@
 #define ELASTICSCATTERING_HPP_
 
 #include "../../Isotope.hpp"
-#include "MuSampler.hpp"
 #include "../AceModule.hpp"
+#include "../AceReader/NeutronReaction.hpp"
+#include "MuSampler.hpp"
+#include "AceReactionBase.hpp"
+
 
 namespace Helios {
 
@@ -50,8 +53,8 @@ namespace AceReaction {
 		/* Sample target velocity. */
 		void targetVelocity(double energy, Direction direction, Direction& velocity, Random& random) const;
 	public:
-		ElasticScattering(double awr, double temperature, const Ace::AngularDistribution& ace_data) :
-			MuSampling(ace_data), awr(awr), temperature(temperature) {/* */};
+		ElasticScattering(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
+			MuSampling(ace_reaction.getAngular()), awr(isotope->getAwr()), temperature(isotope->getTemperature()) {/* */};
 
 		/* Change particle state */
 		void operator()(Particle& particle, Random& random) const;

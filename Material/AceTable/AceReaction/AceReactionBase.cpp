@@ -25,36 +25,41 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "MuSampler.hpp"
+#include "AceReactionBase.hpp"
 
 namespace Helios {
 
 using namespace AceReaction;
 
-/* Cosine table builder */
-CosineTable* MuTable::tableBuilder(const AceAngular* ace_array) {
-	typedef Ace::AngularDistribution Ang;
-	typedef Ang::TableType TableType;
-	TableType type = ace_array->getType();
-	if(type == Ang::isotropic_table)
-		return new Isotropic();
-	else if(type == Ang::equibins_table)
-		return new EquiBins(static_cast<const AceEquiBins*>(ace_array));
-	else if(type == Ang::tabular_table)
-		return new Tabular(static_cast<const AceTabular*>(ace_array));
-	return 0;
+MuSampler* AceReactionBase::buildMuSampler(const Ace::AngularDistribution& ace_angular) {
+	typedef Ace::AngularDistribution AceAngular;
+	if(ace_angular.getKind() == AceAngular::data)
+		/* There is data on the angular distribution of this reaction */
+		return new MuTable(ace_angular);
+	else if(ace_angular.getKind() == AceAngular::isotropic)
+		/* Isotropic sampling */
+		return new MuIsotropic(ace_angular);
+	else if(ace_angular.getKind() == AceAngular::law44)
+		/* MU sampling is done on the energy distribution */
+		return 0;
+	throw(GeneralError("No angular distribution"));
 }
 
-/* Constructor */
-MuTable::MuTable(const Ace::AngularDistribution& ace_data) : MuSampler(ace_data) {
-	energies = ace_data.energy;
-	/* Sanity check */
-	assert(ace_data.adist.size() == energies.size());
-	/* Create the tables */
-	for(vector<AceAngular*>::const_iterator it = ace_data.adist.begin() ; it != ace_data.adist.end() ; ++it)
-		cosine_table.push_back(tableBuilder(*it));
+AceReactionBase::AceReactionBase(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
+	mu_sampler(0), energy_sampler(0) {
+	/* Build MU sampler */
+	mu_sampler = buildMuSampler(ace_reaction.getAngular());
+	/* Build energy sampler */
+	energy_sampler = buildEnergySampler(ace_reaction.getEnergy());
+}
+
+AceReactionBase::~AceReactionBase() {
+	/* Delete samplers */
+	delete mu_sampler;
+	delete energy_sampler;
 }
 
 }
+
 
 

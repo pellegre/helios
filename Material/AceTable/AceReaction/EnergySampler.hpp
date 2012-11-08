@@ -25,36 +25,27 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "MuSampler.hpp"
+#ifndef ENERGYSAMPLER_HPP_
+#define ENERGYSAMPLER_HPP_
+
+#include "../../../Common/Common.hpp"
+#include "../../../Transport/Particle.hpp"
 
 namespace Helios {
 
-using namespace AceReaction;
+namespace AceReaction {
+	/*
+	 * Base class to deal with cosine samplers
+	 */
+	class EnergySampler {
+	public:
+		EnergySampler(const Ace::EnergyDistribution& ace_data) {/* */}
+		virtual void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const = 0;
+		virtual ~EnergySampler() {/* */}
+	};
 
-/* Cosine table builder */
-CosineTable* MuTable::tableBuilder(const AceAngular* ace_array) {
-	typedef Ace::AngularDistribution Ang;
-	typedef Ang::TableType TableType;
-	TableType type = ace_array->getType();
-	if(type == Ang::isotropic_table)
-		return new Isotropic();
-	else if(type == Ang::equibins_table)
-		return new EquiBins(static_cast<const AceEquiBins*>(ace_array));
-	else if(type == Ang::tabular_table)
-		return new Tabular(static_cast<const AceTabular*>(ace_array));
-	return 0;
-}
-
-/* Constructor */
-MuTable::MuTable(const Ace::AngularDistribution& ace_data) : MuSampler(ace_data) {
-	energies = ace_data.energy;
-	/* Sanity check */
-	assert(ace_data.adist.size() == energies.size());
-	/* Create the tables */
-	for(vector<AceAngular*>::const_iterator it = ace_data.adist.begin() ; it != ace_data.adist.end() ; ++it)
-		cosine_table.push_back(tableBuilder(*it));
 }
 
 }
 
-
+#endif /* ENERGYSAMPLER_HPP_ */

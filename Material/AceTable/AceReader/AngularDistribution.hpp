@@ -43,8 +43,8 @@ public:
 	typedef int TableType;
 	/* Type of scattering cosine tables */
 	const static TableType isotropic_table = 0;
-	const static TableType equibins_table = 0;
-	const static TableType tabular_table = 0;
+	const static TableType equibins_table = 1;
+	const static TableType tabular_table = 2;
 
 	/* Array where the distribution is defined (32 equiprobable bins, tabular or isotropic) */
 	struct AngularArray {
