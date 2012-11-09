@@ -39,7 +39,7 @@ void NeutronReaction::printInformation(std::ostream& out) const {
 	out << tab << tab << "[@] Number of energies  : " << getXs().getData().size() << endl;
 	out << tab << tab << "[@] Reaction parameters : ";
 	out << "Q = " << fixed << getQ() << " MeV "<< " ; ";
-	int ty = tyr_dist.getTYR();
+	int ty = tyr_dist.getTyr();
 	string coord = "";
 	if(ty < 0) coord = "(CM system)";
 	if(ty > 0) coord = "(LAB system)";

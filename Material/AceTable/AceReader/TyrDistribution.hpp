@@ -62,7 +62,12 @@ public:
 	void dump(std::ostream& xss) const;
 	int getSize() const {return (2 + nbt.size() + aint.size() + energies.size() + nu.size());};
 	int getType() const {return type;};
-	int getTYR() const {return tyr;};
+	int getTyr() const {return tyr;};
+
+	/* Get data */
+	const std::vector<double>& getEnergies() const {return energies;}
+	const std::vector<double>& getNu() const {return nu;}
+
 	~TyrDistribution() {/* */};
 };
 
