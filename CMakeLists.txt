@@ -122,7 +122,9 @@ set(MCFILES Common/Common.cpp
             Material/AceTable/AceMaterial.cpp  
             Material/AceTable/AceModule.cpp
             Material/AceTable/AceReaction/ElasticScattering.cpp  
-            Material/AceTable/AceReaction/MuSampler.cpp                                         
+            Material/AceTable/AceReaction/MuSampler.cpp   
+            Material/AceTable/AceReaction/AceReactionBase.cpp                                         
+            Material/AceTable/AceReaction/InelasticScattering.cpp                                         
 			Material/AceTable/AceReader/ACETable.cpp
 			Material/AceTable/AceReader/ACEReader.cpp
 			Material/AceTable/AceReader/CrossSection.cpp

@@ -25,38 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ELASTICSCATTERING_HPP_
-#define ELASTICSCATTERING_HPP_
-
-#include "AceReactionBase.hpp"
+#include "InelasticScattering.hpp"
 
 namespace Helios {
 
-namespace AceReaction {
-
-	/*
-	 * Elastic scattering using free gas treatment
-	 *
-	 * The scattering cosine is always sampled on the CM system
-	 */
-	class ElasticScattering : public AceReactionBase {
-		/* Atomic weight ratio */
-		double awr;
-		/* Temperature (in MeVs) */
-		double temperature;
-		/* Sample target velocity. */
-		void targetVelocity(double energy, Direction direction, Direction& velocity, Random& random) const;
-	public:
-		ElasticScattering(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
-			AceReactionBase(isotope, ace_reaction), awr(isotope->getAwr()), temperature(isotope->getTemperature()) {/* */};
-
-		/* Change particle state */
-		void operator()(Particle& particle, Random& random) const;
-
-		virtual ~ElasticScattering() {/* */};
-	};
-
-}
-
 } /* namespace Helios */
-#endif /* ELASTICSCATTERING_HPP_ */

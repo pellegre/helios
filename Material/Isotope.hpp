@@ -35,11 +35,18 @@ namespace Helios {
 
 	/* A reaction is simply a functor that change the state of a particle (based on a random number generator) */
 	class Reaction {
+		friend std::ostream& operator<<(std::ostream& out, const Reaction& q);
 	public:
 		Reaction() {/* */}
+		/* Sample reaction */
 		virtual void operator() (Particle& particle, Random& r) const = 0;
+		/* Print information about the reaction (by default it does nothing) */
+		virtual void print(std::ostream& out) const {/* */}
 		virtual ~Reaction() {/* */}
 	};
+
+	/* Print a reaction */
+	std::ostream& operator<<(std::ostream& out, const Reaction& q);
 
 	class Isotope {
 	protected:

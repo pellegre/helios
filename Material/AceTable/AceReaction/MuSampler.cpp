@@ -55,6 +55,14 @@ MuTable::MuTable(const Ace::AngularDistribution& ace_data) : MuSampler(ace_data)
 		cosine_table.push_back(tableBuilder(*it));
 }
 
+void MuTable::print(std::ostream& out) const {
+	out << " - Cosine Table Sampler " << endl;
+	for(size_t i = 0 ; i < cosine_table.size() ; ++i) {
+		out << "energy = " << scientific << energies[i] << endl;
+		cosine_table[i]->print(out);
+	}
+}
+
 }
 
 

@@ -37,5 +37,10 @@ std::ostream& operator<<(std::ostream& out, const Isotope& q) {
 	return out;
 }
 
+std::ostream& operator<<(std::ostream& out, const Reaction& q) {
+	q.print(out);
+	return out;
+}
+
 }
 

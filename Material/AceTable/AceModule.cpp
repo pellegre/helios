@@ -28,6 +28,7 @@
 #include "AceModule.hpp"
 #include "AceReader/ACEReader.hpp"
 #include "AceReader/NeutronTable.hpp"
+#include "AceReaction/AceReactionBase.hpp"
 
 using namespace std;
 using namespace Ace;
@@ -56,7 +57,7 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 		assert(fission_xs.size() == total_xs.size());
 	}
 
-	/* Set the absorption probability */
+	/* Set the absorption cross section */
 	absorption_xs = reactions.get_xs(27);
 	/* Check size */
 	if(absorption_xs.size() != 0)
@@ -89,16 +90,20 @@ double AceIsotope::getTotalXs(Energy& energy) const {
 }
 
 Reaction* AceIsotope::getReaction(int mt) const {
+	/* Static instance of the reaction factory */
+	static AceReaction::AceReactionFactory reaction_factory;
+
 	/* Get the reaction from the container */
 	ReactionContainer::const_iterator it_reaction = reactions.get_mt(mt);
 
 	if(it_reaction != reactions .end()) {
 		/* Reaction exist */
 		const NeutronReaction& ace_reaction = (*it_reaction);
-		return 0;
+		/* Return reaction */
+		return reaction_factory.createReaction(this, ace_reaction);
 	} else {
 		/* Reaction can't be found */
-		throw(AceModule::AceError(reactions.name(),"Reaction mt " + toString(mt) + " does not exist"));
+		throw(AceModule::AceError(reactions.name(),"Reaction mt = " + toString(mt) + " does not exist"));
 	}
 
 }

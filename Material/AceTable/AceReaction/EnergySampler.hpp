@@ -40,10 +40,41 @@ namespace AceReaction {
 	class EnergySampler {
 	public:
 		EnergySampler(const Ace::EnergyDistribution& ace_data) {/* */}
+
+		/* Exception */
+		class BadEnergySamplerCreation : public std::exception {
+			std::string reason;
+		public:
+			BadEnergySamplerCreation(const std::string& msg) {
+				reason = "Cannot create energy sampler : " + msg;
+			}
+			const char *what() const throw() {
+				return reason.c_str();
+			}
+			~BadEnergySamplerCreation() throw() {/* */};
+		};
+
+		/* Sample energy (and MU if information exists) using particle's information */
 		virtual void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const = 0;
+
+		/* Print internal data of the energy sampler */
+		virtual void print() const = 0;
+
 		virtual ~EnergySampler() {/* */}
 	};
 
+
+	class EnergySamplerFactory {
+	public:
+		EnergySamplerFactory() {/* */}
+		EnergySampler* createSampler(const Ace::EnergyDistribution& ace_data) {
+			/* Get law */
+			int law = ace_data.laws[0]->getLaw();
+			/* No law */
+			throw(EnergySampler::BadEnergySamplerCreation("Energy law " + toString(law) + " is not supported"));
+		}
+		~EnergySamplerFactory() {/* */}
+	};
 }
 
 }

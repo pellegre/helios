@@ -52,6 +52,7 @@ namespace AceReaction {
 	public:
 		CosineTable() {/* */}
 		virtual double operator()(Random& random) const = 0;
+		virtual void print(std::ostream& out) const = 0;
 		virtual ~CosineTable() {/* */}
 	};
 
@@ -63,6 +64,10 @@ namespace AceReaction {
 		double operator()(Random& random) const {
 			/* Return value */
 			return (1.0 - 2.0 * random.uniform());
+		}
+
+		void print(std::ostream& out) const {
+			out << " * Isotropic distribution (no information available) " << endl;
 		}
 
 		~Isotropic() {/* */}
@@ -87,6 +92,12 @@ namespace AceReaction {
 			size_t pos = (size_t) (chi * 32);
 			/* Get interpolated cosine */
 			return bins[pos] + (chi - pos) * (bins[pos + 1] - bins[pos]);
+		}
+
+		void print(std::ostream& out) const {
+			out << " * 32 Equiprobable Cosine bins " << endl;
+			for(size_t i = 0 ; i < bins.size() ; ++i)
+				out << scientific << setw(15) << bins[i] << endl;
 		}
 
 		~EquiBins() {/* */}
@@ -118,17 +129,28 @@ namespace AceReaction {
 			if(iflag == 1) {
 				/* Return cosine */
 				return csout[idx] + (chi - cdf[idx]) / pdf[idx];
-
 			/* Linear-Linear interpolation */
 			} else if(iflag == 2) {
 				/* Auxiliary variables */
 				double g = (pdf[idx + 1] - pdf[idx]) / (csout[idx + 1] - csout[idx]);
 				double h = sqrt(pdf[idx] * pdf[idx] + 2*g*(chi - cdf[idx]));
 				/* Solve for cosine */
-				return csout[idx] + (1/g) * (h - pdf[idx]);
+				if(g == 0.0)
+					/* Just like the histogram distribution */
+					return csout[idx] + (chi - cdf[idx]) / pdf[idx];
+				else
+					/* Interpolation */
+					return csout[idx] + (1/g) * (h - pdf[idx]);
 			}
 
 			return 0.0;
+		}
+
+		void print(std::ostream& out) const {
+			out << " * Tabular Cosine distribution " << endl;
+			out << setw(15) << "csout" << setw(15) << "pdf" << setw(15) << "cdf" << endl;
+			for(size_t i = 0 ; i < csout.size() ; ++i)
+				out << scientific << setw(15) << csout[i] << setw(15) << pdf[i] << setw(15) << cdf[i] << endl;
 		}
 
 		~Tabular() {/* */}
@@ -140,7 +162,10 @@ namespace AceReaction {
 	class MuSampler {
 	public:
 		MuSampler(const Ace::AngularDistribution& ace_data) {/* */}
+		/* Set the cosine with particle's information */
 		virtual void setCosine(const Particle& particle, Random& random, double& mu) const = 0;
+		/* Print internal data of the sampler */
+		virtual void print(std::ostream& out) const = 0;
 		virtual ~MuSampler() {/* */}
 	};
 
@@ -178,6 +203,8 @@ namespace AceReaction {
 			else mu = (*cosine_table[idx])(random);
 		}
 
+		void print(std::ostream& out) const;
+
 		~MuTable() {/* */}
 	};
 
@@ -195,6 +222,10 @@ namespace AceReaction {
 		/* Sample scattering cosine */
 		void setCosine(const Particle& particle, Random& random, double& mu) const {
 			mu = isotropic(random);
+		}
+
+		void print(std::ostream& out) const {
+			cout << " - Isotropic cosine sampler (no information available) " << endl;
 		}
 
 		~MuIsotropic() {/* */}

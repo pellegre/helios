@@ -60,26 +60,30 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	using namespace Ace;
 	using namespace AceReaction;
 
-	NeutronTable* ace_table = dynamic_cast<NeutronTable*>(AceReader::getTable("1001.03c"));
+	McEnvironment* environment = new McEnvironment;
 
-	ReactionContainer reactions = ace_table->getReactions();
-	NeutronReaction& elastic_reaction = *reactions.get_mt(2);
-	ElasticScattering<MuTable> elastic(1.0, reactions.temp(), elastic_reaction.getAngular());
+	vector<McObject*> ace_objects;
+	ace_objects.push_back(new AceObject("1001.03c"));
 
-	Histogram<LinearBins> histo(-2.0,2.0,50);
+	/* Setup environment */
+	environment->pushObjects(ace_objects.begin(), ace_objects.end());
+	environment->setup();
+
+	Histogram<LinearBins> histo(1E-9,1E-7,75);
 	Particle particle;
 	Random random(1);
 
-	for(size_t i = 0 ; i < 50000000 ; ++i) {
-		Direction last = particle.dir();
-		elastic(particle,random);
+	/* Get elastic scattering */
+	Reaction* elastic = environment->getObject<AceModule,AceIsotope>("1001.03c")[0]->getReaction(2);
+
+	for(size_t i = 0 ; i < 10000000 ; ++i) {
+		(*elastic)(particle,random);
 		histo(particle.erg().second);
 	}
 
 	histo.normalize();
 	cout << histo;
 
-	delete ace_table;
 }
 
 

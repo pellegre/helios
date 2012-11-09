@@ -582,6 +582,9 @@ public:
 	/* Return the laws of this energy distribution */
 	std::vector<int> getLaws() const;
 
+	/* Container of energy laws */
+	std::vector<EnergyLaw*> laws;
+
 	/*
 	 * There is data on the object
 	 */
@@ -608,8 +611,6 @@ private:
 
 	EnergyDistribution(std::vector<double>::const_iterator it, std::vector<double>::const_iterator begin);
 
-	/* Container of energy laws */
-	std::vector<EnergyLaw*> laws;
 	/* Kind of data included on the distribution */
 	int kind;
 };

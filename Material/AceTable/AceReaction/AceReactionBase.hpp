@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ACEREACTIONBASE_HPP_
 #define ACEREACTIONBASE_HPP_
 
-#include "../../Isotope.hpp"
+#include "../AceModule.hpp"
 #include "MuSampler.hpp"
 #include "EnergySampler.hpp"
 
@@ -68,22 +68,35 @@ namespace AceReaction {
 		 */
 
 		/* Sample scattering cosine */
-		void sampleCosine(const Particle& particle, Random& random, double& mu) {
+		void sampleCosine(const Particle& particle, Random& random, double& mu) const {
 			/* Sample MU */
-			(*mu_sampler)(particle, random, mu);
+			mu_sampler->setCosine(particle, random, mu);
 		}
 
 		/* Sample energy distribution (and MU if is available on the energy distribution) */
-		void sampleEnergy(const Particle& particle, Random& random, double& energy, double& mu) {
+		void sampleEnergy(const Particle& particle, Random& random, double& energy, double& mu) const {
 			/* Sample energy */
-			(*energy_sampler)(particle, random, energy, mu);
+			energy_sampler->setEnergy(particle, random, energy, mu);
 		}
 
 	public:
 		/* Constructor, from ACE isotope and the reaction parsed from the ACE library */
 		AceReactionBase(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction);
 
+		/* Print ACE reaction */
+		void print(std::ostream& out) const;
+
 		virtual ~AceReactionBase();
+	};
+
+	/* Factory to create ACE reactions */
+	class AceReactionFactory {
+	public:
+		/* Prevent construction or copy */
+		AceReactionFactory() {/* */};
+		/* Create a new surface */
+		AceReactionBase* createReaction(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) const;
+		virtual ~AceReactionFactory() {/* */}
 	};
 
 }

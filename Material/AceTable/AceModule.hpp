@@ -122,7 +122,7 @@ namespace Helios {
 			std::string reason;
 		public:
 			AceError(const IsotopeId& id, const std::string& msg) {
-				reason = "Cannot access to isotope " + id + " : " + msg;
+				reason = "Problem with isotope " + id + " : " + msg;
 			}
 			const char *what() const throw() {
 				return reason.c_str();

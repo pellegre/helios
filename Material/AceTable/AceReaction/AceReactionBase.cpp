@@ -26,10 +26,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "AceReactionBase.hpp"
+#include "ElasticScattering.hpp"
+#include "InelasticScattering.hpp"
 
 namespace Helios {
 
 using namespace AceReaction;
+
+AceReactionBase* AceReactionFactory::createReaction(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) const {
+	/* Get MT of the reaction to handle known cases */
+	int mt = ace_reaction.getMt();
+	if(mt == 2) {
+		/* We know this is an elastic scattering reaction */
+		return new ElasticScattering(isotope, ace_reaction);
+	}
+	/* Generic inelastic reaction */
+	return new InelasticScattering(isotope, ace_reaction);
+}
 
 MuSampler* AceReactionBase::buildMuSampler(const Ace::AngularDistribution& ace_angular) {
 	typedef Ace::AngularDistribution AceAngular;
@@ -42,15 +55,47 @@ MuSampler* AceReactionBase::buildMuSampler(const Ace::AngularDistribution& ace_a
 	else if(ace_angular.getKind() == AceAngular::law44)
 		/* MU sampling is done on the energy distribution */
 		return 0;
-	throw(GeneralError("No angular distribution"));
+	throw(GeneralError("No angular distribution defined"));
+}
+
+EnergySampler* AceReactionBase::buildEnergySampler(const Ace::EnergyDistribution& ace_energy) {
+	typedef Ace::EnergyDistribution AceEnergy;
+	/* Sampler factory */
+	static EnergySamplerFactory sampler_factory;
+	/* Check if there is data inside the table */
+	if(ace_energy.getKind() == AceEnergy::data) {
+		/* We should create an energy sampler using ACE energy laws */
+		return sampler_factory.createSampler(ace_energy);
+	}
+	/* No data, probably an elastic scattering reaction */
+	return 0;
 }
 
 AceReactionBase::AceReactionBase(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
 	mu_sampler(0), energy_sampler(0) {
 	/* Build MU sampler */
-	mu_sampler = buildMuSampler(ace_reaction.getAngular());
+	try {
+		mu_sampler = buildMuSampler(ace_reaction.getAngular());
+	} catch (exception& error) {
+		throw(AceModule::AceError(isotope->getUserId(),
+				"Cannot create reaction for mt = " + toString(ace_reaction.getMt()) + " : " + error.what()));
+	}
 	/* Build energy sampler */
-	energy_sampler = buildEnergySampler(ace_reaction.getEnergy());
+	try {
+		energy_sampler = buildEnergySampler(ace_reaction.getEnergy());
+	} catch (exception& error) {
+		throw(AceModule::AceError(isotope->getUserId(),
+				"Cannot create reaction for mt = " + toString(ace_reaction.getMt()) + " : " + error.what()));
+	}
+}
+
+void AceReactionBase::print(std::ostream& out) const {
+	/* Print MU sampler */
+	if(mu_sampler)
+		mu_sampler->print(out);
+	/* Print energy sampler */
+	if(energy_sampler)
+		energy_sampler->print();
 }
 
 AceReactionBase::~AceReactionBase() {
