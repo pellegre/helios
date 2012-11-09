@@ -28,7 +28,7 @@
 #ifndef ELASTICSCATTERING_HPP_
 #define ELASTICSCATTERING_HPP_
 
-#include "AceReactionBase.hpp"
+#include "../AceModule.hpp"
 
 namespace Helios {
 
@@ -40,7 +40,7 @@ namespace AceReaction {
 	 * The scattering cosine is always sampled on the CM system
 	 */
 	template<class MuSampling>
-	class ElasticScattering : public AceReactionBase, public MuSampling {
+	class ElasticScattering : public Reaction, public MuSampling {
 		/* Atomic weight ratio */
 		double awr;
 		/* Temperature (in MeVs) */
@@ -49,8 +49,7 @@ namespace AceReaction {
 		void targetVelocity(double energy, Direction direction, Direction& velocity, Random& random) const;
 	public:
 		ElasticScattering(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
-			AceReactionBase(isotope, ace_reaction), MuSampling(ace_reaction.getAngular()),
-			awr(isotope->getAwr()), temperature(isotope->getTemperature()) {/* */};
+			MuSampling(ace_reaction.getAngular()), awr(isotope->getAwr()), temperature(isotope->getTemperature()) {/* */};
 
 		/* Change particle state */
 		void operator()(Particle& particle, Random& random) const;
