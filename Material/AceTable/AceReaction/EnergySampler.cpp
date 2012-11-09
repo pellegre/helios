@@ -25,53 +25,28 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef ENERGYSAMPLER_HPP_
-#define ENERGYSAMPLER_HPP_
-
-#include "../../../Common/Common.hpp"
-#include "../../../Transport/Particle.hpp"
+#include "EnergySampler.hpp"
 
 namespace Helios {
 
-namespace AceReaction {
-	/*
-	 * Base class to deal with cosine samplers
-	 */
-	class EnergySampler {
-	public:
-		EnergySampler(const Ace::EnergyDistribution& ace_data) {/* */}
+using namespace AceReaction;
 
-		/* Exception */
-		class BadEnergySamplerCreation : public std::exception {
-			std::string reason;
-		public:
-			BadEnergySamplerCreation(const std::string& msg) {
-				reason = "Cannot create energy sampler : " + msg;
-			}
-			const char *what() const throw() {
-				return reason.c_str();
-			}
-			~BadEnergySamplerCreation() throw() {/* */};
-		};
+EnergySampler* EnergySamplerFactory::createSampler(const Ace::EnergyDistribution& ace_data) {
+	if(ace_data.laws.size() != 1)
+		throw(EnergySampler::BadEnergySamplerCreation("More than 1 energy law distribution in is not supported"));
 
-		/* Sample energy (and MU if information exists) using particle's information */
-		virtual void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const = 0;
+	/* Get law */
+	int law = ace_data.laws[0]->getLaw();
 
-		/* Print internal data of the energy sampler */
-		virtual void print() const = 0;
+	if(law == 4) {
 
-		virtual ~EnergySampler() {/* */}
-	};
+	}
 
-
-	class EnergySamplerFactory {
-	public:
-		EnergySamplerFactory() {/* */}
-		EnergySampler* createSampler(const Ace::EnergyDistribution& ace_data);
-		~EnergySamplerFactory() {/* */}
-	};
+	/* No law */
+	throw(EnergySampler::BadEnergySamplerCreation("Energy law " + toString(law) + " is not supported"));
 }
 
 }
 
-#endif /* ENERGYSAMPLER_HPP_ */
+
+

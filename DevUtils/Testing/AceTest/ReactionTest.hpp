@@ -72,7 +72,7 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 
 	Histogram<LinearBins> histo(-1,1,75);
 	Particle particle;
-	particle.erg().second = 1E-7;
+	particle.erg().second = 1E-8;
 	Random random(1);
 
 	/* Get elastic scattering */

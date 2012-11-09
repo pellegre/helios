@@ -37,9 +37,8 @@ static NuSampler* buildNuSampler(const Ace::NUBlock::NuData* nu_data) {
 	/* Get type */
 	int type = nu_data->getType();
 	/* Polynomial type */
-	if(type == AceNu::flag_pol) {
+	if(type == AceNu::flag_pol)
 		return new PolynomialNu(dynamic_cast<const AceNu::Polynomial*>(nu_data));
-	}
 	/* Tabular type */
 	return new TabularNu(dynamic_cast<const AceNu::Tabular*>(nu_data));
 }
