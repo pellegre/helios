@@ -34,27 +34,44 @@ namespace Helios {
 using namespace AceReaction;
 
 AceReactionBase* AceReactionFactory::createReaction(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) const {
+	typedef Ace::AngularDistribution AceAngular;
 	/* Get MT of the reaction to handle known cases */
 	int mt = ace_reaction.getMt();
 	if(mt == 2) {
-		/* We know this is an elastic scattering reaction */
-		return new ElasticScattering(isotope, ace_reaction);
+		/*
+		 * We know this is an elastic scattering reaction but we should peek over
+		 * the angular distribution to create the correct template
+		 */
+		const Ace::AngularDistribution& ace_angular = ace_reaction.getAngular();
+
+		if(ace_angular.getKind() == AceAngular::data)
+			/* There is data on the angular distribution of this reaction */
+			return new ElasticScattering<MuTable>(isotope, ace_reaction);
+
+		else if(ace_angular.getKind() == AceAngular::isotropic)
+			/* Isotropic sampling */
+			return new ElasticScattering<MuIsotropic>(isotope, ace_reaction);
 	}
+
 	/* Generic inelastic reaction */
 	return new InelasticScattering(isotope, ace_reaction);
 }
 
 MuSampler* AceReactionBase::buildMuSampler(const Ace::AngularDistribution& ace_angular) {
 	typedef Ace::AngularDistribution AceAngular;
+
 	if(ace_angular.getKind() == AceAngular::data)
 		/* There is data on the angular distribution of this reaction */
 		return new MuTable(ace_angular);
+
 	else if(ace_angular.getKind() == AceAngular::isotropic)
 		/* Isotropic sampling */
 		return new MuIsotropic(ace_angular);
+
 	else if(ace_angular.getKind() == AceAngular::law44)
 		/* MU sampling is done on the energy distribution */
 		return 0;
+
 	throw(GeneralError("No angular distribution defined"));
 }
 

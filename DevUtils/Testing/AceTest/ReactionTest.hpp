@@ -61,9 +61,10 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	using namespace AceReaction;
 
 	McEnvironment* environment = new McEnvironment;
+	string name = "2003.03c";
 
 	vector<McObject*> ace_objects;
-	ace_objects.push_back(new AceObject("1001.03c"));
+	ace_objects.push_back(new AceObject(name));
 
 	/* Setup environment */
 	environment->pushObjects(ace_objects.begin(), ace_objects.end());
@@ -71,10 +72,11 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 
 	Histogram<LinearBins> histo(1E-9,1E-7,75);
 	Particle particle;
+	particle.erg().second = 1E-7;
 	Random random(1);
 
 	/* Get elastic scattering */
-	Reaction* elastic = environment->getObject<AceModule,AceIsotope>("1001.03c")[0]->getReaction(2);
+	Reaction* elastic = environment->getObject<AceModule,AceIsotope>(name)[0]->getReaction(2);
 
 	for(size_t i = 0 ; i < 10000000 ; ++i) {
 		(*elastic)(particle,random);
