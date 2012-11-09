@@ -61,7 +61,7 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	using namespace AceReaction;
 
 	McEnvironment* environment = new McEnvironment;
-	string name = "2003.03c";
+	string name = "1001.03c";
 
 	vector<McObject*> ace_objects;
 	ace_objects.push_back(new AceObject(name));
@@ -70,7 +70,7 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	environment->pushObjects(ace_objects.begin(), ace_objects.end());
 	environment->setup();
 
-	Histogram<LinearBins> histo(1E-9,1E-7,75);
+	Histogram<LinearBins> histo(-1,1,75);
 	Particle particle;
 	particle.erg().second = 1E-7;
 	Random random(1);
@@ -79,8 +79,9 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	Reaction* elastic = environment->getObject<AceModule,AceIsotope>(name)[0]->getReaction(2);
 
 	for(size_t i = 0 ; i < 10000000 ; ++i) {
+		Direction last = particle.dir();
 		(*elastic)(particle,random);
-		histo(particle.erg().second);
+		histo(dot(last, particle.dir()));
 	}
 
 	histo.normalize();

@@ -38,6 +38,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../AceReader/AngularDistribution.hpp"
 #include "../AceReader/NeutronReaction.hpp"
 
+#include "AceReactionCommon.hpp"
+
 namespace Helios {
 
 namespace AceReaction {
@@ -104,53 +106,20 @@ namespace AceReaction {
 	};
 
 	/* Sample scattering cosine using a tabular distribution */
-	class Tabular : public CosineTable {
-		int iflag;                 /* 1 = histogram, 2 = lin-lin */
-		std::vector<double> csout; /* Cosine scattering angular grid */
-		std::vector<double> pdf;   /* Probability density function */
-		std::vector<double> cdf;   /* Cumulative density function */
+	class Tabular : public TabularDistribution, public CosineTable /* defined on AceReactionCommon.hpp */ {
 	public:
+
 		Tabular(const AceTabular* ace_angular) :
-			 iflag(ace_angular->iflag) ,csout(ace_angular->csout)
-			,pdf(ace_angular->pdf), cdf(ace_angular->cdf)
-		{
-			/* Sanity check */
-			assert(csout.size() == pdf.size());
-			assert(cdf.size() == pdf.size());
-		}
+			TabularDistribution(ace_angular->iflag, ace_angular->csout, ace_angular->pdf,ace_angular->cdf)
+		{/* */}
 
 		double operator()(Random& random) const {
-			/* Get random number */
-			double chi = random.uniform();
-			/* Sample the bin on the cumulative */
-			size_t idx = std::upper_bound(cdf.begin(), cdf.end(), chi) - cdf.begin() - 1;
-
-			/* Histogram interpolation */
-			if(iflag == 1) {
-				/* Return cosine */
-				return csout[idx] + (chi - cdf[idx]) / pdf[idx];
-			/* Linear-Linear interpolation */
-			} else if(iflag == 2) {
-				/* Auxiliary variables */
-				double g = (pdf[idx + 1] - pdf[idx]) / (csout[idx + 1] - csout[idx]);
-				double h = sqrt(pdf[idx] * pdf[idx] + 2*g*(chi - cdf[idx]));
-				/* Solve for cosine */
-				if(g == 0.0)
-					/* Just like the histogram distribution */
-					return csout[idx] + (chi - cdf[idx]) / pdf[idx];
-				else
-					/* Interpolation */
-					return csout[idx] + (1/g) * (h - pdf[idx]);
-			}
-
-			return 0.0;
+			return TabularDistribution::operator()(random);
 		}
 
 		void print(std::ostream& out) const {
-			out << " * Tabular Cosine distribution " << endl;
-			out << setw(15) << "csout" << setw(15) << "pdf" << setw(15) << "cdf" << endl;
-			for(size_t i = 0 ; i < csout.size() ; ++i)
-				out << scientific << setw(15) << csout[i] << setw(15) << pdf[i] << setw(15) << cdf[i] << endl;
+			out << " * 32 Equiprobable Cosine bins " << endl;
+			TabularDistribution::print(out);
 		}
 
 		~Tabular() {/* */}
