@@ -93,6 +93,7 @@ namespace Ace {
 
 		public:
 
+			ACEBlock() {/* */}
 			friend class AceTable; /* Because a table contains a lot of blocks (with up-casting) */
 
 			/* Dump the block, on a XSS stream */

@@ -34,34 +34,44 @@ namespace Ace {
 
 	class NUBlock: public AceTable::ACEBlock {
 
+	public:
+
 		/* Flag of type of data */
 		static const int flag_pol =  1;
 		static const int flag_tab =  2;
 
-		class NUData : public AceTable::ACEBlock {
+		class NuData : public AceTable::ACEBlock {
 		public:
-			NUData(std::vector<double>::const_iterator _it, AceTable* ace_table) : ACEBlock(_it,ace_table) {/* */};
+			NuData() {/* */}
+			NuData(std::vector<double>::const_iterator _it, AceTable* ace_table) : ACEBlock(_it,ace_table) {/* */};
 			virtual void dump(std::ostream& xss) = 0;
 			virtual int getSize() const = 0;
 			virtual int getType() const = 0;
 			static std::string name() {return "NUData";}
 			std::string blockName() const {return name();};
-			virtual ~NUData() {/* */};
+			virtual NuData* clone() const = 0;
+			virtual ~NuData() {/* */};
 		};
 
-		struct Polynomial : public NUData {
+		struct Polynomial : public NuData {
+			Polynomial(int ncoef, const std::vector<double>& coef) : ncoef(ncoef), coef(coef) {/* */}
+		public:
 			/* Polynomial function form of NU array */
 			int ncoef;                 /* Number of coefficients */
 			std::vector<double> coef;  /* Coefficients */
-		public:
 			Polynomial(std::vector<double>::const_iterator _it, AceTable* ace_table);
 			void dump(std::ostream& xss);
 			int getSize() const {return (1 + coef.size());};
 			int getType() const {return flag_pol;};
+			NuData* clone() const {return new Polynomial(ncoef, coef);};
 			~Polynomial() {/* */};
 		};
 
-		class Tabular : public NUData {
+		class Tabular : public NuData {
+			Tabular(int nr, const std::vector<int>& nbt, const std::vector<int>& aint,
+					const std::vector<double>& energies, const std::vector<double>& nu) : nr(nr), nbt(nbt), aint(aint),
+					ne(energies.size()), energies(energies), nu(nu) {/* */}
+		public:
 			/* Tabular data form of NU array */
 			int nr;                       /* Number of interpolation regions */
 			std::vector<int> nbt;         /* ENDF interpolation parameters */
@@ -69,20 +79,13 @@ namespace Ace {
 			int ne;                       /* Number of energies */
 			std::vector<double> energies; /* tabular energies points */
 			std::vector<double> nu;       /* Values of NU */
-		public:
 			Tabular(std::vector<double>::const_iterator _it, AceTable* ace_table);
 			void dump(std::ostream& xss);
 			int getSize() const {return (2 + nbt.size() + aint.size() + energies.size() + nu.size());};
 			int getType() const {return flag_tab;};
+			NuData* clone() const {return new Tabular(nr, nbt, aint, energies, nu);};
 			~Tabular() {/* */};
 		};
-
-		/* Containers of NU data */
-		std::vector<NUData*> PromptData; /* This one can have total NU data too. */
-
-		NUBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable* ace_table);
-
-	public:
 
 		friend class NeutronTable;
 
@@ -96,7 +99,17 @@ namespace Ace {
 		static std::string name() {return "NUBlock";}
 		std::string blockName() const {return name();};
 
+		/* Clone data inside this block */
+		std::vector<NuData*> clone() const;
+
 		virtual ~NUBlock();
+
+	private:
+
+		/* Containers of NU data */
+		std::vector<NuData*> nu_data; /* This one can have total NU data too. */
+
+		NUBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable* ace_table);
 
 	};
 

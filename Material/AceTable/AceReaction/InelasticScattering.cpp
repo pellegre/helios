@@ -31,7 +31,7 @@ namespace Helios {
 
 using namespace AceReaction;
 
-MuSampler* InelasticScattering::buildMuSampler(const Ace::AngularDistribution& ace_angular) {
+MuSampler* GenericReaction::buildMuSampler(const Ace::AngularDistribution& ace_angular) {
 	typedef Ace::AngularDistribution AceAngular;
 
 	if(ace_angular.getKind() == AceAngular::data)
@@ -49,7 +49,7 @@ MuSampler* InelasticScattering::buildMuSampler(const Ace::AngularDistribution& a
 	throw(GeneralError("No angular distribution defined"));
 }
 
-EnergySampler* InelasticScattering::buildEnergySampler(const Ace::EnergyDistribution& ace_energy) {
+EnergySampler* GenericReaction::buildEnergySampler(const Ace::EnergyDistribution& ace_energy) {
 	typedef Ace::EnergyDistribution AceEnergy;
 	/* Sampler factory */
 	static EnergySamplerFactory sampler_factory;
@@ -62,7 +62,7 @@ EnergySampler* InelasticScattering::buildEnergySampler(const Ace::EnergyDistribu
 	return 0;
 }
 
-InelasticScattering::InelasticScattering(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
+GenericReaction::GenericReaction(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
 	mu_sampler(0), energy_sampler(0) {
 	/* Build MU sampler */
 	try {
@@ -80,7 +80,7 @@ InelasticScattering::InelasticScattering(const AceIsotope* isotope, const Ace::N
 	}
 }
 
-void InelasticScattering::print(std::ostream& out) const {
+void GenericReaction::print(std::ostream& out) const {
 	/* Print MU sampler */
 	if(mu_sampler)
 		mu_sampler->print(out);
@@ -89,9 +89,10 @@ void InelasticScattering::print(std::ostream& out) const {
 		energy_sampler->print();
 }
 
-InelasticScattering::~InelasticScattering() {
-	/* Delete samplers */
+GenericReaction::~GenericReaction() {
+	/* Delete MU sampler */
 	delete mu_sampler;
+	/* Delete energy sampler */
 	delete energy_sampler;
 }
 } /* namespace Helios */

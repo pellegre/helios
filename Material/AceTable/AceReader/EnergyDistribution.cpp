@@ -293,7 +293,6 @@ void EnergyDistribution::Law4::dump_array(std::ostream& xss) const {
 	putXSS(loca,xss);
 
 	for(int i = 0 ; i < nen ; i++) {
-		int np = eout_dist[i].np;
 		putXSS(eout_dist[i].intt,xss);
 		putXSS(eout_dist[i].np,xss);
 		putXSS(eout_dist[i].eout,xss);
@@ -498,7 +497,6 @@ void EnergyDistribution::Law22::dump_array(std::ostream& xss) const {
 	putXSS(loca,xss);
 
 	for(int i = 0 ; i < nen ; i++) {
-		int nf = eout_dist[i].nf;
 		putXSS(eout_dist[i].nf,xss);
 		putXSS(eout_dist[i].p,xss);
 		putXSS(eout_dist[i].t,xss);
@@ -590,7 +588,6 @@ void EnergyDistribution::Law44::dump_array(std::ostream& xss) const {
 	putXSS(loca,xss);
 
 	for(int i = 0 ; i < nen ; i++) {
-		int np = eout_dist[i].np;
 		putXSS(eout_dist[i].intt,xss);
 		putXSS(eout_dist[i].np,xss);
 		putXSS(eout_dist[i].eout,xss);
@@ -767,7 +764,7 @@ void EnergyDistribution::Law67::dump_array(std::ostream& xss) const {
 }
 
 int EnergyDistribution::Law67::size_array() const {
-
+	return 0;
 }
 
 EnergyDistribution::EnergyLaw* EnergyDistribution::Law67::clone() const {

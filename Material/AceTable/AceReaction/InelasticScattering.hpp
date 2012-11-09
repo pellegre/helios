@@ -36,9 +36,9 @@ namespace Helios {
 
 namespace AceReaction {
 	/*
-	 * Generic inelastic scattering
+	 * Generic scattering
 	 */
-	class InelasticScattering : public Reaction {
+	class GenericReaction : public Reaction {
 
 		/*
 		 * Pointer to a cosine sampler. If the reaction does not contain a MU sampler (because
@@ -68,26 +68,39 @@ namespace AceReaction {
 		/* Sample scattering cosine */
 		void sampleCosine(const Particle& particle, Random& random, double& mu) const {
 			/* Sample MU */
-			mu_sampler->setCosine(particle, random, mu);
+			if(mu_sampler)
+				mu_sampler->setCosine(particle, random, mu);
 		}
 
 		/* Sample energy distribution (and MU if is available on the energy distribution) */
 		void sampleEnergy(const Particle& particle, Random& random, double& energy, double& mu) const {
 			/* Sample energy */
-			energy_sampler->setEnergy(particle, random, energy, mu);
+			if(energy_sampler)
+				energy_sampler->setEnergy(particle, random, energy, mu);
 		}
 
 	public:
 		/* Constructor, from ACE isotope and the reaction parsed from the ACE library */
-		InelasticScattering(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction);
-
-		/* Change particle state */
-		void operator()(Particle& particle, Random& random) const {/* */};
+		GenericReaction(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction);
 
 		/* Print ACE reaction */
 		void print(std::ostream& out) const;
 
-		virtual ~InelasticScattering();
+		virtual ~GenericReaction();
+	};
+
+	/*
+	 * Inelastic scattering
+	 */
+	class InelasticScattering : public GenericReaction {
+
+	public:
+		InelasticScattering(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
+			GenericReaction(isotope, ace_reaction) {/* */};
+
+		void operator()(Particle& particle, Random& random) const {/* */}
+
+		virtual ~InelasticScattering() {/* */};
 	};
 }
 

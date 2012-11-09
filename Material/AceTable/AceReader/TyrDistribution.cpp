@@ -46,6 +46,16 @@ TyrDistribution::TyrDistribution(const TyrDistribution& tyrr)
 	}
 
 	tyr = tyrr.tyr;
+
+	for(vector<NUBlock::NuData*>::const_iterator it = tyrr.fission_data.begin() ; it != tyrr.fission_data.end() ; ++it)
+		fission_data.push_back((*it)->clone());
+
+}
+
+void TyrDistribution::setFission(const std::vector<NUBlock::NuData*>& nu_data) {
+	for(vector<NUBlock::NuData*>::const_iterator it = nu_data.begin() ; it != nu_data.end() ; ++it)
+		fission_data.push_back((*it)->clone());
+	type = fission;
 }
 
 TyrDistribution::TyrDistribution(int tyr, std::vector<double>::const_iterator it) : tyr(tyr){
@@ -60,7 +70,6 @@ TyrDistribution::TyrDistribution(int tyr, std::vector<double>::const_iterator it
 
 void TyrDistribution::dump(std::ostream& xss) const {
 	if(type == distribution) {
-
 		putXSS(nr,xss);
 		putXSS(nbt,xss);
 		putXSS(aint,xss);
@@ -70,3 +79,9 @@ void TyrDistribution::dump(std::ostream& xss) const {
 	} else if(type == number)
 		putXSS(tyr,xss);
 }
+
+TyrDistribution::~TyrDistribution() {
+	for(vector<NUBlock::NuData*>::const_iterator it = fission_data.begin() ; it != fission_data.end() ; ++it)
+		delete (*it);
+};
+

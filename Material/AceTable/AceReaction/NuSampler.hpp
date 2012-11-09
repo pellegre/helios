@@ -39,22 +39,39 @@ namespace AceReaction {
 	 * a fixed value or energy dependent.
 	 */
 
+	/*
+	 * Base class to deal with NU sampling
+	 */
+	class NuSampler {
+	public:
+		NuSampler() {/* */}
+		virtual double getNu(double energy) const = 0;
+		virtual void print(std::ostream& out) const = 0;
+		virtual ~NuSampler() {/* */}
+	};
+
 	/* Fixed NU (No dependency with particle's energy) */
-	class FixedNu {
+	class FixedNu : public NuSampler {
 		double number;
 	public:
 		FixedNu(const Ace::TyrDistribution& tyr) : number(tyr.getTyr()) {/* */}
-		double getNu(double energy) {return number;}
+		double getNu(double energy) const {return number;}
+		void print(std::ostream& out) const {
+			out << " * Fixed NU = " << number << endl;
+		}
 		~FixedNu() {/* */}
 	};
 
 	/* Get NU from a table */
-	class TabularNu {
+	class TabularNu : public NuSampler {
 		std::vector<double> energies; /* tabular energies points */
 		std::vector<double> nu;       /* Values of NU */
 	public:
+		/* Get from data on DLW block */
 		TabularNu(const Ace::TyrDistribution& tyr) : energies(tyr.getEnergies()), nu(tyr.getNu()) {/* */}
-		double getNu(double energy) {
+		/* Get from data on NU block */
+		TabularNu(const Ace::NUBlock::Tabular* nu_data) : energies(nu_data->energies), nu(nu_data->nu) {/* */}
+		double getNu(double energy) const {
 			/* Get interpolation data */
 			std::pair<size_t,double> res = interpolate(energies.begin(), energies.end(), energy);
 			/* Index */
@@ -64,7 +81,38 @@ namespace AceReaction {
 			/* Return interpolated NU */
 			return factor * (nu[idx + 1] - nu[idx]) + nu[idx];
 		}
+		void print(std::ostream& out) const {
+			out << " * Tabular NU " << endl;
+			for(size_t i = 0 ; i  < energies.size() ; ++i)
+				out << scientific << setw(15) << energies[i] << setw(15) << nu[i] << endl;
+		}
 		~TabularNu() {/* */}
+	};
+
+	/* Get NU from a polynomial function */
+	class PolynomialNu : public NuSampler {
+		std::vector<double> coeffs;
+	public:
+		/* Get from data on NU block */
+		PolynomialNu(const Ace::NUBlock::Polynomial* nu_data) : coeffs(nu_data->coef) {/* */}
+		double getNu(double energy) const {
+			/* Initial energy */
+			double erg = 1.0;
+			/* Accumulated NU */
+			double accum = 0.0;
+			for(size_t i = 0 ; i < coeffs.size() ; ++i) {
+				accum += coeffs[i] * erg;
+				erg *= energy;
+			}
+			return accum;
+		}
+		void print(std::ostream& out) const {
+			out << " * Polynomial NU " << endl;
+			for(size_t i = 0 ; i  < coeffs.size() ; ++i)
+				out << scientific << coeffs[i] << " ";
+			out << endl;
+		}
+		~PolynomialNu() {/* */}
 	};
 }
 

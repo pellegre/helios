@@ -32,6 +32,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "Blocks/NUBlock.hpp"
+
 namespace Ace {
 
 class TyrDistribution {
@@ -49,10 +51,14 @@ class TyrDistribution {
 	/* Type of data */
 	int type;
 
+	/* In case the reaction is fission, the data is contained on this container */
+	std::vector<NUBlock::NuData*> fission_data; /* This one can have total NU data too. */
+
 public:
 	/* Type of data */
 	static const int distribution = 0;
 	static const int number = 1;
+	static const int fission = 2;
 
 	TyrDistribution(int tyr,std::vector<double>::const_iterator it);
 	TyrDistribution(int tyr) : tyr(tyr), type(number) {/* */};
@@ -68,7 +74,13 @@ public:
 	const std::vector<double>& getEnergies() const {return energies;}
 	const std::vector<double>& getNu() const {return nu;}
 
-	~TyrDistribution() {/* */};
+	/* Set fission information */
+	void setFission(const std::vector<NUBlock::NuData*>& nu_data);
+
+	/* Get fission information */
+	const std::vector<NUBlock::NuData*>& getFission() const {return fission_data;}
+
+	~TyrDistribution();
 };
 
 } /* namespace ACE */

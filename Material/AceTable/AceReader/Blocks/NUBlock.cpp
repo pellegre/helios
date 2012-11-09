@@ -50,36 +50,36 @@ NUBlock::NUBlock(const int nxs[nxs_size], const int jxs[jxs_size], const vector<
 			getXSS(knu_prompt);
 
 			if(knu_prompt == flag_pol)
-				PromptData.push_back(new Polynomial(getPosition(),ace_table));
+				nu_data.push_back(new Polynomial(getPosition(),ace_table));
 			else if (knu_prompt == flag_tab)
-				PromptData.push_back(new Tabular(getPosition(),ace_table));
+				nu_data.push_back(new Tabular(getPosition(),ace_table));
 			else
 				return;
 
 			/* Shift iterator */
-			setBegin(getPosition() + PromptData[0]->getSize());
+			setBegin(getPosition() + nu_data[0]->getSize());
 
 			int knu_total;
 			getXSS(knu_total);
 
 			if(knu_total == flag_pol)
-				PromptData.push_back(new Polynomial(getPosition(),ace_table));
+				nu_data.push_back(new Polynomial(getPosition(),ace_table));
 			else if (knu_total == flag_tab)
-				PromptData.push_back(new Tabular(getPosition(),ace_table));
+				nu_data.push_back(new Tabular(getPosition(),ace_table));
 
 		} else {
 			/* Only one of the arrays */
 			int knu = lnu;
 
 			if(knu == flag_pol)
-				PromptData.push_back(new Polynomial(getPosition(),ace_table));
+				nu_data.push_back(new Polynomial(getPosition(),ace_table));
 			else if (knu == flag_tab)
-				PromptData.push_back(new Tabular(getPosition(),ace_table));
+				nu_data.push_back(new Tabular(getPosition(),ace_table));
 		}
 	}
 }
 
-NUBlock::Polynomial::Polynomial(std::vector<double>::const_iterator _it, AceTable* ace_table) : NUBlock::NUData(_it,ace_table) {
+NUBlock::Polynomial::Polynomial(std::vector<double>::const_iterator _it, AceTable* ace_table) : NUBlock::NuData(_it,ace_table) {
 	getXSS(ncoef);
 	getXSS(coef,ncoef);
 }
@@ -89,7 +89,7 @@ void NUBlock::Polynomial::dump(std::ostream& xss) {
 	putXSS(coef,xss);
 }
 
-NUBlock::Tabular::Tabular(std::vector<double>::const_iterator _it, AceTable* ace_table) : NUBlock::NUData(_it,ace_table) {
+NUBlock::Tabular::Tabular(std::vector<double>::const_iterator _it, AceTable* ace_table) : NUBlock::NuData(_it,ace_table) {
 	getXSS(nr);
 	getXSS(nbt,nr);
 	getXSS(aint,nr);
@@ -107,34 +107,42 @@ void NUBlock::Tabular::dump(std::ostream& xss) {
 	putXSS(nu,xss);
 }
 
+/* Clone data */
+vector<NUBlock::NuData*> NUBlock::clone() const {
+	vector<NUBlock::NuData*> cloned;
+	for(vector<NUBlock::NuData*>::const_iterator it = nu_data.begin() ; it != nu_data.end() ; ++it)
+		cloned.push_back((*it)->clone());
+	return cloned;
+}
+
 /* Dump the block, on a xss stream */
 void NUBlock::dump(std::ostream& xss) {
-	if(PromptData.size() == 1) {
+	if(nu_data.size() == 1) {
 		/* Only one NU table */
-		putXSS(PromptData[0]->getType(),xss); /* Dump the type of table */
-		PromptData[0]->dump(xss);             /* Dump the NU table */
-	} else if (PromptData.size() == 2) {
+		putXSS(nu_data[0]->getType(),xss); /* Dump the type of table */
+		nu_data[0]->dump(xss);             /* Dump the NU table */
+	} else if (nu_data.size() == 2) {
 		/* We have two tables */
-		putXSS(- (PromptData[0]->getSize() + 1),xss); /* Dump the offset to the next NU table */
+		putXSS(- (nu_data[0]->getSize() + 1),xss); /* Dump the offset to the next NU table */
 
-		putXSS(PromptData[0]->getType(),xss); /* Dump the type of table (prompt) */
-		PromptData[0]->dump(xss);             /* Dump the NU table */
+		putXSS(nu_data[0]->getType(),xss); /* Dump the type of table (prompt) */
+		nu_data[0]->dump(xss);             /* Dump the NU table */
 
-		putXSS(PromptData[1]->getType(),xss); /* Dump the type of table (total )*/
-		PromptData[1]->dump(xss);             /* Dump the NU table */
+		putXSS(nu_data[1]->getType(),xss); /* Dump the type of table (total )*/
+		nu_data[1]->dump(xss);             /* Dump the NU table */
 	}
 }
 
 int NUBlock::getSize() const {
-	std::vector<NUData*>::const_iterator it;
+	std::vector<NuData*>::const_iterator it;
 	int size = 0;
 
-	for(it = PromptData.begin() ; it != PromptData.end() ; it++)
+	for(it = nu_data.begin() ; it != nu_data.end() ; it++)
 		size += (*it)->getSize();
 
-	if(PromptData.size() == 2) {
+	if(nu_data.size() == 2) {
 		return (size + 3); /* NU data plus the first (negative) value plus two flag of the type of table */
-	} else if (PromptData.size() == 1)
+	} else if (nu_data.size() == 1)
 		return (size + 1);     /* NU data plus the flag of the type of table */
 
 	return 0;
@@ -145,8 +153,8 @@ int NUBlock::getType() const {
 };
 
 NUBlock::~NUBlock() {
-	std::vector<NUData*>::const_iterator it;
+	std::vector<NuData*>::const_iterator it;
 
-	for(it = PromptData.begin() ; it != PromptData.end() ; it++)
+	for(it = nu_data.begin() ; it != nu_data.end() ; it++)
 		delete (*it);
 }
