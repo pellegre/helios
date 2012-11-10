@@ -111,6 +111,11 @@ public:
 		return logger.messages;
 	}
 
+	static void printLine(std::ostream& out, const std::string& what, size_t count = 80) {
+		for(size_t i = 0 ; i < count ; ++i)
+			out << what;
+	}
+
 	~Log();
 
 private:

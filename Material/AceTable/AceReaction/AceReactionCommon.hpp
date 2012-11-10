@@ -80,7 +80,7 @@ namespace AceReaction {
 		}
 
 		void print(std::ostream& out) const {
-			out << setw(15) << "csout" << setw(15) << "pdf" << setw(15) << "cdf" << endl;
+			out << setw(15) << "out" << setw(15) << "pdf" << setw(15) << "cdf" << endl;
 			for(size_t i = 0 ; i < csout.size() ; ++i)
 				out << scientific << setw(15) << csout[i] << setw(15) << pdf[i] << setw(15) << cdf[i] << endl;
 		}

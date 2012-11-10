@@ -25,49 +25,57 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FissionReaction.hpp"
+#ifndef ENERGYLAW4_HPP_
+#define ENERGYLAW4_HPP_
+
+#include "AceEnergyLaw.hpp"
 
 namespace Helios {
+namespace AceReaction {
 
-using namespace AceReaction;
+	/* ---------- Continuous tabular distribution (law 4) ---------- */
 
-/* Create NU sampler based on the information on the ACE data */
-static NuSampler* buildNuSampler(const Ace::NUBlock::NuData* nu_data) {
-	typedef Ace::NUBlock AceNu;
-	/* Get type */
-	int type = nu_data->getType();
-	/* Polynomial type */
-	if(type == AceNu::flag_pol)
-		return new PolynomialNu(dynamic_cast<const AceNu::Polynomial*>(nu_data));
-	/* Tabular type */
-	return new TabularNu(dynamic_cast<const AceNu::Tabular*>(nu_data));
-}
+	/* Sample outgoing energy using a tabular distribution */
+	class EnergyTabular : public TabularDistribution /* defined on AceReactionCommon.hpp */ {
+	public:
 
-Fission::Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
-	GenericReaction(isotope, ace_reaction), prompt_nu(0) {
+		EnergyTabular(const Ace::EnergyDistribution::Law4::EnergyData& ace_energy) :
+			TabularDistribution(ace_energy.intt, ace_energy.eout, ace_energy.pdf, ace_energy.cdf)
+		{/* */}
 
-	/* Get distribution of emerging particles */
-	const Ace::TyrDistribution& tyr = ace_reaction.getTyr();
-	/* Sanity check */
-	assert(tyr.getType() == Ace::TyrDistribution::fission);
-	/* Get the NU data related to this fission reaction */
-	vector<Ace::NUBlock::NuData*> nu_data = tyr.getFission();
+		double operator()(Random& random) const {
+			return TabularDistribution::operator()(random);
+		}
 
-	/* TODO - For now just prompt particles */
-	prompt_nu = buildNuSampler(nu_data[0]);
-}
+		void print(std::ostream& out) const {
+			out << " * Energy Tabular Distribution " << endl;
+			TabularDistribution::print(out);
+		}
 
-void Fission::print(std::ostream& out) const {
-	out << " - Fission Reaction" << endl;
-	Log::printLine(out,"*");
-	out << endl;
-	prompt_nu->print(out);
-	/* Print the cosine and energy sampler */
-	GenericReaction::print(out);
-}
+		~EnergyTabular() {/* */}
+	};
 
-Fission::~Fission() {
-	delete prompt_nu;
-}
+	class EnergyLaw4 : public AceEnergyLaw, public TableSampler<EnergyTabular*> {
+		typedef Ace::EnergyDistribution::Law4 Law4;
+	public:
+		EnergyLaw4(const Law* ace_data);
 
+		/* Sample scattering outgoing energy */
+		void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const {
+			/* Get particle energy */
+			double initial_energy = particle.getEnergy().second;
+			/* Sample cosine table */
+			EnergyTabular* energy_table = TableSampler<EnergyTabular*>::sample(initial_energy, random);
+			/* Once we got the table, sample the scattering cosine */
+			energy = (*energy_table)(random);
+		}
+
+		void print(std::ostream& out) const;
+
+		~EnergyLaw4();
+	};
+
+
+} /* namespace AceReaction */
 } /* namespace Helios */
+#endif /* ENERGYLAW4_HPP_ */

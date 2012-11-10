@@ -32,17 +32,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../../Transport/Particle.hpp"
 #include "../AceReader/EnergyDistribution.hpp"
 
-#include "AceReactionCommon.hpp"
-
 namespace Helios {
 
 namespace AceReaction {
 	/*
-	 * Base class to deal with cosine samplers
+	 * Base class to deal with energy samplers
 	 */
-	class EnergySampler {
+	class EnergySamplerBase {
 	public:
-		EnergySampler() {/* */}
+		EnergySamplerBase() {/* */}
 
 		/* Exception */
 		class BadEnergySamplerCreation : public std::exception {
@@ -63,56 +61,41 @@ namespace AceReaction {
 		/* Print internal data of the energy sampler */
 		virtual void print(std::ostream& out) const = 0;
 
-		virtual ~EnergySampler() {/* */}
+		virtual ~EnergySamplerBase() {/* */}
 	};
 
 	class EnergySamplerFactory {
 	public:
 		EnergySamplerFactory() {/* */}
-		EnergySampler* createSampler(const Ace::EnergyDistribution& ace_data);
+		/* Create a new energy sampler using information parsed from the ACE cross section file */
+		EnergySamplerBase* createSampler(const Ace::EnergyDistribution& ace_data);
 		~EnergySamplerFactory() {/* */}
 	};
 
-    /* ---------- Continuous tabular distribution (law 4) ---------- */
-
-	/* Sample outgoing energy using a tabular distribution */
-	class EnergyTabular : public TabularDistribution /* defined on AceReactionCommon.hpp */ {
+	/* Sample energy (and MU if available) using one ACE law */
+	template<class LawPolicy>
+	class EnergySampler : public EnergySamplerBase, public LawPolicy {
+		typedef Ace::EnergyDistribution::EnergyLaw EnergyLaw;
 	public:
+		/* Constructor for using multiple laws */
+		template<class PolicyData>
+		EnergySampler(PolicyData ace_data) : LawPolicy(ace_data) {/* */}
 
-		EnergyTabular(const Ace::EnergyDistribution::Law4::EnergyData& ace_energy) :
-			TabularDistribution(ace_energy.intt, ace_energy.eout, ace_energy.pdf, ace_energy.cdf)
-		{/* */}
+		/* -- Overload base classes of the energy sampler */
 
-		double operator()(Random& random) const {
-			return TabularDistribution::operator()(random);
-		}
-
-		void print(std::ostream& out) const {
-			out << " * Energy Tabular Distribution " << endl;
-			TabularDistribution::print(out);
-		}
-
-		~EnergyTabular() {/* */}
-	};
-
-	class EnergyLaw4 : public EnergySampler, public TableSampler<EnergyTabular*> {
-	public:
-		EnergyLaw4(const Ace::EnergyDistribution::Law4* ace_data);
-
-		/* Sample scattering cosine */
+		/* Sample energy (and MU if information exists) using particle's information */
 		void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const {
-			/* Get particle energy */
-			double initial_energy = particle.getEnergy().second;
-			/* Sample cosine table */
-			EnergyTabular* energy_table = TableSampler<EnergyTabular*>::sample(initial_energy, random);
-			/* Once we got the table, sample the scattering cosine */
-			energy = (*energy_table)(random);
+			LawPolicy::setEnergy(particle, random, energy, mu);
 		}
 
-		void print(std::ostream& out) const;
+		/* Print internal data of the energy sampler */
+		void print(std::ostream& out) const {
+			LawPolicy::print(out);
+		}
 
-		~EnergyLaw4();
+		~EnergySampler() {/* */}
 	};
+
 
 }
 

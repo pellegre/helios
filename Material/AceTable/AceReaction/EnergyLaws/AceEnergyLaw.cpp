@@ -25,49 +25,16 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FissionReaction.hpp"
+#include "AceEnergyLaw.hpp"
 
 namespace Helios {
+namespace AceReaction {
 
-using namespace AceReaction;
-
-/* Create NU sampler based on the information on the ACE data */
-static NuSampler* buildNuSampler(const Ace::NUBlock::NuData* nu_data) {
-	typedef Ace::NUBlock AceNu;
-	/* Get type */
-	int type = nu_data->getType();
-	/* Polynomial type */
-	if(type == AceNu::flag_pol)
-		return new PolynomialNu(dynamic_cast<const AceNu::Polynomial*>(nu_data));
-	/* Tabular type */
-	return new TabularNu(dynamic_cast<const AceNu::Tabular*>(nu_data));
+std::ostream& operator<<(std::ostream& out, const AceEnergyLaw& q) {
+	out << " - " << q.name << endl;
+	q.print(out);
+	return out;
 }
 
-Fission::Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
-	GenericReaction(isotope, ace_reaction), prompt_nu(0) {
-
-	/* Get distribution of emerging particles */
-	const Ace::TyrDistribution& tyr = ace_reaction.getTyr();
-	/* Sanity check */
-	assert(tyr.getType() == Ace::TyrDistribution::fission);
-	/* Get the NU data related to this fission reaction */
-	vector<Ace::NUBlock::NuData*> nu_data = tyr.getFission();
-
-	/* TODO - For now just prompt particles */
-	prompt_nu = buildNuSampler(nu_data[0]);
-}
-
-void Fission::print(std::ostream& out) const {
-	out << " - Fission Reaction" << endl;
-	Log::printLine(out,"*");
-	out << endl;
-	prompt_nu->print(out);
-	/* Print the cosine and energy sampler */
-	GenericReaction::print(out);
-}
-
-Fission::~Fission() {
-	delete prompt_nu;
-}
-
+} /* namespace AceReaction */
 } /* namespace Helios */

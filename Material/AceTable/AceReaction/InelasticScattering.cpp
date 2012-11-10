@@ -49,7 +49,7 @@ MuSampler* GenericReaction::buildMuSampler(const Ace::AngularDistribution& ace_a
 	throw(GeneralError("No angular distribution defined"));
 }
 
-EnergySampler* GenericReaction::buildEnergySampler(const Ace::EnergyDistribution& ace_energy) {
+EnergySamplerBase* GenericReaction::buildEnergySampler(const Ace::EnergyDistribution& ace_energy) {
 	typedef Ace::EnergyDistribution AceEnergy;
 	/* Sampler factory */
 	static EnergySamplerFactory sampler_factory;
@@ -81,12 +81,22 @@ GenericReaction::GenericReaction(const AceIsotope* isotope, const Ace::NeutronRe
 }
 
 void GenericReaction::print(std::ostream& out) const {
+	Log::printLine(out,"*");
+	out << endl;
 	/* Print MU sampler */
-	if(mu_sampler)
+	if(mu_sampler) {
+		out << "[+] Angular Distribution : " << endl;
 		mu_sampler->print(out);
+	}
+	Log::printLine(out,"*");
+	out << endl;
 	/* Print energy sampler */
-	if(energy_sampler)
+	if(energy_sampler) {
+		out << "[+] Energy Distribution : " << endl;
 		energy_sampler->print(out);
+	}
+	Log::printLine(out,"*");
+	out << endl;
 }
 
 GenericReaction::~GenericReaction() {

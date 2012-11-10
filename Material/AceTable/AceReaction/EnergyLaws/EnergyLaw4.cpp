@@ -25,49 +25,35 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FissionReaction.hpp"
+#include "EnergyLaw4.hpp"
 
 namespace Helios {
+namespace AceReaction {
 
-using namespace AceReaction;
-
-/* Create NU sampler based on the information on the ACE data */
-static NuSampler* buildNuSampler(const Ace::NUBlock::NuData* nu_data) {
-	typedef Ace::NUBlock AceNu;
-	/* Get type */
-	int type = nu_data->getType();
-	/* Polynomial type */
-	if(type == AceNu::flag_pol)
-		return new PolynomialNu(dynamic_cast<const AceNu::Polynomial*>(nu_data));
-	/* Tabular type */
-	return new TabularNu(dynamic_cast<const AceNu::Tabular*>(nu_data));
-}
-
-Fission::Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
-	GenericReaction(isotope, ace_reaction), prompt_nu(0) {
-
-	/* Get distribution of emerging particles */
-	const Ace::TyrDistribution& tyr = ace_reaction.getTyr();
+/* Constructor */
+EnergyLaw4::EnergyLaw4(const Law* ace_data) : AceEnergyLaw(ace_data) {
+	const Law4* law_data = dynamic_cast<const Law4*>(ace_data);
+	energies = law_data->ein;
 	/* Sanity check */
-	assert(tyr.getType() == Ace::TyrDistribution::fission);
-	/* Get the NU data related to this fission reaction */
-	vector<Ace::NUBlock::NuData*> nu_data = tyr.getFission();
-
-	/* TODO - For now just prompt particles */
-	prompt_nu = buildNuSampler(nu_data[0]);
+	assert(law_data->eout_dist.size() == energies.size());
+	/* Create the tables */
+	for(vector<Law4::EnergyData>::const_iterator it = law_data->eout_dist.begin() ; it != law_data->eout_dist.end() ; ++it)
+		tables.push_back(new EnergyTabular(*it));
 }
 
-void Fission::print(std::ostream& out) const {
-	out << " - Fission Reaction" << endl;
-	Log::printLine(out,"*");
-	out << endl;
-	prompt_nu->print(out);
-	/* Print the cosine and energy sampler */
-	GenericReaction::print(out);
+void EnergyLaw4::print(std::ostream& out) const {
+	AceEnergyLaw::print(out);
+	for(size_t i = 0 ; i < tables.size() ; ++i) {
+		out << "energy = " << scientific << energies[i] << endl;
+		tables[i]->print(out);
+	}
 }
 
-Fission::~Fission() {
-	delete prompt_nu;
+EnergyLaw4::~EnergyLaw4() {
+	for(size_t i = 0 ; i < tables.size() ; ++i) {
+		delete tables[i];
+	}
 }
 
+} /* namespace AceReaction */
 } /* namespace Helios */

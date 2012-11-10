@@ -25,29 +25,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "EnergySampler.hpp"
-#include "EnergyLaws/EnergyLaws.hpp"
+#ifndef ENERGYLAWS_HPP_
+#define ENERGYLAWS_HPP_
 
-namespace Helios {
+#include "EnergyLaw4.hpp"
 
-using namespace AceReaction;
-
-EnergySamplerBase* EnergySamplerFactory::createSampler(const Ace::EnergyDistribution& ace_data) {
-	if(ace_data.laws.size() != 1)
-		throw(EnergySamplerBase::BadEnergySamplerCreation("More than 1 energy law distribution in is not supported"));
-
-	/* Get law */
-	int law = ace_data.laws[0]->getLaw();
-
-	if(law == 4) {
-		/* Continuous Tabular Distribution */
-		return new EnergySampler<EnergyLaw4>(ace_data.laws[0]);
-	}
-	/* No law */
-	throw(EnergySamplerBase::BadEnergySamplerCreation("Energy law " + toString(law) + " is not supported"));
-}
-
-}
-
-
-
+#endif /* ENERGYLAWS_HPP_ */

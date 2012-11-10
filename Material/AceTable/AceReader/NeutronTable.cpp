@@ -243,7 +243,7 @@ NeutronTable::NeutronTable(const std::string& _table_name, const std::string& fu
 	/* Set the energy grid */
 	reactions.set_grid(getEnergyGrid());
 	/* Create elastic scattering reaction */
-	reactions.push_back(NeutronReaction(2,0.0,TyrDistribution(1),getElastic(),and_block->and_dist[0],EnergyDistribution(EnergyDistribution::no_data)));
+	reactions.push_back(NeutronReaction(2,0.0,TyrDistribution(-1),getElastic(),and_block->and_dist[0],EnergyDistribution(EnergyDistribution::no_data)));
 
 	/* Set the reactions */
 	int nrea = nxs[NeutronTable::NTR];

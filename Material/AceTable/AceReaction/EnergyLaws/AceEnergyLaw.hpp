@@ -25,49 +25,52 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FissionReaction.hpp"
+#ifndef ACEENERGYLAW_HPP_
+#define ACEENERGYLAW_HPP_
+
+#include <string>
+
+#include "../../../../Common/Common.hpp"
+#include "../../../../Transport/Particle.hpp"
+#include "../../AceReader/EnergyDistribution.hpp"
+
+#include "../AceReactionCommon.hpp"
 
 namespace Helios {
 
-using namespace AceReaction;
+namespace AceReaction {
+	/*
+	 * Base class that defines an energy law for sampling the new
+	 * energy and angle on reactions with outgoing particles.
+	 */
+	class AceEnergyLaw {
+		/* Name of this law */
+		std::string name;
+		/* Friendly printer */
+		friend std::ostream& operator<<(std::ostream& out, const AceEnergyLaw& q);
 
-/* Create NU sampler based on the information on the ACE data */
-static NuSampler* buildNuSampler(const Ace::NUBlock::NuData* nu_data) {
-	typedef Ace::NUBlock AceNu;
-	/* Get type */
-	int type = nu_data->getType();
-	/* Polynomial type */
-	if(type == AceNu::flag_pol)
-		return new PolynomialNu(dynamic_cast<const AceNu::Polynomial*>(nu_data));
-	/* Tabular type */
-	return new TabularNu(dynamic_cast<const AceNu::Tabular*>(nu_data));
-}
+	protected:
+		/* Energy law defined on the ACE parser */
+		typedef Ace::EnergyDistribution::EnergyLaw Law;
 
-Fission::Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
-	GenericReaction(isotope, ace_reaction), prompt_nu(0) {
+	public:
+		AceEnergyLaw(const Law* energy_law) : name(energy_law->getLawName()) {/* */};
 
-	/* Get distribution of emerging particles */
-	const Ace::TyrDistribution& tyr = ace_reaction.getTyr();
-	/* Sanity check */
-	assert(tyr.getType() == Ace::TyrDistribution::fission);
-	/* Get the NU data related to this fission reaction */
-	vector<Ace::NUBlock::NuData*> nu_data = tyr.getFission();
+		/* Get name of the law */
+		std::string getName() const {return name;}
+		/* Sample scattering outgoing energy */
+		virtual void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const = 0;
+		/* Print internal information of this sampling law */
+		virtual void print(std::ostream& out) const {out << name << endl;};
 
-	/* TODO - For now just prompt particles */
-	prompt_nu = buildNuSampler(nu_data[0]);
-}
+		virtual ~AceEnergyLaw() {/* */};
+	};
 
-void Fission::print(std::ostream& out) const {
-	out << " - Fission Reaction" << endl;
-	Log::printLine(out,"*");
-	out << endl;
-	prompt_nu->print(out);
-	/* Print the cosine and energy sampler */
-	GenericReaction::print(out);
-}
+	/* Print a reaction */
+	std::ostream& operator<<(std::ostream& out, const AceEnergyLaw& q);
 
-Fission::~Fission() {
-	delete prompt_nu;
-}
+} /* namespace AceReaction */
 
 } /* namespace Helios */
+
+#endif /* ACEENERGYLAW_HPP_ */

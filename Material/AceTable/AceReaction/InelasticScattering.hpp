@@ -50,7 +50,7 @@ namespace AceReaction {
 		 * elastic scattering) this pointer is NULL. The energy sampler could sample the scattering
 		 * cosine too.
 		 */
-		EnergySampler* energy_sampler;
+		EnergySamplerBase* energy_sampler;
 
 		/* -- Sampler Builders */
 
@@ -58,7 +58,7 @@ namespace AceReaction {
 		static MuSampler* buildMuSampler(const Ace::AngularDistribution& ace_angular);
 
 		/* Build Energy Sampler */
-		static EnergySampler* buildEnergySampler(const Ace::EnergyDistribution& ace_energy);
+		static EnergySamplerBase* buildEnergySampler(const Ace::EnergyDistribution& ace_energy);
 
 	protected:
 		/*
