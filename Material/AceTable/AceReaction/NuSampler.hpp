@@ -43,9 +43,18 @@ namespace AceReaction {
 	 * Base class to deal with NU sampling
 	 */
 	class NuSampler {
+	protected:
+		/* Get integer part of floating point sampled NU */
+		double integerPart(double nubar, Random& random) const {
+			/* Integer part */
+			int nu = (int) nubar;
+			if (random.uniform() < nubar - (double)nu)
+				nu++;
+			return nu;
+		}
 	public:
 		NuSampler() {/* */}
-		virtual double getNu(double energy) const = 0;
+		virtual double getNu(double energy, Random& random) const = 0;
 		virtual void print(std::ostream& out) const = 0;
 		virtual ~NuSampler() {/* */}
 	};
@@ -71,7 +80,7 @@ namespace AceReaction {
 		TabularNu(const Ace::TyrDistribution& tyr) : energies(tyr.getEnergies()), nu(tyr.getNu()) {/* */}
 		/* Get from data on NU block */
 		TabularNu(const Ace::NUBlock::Tabular* nu_data) : energies(nu_data->energies), nu(nu_data->nu) {/* */}
-		double getNu(double energy) const {
+		double getNu(double energy, Random& random) const {
 			/* Get interpolation data */
 			std::pair<size_t,double> res = interpolate(energies.begin(), energies.end(), energy);
 			/* Index */
@@ -79,7 +88,7 @@ namespace AceReaction {
 			/* Interpolation factor */
 			double factor = res.second;
 			/* Return interpolated NU */
-			return factor * (nu[idx + 1] - nu[idx]) + nu[idx];
+			return integerPart(factor * (nu[idx + 1] - nu[idx]) + nu[idx], random);
 		}
 		void print(std::ostream& out) const {
 			out << " * Tabular NU " << endl;
@@ -95,7 +104,7 @@ namespace AceReaction {
 	public:
 		/* Get from data on NU block */
 		PolynomialNu(const Ace::NUBlock::Polynomial* nu_data) : coeffs(nu_data->coef) {/* */}
-		double getNu(double energy) const {
+		double getNu(double energy, Random& random) const {
 			/* Initial energy */
 			double erg = 1.0;
 			/* Accumulated NU */
@@ -104,7 +113,7 @@ namespace AceReaction {
 				accum += coeffs[i] * erg;
 				erg *= energy;
 			}
-			return accum;
+			return integerPart(accum, random);
 		}
 		void print(std::ostream& out) const {
 			out << " * Polynomial NU " << endl;

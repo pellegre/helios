@@ -46,11 +46,7 @@ namespace AceReaction {
 		/* Sample a fission neutron (the weight of the neutron is multiplied by NU) */
 		void operator()(Particle& particle, Random& random) const {
 			/* Sample NU  */
-			double nubar = prompt_nu->getNu(particle.erg().second);
-			/* Integer part */
-			int nu = (int) nubar;
-			if (random.uniform() < nubar - (double)nu)
-				nu++;
+			double nu = prompt_nu->getNu(particle.erg().second, random);
 
 			/* Just multiply the particle weight */
 			particle.wgt() *= (double)nu;
