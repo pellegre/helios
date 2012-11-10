@@ -39,13 +39,37 @@ EnergySampler* EnergySamplerFactory::createSampler(const Ace::EnergyDistribution
 	int law = ace_data.laws[0]->getLaw();
 
 	if(law == 4) {
-
+		/* Continuous Tabular Distribution */
+		return new EnergyLaw4(dynamic_cast<Ace::EnergyDistribution::Law4*>(ace_data.laws[0]));
 	}
-
 	/* No law */
 	throw(EnergySampler::BadEnergySamplerCreation("Energy law " + toString(law) + " is not supported"));
 }
 
+/* Constructor */
+EnergyLaw4::EnergyLaw4(const Ace::EnergyDistribution::Law4* ace_data) {
+	typedef Ace::EnergyDistribution::Law4 AceLaw;
+	energies = ace_data->ein;
+	/* Sanity check */
+	assert(ace_data->eout_dist.size() == energies.size());
+	/* Create the tables */
+	for(vector<AceLaw::EnergyData>::const_iterator it = ace_data->eout_dist.begin() ; it != ace_data->eout_dist.end() ; ++it)
+		tables.push_back(new EnergyTabular(*it));
+}
+
+void EnergyLaw4::print(std::ostream& out) const {
+	out << " - Cosine Table Sampler " << endl;
+	for(size_t i = 0 ; i < tables.size() ; ++i) {
+		out << "energy = " << scientific << energies[i] << endl;
+		tables[i]->print(out);
+	}
+}
+
+EnergyLaw4::~EnergyLaw4() {
+	for(size_t i = 0 ; i < tables.size() ; ++i) {
+		delete tables[i];
+	}
+}
 }
 
 

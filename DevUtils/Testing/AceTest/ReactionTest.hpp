@@ -61,7 +61,7 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	using namespace AceReaction;
 
 	McEnvironment* environment = new McEnvironment;
-	string name = "1001.03c";
+	string name = "92235.03c";
 
 	vector<McObject*> ace_objects;
 	ace_objects.push_back(new AceObject(name));
@@ -70,23 +70,35 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	environment->pushObjects(ace_objects.begin(), ace_objects.end());
 	environment->setup();
 
-	Histogram<LinearBins> histo(-1,1,75);
+	Histogram<LinearBins> histo(0.01,3,75);
 	Particle particle;
 	particle.erg().second = 1E-8;
+	particle.dir() = Direction(1.0,0.0,0.0);
 	Random random(1);
+	cout << particle << endl;
 
 	/* Get elastic scattering */
-	Reaction* elastic = environment->getObject<AceModule,AceIsotope>(name)[0]->getReaction(2);
+	Reaction* elastic = environment->getObject<AceModule,AceIsotope>(name)[0]->getReaction(18);
+	size_t nsamples = 10000000;
+	double accum_nu = 0.0;
+	for(size_t i = 0 ; i < nsamples ; ++i) {
 
-	for(size_t i = 0 ; i < 10000000 ; ++i) {
-		Direction last = particle.dir();
+		/* Set initial data */
+		particle.wgt() = 1.0;
+		particle.erg().second = 1E-8;
+
 		(*elastic)(particle,random);
-		histo(dot(last, particle.dir()));
+		histo(particle.erg().second);
+
+		accum_nu += particle.wgt();
 	}
 
 	histo.normalize();
 	cout << histo;
 
+	cout << "Average NU = " << accum_nu / (double) nsamples << endl;
+	delete environment;
+	delete elastic;
 }
 
 

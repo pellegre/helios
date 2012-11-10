@@ -33,7 +33,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cassert>
 
 #include "../../../Common/Common.hpp"
-#include "../../../Common/Interpolate.hpp"
 #include "../../../Transport/Particle.hpp"
 #include "../AceReader/AngularDistribution.hpp"
 #include "../AceReader/NeutronReaction.hpp"
@@ -106,7 +105,7 @@ namespace AceReaction {
 	};
 
 	/* Sample scattering cosine using a tabular distribution */
-	class Tabular : public TabularDistribution, public CosineTable /* defined on AceReactionCommon.hpp */ {
+	class Tabular : public CosineTable, public TabularDistribution /* defined on AceReactionCommon.hpp */ {
 	public:
 
 		Tabular(const AceTabular* ace_angular) :
@@ -118,7 +117,7 @@ namespace AceReaction {
 		}
 
 		void print(std::ostream& out) const {
-			out << " * 32 Equiprobable Cosine bins " << endl;
+			out << " * Tabular Cosine distribution " << endl;
 			TabularDistribution::print(out);
 		}
 
@@ -145,14 +144,10 @@ namespace AceReaction {
 	 * Before sampling a scattering cosine, the class samples the cosine table
 	 * using the incident particle energy.
 	 */
-	class MuTable : public MuSampler {
-		/* Tabulated incident energies */
-		std::vector<double> energies;
-		/* Cosine table for each tabulated energy */
-		std::vector<CosineTable*> cosine_table;
-
+	class MuTable : public MuSampler, public TableSampler<CosineTable*> {
 		/* Cosine table builder */
 		static CosineTable* tableBuilder(const AceAngular* ace_array);
+
 	public:
 		MuTable(const Ace::AngularDistribution& ace_data);
 
@@ -160,21 +155,15 @@ namespace AceReaction {
 		void setCosine(const Particle& particle, Random& random, double& mu) const {
 			/* Get particle energy */
 			double energy = particle.getEnergy().second;
-			/* Get interpolation data */
-			std::pair<size_t,double> res = interpolate(energies.begin(), energies.end(), energy);
-			/* Index */
-			size_t idx = res.first;
-			/* Interpolation factor */
-			double factor = res.second;
-			/* Sample bin and return cosine */
-			double chi = random.uniform();
-			if(chi < factor) mu = (*cosine_table[idx + 1])(random);
-			else mu = (*cosine_table[idx])(random);
+			/* Sample cosine table */
+			CosineTable* cosine_table = TableSampler<CosineTable*>::sample(energy, random);
+			/* Once we got the table, sample the scattering cosine */
+			mu = (*cosine_table)(random);
 		}
 
 		void print(std::ostream& out) const;
 
-		~MuTable() {/* */}
+		~MuTable();
 	};
 
 	/*

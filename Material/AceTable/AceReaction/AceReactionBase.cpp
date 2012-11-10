@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "AceReactionBase.hpp"
 #include "ElasticScattering.hpp"
+#include "FissionReaction.hpp"
 #include "InelasticScattering.hpp"
 
 namespace Helios {
@@ -52,7 +53,13 @@ Reaction* AceReactionFactory::createReaction(const AceIsotope* isotope, const Ac
 		else if(ace_angular.getKind() == AceAngular::isotropic)
 			/* Isotropic sampling */
 			return new ElasticScattering<MuIsotropic>(isotope, ace_reaction);
+
+	} else if(mt == 18) {
+		/* Fission reaction */
+		return new Fission(isotope, ace_reaction);
 	}
+
+	throw(AceModule::AceError(isotope->getUserId(), "Reaction with mt = " + toString(mt) + " is not supported"));
 
 	/* Generic inelastic reaction */
 	return new InelasticScattering(isotope, ace_reaction);

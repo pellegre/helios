@@ -30,6 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../../../Common/Common.hpp"
 #include "../../../Transport/Particle.hpp"
+#include "../AceReader/EnergyDistribution.hpp"
+
+#include "AceReactionCommon.hpp"
 
 namespace Helios {
 
@@ -39,7 +42,7 @@ namespace AceReaction {
 	 */
 	class EnergySampler {
 	public:
-		EnergySampler(const Ace::EnergyDistribution& ace_data) {/* */}
+		EnergySampler() {/* */}
 
 		/* Exception */
 		class BadEnergySamplerCreation : public std::exception {
@@ -58,11 +61,10 @@ namespace AceReaction {
 		virtual void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const = 0;
 
 		/* Print internal data of the energy sampler */
-		virtual void print() const = 0;
+		virtual void print(std::ostream& out) const = 0;
 
 		virtual ~EnergySampler() {/* */}
 	};
-
 
 	class EnergySamplerFactory {
 	public:
@@ -70,6 +72,48 @@ namespace AceReaction {
 		EnergySampler* createSampler(const Ace::EnergyDistribution& ace_data);
 		~EnergySamplerFactory() {/* */}
 	};
+
+    /* ---------- Continuous tabular distribution (law 4) ---------- */
+
+	/* Sample outgoing energy using a tabular distribution */
+	class EnergyTabular : public TabularDistribution /* defined on AceReactionCommon.hpp */ {
+	public:
+
+		EnergyTabular(const Ace::EnergyDistribution::Law4::EnergyData& ace_energy) :
+			TabularDistribution(ace_energy.intt, ace_energy.eout, ace_energy.pdf, ace_energy.cdf)
+		{/* */}
+
+		double operator()(Random& random) const {
+			return TabularDistribution::operator()(random);
+		}
+
+		void print(std::ostream& out) const {
+			out << " * Energy Tabular Distribution " << endl;
+			TabularDistribution::print(out);
+		}
+
+		~EnergyTabular() {/* */}
+	};
+
+	class EnergyLaw4 : public EnergySampler, public TableSampler<EnergyTabular*> {
+	public:
+		EnergyLaw4(const Ace::EnergyDistribution::Law4* ace_data);
+
+		/* Sample scattering cosine */
+		void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const {
+			/* Get particle energy */
+			double initial_energy = particle.getEnergy().second;
+			/* Sample cosine table */
+			EnergyTabular* energy_table = TableSampler<EnergyTabular*>::sample(initial_energy, random);
+			/* Once we got the table, sample the scattering cosine */
+			energy = (*energy_table)(random);
+		}
+
+		void print(std::ostream& out) const;
+
+		~EnergyLaw4();
+	};
+
 }
 
 }

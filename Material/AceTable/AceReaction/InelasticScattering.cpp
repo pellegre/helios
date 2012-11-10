@@ -86,7 +86,7 @@ void GenericReaction::print(std::ostream& out) const {
 		mu_sampler->print(out);
 	/* Print energy sampler */
 	if(energy_sampler)
-		energy_sampler->print();
+		energy_sampler->print(out);
 }
 
 GenericReaction::~GenericReaction() {

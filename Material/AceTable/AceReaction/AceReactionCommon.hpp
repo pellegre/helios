@@ -29,7 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ACEREACTIONCOMMON_HPP_
 
 #include <algorithm>
+
 #include "../AceModule.hpp"
+#include "../../../Common/Interpolate.hpp"
 
 namespace Helios {
 
@@ -84,6 +86,43 @@ namespace AceReaction {
 		}
 
 		virtual ~TabularDistribution() {/* */}
+	};
+
+	/*
+	 * Class to sample a table using an energy grid. Table's *kind* is
+	 * arbitrary and should be specified as a template parameter.
+	 */
+	template<class TableType>
+	class TableSampler {
+	protected:
+		/* A table contains an energy grid... */
+		std::vector<double> energies;
+		/* ... and a Table container */
+		std::vector<TableType> tables;
+	public:
+		TableSampler() {/* */}
+		/* Sample table */
+		TableType sample(double energy, Random& random) const {
+			/* Get interpolation data */
+			std::pair<size_t,double> res = interpolate(energies.begin(), energies.end(), energy);
+			/* Index */
+			size_t idx = res.first;
+			/* Interpolation factor */
+			double factor = res.second;
+			/* Sample bin and return the table */
+			double chi = random.uniform();
+			if(chi < factor) return tables[idx + 1];
+			return tables[idx];
+		}
+		/* Get a pair energy/table for some index */
+		std::pair<double, TableType> operator[](size_t idx) const {
+			return std::pair<double, TableType>(energies[idx], tables[idx]);
+		}
+		/* Get size */
+		size_t size() const {
+			return energies.size();
+		}
+		virtual ~TableSampler() {/* */}
 	};
 }
 

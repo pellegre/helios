@@ -52,14 +52,20 @@ MuTable::MuTable(const Ace::AngularDistribution& ace_data) : MuSampler(ace_data)
 	assert(ace_data.adist.size() == energies.size());
 	/* Create the tables */
 	for(vector<AceAngular*>::const_iterator it = ace_data.adist.begin() ; it != ace_data.adist.end() ; ++it)
-		cosine_table.push_back(tableBuilder(*it));
+		tables.push_back(tableBuilder(*it));
 }
 
 void MuTable::print(std::ostream& out) const {
 	out << " - Cosine Table Sampler " << endl;
-	for(size_t i = 0 ; i < cosine_table.size() ; ++i) {
+	for(size_t i = 0 ; i < tables.size() ; ++i) {
 		out << "energy = " << scientific << energies[i] << endl;
-		cosine_table[i]->print(out);
+		tables[i]->print(out);
+	}
+}
+
+MuTable::~MuTable() {
+	for(size_t i = 0 ; i < tables.size() ; ++i) {
+		delete tables[i];
 	}
 }
 
