@@ -13,6 +13,9 @@ set( ${PROJECT_NAME}_MINOR_VERSION 1 )
 
 # ---- Compiler settings for different builds
 
+# Include root directory
+include_directories(".")
+
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message("-- Setting flags for gnu/g++ compiler")
 	# Using GNU compiler
@@ -160,9 +163,9 @@ set(MCFILES Common/Common.cpp
             Parser/XMLParser/XmlParserSource.cpp                                        
             )
             
-add_library(mc++ ${MCFILES})
+add_library(helios ${MCFILES})
 
-target_link_libraries (mc++ ${BLITZ_LIBRARY} ${TRNG_LIBRARY})
+target_link_libraries (helios ${BLITZ_LIBRARY} ${TRNG_LIBRARY})
 
 # ---- Unit Test
 
@@ -172,7 +175,7 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 add_executable(testmc++ DevUtils/Utils.cpp DevUtils/Testing/Main.cpp)
                
-target_link_libraries(testmc++ mc++ ${Blitz_LIBRARY} ${TRNG_LIBRARY} gtest gtest_main)
+target_link_libraries(testmc++ helios ${Blitz_LIBRARY} ${TRNG_LIBRARY} gtest gtest_main)
 set(cxx_use_own_tuple "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
 set_target_properties (testmc++ PROPERTIES COMPILE_FLAGS ${cxx_use_own_tuple})
 
@@ -191,13 +194,13 @@ add_executable(plottermc++ ${PNGWRITER}
                            DevUtils/PngPlotter/PngPlotter.cpp
                            )
 
-target_link_libraries(plottermc++ mc++ ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Blitz_LIBRARY} ${PNG_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
+target_link_libraries(plottermc++ helios ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Blitz_LIBRARY} ${PNG_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
 
 # ---- Helios
 
 add_executable(helios++ Main.cpp)
                
-target_link_libraries(helios++ mc++ ${Blitz_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
+target_link_libraries(helios++ helios ${Blitz_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
 
 # ---- Instal stuff
 
