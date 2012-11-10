@@ -102,6 +102,9 @@ namespace Ace {
 		/* Clone data inside this block */
 		std::vector<NuData*> clone() const;
 
+		/* Get pointers to the NU data */
+		const std::vector<NuData*>& getNuData() const {return nu_data;};
+
 		virtual ~NUBlock();
 
 	private:

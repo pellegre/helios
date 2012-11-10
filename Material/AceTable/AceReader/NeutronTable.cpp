@@ -267,7 +267,7 @@ NeutronTable::NeutronTable(const std::string& _table_name, const std::string& fu
 					/* Fission */
 					TyrDistribution tyr_distribution(tyr);
 					NUBlock* nu_block = getBlock<NUBlock>();
-					tyr_distribution.setFission(nu_block->clone());
+					tyr_distribution.setFission(nu_block->getNuData());
 					reactions.push_back(NeutronReaction(mt,q,tyr_distribution,nr_block->sig_block.xs[i],
 							and_block->and_dist[i+1],dlw_block->energy_dist[i]));
 				} else

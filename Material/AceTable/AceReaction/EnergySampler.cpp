@@ -70,6 +70,7 @@ EnergyLaw4::~EnergyLaw4() {
 		delete tables[i];
 	}
 }
+
 }
 
 

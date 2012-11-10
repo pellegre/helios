@@ -79,7 +79,7 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 
 	/* Get elastic scattering */
 	Reaction* elastic = environment->getObject<AceModule,AceIsotope>(name)[0]->getReaction(18);
-	size_t nsamples = 10000000;
+	size_t nsamples = 10;
 	double accum_nu = 0.0;
 	for(size_t i = 0 ; i < nsamples ; ++i) {
 
