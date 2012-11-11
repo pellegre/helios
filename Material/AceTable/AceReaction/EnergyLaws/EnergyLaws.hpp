@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ENERGYLAWS_HPP_
 #define ENERGYLAWS_HPP_
 
+#include "EnergyLaw3.hpp"
 #include "EnergyLaw4.hpp"
+#include "EnergyLaw44.hpp"
 
 #endif /* ENERGYLAWS_HPP_ */

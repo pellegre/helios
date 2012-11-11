@@ -102,7 +102,7 @@ double MasterGrid::interpolate(pair<size_t,double>& pair_value) const {
 	double high_energy = master_grid[pair_value.first + 1];
 
 	/* Check if the index is in the right place */
-	if(energy >= low_energy && energy < high_energy) {
+	if(energy >= low_energy && energy <= high_energy) {
 		/* Don't touch the index and return the factor */
 		return (energy - low_energy) / (high_energy - low_energy);
 	} else {
@@ -147,7 +147,7 @@ void MasterGrid::setIndex(std::pair<size_t,double>& pair_value) const {
 	double high_energy = master_grid[pair_value.first + 1];
 
 	/* Check if the index is in the right place */
-	if(not (energy >= low_energy && energy < high_energy)) {
+	if(not (energy >= low_energy && energy <= high_energy)) {
 		/* Search boundaries */
 		vector<double>::const_iterator begin = master_grid.begin();
 		vector<double>::const_iterator end = master_grid.end();

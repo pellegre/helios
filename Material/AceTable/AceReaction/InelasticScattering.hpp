@@ -105,11 +105,11 @@ namespace AceReaction {
 			 GenericReaction(isotope, ace_reaction), FramePolicy(isotope->getAwr()), NuPolicy(ace_reaction.getTyr()) {/* */};
 
 		void operator()(Particle& particle, Random& random) const {
-			/* Sample number of outgoing particle  */
-			double nu = NuPolicy::getNu(particle.erg().second, random);
-
-			/* Just multiply the particle weight */
-			particle.wgt() *= (double)nu;
+//			/* Sample number of outgoing particle  */
+//			double nu = NuPolicy::getNu(particle.erg().second, random);
+//
+//			/* Just multiply the particle weight */
+//			particle.wgt() *= nu;
 
 			/* Sample new scattering cosine */
 			double mu;

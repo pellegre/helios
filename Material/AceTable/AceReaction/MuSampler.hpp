@@ -158,7 +158,10 @@ namespace AceReaction {
 			/* Sample cosine table */
 			CosineTable* cosine_table = TableSampler<CosineTable*>::sample(energy, random);
 			/* Once we got the table, sample the scattering cosine */
-			mu = (*cosine_table)(random);
+			mu = (*cosine_table)(random);\
+			/* Make adjustment (sometimes numerics is a bitch) */
+			if (mu > 1.0) mu = 1.0;
+			else if (mu < -1.0)mu = -1.0;
 		}
 
 		void print(std::ostream& out) const;

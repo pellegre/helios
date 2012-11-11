@@ -31,6 +31,7 @@
 #include "AceReader/ReactionContainer.hpp"
 #include "../../Environment/McModule.hpp"
 #include "../../Common/Common.hpp"
+#include "../../Common/FactorSampler.hpp"
 #include "../Grid/MasterGrid.hpp"
 #include "../Isotope.hpp"
 
@@ -59,6 +60,15 @@ namespace Helios {
 
 		void print(std::ostream& out) const;
 
+		/*
+		 * Fission reaction. As always, this reaction is treated separately. Pointer
+		 * is NULL for non-fissiles isotopes.
+		 */
+		Reaction* fission_reaction;
+
+		/* Secondary particle reaction sampler (using an interpolation factor) */
+		FactorSampler<Reaction*>* secondary_sampler;
+
 	public:
 
 		/* Threshold values */
@@ -83,10 +93,17 @@ namespace Helios {
 		double getTotalXs(Energy& energy) const;
 
 		/* Fission reaction */
-		void fission(Particle& particle, Random& random) const {/* */};
+		void fission(Particle& particle, Random& random) const {
+			(*fission_reaction)(particle, random);
+		};
 
-		/* Just one scattering reaction (from the scattering matrix) */
-		void scatter(Particle& particle, Random& random) const {/* */};
+		/* Scattering (we should sample the reaction) */
+		void scatter(Particle& particle, Random& random) const {
+			double factor;
+			size_t idx = child_grid->index(particle.erg(), factor);
+			Reaction* reaction = secondary_sampler->sample(idx, random.uniform(), factor);
+			(*reaction)(particle, random);
+		};
 
 		/*
 		 * Get reaction from an MT number (thrown an exception if the reaction number does not exist)
@@ -94,7 +111,7 @@ namespace Helios {
 		 */
 		Reaction* getReaction(int mt) const;
 
-		~AceIsotope() {/* */};
+		~AceIsotope();
 	};
 
 	class AceModule: public Helios::McModule {

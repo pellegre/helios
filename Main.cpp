@@ -24,7 +24,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -72,18 +71,16 @@ int main(int argc, char **argv) {
 	/* Setup the problem */
 	environment.setup();
 
-	environment.getModule<Materials>()->printMaterials(cout);
-
 	/* Initialization - Random number */
 	Random r;
 	r.seed(1);
 
 	/* Initialization - KEFF cycle */
-	double keff = 1.186;
+	double keff = 1.000;
 	double ave_keff = 0.0;
 	int neutrons = 10000;
 	int skip = 50;
-	int cycles = 250;
+	int cycles = 1050;
 
 	/* Initialize simulation */
 	OpenMp::KeffSimulation simulation(r,&environment,keff,neutrons);

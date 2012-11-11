@@ -38,17 +38,19 @@ namespace Helios {
 namespace AceReaction {
 
 	/* Common classes / templates for ACE reactions */
-	class TabularDistribution {
+
+	struct TabularDistribution {
+
 		int iflag;                 /* 1 = histogram, 2 = lin-lin */
-		std::vector<double> csout; /* Cosine scattering angular grid */
+		std::vector<double> out;   /* Outgoing values grid */
 		std::vector<double> pdf;   /* Probability density function */
 		std::vector<double> cdf;   /* Cumulative density function */
-	public:
-		TabularDistribution(int iflag, const std::vector<double>& csout, const std::vector<double>& pdf, const std::vector<double>& cdf) :
-			 iflag(iflag) ,csout(csout),pdf(pdf), cdf(cdf)
+
+		TabularDistribution(int iflag, const std::vector<double>& out, const std::vector<double>& pdf, const std::vector<double>& cdf) :
+			 iflag(iflag) ,out(out),pdf(pdf), cdf(cdf)
 		{
 			/* Sanity check */
-			assert(csout.size() == pdf.size());
+			assert(out.size() == pdf.size());
 			assert(cdf.size() == pdf.size());
 		}
 
@@ -57,35 +59,49 @@ namespace AceReaction {
 			double chi = random.uniform();
 			/* Sample the bin on the cumulative */
 			size_t idx = std::upper_bound(cdf.begin(), cdf.end(), chi) - cdf.begin() - 1;
+			/* Return outgoing value */
+			return getOutgoing(chi, idx);
+		}
 
+		double operator()(Random& random, size_t& idx) const {
+			/* Get random number */
+			double chi = random.uniform();
+			/* Sample the bin on the cumulative */
+			idx = std::upper_bound(cdf.begin(), cdf.end(), chi) - cdf.begin() - 1;
+			/* Return outgoing value */
+			return getOutgoing(chi, idx);
+		}
+
+		void print(std::ostream& sout) const {
+			sout << setw(15) << "out" << setw(15) << "pdf" << setw(15) << "cdf" << endl;
+			for(size_t i = 0 ; i < out.size() ; ++i)
+				sout << scientific << setw(15) << out[i] << setw(15) << pdf[i] << setw(15) << cdf[i] << endl;
+		}
+
+		virtual ~TabularDistribution() {/* */}
+
+	private:
+		/* Return outgoing value */
+		double getOutgoing(double chi, size_t idx) const {
 			/* Histogram interpolation */
 			if(iflag == 1) {
 				/* Return cosine */
-				return csout[idx] + (chi - cdf[idx]) / pdf[idx];
+				return out[idx] + (chi - cdf[idx]) / pdf[idx];
 			/* Linear-Linear interpolation */
 			} else if(iflag == 2) {
 				/* Auxiliary variables */
-				double g = (pdf[idx + 1] - pdf[idx]) / (csout[idx + 1] - csout[idx]);
+				double g = (pdf[idx + 1] - pdf[idx]) / (out[idx + 1] - out[idx]);
 				double h = sqrt(pdf[idx] * pdf[idx] + 2*g*(chi - cdf[idx]));
 				/* Solve for cosine */
 				if(g == 0.0)
 					/* Just like the histogram distribution */
-					return csout[idx] + (chi - cdf[idx]) / pdf[idx];
+					return out[idx] + (chi - cdf[idx]) / pdf[idx];
 				else
 					/* Interpolation */
-					return csout[idx] + (1/g) * (h - pdf[idx]);
+					return out[idx] + (1/g) * (h - pdf[idx]);
 			}
-
 			return 0.0;
 		}
-
-		void print(std::ostream& out) const {
-			out << setw(15) << "out" << setw(15) << "pdf" << setw(15) << "cdf" << endl;
-			for(size_t i = 0 ; i < csout.size() ; ++i)
-				out << scientific << setw(15) << csout[i] << setw(15) << pdf[i] << setw(15) << cdf[i] << endl;
-		}
-
-		virtual ~TabularDistribution() {/* */}
 	};
 
 	/*
@@ -94,6 +110,17 @@ namespace AceReaction {
 	 */
 	template<class TableType>
 	class TableSampler {
+		/* Make the interpolation using the data on the pair*/
+		TableType getTable(double energy, Random& random, const std::pair<size_t,double>& res) const {
+			/* Index */
+			size_t idx = res.first;
+			/* Interpolation factor */
+			double factor = res.second;
+			/* Sample bin and return the table */
+			double chi = random.uniform();
+			if(chi < factor) return tables[idx + 1];
+			return tables[idx];
+		}
 	protected:
 		/* A table contains an energy grid... */
 		std::vector<double> energies;
@@ -105,14 +132,15 @@ namespace AceReaction {
 		TableType sample(double energy, Random& random) const {
 			/* Get interpolation data */
 			std::pair<size_t,double> res = interpolate(energies.begin(), energies.end(), energy);
-			/* Index */
-			size_t idx = res.first;
-			/* Interpolation factor */
-			double factor = res.second;
-			/* Sample bin and return the table */
-			double chi = random.uniform();
-			if(chi < factor) return tables[idx + 1];
-			return tables[idx];
+			/* Get table */
+			return getTable(energy, random, res);
+		}
+		/* Sample table and set interpolation data */
+		TableType sample(double energy, Random& random, std::pair<size_t,double>& res) const {
+			/* Get interpolation data */
+			res = interpolate(energies.begin(), energies.end(), energy);
+			/* Get table */
+			return getTable(energy, random, res);
 		}
 		/* Get a pair energy/table for some index */
 		std::pair<double, TableType> operator[](size_t idx) const {

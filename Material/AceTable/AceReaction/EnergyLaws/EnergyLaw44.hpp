@@ -25,26 +25,45 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ENERGYLAW4_HPP_
-#define ENERGYLAW4_HPP_
+#ifndef ENERGYLAW44_HPP_
+#define ENERGYLAW44_HPP_
 
 #include "AceEnergyLaw.hpp"
 
 namespace Helios {
 namespace AceReaction {
 
-	/* ---------- Continuous tabular distribution (law 4) ---------- */
+	/* ---------- Kalbach-87 Formalism (law 44) ---------- */
 
 	/* Sample outgoing energy using a tabular distribution */
-	class EnergyTabular : public TabularDistribution /* defined on AceReactionCommon.hpp */ {
+	class KalbachTabular : public TabularDistribution /* defined on AceReactionCommon.hpp */ {
+		/* Precompound fraction */
+		std::vector<double> r;
+		/* Angular distribution slope */
+		std::vector<double> a;
 	public:
 
-		EnergyTabular(const Ace::EnergyDistribution::Law4::EnergyData& ace_energy) :
-			TabularDistribution(ace_energy.intt, ace_energy.eout, ace_energy.pdf, ace_energy.cdf)
+		KalbachTabular(const Ace::EnergyDistribution::Law44::EnergyData& ace_energy) :
+			TabularDistribution(ace_energy.intt, ace_energy.eout, ace_energy.pdf, ace_energy.cdf),
+			r(ace_energy.r), a(ace_energy.a)
 		{/* */}
 
-		double operator()(Random& random) const {
-			return TabularDistribution::operator()(random);
+		void operator()(Random& random, double& energy, double& mu) const {
+			/* Index on the outgoing grid */
+			size_t idx;
+			/* Set energy */
+			energy = TabularDistribution::operator()(random, idx);
+			/* Calculate Kalbach parameters */
+			double rk, ak;
+			/* Histogram interpolation */
+			if(iflag == 1) {
+				rk = r[idx];
+				ak = a[idx];
+			/* Linear-Linear interpolation */
+			} else if(iflag == 2) {
+				rk = r[idx] + (r[idx + 1] - r[idx]) * (energy - out[idx]) * (out[idx + 1] - out[idx]);
+				ak = a[idx] + (a[idx + 1] - a[idx]) * (energy - out[idx]) * (out[idx + 1] - out[idx]);
+			}
 		}
 
 		void print(std::ostream& out) const {
@@ -52,13 +71,13 @@ namespace AceReaction {
 			TabularDistribution::print(out);
 		}
 
-		~EnergyTabular() {/* */}
+		~KalbachTabular() {/* */}
 	};
 
-	class EnergyLaw4 : public AceEnergyLaw, public TableSampler<EnergyTabular*> {
-		typedef Ace::EnergyDistribution::Law4 Law4;
+	class EnergyLaw44 : public AceEnergyLaw, public TableSampler<KalbachTabular*> {
+		typedef Ace::EnergyDistribution::Law44 Law44;
 	public:
-		EnergyLaw4(const Law* ace_data);
+		EnergyLaw44(const Law* ace_data);
 
 		/* Sample scattering outgoing energy */
 		void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const {
@@ -67,9 +86,9 @@ namespace AceReaction {
 			/* Interpolation data */
 			std::pair<size_t,double> inter;
 			/* Sample cosine table */
-			EnergyTabular* energy_table = TableSampler<EnergyTabular*>::sample(initial_energy, random, inter);
+			KalbachTabular* energy_table = TableSampler<KalbachTabular*>::sample(initial_energy, random, inter);
 			/* Once we got the table, sample the new energy */
-			energy = (*energy_table)(random);
+			(*energy_table)(random, energy, mu);
 
 			/* -- Scaled interpolation */
 
@@ -92,9 +111,9 @@ namespace AceReaction {
 
 		void print(std::ostream& out) const;
 
-		~EnergyLaw4();
+		~EnergyLaw44();
 	};
 
 } /* namespace AceReaction */
 } /* namespace Helios */
-#endif /* ENERGYLAW4_HPP_ */
+#endif /* ENERGYLAW44_HPP_ */

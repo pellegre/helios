@@ -39,10 +39,19 @@ EnergySamplerBase* EnergySamplerFactory::createSampler(const Ace::EnergyDistribu
 	/* Get law */
 	int law = ace_data.laws[0]->getLaw();
 
-	if(law == 4) {
+	if(law == 3) {
+		/* Level Scattering */
+		return new EnergySampler<EnergyLaw3>(ace_data.laws[0]);
+	}
+	else if(law == 4) {
 		/* Continuous Tabular Distribution */
 		return new EnergySampler<EnergyLaw4>(ace_data.laws[0]);
 	}
+	else if(law == 44) {
+		/* Continuous Tabular Distribution */
+		return new EnergySampler<EnergyLaw44>(ace_data.laws[0]);
+	}
+
 	/* No law */
 	throw(EnergySamplerBase::BadEnergySamplerCreation("Energy law " + toString(law) + " is not supported"));
 }

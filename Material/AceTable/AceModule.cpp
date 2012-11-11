@@ -39,7 +39,8 @@ double AceIsotope::energy_freegas_threshold = 400.0; /* By default, 400.0 kT*/
 double AceIsotope::awr_freegas_threshold = 1.0;      /* By default, only H */
 
 AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid* _child_grid) : Isotope(_reactions.name()),
-	reactions(_reactions), aweight(_reactions.awr()), temperature(_reactions.temp()), child_grid(_child_grid) {
+	reactions(_reactions), aweight(_reactions.awr()), temperature(_reactions.temp()), child_grid(_child_grid),
+	fission_reaction(0), secondary_sampler(0) {
 
 	/* Total microscopic cross section of this isotope */
 	total_xs = reactions.get_xs(1);
@@ -55,6 +56,8 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 		fission_xs = reactions.get_xs(18);
 		/* Check size */
 		assert(fission_xs.size() == total_xs.size());
+		/* Set fission cross section */
+		fission_reaction = getReaction(18);
 	}
 
 	/* Set the absorption cross section */
@@ -64,6 +67,42 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 		assert(absorption_xs.size() == total_xs.size());
 	else
 		absorption_xs = CrossSection(total_xs.size());
+
+	/* Array for the secondary particle reaction sampler */
+	vector<Reaction*> reaction_array;
+	/* Arrays of XS of each reaction */
+	vector<vector<double> > xs_array;
+
+	/* Loop over the scattering reactions (skipping fission) */
+	for(Ace::ReactionContainer::const_iterator it = reactions.begin() ; it != reactions.end() ; ++it) {
+		/* Get angular distribution type */
+		int angular_data = (*it).getAngular().getKind();
+
+		/* If the reaction does not contains angular data, we reach the end */
+		if(angular_data == Ace::AngularDistribution::no_data) break;
+
+		/* Get MT of the reaction */
+		int mt = (*it).getMt();
+
+		/* Check fission reaction */
+		if(mt != 18) {
+				/* Create reaction */
+				reaction_array.push_back(getReaction(mt));
+				/* Get cross section data */
+				vector<double> xs_data(child_grid->size(),0.0);
+				Ace::CrossSection xs = (*it).getXs();
+				/* Fill container */
+				for(size_t i = 0 ; i < xs_data.size() ; ++i)
+					xs_data[i] = xs[i];
+				/* Push it into the global array */
+				xs_array.push_back(xs_data);
+				cout << mt << " ";
+		}
+	}
+	cout << endl;
+
+	/* Create the sampler */
+	secondary_sampler = new FactorSampler<Reaction*>(reaction_array, xs_array);
 }
 
 double AceIsotope::getAbsorptionProb(Energy& energy) const {
@@ -112,6 +151,13 @@ void AceIsotope::print(std::ostream& out) const {
 	out << "isotope = " <<  setw(9) << reactions.name()
 		<< " ; awr = " << setw(9) << aweight << " ; temperature = " << temperature / Constant::boltz << " K ";
 }
+
+AceIsotope::~AceIsotope() {
+	/* Delete fission reaction */
+	delete fission_reaction;
+	/* Delete sampler */
+	delete secondary_sampler;
+};
 
 AceModule::AceModule(const std::vector<McObject*>& aceObjects, const McEnvironment* environment) : McModule(name(),environment) {
 	/* Create master grid */

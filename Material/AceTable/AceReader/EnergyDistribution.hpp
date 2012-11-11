@@ -176,10 +176,10 @@ public:
 
         Law3(std::vector<double>::const_iterator it, int lnw);
 
+    public:
+
         double ldat1;
         double ldat2;
-
-    public:
 
         Law3(int lnw,int idat,int nr,const std::vector<int>& nbt,const std::vector<int>&aint,int ne,const std::vector<double>& energy,const std::vector<double>& prob)
                 : EnergyLaw(lnw,idat,nr,nbt,aint,ne,energy,prob) {/* */};
@@ -444,6 +444,8 @@ public:
 
         Law44(std::vector<double>::const_iterator it, int lnw);
 
+    public:
+
         struct EnergyData {
         	int intt;
         	int np;
@@ -460,8 +462,6 @@ public:
         std::vector<double> ein;
         std::vector<int> loca;
         std::vector<EnergyData> eout_dist;
-
-    public:
 
         Law44(int lnw,int idat,int nr,const std::vector<int>& nbt,const std::vector<int>&aint,int ne,const std::vector<double>& energy,const std::vector<double>& prob)
                 : EnergyLaw(lnw,idat,nr,nbt,aint,ne,energy,prob) {/* */};

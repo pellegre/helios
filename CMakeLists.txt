@@ -130,7 +130,8 @@ set(MCFILES Common/Common.cpp
             Material/AceTable/AceReaction/FissionReaction.cpp 
             Material/AceTable/AceReaction/EnergySampler.cpp
             Material/AceTable/AceReaction/EnergyLaws/AceEnergyLaw.cpp                                                                
-            Material/AceTable/AceReaction/EnergyLaws/EnergyLaw4.cpp                                                                            
+            Material/AceTable/AceReaction/EnergyLaws/EnergyLaw4.cpp
+            Material/AceTable/AceReaction/EnergyLaws/EnergyLaw44.cpp                                                                                        
 			Material/AceTable/AceReader/ACETable.cpp
 			Material/AceTable/AceReader/ACEReader.cpp
 			Material/AceTable/AceReader/CrossSection.cpp
