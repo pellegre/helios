@@ -59,12 +59,23 @@ namespace AceReaction {
 		virtual ~NuSampler() {/* */}
 	};
 
+	/* One outgoing particle */
+	class OneNu : public NuSampler {
+	public:
+		OneNu(const Ace::TyrDistribution& tyr) {/* */}
+		double getNu(double energy, Random& random) const {return 1;}
+		void print(std::ostream& out) const {
+			out << " * No NU (one outgoing particle)" << endl;
+		}
+		~OneNu() {/* */}
+	};
+
 	/* Fixed NU (No dependency with particle's energy) */
 	class FixedNu : public NuSampler {
 		double number;
 	public:
 		FixedNu(const Ace::TyrDistribution& tyr) : number(tyr.getTyr()) {/* */}
-		double getNu(double energy) const {return number;}
+		double getNu(double energy, Random& random) const {return number;}
 		void print(std::ostream& out) const {
 			out << " * Fixed NU = " << number << endl;
 		}

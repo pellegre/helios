@@ -34,6 +34,27 @@ namespace Helios {
 
 using namespace AceReaction;
 
+/* Get inelastic in CM or LAB frame */
+template<class Frame>
+static Reaction* getInelastic(int tyr_type, int tyr_number, const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) {
+	/* Reaction on CM frame */
+	if(tyr_type == Ace::TyrDistribution::distribution)
+		/* Tabular form of number of outgoing particle */
+		return new InelasticScattering<Frame,TabularNu>(isotope, ace_reaction);
+	else {
+		/* Fixed number of outgoing particles */
+		if(tyr_number == 1)
+			/* Just one particle */
+			return new InelasticScattering<Frame,OneNu>(isotope, ace_reaction);
+		else
+			/* More than one particle */
+			return new InelasticScattering<Frame,FixedNu>(isotope, ace_reaction);
+	}
+	throw(AceModule::AceError(isotope->getUserId(),
+			"TYR number = " + toString(tyr_number) + " on reaction with mt = " + toString(ace_reaction.getMt()) +
+			" is not supported"));
+}
+
 Reaction* AceReactionFactory::createReaction(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) const {
 	typedef Ace::AngularDistribution AceAngular;
 	/* Get MT of the reaction to handle known cases */
@@ -54,15 +75,34 @@ Reaction* AceReactionFactory::createReaction(const AceIsotope* isotope, const Ac
 			/* Isotropic sampling */
 			return new ElasticScattering<MuIsotropic>(isotope, ace_reaction);
 
-	} else if(mt == 18) {
-		/* Fission reaction */
+	} else if(((mt > 17) && (mt < 22)) || mt == 38) {
+		/* Fission reaction is treated separately */
 		return new Fission(isotope, ace_reaction);
 	}
 
-	throw(AceModule::AceError(isotope->getUserId(), "Reaction with mt = " + toString(mt) + " is not supported"));
+	/*
+	 * Deal with the reaction as a generic inelastic scattering functor. We should peek
+	 * over the TYR distribution to check whether the reaction is on CM frame or LAB
+	 * frame. Also, we should check if there is a distribution over the number of outgoing
+	 * particles.
+	 */
+	const Ace::TyrDistribution& tyr_distribution = ace_reaction.getTyr();
+	/* TYR number, if is not a distribution is the number of outgoing particles */
+	int tyr_number = tyr_distribution.getTyr();
+	/* Type (CM or LAB frame) */
+	int tyr_type = tyr_distribution.getType();
 
-	/* Generic inelastic reaction */
-	return new InelasticScattering(isotope, ace_reaction);
+	if(tyr_number < 0) {
+		/* Reaction on CM frame */
+		return getInelastic<CenterOfMass>(tyr_type, tyr_number, isotope, ace_reaction);
+	} else if (tyr_number > 0) {
+		/* Reaction on LAB frame */
+		return getInelastic<Laboratory>(tyr_type, tyr_number, isotope, ace_reaction);
+	} else {
+		throw(AceModule::AceError(isotope->getUserId(),
+				"Reaction with mt = " + toString(mt) + " doesn't produce secondary particles"));
+	}
+
 }
 
 }

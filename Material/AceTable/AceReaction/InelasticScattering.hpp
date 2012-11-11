@@ -90,17 +90,45 @@ namespace AceReaction {
 	};
 
 	/*
-	 * Inelastic scattering
+	 * Inelastic scattering.
+	 *
+	 * This class uses policies to convert energies and scattering cosines from CM to LAB and
+	 * to sample the number of outgoing neutrons on the reaction (that could be a fixed number
+	 * in (n,xn) reactions) or just a multiplication for 1 in case of level scattering (of course,
+	 * that would be optimized by the compiler when the template-functor is generated)
 	 */
-	class InelasticScattering : public GenericReaction {
 
+	template<class FramePolicy, class NuPolicy>
+	class InelasticScattering : public GenericReaction, public FramePolicy, public NuPolicy {
 	public:
 		InelasticScattering(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
-			GenericReaction(isotope, ace_reaction) {/* */};
+			 GenericReaction(isotope, ace_reaction), FramePolicy(isotope->getAwr()), NuPolicy(ace_reaction.getTyr()) {/* */};
 
-		void operator()(Particle& particle, Random& random) const {/* */}
+		void operator()(Particle& particle, Random& random) const {
+			/* Sample number of outgoing particle  */
+			double nu = NuPolicy::getNu(particle.erg().second, random);
 
-		virtual ~InelasticScattering() {/* */};
+			/* Just multiply the particle weight */
+			particle.wgt() *= (double)nu;
+
+			/* Sample new scattering cosine */
+			double mu;
+			sampleCosine(particle, random, mu);
+			/* Sample new energy */
+			double energy;
+			sampleEnergy(particle, random, energy, mu);
+
+			/* Make the transformation (LAB-LAB or CM-LAB) */
+			FramePolicy::transform(particle, energy, mu);
+
+			/* Set new direction */
+			azimutalRotation(mu, particle.dir(), random);
+
+			/* Set new energy */
+			particle.erg().second = energy;
+		}
+
+		~InelasticScattering() {/* */};
 	};
 }
 

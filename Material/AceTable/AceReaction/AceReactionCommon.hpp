@@ -124,6 +124,41 @@ namespace AceReaction {
 		}
 		virtual ~TableSampler() {/* */}
 	};
+
+	/*
+	 * Policies to make the change from LAB-LAB and CM-LAB reference systems
+	 */
+
+	/* Make the change from CM to LAB system */
+	class CenterOfMass {
+		/* Atomic weight ratio */
+		double awr;
+	public:
+		CenterOfMass(double awr) : awr(awr) {/* */}
+		/* Make the transformation from CM to LAB system */
+		void transform(const Particle& particle, double& energy, double& mu) const {
+			/* Outgoing energy on the CM system */
+			double ecm = energy;
+			/* Incident particle energy on LAB system */
+			double ein = particle.getEnergy().second;
+			/* Factor */
+			double ac = awr + 1.0;
+			/* Energy from CM to LAB frame (using MU sampled on CM frame) */
+			energy = ecm + (ein + 2.0 * mu*ac*sqrt(ein*ecm))/(ac*ac);
+			/* Cosine from CM to LAB frame (using energy on LAB frame) */
+			mu = mu * sqrt(ecm/energy) + sqrt(ein/energy)/ac;
+		}
+		~CenterOfMass(){/* */}
+	};
+
+	/* The sampling was on LAB frame, nothing should be done */
+	class Laboratory {
+	public:
+		Laboratory(double awr) {/* */}
+		void transform(const Particle& particle, double& energy, double& mu) const {/* */}
+		~Laboratory(){/* */}
+	};
+
 }
 
 }
