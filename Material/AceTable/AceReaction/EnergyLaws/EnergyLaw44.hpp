@@ -60,9 +60,21 @@ namespace AceReaction {
 				rk = r[idx];
 				ak = a[idx];
 			/* Linear-Linear interpolation */
-			} else if(iflag == 2) {
+			} else {
 				rk = r[idx] + (r[idx + 1] - r[idx]) * (energy - out[idx]) * (out[idx + 1] - out[idx]);
 				ak = a[idx] + (a[idx + 1] - a[idx]) * (energy - out[idx]) * (out[idx + 1] - out[idx]);
+			}
+			/* Random numbers */
+			double chi = random.uniform();
+			double rho = random.uniform();
+			/* Sample scattering cosine */
+			if(chi > rk) {
+				/* Auxiliar factor */
+				double t = (2 * rho - 1) * sinh(ak);
+				/* Calculate MU */
+				mu = log(t + sqrt(t*t + 1.0))/ak;
+			} else {
+				mu = log(rho*exp(ak) + (1.0 - rho)*exp(-ak))/ak;
 			}
 		}
 
@@ -98,10 +110,12 @@ namespace AceReaction {
 			/* Minimum energy */
 			double emin = tables[idx]->out[0] + factor * (tables[idx + 1]->out[0] - tables[idx]->out[0]);
 			/* Maximum energy */
-			size_t last = tables[idx]->out.size() - 1;
-			double emax = tables[idx]->out[last] + factor * (tables[idx + 1]->out[last] - tables[idx]->out[last]);
+			size_t last1 = tables[idx]->out.size() - 1;
+			size_t last2 = tables[idx + 1]->out.size() - 1;
+			double emax = tables[idx]->out[last1] + factor * (tables[idx + 1]->out[last2] - tables[idx]->out[last1]);
 
 			/* Get bounds on the sampled table */
+			size_t last = energy_table->out.size() - 1;
 			double eo = energy_table->out[0];
 			double ek = energy_table->out[last];
 

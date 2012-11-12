@@ -98,12 +98,7 @@ namespace Helios {
 		};
 
 		/* Scattering (we should sample the reaction) */
-		void scatter(Particle& particle, Random& random) const {
-			double factor;
-			size_t idx = child_grid->index(particle.erg(), factor);
-			Reaction* reaction = secondary_sampler->sample(idx, random.uniform(), factor);
-			(*reaction)(particle, random);
-		};
+		Reaction* scatter(Particle& particle, Random& random) const;
 
 		/*
 		 * Get reaction from an MT number (thrown an exception if the reaction number does not exist)

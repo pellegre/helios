@@ -74,7 +74,7 @@ namespace AceReaction {
 	class FixedNu : public NuSampler {
 		double number;
 	public:
-		FixedNu(const Ace::TyrDistribution& tyr) : number(tyr.getTyr()) {/* */}
+		FixedNu(const Ace::TyrDistribution& tyr) : number(abs(tyr.getTyr())) {/* */}
 		double getNu(double energy, Random& random) const {return number;}
 		void print(std::ostream& out) const {
 			out << " * Fixed NU = " << number << endl;

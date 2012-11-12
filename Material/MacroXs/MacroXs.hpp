@@ -67,6 +67,7 @@ namespace Helios {
 				/* New group */
 				particle.erg().first = spectrum->sample(0,r.uniform());
 			};
+			void print(std::ostream& out) const {out << "Fission Macro XS reaction";};
 			~Fission();
 		};
 
@@ -86,6 +87,7 @@ namespace Helios {
 				/* New group */
 				particle.erg().first = spectrum->sample(particle.erg().first,r.uniform());
 			};
+			void print(std::ostream& out) const {out << "Scattering Macro XS reaction";};
 			~Scattering();
 		};
 
@@ -122,8 +124,8 @@ namespace Helios {
 		}
 
 		/* Just one scattering reaction (from the scattering matrix) */
-		void scatter(Particle& particle, Random& random) const {
-			(*scattering_reaction)(particle,random);
+		Reaction* scatter(Particle& particle, Random& random) const {
+			return scattering_reaction;
 		}
 
 		~MacroXsIsotope();

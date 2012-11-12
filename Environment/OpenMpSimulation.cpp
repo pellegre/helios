@@ -156,9 +156,12 @@ void KeffSimulation::launch() {
 					}
 					/* Kill the particle, this is an analog simulation */
 					break;
-				} else
+				} else {
 					/* Scatter with isotope */
-					isotope->scatter(particle,r);
+					Reaction* scattering = isotope->scatter(particle,r);
+					/* Apply the reaction */
+					(*scattering)(particle,r);
+				}
 			}
 		}
 

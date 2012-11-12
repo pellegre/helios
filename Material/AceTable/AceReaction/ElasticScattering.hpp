@@ -54,6 +54,8 @@ namespace AceReaction {
 		/* Change particle state */
 		void operator()(Particle& particle, Random& random) const;
 
+		void print(std::ostream& out) const;
+
 		virtual ~ElasticScattering() {/* */};
 	};
 
@@ -153,6 +155,14 @@ namespace AceReaction {
 		/* Set direction cosines */
 		particle.dir() = vp / velp;
 	}
+
+	template<class MuSampling>
+	void ElasticScattering<MuSampling>::print(std::ostream& out) const {
+		out << " Elastic ACE reaction" << endl;
+		out << "  - awr = " << awr << endl;
+		out << "  - tmp = " << temperature << endl;
+	};
+
 }
 
 } /* namespace Helios */

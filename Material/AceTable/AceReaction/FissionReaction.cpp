@@ -54,7 +54,7 @@ Fission::Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reac
 	vector<Ace::NUBlock::NuData*> nu_data = tyr.getFission();
 
 	/* TODO - For now just prompt particles */
-	prompt_nu = buildNuSampler(nu_data[0]);
+	prompt_nu = buildNuSampler(nu_data[1]);
 }
 
 void Fission::print(std::ostream& out) const {

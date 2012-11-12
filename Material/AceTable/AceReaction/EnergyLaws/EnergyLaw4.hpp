@@ -79,10 +79,12 @@ namespace AceReaction {
 			/* Minimum energy */
 			double emin = tables[idx]->out[0] + factor * (tables[idx + 1]->out[0] - tables[idx]->out[0]);
 			/* Maximum energy */
-			size_t last = tables[idx]->out.size() - 1;
-			double emax = tables[idx]->out[last] + factor * (tables[idx + 1]->out[last] - tables[idx]->out[last]);
+			size_t last1 = tables[idx]->out.size() - 1;
+			size_t last2 = tables[idx + 1]->out.size() - 1;
+			double emax = tables[idx]->out[last1] + factor * (tables[idx + 1]->out[last2] - tables[idx]->out[last1]);
 
 			/* Get bounds on the sampled table */
+			size_t last = energy_table->out.size() - 1;
 			double eo = energy_table->out[0];
 			double ek = energy_table->out[last];
 

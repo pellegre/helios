@@ -128,6 +128,12 @@ double AceIsotope::getTotalXs(Energy& energy) const {
 	return total;
 }
 
+Reaction* AceIsotope::scatter(Particle& particle, Random& random) const {
+	double factor;
+	size_t idx = child_grid->index(particle.erg(), factor);
+	return secondary_sampler->sample(idx, random.uniform(), factor);
+};
+
 Reaction* AceIsotope::getReaction(int mt) const {
 	/* Static instance of the reaction factory */
 	static AceReaction::AceReactionFactory reaction_factory;

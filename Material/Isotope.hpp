@@ -41,7 +41,7 @@ namespace Helios {
 		/* Sample reaction */
 		virtual void operator() (Particle& particle, Random& r) const = 0;
 		/* Print information about the reaction (by default it does nothing) */
-		virtual void print(std::ostream& out) const {/* */}
+		virtual void print(std::ostream& out) const = 0;
 		virtual ~Reaction() {/* */}
 	};
 
@@ -96,11 +96,10 @@ namespace Helios {
 		/*
 		 * -- Scatter
 		 *
-		 * This method should change the particle's phase space coordinates
-		 * according to a secondary angle distributions and/or a secondary energy
-		 * distribution.
+		 * This method should return a rection that change the particle's phase space coordinates
+		 * according to a secondary angle distributions and/or a secondary energy distribution.
 		 */
-		virtual void scatter(Particle& particle, Random& random) const = 0;
+		virtual Reaction* scatter(Particle& particle, Random& random) const = 0;
 
 		/* Set internal / unique identifier for the isotope */
 		void setInternalId(const InternalMaterialId& internal) {internal_id = internal;}

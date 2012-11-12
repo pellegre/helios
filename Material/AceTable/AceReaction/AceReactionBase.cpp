@@ -43,7 +43,7 @@ static Reaction* getInelastic(int tyr_type, int tyr_number, const AceIsotope* is
 		return new InelasticScattering<Frame,TabularNu>(isotope, ace_reaction);
 	else {
 		/* Fixed number of outgoing particles */
-		if(tyr_number == 1)
+		if(abs(tyr_number) == 1)
 			/* Just one particle */
 			return new InelasticScattering<Frame,OneNu>(isotope, ace_reaction);
 		else
