@@ -53,8 +53,14 @@ Fission::Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reac
 	/* Get the NU data related to this fission reaction */
 	vector<Ace::NUBlock::NuData*> nu_data = tyr.getFission();
 
-	/* TODO - For now just prompt particles */
-	prompt_nu = buildNuSampler(nu_data[1]);
+	/* TODO - For now just sample particles with prompt spectrum */
+	if(nu_data.size() >= 2)
+		prompt_nu = buildNuSampler(nu_data[1]);
+	else if(nu_data.size() == 1)
+		prompt_nu = buildNuSampler(nu_data[0]);
+	else
+		throw(AceModule::AceError(isotope->getUserId(),
+			"Cannot create reaction for mt = " + toString(ace_reaction.getMt()) + " : Information in NU block is not available" ));
 }
 
 void Fission::print(std::ostream& out) const {
