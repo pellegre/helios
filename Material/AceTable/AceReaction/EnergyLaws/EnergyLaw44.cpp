@@ -31,28 +31,14 @@ namespace Helios {
 namespace AceReaction {
 
 /* Constructor */
-EnergyLaw44::EnergyLaw44(const Law* ace_data) : AceEnergyLaw(ace_data) {
+EnergyLaw44::EnergyLaw44(const Law* ace_data) : EnergyOutgoingTabular<KalbachTabular>(ace_data) {
 	const Law44* law_data = dynamic_cast<const Law44*>(ace_data);
-	energies = law_data->ein;
+	setEnergies(law_data->ein);
 	/* Sanity check */
-	assert(law_data->eout_dist.size() == energies.size());
+	assert(law_data->eout_dist.size() == law_data->ein.size());
 	/* Create the tables */
 	for(vector<Law44::EnergyData>::const_iterator it = law_data->eout_dist.begin() ; it != law_data->eout_dist.end() ; ++it)
-		tables.push_back(new KalbachTabular(*it));
-}
-
-void EnergyLaw44::print(std::ostream& out) const {
-	AceEnergyLaw::print(out);
-	for(size_t i = 0 ; i < tables.size() ; ++i) {
-		out << "energy = " << scientific << energies[i] << endl;
-		tables[i]->print(out);
-	}
-}
-
-EnergyLaw44::~EnergyLaw44() {
-	for(size_t i = 0 ; i < tables.size() ; ++i) {
-		delete tables[i];
-	}
+		pushTable(*it);
 }
 
 } /* namespace AceReaction */

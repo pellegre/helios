@@ -29,6 +29,7 @@
 #define ENERGYLAW44_HPP_
 
 #include "AceEnergyLaw.hpp"
+#include "EnergyTabular.hpp"
 
 namespace Helios {
 namespace AceReaction {
@@ -86,46 +87,10 @@ namespace AceReaction {
 		~KalbachTabular() {/* */}
 	};
 
-	class EnergyLaw44 : public AceEnergyLaw, public TableSampler<KalbachTabular*> {
+	class EnergyLaw44 : public EnergyOutgoingTabular<KalbachTabular> {
 		typedef Ace::EnergyDistribution::Law44 Law44;
 	public:
 		EnergyLaw44(const Law* ace_data);
-
-		/* Sample scattering outgoing energy */
-		void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const {
-			/* Get particle energy */
-			double initial_energy = particle.getEnergy().second;
-			/* Interpolation data */
-			std::pair<size_t,double> inter;
-			/* Sample cosine table */
-			KalbachTabular* energy_table = TableSampler<KalbachTabular*>::sample(initial_energy, random, inter);
-			/* Once we got the table, sample the new energy */
-			(*energy_table)(random, energy, mu);
-
-			/* -- Scaled interpolation */
-
-			size_t idx = inter.first;
-			double factor = inter.second;
-
-			/* Minimum energy */
-			double emin = tables[idx]->out[0] + factor * (tables[idx + 1]->out[0] - tables[idx]->out[0]);
-			/* Maximum energy */
-			size_t last1 = tables[idx]->out.size() - 1;
-			size_t last2 = tables[idx + 1]->out.size() - 1;
-			double emax = tables[idx]->out[last1] + factor * (tables[idx + 1]->out[last2] - tables[idx]->out[last1]);
-
-			/* Get bounds on the sampled table */
-			size_t last = energy_table->out.size() - 1;
-			double eo = energy_table->out[0];
-			double ek = energy_table->out[last];
-
-			/* Finally, scale the sampled energy */
-			energy = emin + ((energy - eo) * (emax - emin))/(ek - eo);
-		}
-
-		void print(std::ostream& out) const;
-
-		~EnergyLaw44();
 	};
 
 } /* namespace AceReaction */
