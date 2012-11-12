@@ -68,6 +68,8 @@ public:
 	}
 
 	friend const CrossSection operator+(const CrossSection& left, const CrossSection& right);
+	friend const CrossSection operator-(const CrossSection& left, const CrossSection& right);
+
 };
 
 } /* namespace ACE */

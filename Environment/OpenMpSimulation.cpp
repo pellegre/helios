@@ -148,7 +148,8 @@ void KeffSimulation::launch() {
 						double fission = isotope->getFissionProb(particle.erg());
 						if(prob > (absorption - fission)) {
 							/* We should bank the particle state after simulating the fission reaction */
-							isotope->fission(particle,r);
+							Reaction* fission_reaction = isotope->fission();
+							(*fission_reaction)(particle, r);
 							particle.sta() = Particle::BANK;
 							population += particle.wgt();
 							local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);
@@ -157,10 +158,21 @@ void KeffSimulation::launch() {
 					/* Kill the particle, this is an analog simulation */
 					break;
 				} else {
-					/* Scatter with isotope */
-					Reaction* scattering = isotope->scatter(particle,r);
-					/* Apply the reaction */
-					(*scattering)(particle,r);
+					/* Get elastic probability */
+					double elastic = isotope->getElasticProb(particle.erg());
+
+					/* Sample between inelastic and elastic scattering */
+					if((prob - absorption) <= elastic) {
+						/* Elastic reaction */
+						Reaction* elastic_reaction = isotope->elastic();
+						/* Apply the reaction */
+						(*elastic_reaction)(particle,r);
+					} else {
+						/* Scatter with isotope sampling an inelastic reaction*/
+						Reaction* inelastic_reaction = isotope->inelastic(particle.erg(),r);
+						/* Apply the reaction */
+						(*inelastic_reaction)(particle,r);
+					}
 				}
 			}
 		}

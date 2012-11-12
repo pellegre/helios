@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 	/* Initialization - KEFF cycle */
 	double keff = 1.000;
 	double ave_keff = 0.0;
-	int neutrons = 10000;
+	int neutrons = 50000;
 	int skip = 50;
 	int cycles = 1050;
 

@@ -45,6 +45,11 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 	/* Total microscopic cross section of this isotope */
 	total_xs = reactions.get_xs(1);
 
+	/* Elastic cross section */
+	elastic_xs = reactions.get_xs(2);
+	/* Set elastic reaction */
+	elastic_scattering = getReaction(2);
+
 	/* Check if the isotope contains a fission cross section */
 	fissile = reactions.check_all("18");
 	/* Check for ith-chance fission */
@@ -68,6 +73,9 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 	else
 		absorption_xs = CrossSection(total_xs.size());
 
+	/* 	Calculate inelastic cross section */
+	inelastic_xs = total_xs - absorption_xs - elastic_xs;
+
 	/* Array for the secondary particle reaction sampler */
 	vector<Reaction*> reaction_array;
 	/* Arrays of XS of each reaction */
@@ -78,14 +86,14 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 		/* Get angular distribution type */
 		int angular_data = (*it).getAngular().getKind();
 
-		/* If the reaction does not contains angular data, we reach the end */
+		/* If the reaction does not contains angular data, we reach the end "secondary" particle's reactions */
 		if(angular_data == Ace::AngularDistribution::no_data) break;
 
 		/* Get MT of the reaction */
 		int mt = (*it).getMt();
 
-		/* Check fission reaction */
-		if(mt != 18) {
+		/* We shouldn't include elastic and fission here */
+		if(mt != 18 && mt != 2) {
 				/* Create reaction */
 				reaction_array.push_back(getReaction(mt));
 				/* Get cross section data */
@@ -96,29 +104,34 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 					xs_data[i] = xs[i];
 				/* Push it into the global array */
 				xs_array.push_back(xs_data);
-				cout << mt << " ";
 		}
 	}
-	cout << endl;
 
 	/* Create the sampler */
-	secondary_sampler = new FactorSampler<Reaction*>(reaction_array, xs_array);
+	if(reaction_array.size() > 0)
+		secondary_sampler = new FactorSampler<Reaction*>(reaction_array, xs_array, false);
+
 }
 
-double AceIsotope::getAbsorptionProb(Energy& energy) const {
+/* Auxiliary function to get the probability of a reaction */
+double AceIsotope::getProb(Energy& energy, const Ace::CrossSection& xs) const {
 	double factor;
 	size_t idx = child_grid->index(energy,factor);
-	double abs = factor * (absorption_xs[idx + 1] - absorption_xs[idx]) + absorption_xs[idx];
+	double abs = factor * (xs[idx + 1] - xs[idx]) + xs[idx];
 	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
 	return abs / total;
 }
 
+double AceIsotope::getAbsorptionProb(Energy& energy) const {
+	return getProb(energy, absorption_xs);
+}
+
 double AceIsotope::getFissionProb(Energy& energy) const {
-	double factor;
-	size_t idx = child_grid->index(energy,factor);
-	double fission = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
-	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
-	return fission / total;
+	return getProb(energy, fission_xs);
+}
+
+double AceIsotope::getElasticProb(Energy& energy) const {
+	return getProb(energy, elastic_xs);
 }
 
 double AceIsotope::getTotalXs(Energy& energy) const {
@@ -128,24 +141,37 @@ double AceIsotope::getTotalXs(Energy& energy) const {
 	return total;
 }
 
-Reaction* AceIsotope::scatter(Particle& particle, Random& random) const {
+Reaction* AceIsotope::inelastic(Energy& energy, Random& random) const {
+	/* Check if there is a sampler. This shouldn't be a problem on normal conditions, but who knows... */
+	if(!secondary_sampler) return elastic_scattering;
+	/* Get inelastic reaction from the sampler */
 	double factor;
-	size_t idx = child_grid->index(particle.erg(), factor);
-	return secondary_sampler->sample(idx, random.uniform(), factor);
+	size_t idx = child_grid->index(energy, factor);
+	double inel = factor * (inelastic_xs[idx + 1] - inelastic_xs[idx]) + inelastic_xs[idx];
+	return secondary_sampler->sample(idx, inel * random.uniform(), factor);
 };
 
-Reaction* AceIsotope::getReaction(int mt) const {
+Reaction* AceIsotope::getReaction(int mt) {
 	/* Static instance of the reaction factory */
 	static AceReaction::AceReactionFactory reaction_factory;
+
+	/* Check on local map */
+	map<int,Reaction*>::const_iterator rea = reaction_map.find(mt);
+	if(rea != reaction_map.end())
+		return (*rea).second;
 
 	/* Get the reaction from the container */
 	ReactionContainer::const_iterator it_reaction = reactions.get_mt(mt);
 
-	if(it_reaction != reactions .end()) {
+	if(it_reaction != reactions.end()) {
 		/* Reaction exist */
 		const NeutronReaction& ace_reaction = (*it_reaction);
 		/* Return reaction */
-		return reaction_factory.createReaction(this, ace_reaction);
+		Reaction* reaction = reaction_factory.createReaction(this, ace_reaction);
+		/* Push reaction into local map */
+		reaction_map[mt] = reaction;
+		/* And return it... */
+		return reaction;
 	} else {
 		/* Reaction can't be found */
 		throw(AceModule::AceError(reactions.name(),"Reaction mt = " + toString(mt) + " does not exist"));
@@ -159,8 +185,9 @@ void AceIsotope::print(std::ostream& out) const {
 }
 
 AceIsotope::~AceIsotope() {
-	/* Delete fission reaction */
-	delete fission_reaction;
+	/* Delete reactions */
+	for(map<int,Reaction*>::const_iterator it = reaction_map.begin() ; it != reaction_map.end() ; ++it)
+		delete (*it).second;
 	/* Delete sampler */
 	delete secondary_sampler;
 };

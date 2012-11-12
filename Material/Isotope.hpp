@@ -83,6 +83,9 @@ namespace Helios {
 		/* -- Get fission probability */
 		virtual double getFissionProb(Energy& energy) const = 0;
 
+		/* -- Get elastic probability */
+		virtual double getElasticProb(Energy& energy) const = 0;
+
 		/*
 		 * -- Fission.
 		 *
@@ -91,15 +94,24 @@ namespace Helios {
 		 * We also need to bank particles with a fission distribution on
 		 * KEFF simulations.
 		 */
-		virtual void fission(Particle& particle, Random& random) const = 0;
+		virtual Reaction* fission() const = 0;
 
 		/*
-		 * -- Scatter
+		 * -- Elastic scattering
 		 *
-		 * This method should return a rection that change the particle's phase space coordinates
-		 * according to a secondary angle distributions and/or a secondary energy distribution.
+		 * Get elastic scattering reaction of this isotope.
 		 */
-		virtual Reaction* scatter(Particle& particle, Random& random) const = 0;
+		virtual Reaction* elastic() const = 0;
+
+		/*
+		 * -- Inelastic Scattering
+		 *
+		 * This method should return a reaction that change the particle's phase space coordinates
+		 * according to a secondary angle distributions and/or a secondary energy distribution. This
+		 * method should not include elastic scattering between those reactions. The sampling is
+		 * done using the particle energy.
+		 */
+		virtual Reaction* inelastic(Energy& energy, Random& random) const = 0;
 
 		/* Set internal / unique identifier for the isotope */
 		void setInternalId(const InternalMaterialId& internal) {internal_id = internal;}

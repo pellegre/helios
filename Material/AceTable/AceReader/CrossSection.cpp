@@ -84,4 +84,43 @@ const CrossSection operator+(const CrossSection& left, const CrossSection& right
 	return CrossSection(min_ie,xs_data);
 }
 
+const CrossSection operator-(const CrossSection& left, const CrossSection& right) {
+	/* Check for "NULL" cross section */
+	if((left.ie + left.xs_data.size()) == 1)
+			return right;
+	if((right.ie + right.xs_data.size()) == 1)
+			return left;
+
+	/* Sanity check, the XS should be referring to the same energy grid */
+	if( (left.ie + left.xs_data.size()) != (right.ie + right.xs_data.size()) )
+		 throw(Helios::GeneralError("ACE::CrossSection::operator+() : Cross sections aren't of the same size. "));
+
+	/* Get the minor index on both cross sections */
+	int min_ie = min(left.ie,right.ie);
+
+	/* Get the max size of the cross section array */
+	size_t max_size = max(left.xs_data.size(),right.xs_data.size());
+
+	/* Create new XS */
+	vector<double> xs_data(max_size,0.0);
+
+	int ie = min_ie;
+	int cnt_left = 0;
+	int cnt_right = 0;
+	/* Sum the data on each table */
+	for(size_t i = 0 ; i < max_size ; i++) {
+		if(ie >= left.ie) {
+			xs_data[i] += left.xs_data[cnt_left];
+			cnt_left++;
+		}
+		if(ie >= right.ie) {
+			xs_data[i] -= right.xs_data[cnt_right];
+			cnt_right++;
+		}
+		ie++;
+	}
+
+	return CrossSection(min_ie,xs_data);
+}
+
 }

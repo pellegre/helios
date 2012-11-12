@@ -144,7 +144,8 @@ void KeffSimulation::PowerStepSimulator::operator() (const tbb::blocked_range<si
 					double fission = isotope->getFissionProb(particle.erg());
 					if(prob > (absorption - fission)) {
 						/* We should bank the particle state after simulating the fission reaction */
-						isotope->fission(particle,r);
+						Reaction* fission_reaction = isotope->fission();
+						(*fission_reaction)(particle, r);
 						particle.sta() = Particle::BANK;
 						population += particle.wgt();
 						local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);
@@ -154,9 +155,9 @@ void KeffSimulation::PowerStepSimulator::operator() (const tbb::blocked_range<si
 				break;
 			} else {
 				/* Scatter with isotope */
-				Reaction* scattering = isotope->scatter(particle,r);
+				Reaction* inelastic = isotope->inelastic(particle.erg(),r);
 				/* Apply the reaction */
-				(*scattering)(particle,r);
+				(*inelastic)(particle,r);
 			}
 		}
 	}

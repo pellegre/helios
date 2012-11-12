@@ -40,6 +40,11 @@ namespace Helios {
 	/* Isotope related to an ACE table. */
 	class AceIsotope : public Isotope {
 
+		/* Auxiliary function to get the probability of a reaction */
+		double getProb(Energy& energy, const Ace::CrossSection& xs) const;
+
+		/* -- General data */
+
 		/* Reference to a neutron container (obtained from the AceReader) */
 		Ace::ReactionContainer reactions;
 
@@ -51,20 +56,35 @@ namespace Helios {
 		/* Constant reference to a CHILD grid */
 		const ChildGrid* child_grid;
 
+		/* Print isotope information */
+		void print(std::ostream& out) const;
+
+		/* -- Cross sections */
+
 		/* Total cross section */
 		Ace::CrossSection total_xs;
 		/* Fission cross section */
 		Ace::CrossSection fission_xs;
 		/* Absorption cross section */
 		Ace::CrossSection absorption_xs;
+		/* Elastic cross section */
+		Ace::CrossSection elastic_xs;
+		/* Inelastic cross section */
+		Ace::CrossSection inelastic_xs;
 
-		void print(std::ostream& out) const;
+		/* -- Reactions */
 
 		/*
 		 * Fission reaction. As always, this reaction is treated separately. Pointer
 		 * is NULL for non-fissiles isotopes.
 		 */
 		Reaction* fission_reaction;
+
+		/* Elastic reaction of this isotope. This reaction always exist */
+		Reaction* elastic_scattering;
+
+		/* Map of MT numbers and reactions */
+		std::map<int,Reaction*> reaction_map;
 
 		/* Secondary particle reaction sampler (using an interpolation factor) */
 		FactorSampler<Reaction*>* secondary_sampler;
@@ -85,26 +105,32 @@ namespace Helios {
 
 		/* Get absorption probability */
 		double getAbsorptionProb(Energy& energy) const;
-
 		/* Get fission probability */
 		double getFissionProb(Energy& energy) const;
+		/* Get elastic probability */
+		double getElasticProb(Energy& energy) const;
 
 		/* Get total cross section */
 		double getTotalXs(Energy& energy) const;
 
 		/* Fission reaction */
-		void fission(Particle& particle, Random& random) const {
-			(*fission_reaction)(particle, random);
+		Reaction* fission() const {
+			return fission_reaction;
 		};
 
-		/* Scattering (we should sample the reaction) */
-		Reaction* scatter(Particle& particle, Random& random) const;
+		/* Elastic reaction */
+		Reaction* elastic() const {
+			return elastic_scattering;
+		}
+
+		/* Inelastic Scattering (we should sample the reaction) */
+		Reaction* inelastic(Energy& energy, Random& random) const;
 
 		/*
 		 * Get reaction from an MT number (thrown an exception if the reaction number does not exist)
-		 * Is client responsibility to delete the reaction after is done with it.
+		 * Each created reaction is managed by the isotope.
 		 */
-		Reaction* getReaction(int mt) const;
+		Reaction* getReaction(int mt);
 
 		~AceIsotope();
 	};

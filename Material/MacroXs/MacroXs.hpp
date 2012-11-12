@@ -118,13 +118,22 @@ namespace Helios {
 			return fission_prob[energy.first];
 		}
 
+		double getElasticProb(Energy& energy) const {
+			return 1.0 - absorption_prob[energy.first];
+		}
+
 		/* Fission reaction */
-		void fission(Particle& particle, Random& random) const {
-			(*fission_reaction)(particle,random);
+		Reaction* fission() const {
+			return fission_reaction;
+		}
+
+		/* Fission reaction */
+		Reaction* elastic() const {
+			return scattering_reaction;
 		}
 
 		/* Just one scattering reaction (from the scattering matrix) */
-		Reaction* scatter(Particle& particle, Random& random) const {
+		Reaction* inelastic(Energy& energy, Random& random) const {
 			return scattering_reaction;
 		}
 
