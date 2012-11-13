@@ -36,8 +36,12 @@ namespace Helios {
 	/* A reaction is simply a functor that change the state of a particle (based on a random number generator) */
 	class Reaction {
 		friend std::ostream& operator<<(std::ostream& out, const Reaction& q);
+		/* Internal ID of a reaction */
+		InternalId internal_id;
 	public:
-		Reaction() {/* */}
+		Reaction(InternalId internal_id) : internal_id(internal_id) {/* */}
+		/* Get internal ID */
+		InternalId getId() const {return internal_id;}
 		/* Sample reaction */
 		virtual void operator() (Particle& particle, Random& r) const = 0;
 		/* Print information about the reaction (by default it does nothing) */

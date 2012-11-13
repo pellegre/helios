@@ -31,11 +31,12 @@
 #include "AceReader/ReactionContainer.hpp"
 #include "../../Environment/McModule.hpp"
 #include "../../Common/Common.hpp"
-#include "../../Common/FactorSampler.hpp"
 #include "../Grid/MasterGrid.hpp"
 #include "../Isotope.hpp"
 
 namespace Helios {
+
+	template<typename TypeReaction> class XsSampler;
 
 	/* Isotope related to an ACE table. */
 	class AceIsotope : public Isotope {
@@ -87,7 +88,7 @@ namespace Helios {
 		std::map<int,Reaction*> reaction_map;
 
 		/* Secondary particle reaction sampler (using an interpolation factor) */
-		FactorSampler<Reaction*>* secondary_sampler;
+		XsSampler<Reaction*>* secondary_sampler;
 
 	public:
 

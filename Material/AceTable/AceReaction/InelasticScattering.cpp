@@ -63,7 +63,7 @@ EnergySamplerBase* GenericReaction::buildEnergySampler(const Ace::EnergyDistribu
 }
 
 GenericReaction::GenericReaction(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
-	mu_sampler(0), energy_sampler(0) {
+		Reaction(ace_reaction.getMt()), mu_sampler(0), energy_sampler(0) {
 	/* Build MU sampler */
 	try {
 		mu_sampler = buildMuSampler(ace_reaction.getAngular());

@@ -44,7 +44,7 @@ static NuSampler* buildNuSampler(const Ace::NUBlock::NuData* nu_data) {
 }
 
 Fission::Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
-	GenericReaction(isotope, ace_reaction), prompt_nu(0) {
+		GenericReaction(isotope, ace_reaction), prompt_nu(0) {
 
 	/* Get distribution of emerging particles */
 	const Ace::TyrDistribution& tyr = ace_reaction.getTyr();

@@ -29,6 +29,7 @@
 #include "AceReader/ACEReader.hpp"
 #include "AceReader/NeutronTable.hpp"
 #include "AceReaction/AceReactionBase.hpp"
+#include "../../Common/XsSampler.hpp"
 
 using namespace std;
 using namespace Ace;
@@ -77,9 +78,7 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 	inelastic_xs = total_xs - absorption_xs - elastic_xs;
 
 	/* Array for the secondary particle reaction sampler */
-	vector<Reaction*> reaction_array;
-	/* Arrays of XS of each reaction */
-	vector<vector<double> > xs_array;
+	vector<pair<Reaction*,const CrossSection*> > reaction_array;
 
 	/* Loop over the scattering reactions (skipping fission) */
 	for(Ace::ReactionContainer::const_iterator it = reactions.begin() ; it != reactions.end() ; ++it) {
@@ -95,21 +94,13 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 		/* We shouldn't include elastic and fission here */
 		if(mt != 18 && mt != 2) {
 				/* Create reaction */
-				reaction_array.push_back(getReaction(mt));
-				/* Get cross section data */
-				vector<double> xs_data(child_grid->size(),0.0);
-				Ace::CrossSection xs = (*it).getXs();
-				/* Fill container */
-				for(size_t i = 0 ; i < xs_data.size() ; ++i)
-					xs_data[i] = xs[i];
-				/* Push it into the global array */
-				xs_array.push_back(xs_data);
+				reaction_array.push_back(make_pair(getReaction(mt), &(*it).getXs()));
 		}
 	}
 
 	/* Create the sampler */
 	if(reaction_array.size() > 0)
-		secondary_sampler = new FactorSampler<Reaction*>(reaction_array, xs_array, false);
+		secondary_sampler = new XsSampler<Reaction*>(reaction_array, elastic_scattering);
 
 }
 

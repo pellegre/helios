@@ -33,7 +33,7 @@ namespace Helios {
 
 /* -- Fission */
 
-MacroXsReaction::Fission::Fission(const std::vector<double>& nu, const std::vector<double>& chi) : nu(nu) {
+MacroXsReaction::Fission::Fission(const std::vector<double>& nu, const std::vector<double>& chi) : Reaction(1), nu(nu) {
 	/* Set map for the spectrum sampler */
 	std::map<int,double> m;
 	for(size_t i = 0 ; i < chi.size() ; ++i)
@@ -47,7 +47,7 @@ MacroXsReaction::Fission::~Fission() {
 
 /* -- Scattering*/
 
-MacroXsReaction::Scattering::Scattering(const std::vector<double>& sigma_scat, size_t ngroups) {
+MacroXsReaction::Scattering::Scattering(const std::vector<double>& sigma_scat, size_t ngroups) : Reaction(2) {
 	/* Set map for the spectrum sampler, we got the scattering matrix */
 	std::map<int,std::vector<double> > m;
 	std::vector<double> v(ngroups);

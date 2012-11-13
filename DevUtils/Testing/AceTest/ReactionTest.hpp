@@ -70,36 +70,65 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	environment->pushObjects(ace_objects.begin(), ace_objects.end());
 	environment->setup();
 
-	Histogram<LinearBins> histo(0.01,3,75);
-	Particle particle;
-	particle.erg().second = 1E-8;
-	particle.dir() = Direction(1.0,0.0,0.0);
-	Random random(1);
-	cout << particle << endl;
+	/* Get isotope from ACE reader */
+	NeutronTable* ace_table = dynamic_cast<NeutronTable*>(AceReader::getTable(name));
 
-	/* Get elastic scattering */
-	Reaction* elastic = environment->getObject<AceModule,AceIsotope>(name)[0]->getReaction(18);
+	/* Get reactions (inelastic scattering) */
+	ReactionContainer reactions = ace_table->getReactions();
 
-	size_t nsamples = 1000000;
-	double accum_nu = 0.0;
-	for(size_t i = 0 ; i < nsamples ; ++i) {
+	/* Inelastic scattering cross section (don't include fission and elastic scattering) */
+	CrossSection inelastic_xs;
 
-		/* Set initial data */
-		particle.wgt() = 1.0;
-		particle.erg().second = 1E-8;
+	/* Map of MT with cross sections */
+	map<int,CrossSection> mt_map;
 
-		(*elastic)(particle,random);
-		histo(particle.erg().second);
+	for(ReactionContainer::const_iterator it = reactions.begin() ; it != reactions.end() ; ++it) {
+		/* Get angular distribution type */
+		int angular_data = (*it).getAngular().getKind();
 
-		accum_nu += particle.wgt();
+		/* If the reaction does not contains angular data, we reach the end "secondary" particle's reactions */
+		if(angular_data == Ace::AngularDistribution::no_data) break;
+
+		/* Get MT of the reaction */
+		int mt = (*it).getMt();
+
+		/* We shouldn't include elastic and fission here */
+		if(mt != 18 && mt != 2) {
+			/* Cross section */
+			CrossSection xs = (*it).getXs();
+			/* Sum this reaction */
+			inelastic_xs = inelastic_xs + xs;
+			/* Put the cross section on the map */
+			mt_map[mt] = xs;
+		}
 	}
 
-	histo.normalize();
-	cout << histo;
+	/* Get energy grid */
+	vector<double> energy_grid = ace_table->getEnergyGrid();
 
-	cout << "Average NU = " << accum_nu / (double) nsamples << endl;
+	/* Energy */
+	double energy = 10.0;
+	/* Interpolate on energy grid */
+	size_t idx = upper_bound(energy_grid.begin(), energy_grid.end(), energy) - energy_grid.begin() - 1;
+	double factor = (energy - energy_grid[idx]) / (energy_grid[idx + 1] - energy_grid[idx]);
+	double inel_total =  factor * (inelastic_xs[idx + 1] - inelastic_xs[idx]) + inelastic_xs[idx];
+
+	/* Accumulate probabilities */
+	double accum = 0.0;
+
+	for(map<int,CrossSection>::const_iterator it = mt_map.begin() ; it != mt_map.end() ; ++it) {
+
+		/* Inelastic xs at this energy (total and from this reaction) */
+		double inel_rea = factor * ((*it).second[idx + 1] - (*it).second[idx]) + (*it).second[idx];
+		double prob = inel_rea / inel_total;
+		accum += prob;
+
+		/* Print */
+		cout << scientific << setw(15) << (*it).first << setw(15) <<  prob << endl;
+	}
+
+	cout << "Prob total = " << accum << endl;
 	delete environment;
-	delete elastic;
 }
 
 
