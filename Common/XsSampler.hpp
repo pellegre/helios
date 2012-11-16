@@ -57,8 +57,7 @@ namespace Helios {
 		std::vector<TypeReaction> reactions;
 
 		/*
-		 * Default value to be returned in case the index is out of range. Could be a
-		 * NULL pointer but that is not a good practice at all
+		 * Default value to be returned in case the energy index is out of range (lower than emin).
 		 */
 		TypeReaction default_reaction;
 
@@ -79,22 +78,38 @@ namespace Helios {
 		 * e-mn is the energy index of the particle (not the value). e-m0 (emin) is the smallest index from all
 		 * input cross section arrays.
 		 */
-		double* reaction_matrix;
+		std::vector<std::vector<double> > reaction_matrix;
 
 		/* Get the index of the reaction after a binary search */
-		int getIndex(const double* dat, double val, double factor);
+		int getIndex(size_t nrow, double val, double factor);
 
 	public:
 
+		/* Get a value on the matrix */
+		double getMatrixValue(size_t nerg, size_t nrea) {
+			/* Get row */
+			std::vector<double>& row = reaction_matrix[nerg];
+			/* Get local coordinate */
+			size_t li = nrea - (nreaction - row.size());
+			/* Check out of range index */
+			if(nrea < 0) return 0.0;
+			else return row[li];
+		}
+
 		/* Functor used to get an interpolated value on the reaction matrix (given an interpolation factor) */
 		class Interpolate {
-			size_t stride;
+			const std::vector<double>& low;
+			const std::vector<double>& high;
 			double factor;
 		public:
-			Interpolate(size_t stride, double factor) : stride(stride), factor(factor) {/* */}
-			double operator()(const double* ptr) {
+			Interpolate(const std::vector<double>& low, const std::vector<double>& high, double factor) :
+				low(low), high(high), factor(factor) {/* */}
+			double operator()(std::vector<double>::const_iterator ptr) {
 				double min = *ptr;
-				double max = *(ptr + stride);
+				/* Get index on high container */
+				size_t high_index = (ptr - low.begin()) + high.size() - low.size();
+				double max = *(high.begin() + high_index);
+				/* Interpolate */
 				return factor * (max - min) + min;
 			}
  			~Interpolate() {/* */}
@@ -113,8 +128,8 @@ namespace Helios {
 		 * There is a container of pairs that contains a reaction object and a pointer to a cross
 		 * section array.
 		 */
-		XsSampler(const std::vector<XsData>& _reas, TypeReaction _default_reaction) :
-            nreaction(_reas.size()), reactions(nreaction), default_reaction(_default_reaction),  reaction_matrix(0) {
+		XsSampler(const std::vector<XsData>& _reas) :
+            nreaction(_reas.size()) {
 
 			/* Copy reactions (to sort the XS) */
 			std::vector<XsData> reas = _reas;
@@ -123,13 +138,19 @@ namespace Helios {
 			std::sort(reas.begin(), reas.end(), CompareXs());
 
 			/* Set the smallest index on the grid */
-			emin = (*(reas.end() - 1)).second->getIndex() - 1;
+			emin = (*(reas.end() - 2)).second->getIndex() - 1;
+
+			/* Set the default value */
+			default_reaction = (*(reas.end() - 1)).first;
 
 			/* Set number of energies */
 			nenergy = (*reas.begin()).second->size();
 
 			/* Initialize the offset array */
 			offsets.resize(nenergy - emin);
+
+			/* Initialize reaction matrix */
+			reaction_matrix.resize(nenergy - emin);
 
 			for(size_t i = 0 ; i < offsets.size() ; ++i) {
 				offsets[i] = 0;
@@ -140,15 +161,33 @@ namespace Helios {
 					/* Accumulate if reaction is not outside of the range */
 					if(index <= (emin + (int)i))
 						offsets[i]++;
+					/* Push reactions (in an ordered way) only one time */
 					if(i == 0)
-						std::cout << (*it).first->getId() << " " << (*it).second->getIndex() << " " << (*it).second->size() << std::endl;
+						reactions.push_back((*it).first);
 				}
 			}
 
-			for(size_t i = 0 ; i < offsets.size() ; ++i)
-				cout << i << " " << offsets[i] << endl;
-
-			cout << reas.size() << endl;
+			/* Loop over energies */
+			for(size_t i = 0 ; i < offsets.size() ; ++i) {
+				/* Get row */
+				std::vector<double>& row = reaction_matrix[i];
+				/* Resize matrix row */
+				row.resize(offsets[i] - 1);
+				/* Get absolute value of energy */
+				int nerg = emin + (int)i;
+				/* Calculate partial sums */
+				double partial_sum = 0.0;
+				for(size_t j = 0 ; j < row.size(); ++j) {
+					/* Get absolute index */
+					size_t rea = j + ((nreaction - 1) - row.size());
+					/* Cross section */
+					const Ace::CrossSection* xs = reas[rea].second;
+					/* Accumulate partial sum */
+					partial_sum += (*xs)[nerg];
+					/* Set value on the matrix */
+					row[j] = partial_sum;
+				}
+			}
 		}
 
 		/*
@@ -163,26 +202,31 @@ namespace Helios {
 		/* Get reaction container */
 		const std::vector<TypeReaction>& getReactions() const {return reactions;}
 
-		~XsSampler() {delete [] reaction_matrix;};
+		~XsSampler() {/* */};
 	};
 
 	template<class TypeReaction>
-	int XsSampler<TypeReaction>::getIndex(const double* dat, double val, double factor) {
+	int XsSampler<TypeReaction>::getIndex(size_t nrow, double val, double factor) {
+		/* Get row */
+		std::vector<double>& row = reaction_matrix[nrow];
 		/* Create interpolation object */
-		Interpolate interpolator(nreaction - 1, factor);
+		Interpolate interpolator(row, reaction_matrix[nrow + 1], factor);
 		/* Initial boundaries */
-		const double* lo = dat;
-		const double* hi = dat + (nreaction - 2);
-		if(val < interpolator(lo)) return 0;
+		std::vector<double>::const_iterator lo = row.begin();
+		std::vector<double>::const_iterator hi = row.end() - 1;
+		if(val < interpolator(lo)) return (nreaction - 1) - row.size();
 		if(val > interpolator(hi)) return nreaction - 1;
-		const double* value = eval_lower_bound(lo, hi + 1, val, interpolator);
-		return value - lo;
+		std::vector<double>::const_iterator value = eval_lower_bound(lo, hi + 1, val, interpolator);
+		return (value - lo) + ((nreaction - 1) - row.size());
 	}
 
 	template<class TypeReaction>
 	TypeReaction XsSampler<TypeReaction>::sample(int index, double value, double factor) {
+		/* Check number of reactions */
 		if(nreaction == 1) return reactions[0];
-		int nrea = getIndex(reaction_matrix + index * (nreaction - 1), value, factor);
+		/* Check index */
+		if(index < emin) return default_reaction;
+		int nrea = getIndex(index - emin, value, factor);
 		return reactions[nrea];
 	}
 

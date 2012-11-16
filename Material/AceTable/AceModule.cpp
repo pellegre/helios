@@ -100,7 +100,7 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 
 	/* Create the sampler */
 	if(reaction_array.size() > 0)
-		secondary_sampler = new XsSampler<Reaction*>(reaction_array, elastic_scattering);
+		secondary_sampler = new XsSampler<Reaction*>(reaction_array);
 
 }
 
