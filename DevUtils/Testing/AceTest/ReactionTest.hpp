@@ -107,27 +107,47 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	vector<double> energy_grid = ace_table->getEnergyGrid();
 
 	/* Energy */
-	double energy = 10.0;
+	double energy = 5;
 	/* Interpolate on energy grid */
 	size_t idx = upper_bound(energy_grid.begin(), energy_grid.end(), energy) - energy_grid.begin() - 1;
 	double factor = (energy - energy_grid[idx]) / (energy_grid[idx + 1] - energy_grid[idx]);
 	double inel_total =  factor * (inelastic_xs[idx + 1] - inelastic_xs[idx]) + inelastic_xs[idx];
 
-	/* Accumulate probabilities */
-	double accum = 0.0;
+	/* Reaction histogram */
+	map<int,double> reaction_prob;
 
 	for(map<int,CrossSection>::const_iterator it = mt_map.begin() ; it != mt_map.end() ; ++it) {
-
 		/* Inelastic xs at this energy (total and from this reaction) */
 		double inel_rea = factor * ((*it).second[idx + 1] - (*it).second[idx]) + (*it).second[idx];
 		double prob = inel_rea / inel_total;
-		accum += prob;
-
-		/* Print */
-		cout << scientific << setw(15) << (*it).first << setw(15) <<  prob << endl;
+		/* Save */
+		reaction_prob[(*it).first] = prob;
 	}
 
-	cout << "Prob total = " << accum << endl;
+	/* Sample reactions */
+	size_t nsamples = 100000000;
+	/* Get isotope */
+	AceIsotope* isotope = environment->getObject<AceModule,AceIsotope>(name)[0];
+	/* Random number */
+	Random random(1);
+	/* Samples */
+	map<int,double> reaction_samples;
+	for(size_t  i = 0 ; i < nsamples ; ++i) {
+		Energy energy_pair(0,energy);
+		Reaction* rea = isotope->inelastic(energy_pair,random);
+		int mt = rea->getId();
+		reaction_samples[mt]++;
+	}
+
+	/* Collect samples and check results */
+	for(map<int,double>::iterator it = reaction_samples.begin() ; it != reaction_samples.end() ; ++it) {
+		(*it).second /= (double)nsamples;
+		/* Get difference */
+		double error = 100.0* fabs(reaction_prob[(*it).first] - (*it).second) / reaction_prob[(*it).first];
+		cout << setw(6) << (*it).first << setw(15) << scientific << (*it).second << setw(15)
+				<< reaction_prob[(*it).first] << setw(15) << error << endl;
+	}
+
 	delete environment;
 }
 
