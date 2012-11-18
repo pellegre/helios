@@ -32,8 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <cassert>
 
-#include "FactorSampler.hpp"
-
 namespace Helios {
 
 	/*
@@ -113,7 +111,7 @@ namespace Helios {
 			/* Get lower reaction index */
 			size_t first = ((nreaction - 1) - std::max(low.size(), high.size()));
 			/* Last reaction index */
-			size_t last = nreaction - 2;
+			size_t last = nreaction - 1;
 			/* Initial length */
 			size_t len = last - first;
 			size_t half, middle;
@@ -153,6 +151,13 @@ namespace Helios {
 
 			/* Copy reactions (to sort the XS) */
 			std::vector<XsData> reas = _reas;
+
+			/* Check number of reaction */
+			if(nreaction == 1) {
+				/* Push reaction, and return */
+				reactions.push_back(reas.begin()->first);
+				return;
+			}
 
 			/* Sort the array (from highest index to lowest)*/
 			std::sort(reas.begin(), reas.end(), CompareXs());
@@ -228,7 +233,7 @@ namespace Helios {
 	template<class TypeReaction>
 	size_t XsSampler<TypeReaction>::getIndex(size_t nrow, double val, double factor) {
 		/* Initial boundaries */
-		if(val < intepolateMatrixValue(nrow, 0, factor)) return (nreaction - 1) - reaction_matrix[nrow].size();
+		if(val < intepolateMatrixValue(nrow, 0, factor)) return 0;
 		if(val > intepolateMatrixValue(nrow, nreaction - 2, factor)) return nreaction - 1;
 		return reaction_lower_bound(nrow, val, factor);
 	}
