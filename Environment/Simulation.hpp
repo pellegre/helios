@@ -55,7 +55,7 @@ public:
 	typedef std::pair<InternalCellId,Particle> CellParticle;
 
 	/* Initialize simulation */
-	Simulation(const Random& base,McEnvironment* environment);
+	Simulation(const Random& base, McEnvironment* environment);
 
 	/* Launch a simulation */
 	virtual void launch() = 0;
@@ -63,6 +63,32 @@ public:
 	virtual ~Simulation() {/* */};
 };
 
+/*
+ * KEFF simulation
+ *
+ * Apart of accumulate the user defined tallies, this class also creates a bank
+ * of particles representing the source fission (as a result of this simulation).
+ */
+class CriticalitySimulation : public Simulation {
+	/* Population after the simulation */
+	double keff;
+	/* Particles per cycle */
+	size_t particles_number;
+	/* Reference to the geometry of the problem */
+	Geometry* geometry;
+	/* Global particle bank for this simulation */
+	std::vector<std::vector<CellParticle> > fission_bank;
+	/* Execute a cycle of the KEFF simulation of a particle bank */
+	void cycle(size_t nbank);
+public:
+	/* Initialize simulation */
+	CriticalitySimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
+
+	/* Get multiplication factor */
+	double getKeff() const {return keff;}
+
+	virtual ~CriticalitySimulation() {/* */};
+};
 
 namespace OpenMp {
 

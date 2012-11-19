@@ -34,6 +34,8 @@ using namespace std;
 namespace Helios {
 
 Materials::Materials(const vector<McObject*>& matDefinitions, const McEnvironment* environment) : McModule(name(),environment) {
+	Log::bok() << "Initializing Materials Module " << Log::endl;
+
 	/* Check number of definitions */
 	if(matDefinitions.size() == 0)
 		throw GeneralError("No information available for materials object");
@@ -43,11 +45,16 @@ Materials::Materials(const vector<McObject*>& matDefinitions, const McEnvironmen
 	string name = definition->getObjectName();
 
 	/* Detect the type of materials on the materials. We can't have a mix of materials on a problem */
-	if(name == MacroXs::name())
+	if(name == MacroXs::name()) {
 		/* Macroscopic cross section factory */
 		factory = new MacroXsFactory;
-	else if (name == AceMaterial::name())
+		Log::msg() << left << Log::ident(1) << " - Macroscopic cross sections " << Log::endl;
+	}
+	else if (name == AceMaterial::name()) {
+		/* ACE cross section factory */
 		factory = new AceMaterialFactory;
+		Log::msg() << left << Log::ident(1) << " - Ace cross sections " << Log::endl;
+	}
 	else
 		throw Material::BadMaterialCreation(static_cast<MaterialObject*>(definition)->getMatid(),
 				"Material type " + definition->getObjectName() + " is not defined");

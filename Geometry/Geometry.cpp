@@ -49,6 +49,8 @@ static void pushObject(McObject* geo, std::vector<T*>& definition) {
 }
 
 Geometry::Geometry(const std::vector<McObject*>& definitions, const McEnvironment* environment) : McModule(name(),environment) {
+	Log::bok() << "Initializing Geometry Module " << Log::endl;
+
 	/* Initialize object maps */
 	object_maps[Cell::name()] = ObjectMap(&cell_path_map,&cell_reverse_map,&cell_internal_map);
 	object_maps[Surface::name()] = ObjectMap(&surface_path_map,&surface_reverse_map,&surface_internal_map);
@@ -71,6 +73,12 @@ Geometry::Geometry(const std::vector<McObject*>& definitions, const McEnvironmen
 		else if (type == GeometricFeature::name())
 			pushObject(*it_def,featureObjects);
 	}
+
+	/* Print input data information */
+	Log::msg() << left << Log::ident(1) << " - Number of input surfaces : ";
+	Log::color<Log::COLOR_BOLDWHITE>() << setw(6) << surObjects.size() << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Number of input cells    : ";
+	Log::color<Log::COLOR_BOLDWHITE>() << setw(6) << cellObjects.size() << Log::endl;
 
 	/* Keep the new objects added by the features */
 	vector<CellObject*> cellFeatureObject;
@@ -135,6 +143,10 @@ Geometry::Geometry(const std::vector<McObject*>& definitions, const McEnvironmen
 	}
 
 	addUniverse((*u_cells.begin()).first,u_cells,user_surfaces);
+
+	/* Print general information */
+	Log::msg() << left << Log::ident(1) << " - Total number of surfaces : " << surfaces.size() << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Total number of cells    : " << cells.size() << Log::endl;
 
 	/* Try to get the materials */
 	const Materials* materials = 0;

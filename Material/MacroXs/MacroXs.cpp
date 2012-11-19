@@ -165,6 +165,7 @@ vector<Material*> MacroXsFactory::createMaterials(const vector<MaterialObject*>&
 	const MacroXsObject* macro_definition = static_cast<const MacroXsObject*>(*definitions.begin());
 	/* Get the number of groups (just checking a particular XS)*/
 	int nelement = macro_definition->getConstant()["sigma_a"].size();
+	Log::msg() << left << Log::ident(1) << " - Number of groups = " << nelement << Log::endl;
 
 	/* Container of new materials */
 	vector<Material*> materials;
@@ -177,6 +178,10 @@ vector<Material*> MacroXsFactory::createMaterials(const vector<MaterialObject*>&
 		if(ngroups != nelement)
 			throw(Material::BadMaterialCreation((*it)->getMatid(),"You can't mix materials with different number of groups"));
 		MacroXs* newMaterial = new MacroXs(new_macro,nelement);
+		/* Print additional information */
+		Log::msg() << left << Log::ident(2) << "  Creating material ";
+		Log::color<Log::COLOR_BOLDWHITE>() << newMaterial->getUserId() << Log::endl;
+		/* Push back material */
 		materials.push_back(newMaterial);
 	}
 

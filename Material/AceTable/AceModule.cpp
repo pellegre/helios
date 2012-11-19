@@ -28,6 +28,7 @@
 #include "AceModule.hpp"
 #include "AceReader/ACEReader.hpp"
 #include "AceReader/NeutronTable.hpp"
+#include "AceReader/Conf.hpp"
 #include "AceReaction/AceReactionBase.hpp"
 #include "../../Common/XsSampler.hpp"
 
@@ -184,6 +185,10 @@ AceIsotope::~AceIsotope() {
 };
 
 AceModule::AceModule(const std::vector<McObject*>& aceObjects, const McEnvironment* environment) : McModule(name(),environment) {
+	Log::bok() << "Initializing Ace Module " << Log::endl;
+	/* Print information about the Ace reader */
+	Log::msg() << left << Log::ident(1) << " - Using xsdir from " << Ace::Conf::DATAPATH << Log::endl;
+
 	/* Create master grid */
 	master_grid = new MasterGrid();
 	/* Loop over the definitions to create isotopes */
@@ -192,6 +197,9 @@ AceModule::AceModule(const std::vector<McObject*>& aceObjects, const McEnvironme
 		AceObject* ace_material = dynamic_cast<AceObject*>(*it);
 		string isotope = ace_material->table_name;
 		if (isotope_map.find(isotope) == isotope_map.end()) {
+			/* Print information about the isotope */
+			Log::msg() << left << Log::ident(2) << "  Reading isotope ";
+			Log::color<Log::COLOR_BOLDWHITE>() << isotope << Log::endl;
 			/* Get the neutron table using the AceReader */
 			NeutronTable* table = dynamic_cast<NeutronTable*>(AceReader::getTable(isotope));
 			/* Create child grid */
@@ -206,6 +214,7 @@ AceModule::AceModule(const std::vector<McObject*>& aceObjects, const McEnvironme
 			delete table;
 		}
 	}
+	Log::msg() << left << Log::ident(1) << " - Setting up master grid " << Log::endl;
 	/* Setup master grid */
 	master_grid->setup();
 

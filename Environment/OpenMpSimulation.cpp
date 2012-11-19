@@ -143,7 +143,7 @@ void KeffSimulation::launch() {
 				double absorption = isotope->getAbsorptionProb(particle.erg());
 				double prob = r.uniform();
 				if(prob < absorption) {
-					/* Absorption reaction , we should check if this is a fission reaction */
+					/* 8.2 ---- Absorption reaction , we should check if this is a fission reaction */
 					if(isotope->isFissile()) {
 						double fission = isotope->getFissionProb(particle.erg());
 						if(prob > (absorption - fission)) {
@@ -160,8 +160,7 @@ void KeffSimulation::launch() {
 				} else {
 					/* Get elastic probability */
 					double elastic = isotope->getElasticProb(particle.erg());
-
-					/* Sample between inelastic and elastic scattering */
+					/* 8.2 ---- Sample between inelastic and elastic scattering */
 					if((prob - absorption) <= elastic) {
 						/* Elastic reaction */
 						Reaction* elastic_reaction = isotope->elastic();
