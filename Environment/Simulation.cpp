@@ -32,6 +32,10 @@ using namespace std;
 
 namespace Helios {
 
+CriticalitySimulation::CriticalitySimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
+		Simulation(_random,_environment), keff(keff), particles_number(_particles_number), geometry(environment->getModule<Geometry>()) {
+}
+
 Simulation::Simulation(const Random& base,McEnvironment* environment) : base(base), environment(environment) {
 	/* Parameters for random number on simulations */
 	max_rng_per_source = 100;
