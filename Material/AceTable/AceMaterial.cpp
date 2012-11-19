@@ -212,6 +212,10 @@ vector<Material*> AceMaterialFactory::createMaterials(const vector<MaterialObjec
 	for(vector<MaterialObject*>::const_iterator it = definitions.begin() ;  it != definitions.end() ; ++it) {
 		const AceMaterialObject* new_ace = static_cast<const AceMaterialObject*>((*it));
 		AceMaterial* newMaterial = new AceMaterial(new_ace);
+		/* Print additional information */
+		Log::msg() << left << Log::ident(2) << "  Creating material ";
+		Log::color<Log::COLOR_BOLDWHITE>() << newMaterial->getUserId() << Log::endl;
+		/* Push material */
 		materials.push_back(newMaterial);
 	}
 

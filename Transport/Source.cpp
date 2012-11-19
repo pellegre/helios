@@ -41,6 +41,8 @@ static void pushObject(McObject* src, vector<T*>& definition) {
 }
 
 Source::Source(const vector<McObject*>& definitions, const McEnvironment* environment) : McModule(name(),environment) {
+	Log::bok() << "Initializing Source Module " << Log::endl;
+
 	/* Containers of each source object */
 	vector<DistributionBaseObject*> distObject;
 	vector<ParticleSamplerObject*> samplerObject;
@@ -86,6 +88,11 @@ Source::Source(const vector<McObject*>& definitions, const McEnvironment* enviro
 		sources.push_back(source);
 		strengths.push_back(source->getStrength());
 	}
+
+	/* Print general information */
+	Log::msg() << left << Log::ident(1) << " - Total number of distributions : " << distributions.size() << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Total number of samplers      : " << particle_samplers.size() << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Total number of source        : " << sources.size() << Log::endl;
 
 	/* Once we got all the sources, we should create the sampler */
 	source_sampler = new Sampler<ParticleSource*>(sources,strengths);
