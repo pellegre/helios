@@ -119,8 +119,12 @@ namespace Helios {
 	/* Set an isotropic angle to the particle. Adapted from SERPENT */
 	void isotropicDirection(Direction& dir, Random& random);
 
-    /* Sample like in MCNP (MCNP4C manual p. 2-38). Adapted from SERPENT */
+    /* Sample like in MCNP (MCNP4C manual p. 2-38). */
 	void azimutalRotation(double mu, Direction& dir, Random& random);
+
+	/* Pair of particle and cell */
+	class Cell;
+	typedef std::pair<const Cell*,Particle> CellParticle;
 
 } /* namespace Helios */
 #endif /* PARTICLE_HPP_ */

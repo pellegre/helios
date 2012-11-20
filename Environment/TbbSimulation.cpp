@@ -31,7 +31,7 @@ using namespace Helios;
 using namespace IntelTbb;
 
 
-KeffSimulation::SourceSimulator::SourceSimulator(const McEnvironment* environment, const Random& base, vector<Simulation::CellParticle>& particles,
+KeffSimulation::SourceSimulator::SourceSimulator(const McEnvironment* environment, const Random& base, vector<CellParticle>& particles,
 			const size_t& max_rng) : base(base), particles(particles), max_rng(max_rng),
 			source(environment->getModule<Source>()), geometry(environment->getModule<Geometry>()) {/* */}
 
@@ -39,10 +39,7 @@ void KeffSimulation::SourceSimulator::operator() (const tbb::blocked_range<size_
 	for(size_t i = range.begin() ; i < range.end() ; ++i) {
 		Random r_local(base);
 		r_local.jump(i * max_rng);
-		/* Sample particle */
-		Particle particle = source->sample(r_local);
-		const Cell* cell(geometry->findCell(particle.pos()));
-		particles[i] = Simulation::CellParticle(cell->getInternalId(),particle);
+		particles[i] = source->sample(r_local);
 	}
 }
 
@@ -87,7 +84,7 @@ void KeffSimulation::PowerStepSimulator::operator() (const tbb::blocked_range<si
 
 		/* 1. ---- Initialize particle from source (get particle from the bank) */
 		CellParticle pc = fission_bank[i];
-		const Cell* cell = geometry->getCells()[pc.first];
+		const Cell* cell = pc.first;
 		Particle particle = pc.second;
 
 		while(true) {
@@ -148,16 +145,26 @@ void KeffSimulation::PowerStepSimulator::operator() (const tbb::blocked_range<si
 						(*fission_reaction)(particle, r);
 						particle.sta() = Particle::BANK;
 						population += particle.wgt();
-						local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);
+						local_fission_bank[i] = CellParticle(cell,particle);
 					}
 				}
 				/* Kill the particle, this is an analog simulation */
 				break;
 			} else {
-				/* Scatter with isotope */
-				Reaction* inelastic = isotope->inelastic(particle.erg(),r);
-				/* Apply the reaction */
-				(*inelastic)(particle,r);
+				/* Get elastic probability */
+				double elastic = isotope->getElasticProb(particle.erg());
+				/* 8.2 ---- Sample between inelastic and elastic scattering */
+				if((prob - absorption) <= elastic) {
+					/* Elastic reaction */
+					Reaction* elastic_reaction = isotope->elastic();
+					/* Apply the reaction */
+					(*elastic_reaction)(particle,r);
+				} else {
+					/* Scatter with isotope sampling an inelastic reaction*/
+					Reaction* inelastic_reaction = isotope->inelastic(particle.erg(),r);
+					/* Apply the reaction */
+					(*inelastic_reaction)(particle,r);
+				}
 			}
 		}
 	}
@@ -178,10 +185,10 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 	fission_bank.resize(particles_number);
 
 	/* Populate the particle bank with the initial source */
-	tbb::parallel_for(tbb::blocked_range<size_t>(0,particles_number),SourceSimulator(environment,base,fission_bank,max_rng_per_source));
+	tbb::parallel_for(tbb::blocked_range<size_t>(0,particles_number),SourceSimulator(environment,base,fission_bank,Source::max_samples));
 
 	/* Jump on base stream of RNGs */
-	base.jump(particles_number * max_rng_per_source);
+	base.jump(particles_number * Source::max_samples);
 }
 
 void KeffSimulation::launch() {
@@ -206,7 +213,7 @@ void KeffSimulation::launch() {
 	/* --- Re-populate the particle bank with the new source */
 	for(size_t i = 0 ; i < local_fission_bank.size() ; ++i) {
 		/* Get banked particle */
-		Simulation::CellParticle banked_particle = local_fission_bank[i];
+		CellParticle banked_particle = local_fission_bank[i];
 		if(banked_particle.second.sta() != Particle::BANK) continue;
 
 		/* Split particle */

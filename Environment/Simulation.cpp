@@ -38,7 +38,6 @@ CriticalitySimulation::CriticalitySimulation(const Random& _random, McEnvironmen
 
 Simulation::Simulation(const Random& base,McEnvironment* environment) : base(base), environment(environment) {
 	/* Parameters for random number on simulations */
-	max_rng_per_source = 100;
 	max_rng_per_history = 100000;
 }
 

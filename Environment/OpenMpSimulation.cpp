@@ -50,15 +50,12 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 	for(size_t i = 0 ; i < particles_number ; ++i) {
 		/* Jump random number generator */
 		Random random(base);
-		random.jump(i * max_rng_per_source);
-		/* Sample particle */
-		Particle particle = source->sample(random);
-		const Cell* cell(geometry->findCell(particle.pos()));
-		fission_bank[i] = CellParticle(cell->getInternalId(),particle);
+		random.jump(i * Source::max_samples);
+		fission_bank[i] = source->sample(random);
 	}
 
 	/* Jump on base stream of RNGs */
-	base.jump(particles_number * max_rng_per_source);
+	base.jump(particles_number * Source::max_samples);
 }
 
 void KeffSimulation::launch() {
@@ -91,7 +88,7 @@ void KeffSimulation::launch() {
 
 			/* 1. ---- Initialize particle from source (get particle from the bank) */
 			CellParticle pc = fission_bank[i];
-			const Cell* cell = geometry->getCells()[pc.first];
+			const Cell* cell = pc.first;
 			Particle particle = pc.second;
 
 			while(true) {
@@ -152,7 +149,7 @@ void KeffSimulation::launch() {
 							(*fission_reaction)(particle, r);
 							particle.sta() = Particle::BANK;
 							population += particle.wgt();
-							local_fission_bank[i] = CellParticle(cell->getInternalId(),particle);
+							local_fission_bank[i] = CellParticle(cell,particle);
 						}
 					}
 					/* Kill the particle, this is an analog simulation */
@@ -196,7 +193,7 @@ void KeffSimulation::launch() {
 	/* --- Re-populate the particle bank with the new source */
 	for(size_t i = 0 ; i < local_fission_bank.size() ; ++i) {
 		/* Get banked particle */
-		Simulation::CellParticle banked_particle = local_fission_bank[i];
+		CellParticle banked_particle = local_fission_bank[i];
 		if(banked_particle.second.sta() != Particle::BANK) continue;
 
 		/* Split particle */

@@ -31,6 +31,8 @@ using namespace std;
 
 namespace Helios {
 
+size_t Source::max_samples = 100;
+
 McModule* SourceFactory::create(const std::vector<McObject*>& objects) const {
 	return new Source(objects,getEnvironment());
 }
@@ -96,6 +98,29 @@ Source::Source(const vector<McObject*>& definitions, const McEnvironment* enviro
 
 	/* Once we got all the sources, we should create the sampler */
 	source_sampler = new Sampler<ParticleSource*>(sources,strengths);
+}
+
+/* Sample a particle */
+CellParticle Source::sample(Random& r) const {
+	CellParticle particle;
+	ParticleSource* sampler = source_sampler->sample(0,r.uniform());
+
+	/* Number of samples */
+	size_t nsamples = 0;
+	/* Cell where the particle born */
+	const Cell* cell = 0;
+	while(not cell) {
+		/* This should set the cell and the phase space coordinates of the particle */
+		sampler->sample(particle,r);
+		cell = particle.first;
+		/* Check if the particle is outside the system. */
+		if(nsamples >= Source::max_samples)
+			throw(GeneralError("A lot of source particles are born on the outside. Please review the source definition"));
+		/* Increment counter */
+		++nsamples;
+	}
+	/* Return particle */
+	return particle;
 }
 
 void Source::print(std::ostream& out) const {

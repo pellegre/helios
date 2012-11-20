@@ -32,6 +32,7 @@
 
 #include "../Common/Common.hpp"
 #include "../Common/Sampler.hpp"
+#include "../Geometry/Geometry.hpp"
 #include "SourceObject.hpp"
 #include "Distribution/Distribution.hpp"
 
@@ -66,8 +67,6 @@ namespace Helios {
 	public:
 		/* Name of this object */
 		static std::string name() {return "sampler";}
-		/* Max sampling rejections */
-		static unsigned long int max_samples;
 
 		/* Exception */
 		class BadSamplerCreation : public std::exception {
@@ -89,16 +88,18 @@ namespace Helios {
 		}
 
 		/* Sample particle */
-		virtual void operator() (Particle& particle,Random& r) const {
+		virtual void operator() (CellParticle& particle,Random& r) const {
 			/* Set phase space coordinates of this sampler */
-			particle.pos() = position;
-			particle.dir() = direction;
-			particle.erg() = energy;
-			particle.wgt() = weight;
-			particle.sta() = state;
+			particle.second.pos() = position;
+			particle.second.dir() = direction;
+			particle.second.erg() = energy;
+			particle.second.wgt() = weight;
+			particle.second.sta() = state;
 			/* Apply distributions (if any) */
 			for(std::vector<DistributionBase*>::const_iterator it = distributions.begin() ; it != distributions.end() ; ++it)
-				(*(*it))(particle,r);
+				(*(*it))(particle.second,r);
+			/* No geometry constraint */
+			particle.first = 0;
 		}
 
 		virtual ~ParticleSampler(){/* */};
@@ -115,7 +116,7 @@ namespace Helios {
 	public:
 		ParticleCellSampler(const ParticleSamplerObject* definition, const Source* source);
 		/* Sample particle (and check cell) */
-		void operator() (Particle& particle,Random& r) const;
+		void operator() (CellParticle& particle,Random& r) const;
 		~ParticleCellSampler() {/* */}
 	};
 
@@ -144,17 +145,23 @@ namespace Helios {
 		ParticleSource(const ParticleSourceObject* definition, const Source* source);
 
 		/* Sample a particle */
-		Particle sample(Random& r) const {
-			Particle particle;
+		CellParticle sample(Random& r) const {
+			CellParticle particle;
 			ParticleSampler* sampler = source_sampler->sample(0,r.uniform());
 			(*sampler)(particle,r);
+			/* Find the cell */
+			if(not particle.first)
+				particle.first = geometry->findCell(particle.second.pos());
 			return particle;
 		}
 
 		/* Sample a particle (override) */
-		void sample(Particle& particle, Random& r) const {
+		void sample(CellParticle& particle, Random& r) const {
 			ParticleSampler* sampler = source_sampler->sample(0,r.uniform());
 			(*sampler)(particle,r);
+			/* Find the cell */
+			if(not particle.first)
+				particle.first = geometry->findCell(particle.second.pos());
 		}
 
 		/* Get strength */
@@ -170,6 +177,8 @@ namespace Helios {
 		Sampler<ParticleSampler*>* source_sampler;
 		/* Strength of this source */
 		double strength;
+		/* Geometry of the problem */
+		Geometry* geometry;
 	};
 
 	/* Printers */

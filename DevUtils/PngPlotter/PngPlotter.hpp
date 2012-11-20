@@ -235,9 +235,9 @@ class PngPlotter {
 			r_local.jump(100*range.begin());
 			/* Sample particles and set the color matrix */
 			for(int i = range.begin() ; i < range.end() ; ++i) {
-				Helios::Particle sampleParticle = source->sample(r_local);
+				Helios::CellParticle sampleParticle = source->sample(r_local);
 				/* Get coordinates */
-				Helios::Coordinate position = sampleParticle.pos();
+				Helios::Coordinate position = sampleParticle.second.pos();
 				/* Get coordinates */
 				double x = Helios::getAbscissa<axis>(position);
 				double y = Helios::getOrdinate<axis>(position);

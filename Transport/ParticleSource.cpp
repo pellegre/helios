@@ -35,9 +35,6 @@ using namespace std;
 
 namespace Helios {
 
-/* Maximum number of samples */
-unsigned long int ParticleSampler::max_samples = 1000000;
-
 ParticleSampler::ParticleSampler(const ParticleSamplerObject* definition, const Source* source) :
 		user_id(definition->getSamplerid()), position(definition->getPosition()),
 		direction(definition->getDirection()), energy(Energy(0,1.0)), weight(1.0), state(Particle::ALIVE) {
@@ -90,7 +87,7 @@ ParticleCellSampler::ParticleCellSampler(const ParticleSamplerObject* definition
 }
 
 /* Sample particle (and check cell) */
-void ParticleCellSampler::operator() (Particle& particle,Random& r) const {
+void ParticleCellSampler::operator() (CellParticle& particle,Random& r) const {
 	/* Number of samples */
 	size_t nsamples = 0;
 	/* Flag if is inside the cell */
@@ -98,31 +95,37 @@ void ParticleCellSampler::operator() (Particle& particle,Random& r) const {
 	/* First get the position (rejecting point outside the cell) */
 	while(!inside) {
 		/* Initial position for sampling */
-		particle.pos() = position;
+		particle.second.pos() = position;
 		/* Apply position distributions */
 		for(vector<DistributionBase*>::const_iterator it = pos_distributions.begin() ; it != pos_distributions.end() ; ++it)
-			(*(*it))(particle,r);
+			(*(*it))(particle.second,r);
 		/* Check if we are inside the cell */
 		for(vector<Cell*>::const_iterator it = cells.begin() ; it != cells.end() ; ++it) {
-			if((*it)->isInside(particle.pos())) {
+			/* Get cell */
+			const Cell* cell = (*it)->findCell(particle.second.pos());
+			if(cell) {
+				/* Is inside */
 				inside = true;
+				/* Set the cell */
+				particle.first = cell;
+				/* Break loop */
 				break;
 			}
 		}
 		/* Count sample */
 		nsamples++;
-		if(nsamples >= ParticleSampler::max_samples)
+		if(nsamples >= Source::max_samples)
 			throw(GeneralError("Sampler efficiency too low on sampler " + getUserId() +
 					". Please, reconsider the source definition because this is not a fair game"));
 	}
 	/* Once the position is set, set phase space coordinates of this sampler */
-	particle.dir() = direction;
-	particle.erg() = energy;
-	particle.wgt() = weight;
-	particle.sta() = state;
+	particle.second.dir() = direction;
+	particle.second.erg() = energy;
+	particle.second.wgt() = weight;
+	particle.second.sta() = state;
 	/* Apply distributions (if any) */
 	for(vector<DistributionBase*>::const_iterator it = distributions.begin() ; it != distributions.end() ; ++it)
-		(*(*it))(particle,r);
+		(*(*it))(particle.second,r);
 }
 
 std::ostream& operator<<(std::ostream& out, const ParticleSampler& q) {
@@ -137,7 +140,8 @@ std::ostream& operator<<(std::ostream& out, const ParticleSampler& q) {
 	return out;
 }
 
-ParticleSource::ParticleSource(const ParticleSourceObject* definition, const Source* source) : strength(definition->getStrength()) {
+ParticleSource::ParticleSource(const ParticleSourceObject* definition, const Source* source) :
+		strength(definition->getStrength()), geometry(source->getEnvironment()->getModule<Geometry>()) {
 	/* Get distributions */
 	vector<SamplerId> sampler_ids = definition->getSamplersIds();
 

@@ -72,8 +72,7 @@ int main(int argc, char **argv) {
 	environment.setup();
 
 	/* Initialization - Random number */
-	Random r;
-	r.seed(1);
+	Random r(10);
 
 	/* Initialization - KEFF cycle */
 	double keff = 1.000;
@@ -83,7 +82,7 @@ int main(int argc, char **argv) {
 	int cycles = 1050;
 
 	/* Initialize simulation */
-	OpenMp::KeffSimulation simulation(r,&environment,keff,neutrons);
+	IntelTbb::KeffSimulation simulation(r,&environment,keff,neutrons);
 
 	for(int ncycle = 0 ; ncycle <= cycles ; ++ncycle) {
 

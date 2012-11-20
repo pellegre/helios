@@ -75,10 +75,8 @@ Geometry::Geometry(const std::vector<McObject*>& definitions, const McEnvironmen
 	}
 
 	/* Print input data information */
-	Log::msg() << left << Log::ident(1) << " - Number of input surfaces : ";
-	Log::color<Log::COLOR_BOLDWHITE>() << setw(6) << surObjects.size() << Log::endl;
-	Log::msg() << left << Log::ident(1) << " - Number of input cells    : ";
-	Log::color<Log::COLOR_BOLDWHITE>() << setw(6) << cellObjects.size() << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Number of input surfaces : " << surObjects.size() << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Number of input cells    : " << cellObjects.size() << Log::endl;
 
 	/* Keep the new objects added by the features */
 	vector<CellObject*> cellFeatureObject;

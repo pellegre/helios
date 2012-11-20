@@ -9,9 +9,9 @@
 #define PROJECT "Helios++"
 #define PROJECT_VERSION "0.1"
 #define BUILD_TYPE "release"
-#define COMPILER_NAME "/usr/bin/g++"
-#define COMPILER_FLAGS "-ansi -Wall -fopenmp -O3"
-#define GIT_SHA1 "af4aab6b412d0aaeda093ee0f76ad5b17590542e"
-#define COMPILATION_DATE "11/18/2012 - 12:19:54 AM"
+#define COMPILER_NAME "/opt/intel/composerxe-2011.4.191/bin/intel64/icpc"
+#define COMPILER_FLAGS "-ansi -openmp -xHOST -O3 -ipo -no-prec-div -static-intel"
+#define GIT_SHA1 "c4fa1a151e748f2d0c85138f68f258b9330e43a0"
+#define COMPILATION_DATE "11/19/2012 - 07:42:22 PM"
 
 #endif // CONFIG_H

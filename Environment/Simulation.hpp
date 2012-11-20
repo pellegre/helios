@@ -47,12 +47,8 @@ protected:
 	McEnvironment* environment;
 
 	/* Parameters for random number on simulations */
-	size_t max_rng_per_source;
 	size_t max_rng_per_history;
 public:
-
-	/* Pair of particle and cell */
-	typedef std::pair<InternalCellId,Particle> CellParticle;
 
 	/* Initialize simulation */
 	Simulation(const Random& base, McEnvironment* environment);
@@ -78,7 +74,7 @@ class CriticalitySimulation : public Simulation {
 	Geometry* geometry;
 	/* Global particle bank for this simulation */
 	std::vector<std::vector<CellParticle> > fission_bank;
-	/* Execute a cycle of the KEFF simulation of a particle bank */
+	/* Execute a cycle of the KEFF simulation of particles in a bank */
 	void cycle(size_t nbank);
 public:
 	/* Initialize simulation */
@@ -97,7 +93,6 @@ namespace OpenMp {
 	 *
 	 * Apart of accumulate the user defined tallies, this class also creates a bank
 	 * of particles representing the source fission (as a result of this simulation).
-	 * Is caller responsibility do whatever he/she wants with it.
 	 */
 	class KeffSimulation : public Simulation {
 		/* Population after the simulation */
@@ -130,7 +125,6 @@ namespace IntelTbb {
 	 *
 	 * Apart of accumulate the user defined tallies, this class also creates a bank
 	 * of particles representing the source fission (as a result of this simulation).
-	 * Is caller responsibility do whatever he/she wants with it.
 	 */
 	class KeffSimulation : public Simulation {
 		/* Population after the simulation */

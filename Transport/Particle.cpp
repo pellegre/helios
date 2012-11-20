@@ -98,7 +98,7 @@ std::ostream& operator<<(std::ostream& out, const Particle& q) {
 	return out;
 }
 std::ostream& operator<<(std::ostream& out, const Energy& q) {
-	out << "(" << q.first << " , " << q.first << ")";
+	out << "(" << q.first << " , " << q.second << ")";
 	return out;
 }
 

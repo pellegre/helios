@@ -76,6 +76,8 @@ namespace Helios {
 	public:
 		/* Name of this module */
 		static std::string name() {return "sources";}
+		/* Max number of samples on the source */
+		static size_t max_samples;
 
 		/* Construction from definitions */
 		Source(const std::vector<McObject*>& definitions, const McEnvironment* environment);
@@ -94,12 +96,7 @@ namespace Helios {
 		};
 
 		/* Sample a particle */
-		Particle sample(Random& r) const {
-			Particle particle;
-			ParticleSource* sampler = source_sampler->sample(0,r.uniform());
-			sampler->sample(particle,r);
-			return particle;
-		}
+		CellParticle sample(Random& r) const;
 
 		/* Get references to objects from an id */
 		template<class Object>
