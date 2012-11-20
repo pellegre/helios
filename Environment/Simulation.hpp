@@ -66,16 +66,22 @@ public:
  * of particles representing the source fission (as a result of this simulation).
  */
 class CriticalitySimulation : public Simulation {
+protected:
 	/* Population after the simulation */
 	double keff;
 	/* Particles per cycle */
 	size_t particles_number;
+	/* Global particle bank for this simulation */
+	std::vector<CellParticle> fission_bank;
 	/* Reference to the geometry of the problem */
 	Geometry* geometry;
-	/* Global particle bank for this simulation */
-	std::vector<std::vector<CellParticle> > fission_bank;
-	/* Execute a cycle of the KEFF simulation of particles in a bank */
-	void cycle(size_t nbank);
+
+	/*
+	 * Execute a a random walk of a particle in a bank. If the simulation terminates with a
+	 * a fission, the banked particle is also set.
+	 */
+	double cycle(size_t nbank, vector<CellParticle>& banked);
+
 public:
 	/* Initialize simulation */
 	CriticalitySimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
@@ -94,15 +100,8 @@ namespace OpenMp {
 	 * Apart of accumulate the user defined tallies, this class also creates a bank
 	 * of particles representing the source fission (as a result of this simulation).
 	 */
-	class KeffSimulation : public Simulation {
-		/* Population after the simulation */
-		double keff;
-		/* Particles per cycle */
-		size_t particles_number;
-		/* Global particle bank for this simulation */
-		std::vector<CellParticle> fission_bank;
-		/* Reference to the geometry of the problem */
-		Geometry* geometry;
+	class KeffSimulation : public CriticalitySimulation {
+
 	public:
 		/* Initialize simulation */
 		KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
@@ -126,15 +125,8 @@ namespace IntelTbb {
 	 * Apart of accumulate the user defined tallies, this class also creates a bank
 	 * of particles representing the source fission (as a result of this simulation).
 	 */
-	class KeffSimulation : public Simulation {
-		/* Population after the simulation */
-		double keff;
-		/* Particles per cycle */
-		size_t particles_number;
-		/* Global particle bank for this simulation */
-		std::vector<CellParticle> fission_bank;
-		/* Reference to the geometry of the problem */
-		Geometry* geometry;
+	class KeffSimulation : public CriticalitySimulation {
+
 	public:
 		/* Initialize simulation */
 		KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
@@ -183,7 +175,7 @@ namespace IntelTbb {
 			/* Population after the simulation */
 			double local_population;
 			PowerStepSimulator(const McEnvironment* environment, const Random& base, const size_t& max_rng,
-					vector<CellParticle>& current_bank, vector<CellParticle>& after_bank);
+					vector<CellParticle>& current_bank, vector<vector<CellParticle> >& after_bank);
 			PowerStepSimulator(PowerStepSimulator& right, tbb::split);
 			void join(PowerStepSimulator& right);
 			void operator() (const tbb::blocked_range<size_t>& range);

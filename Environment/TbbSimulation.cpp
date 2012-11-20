@@ -44,7 +44,7 @@ void KeffSimulation::SourceSimulator::operator() (const tbb::blocked_range<size_
 }
 
 KeffSimulation::PowerStepSimulator::PowerStepSimulator(const McEnvironment* environment, const Random& base,
-		const size_t& max_rng,vector<CellParticle>& current_bank,vector<CellParticle>& after_bank) :
+		const size_t& max_rng,vector<CellParticle>& current_bank,vector<vector<CellParticle> >& after_bank) :
 		base(base), max_rng(max_rng), current_bank(current_bank),
 		after_bank(after_bank), geometry(environment->getModule<Geometry>()), local_population(0.0)
 		{/* */}
@@ -63,7 +63,7 @@ void KeffSimulation::PowerStepSimulator::operator() (const tbb::blocked_range<si
 	double population = local_population;
 
 	/* Local bank */
-	vector<CellParticle>& local_fission_bank = after_bank;
+	vector<vector<CellParticle> >& local_bank = after_bank;
 
 	/* Bank to be simulated */
 	vector<CellParticle>& fission_bank = current_bank;
@@ -145,7 +145,7 @@ void KeffSimulation::PowerStepSimulator::operator() (const tbb::blocked_range<si
 						(*fission_reaction)(particle, r);
 						particle.sta() = Particle::BANK;
 						population += particle.wgt();
-						local_fission_bank[i] = CellParticle(cell,particle);
+						local_bank[i] = CellParticle(cell,particle);
 					}
 				}
 				/* Kill the particle, this is an analog simulation */
@@ -174,14 +174,13 @@ void KeffSimulation::PowerStepSimulator::operator() (const tbb::blocked_range<si
 
 }
 
-KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
-		Simulation(_random,_environment), keff(keff), particles_number(_particles_number) {
+KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double _keff, size_t _particles_number) :
+		CriticalitySimulation(_random,_environment,_keff,_particles_number) {
 
 	/* Get geometry from the environment */
 	geometry = environment->getModule<Geometry>();
 
 	/* Reserve space for the particle bank */
-	fission_bank.reserve(particles_number);
 	fission_bank.resize(particles_number);
 
 	/* Populate the particle bank with the initial source */
@@ -194,9 +193,9 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 void KeffSimulation::launch() {
 
 	/* --- Local particle bank for for this simulation */
-	vector<CellParticle> local_fission_bank(fission_bank.size());
+	vector<vector<CellParticle> > local_bank(fission_bank.size());
 
-	PowerStepSimulator power_step(environment,base,max_rng_per_history,fission_bank,local_fission_bank);
+	PowerStepSimulator power_step(environment,base,max_rng_per_history,fission_bank,local_bank);
 
 	/* Simulate power step */
 	tbb::parallel_reduce(tbb::blocked_range<size_t>(0, fission_bank.size()), power_step);
@@ -211,20 +210,20 @@ void KeffSimulation::launch() {
 	fission_bank.clear();
 
 	/* --- Re-populate the particle bank with the new source */
-	for(size_t i = 0 ; i < local_fission_bank.size() ; ++i) {
-		/* Get banked particle */
-		CellParticle banked_particle = local_fission_bank[i];
-		if(banked_particle.second.sta() != Particle::BANK) continue;
-
-		/* Split particle */
-		double amp = banked_particle.second.wgt() / keff;
-		int split = std::max(1,(int)(amp));
-		/* New weight of the particle */
-		banked_particle.second.wgt() = amp/(double)split;
-		/* Put the split particle into the "simulation" list */
-		banked_particle.second.sta() = Particle::ALIVE;
-		for(int i = 0 ; i < split ; i++)
-			fission_bank.push_back(banked_particle);
+	for(vector<vector<CellParticle> >::const_iterator it = local_bank.begin() ; it != local_bank.end() ; ++it) {
+		/* Loop over local bank */
+		for(vector<CellParticle>::const_iterator it_particle = (*it).begin() ; it_particle != (*it).end() ; ++it_particle) {
+			/* Get banked particle */
+			CellParticle& banked_particle = (*it_particle);
+			/* Split particle */
+			double amp = banked_particle.second.wgt() / keff;
+			int split = std::max(1,(int)(amp));
+			/* New weight of the particle */
+			banked_particle.second.wgt() = amp/(double)split;
+			/* Put the split particle into the "simulation" list */
+			for(int i = 0 ; i < split ; i++)
+				fission_bank.push_back(banked_particle);
+		}
 	}
 
 }
