@@ -30,11 +30,6 @@ using namespace std;
 using namespace Helios;
 using namespace IntelTbb;
 
-
-KeffSimulation::SourceSimulator::SourceSimulator(const McEnvironment* environment, const Random& base, vector<CellParticle>& particles,
-			const size_t& max_rng) : base(base), particles(particles), max_rng(max_rng),
-			source(environment->getModule<Source>()), geometry(environment->getModule<Geometry>()) {/* */}
-
 void KeffSimulation::SourceSimulator::operator() (const tbb::blocked_range<size_t>& range) const {
 	for(size_t i = range.begin() ; i < range.end() ; ++i) {
 		Random r_local(base);
@@ -227,7 +222,3 @@ void KeffSimulation::launch() {
 	}
 
 }
-
-
-
-
