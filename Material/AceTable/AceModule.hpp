@@ -119,6 +119,9 @@ namespace Helios {
 			return fission_reaction;
 		};
 
+		/* Get average NU-bar at some energy */
+		double getNuBar(const Energy& energy) const;
+
 		/* Elastic reaction */
 		Reaction* elastic() const {
 			return elastic_scattering;

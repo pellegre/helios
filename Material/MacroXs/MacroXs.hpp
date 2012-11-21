@@ -55,18 +55,14 @@ namespace Helios {
 		public:
 			Fission(const std::vector<double>& nu, const std::vector<double>& chi);
 			void operator() (Particle& particle, Random& r) const {
-				/* Get number of particles */
-				double nubar = nu[particle.erg().first];
-				/* Integer part */
-				int nu = (int) nubar;
-				if (r.uniform() < nubar - (double)nu)
-					nu++;
-				particle.wgt() *= (double)nu;
 				/* New direction */
 				isotropicDirection(particle.dir(),r);
 				/* New group */
 				particle.erg().first = spectrum->sample(0,r.uniform());
 			};
+			double getNuBar(const Energy& energy) const {
+				return nu[energy.first];
+			}
 			void print(std::ostream& out) const {out << "Fission Macro XS reaction";};
 			~Fission();
 		};
@@ -125,6 +121,10 @@ namespace Helios {
 		/* Fission reaction */
 		Reaction* fission() const {
 			return fission_reaction;
+		}
+
+		double getNuBar(const Energy& energy) const {
+			return fission_reaction->getNuBar(energy);
 		}
 
 		/* Fission reaction */

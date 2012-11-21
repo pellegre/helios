@@ -30,6 +30,7 @@
 #include "AceReader/NeutronTable.hpp"
 #include "AceReader/Conf.hpp"
 #include "AceReaction/AceReactionBase.hpp"
+#include "AceReaction/FissionReaction.hpp"
 #include "../../Common/XsSampler.hpp"
 
 using namespace std;
@@ -116,6 +117,10 @@ double AceIsotope::getProb(Energy& energy, const Ace::CrossSection& xs) const {
 
 double AceIsotope::getAbsorptionProb(Energy& energy) const {
 	return getProb(energy, absorption_xs);
+}
+
+double AceIsotope::getNuBar(const Energy& energy) const {
+	return static_cast<AceReaction::Fission*>(fission_reaction)->sampleNuBar(energy);
 }
 
 double AceIsotope::getFissionProb(Energy& energy) const {

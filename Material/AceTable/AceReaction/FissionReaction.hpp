@@ -43,24 +43,21 @@ namespace AceReaction {
 		/* Print internal information of the reaction */
 		void print(std::ostream& out) const;
 
-		/* Sample a fission neutron (the weight of the neutron is multiplied by NU) */
+		/* Sample NU bar (is not an integer number) */
+		double sampleNuBar(const Energy& energy) const {
+			return prompt_nu->getNuBar(energy.second);
+		}
+
+		/* Sample a fission neutron (the weight of the neutron is NOT modified) */
 		void operator()(Particle& particle, Random& random) const {
-			/* Sample NU  */
-			double nu = prompt_nu->getNu(particle.erg().second, random);
-
-			/* Just multiply the particle weight */
-			particle.wgt() *= (double)nu;
-
 			/* Sample new scattering cosine */
 			double mu;
 			sampleCosine(particle, random, mu);
 			/* Sample new energy */
 			double energy;
 			sampleEnergy(particle, random, energy, mu);
-
 			/* Set new direction */
 			azimutalRotation(mu, particle.dir(), random);
-
 			/* Set new energy */
 			particle.erg().second = energy;
 		}

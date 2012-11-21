@@ -83,9 +83,10 @@ namespace Helios {
 
 		/* -- Check if the isotope is fissile */
 		bool isFissile() const {return fissile;}
-
 		/* -- Get fission probability */
 		virtual double getFissionProb(Energy& energy) const = 0;
+		/* -- Get NU-bar from fission reaction */
+		virtual double getNuBar(const Energy& energy) const = 0;
 
 		/* -- Get elastic probability */
 		virtual double getElasticProb(Energy& energy) const = 0;

@@ -54,7 +54,12 @@ namespace AceReaction {
 		}
 	public:
 		NuSampler() {/* */}
-		virtual double getNu(double energy, Random& random) const = 0;
+		virtual double getNuBar(double energy) const = 0;
+		virtual double getNu(double energy, Random& random) const {
+			double nubar = getNuBar(energy);
+			/* Return integer part */
+			return integerPart(nubar,random);
+		}
 		virtual void print(std::ostream& out) const = 0;
 		virtual ~NuSampler() {/* */}
 	};
@@ -63,6 +68,7 @@ namespace AceReaction {
 	class OneNu : public NuSampler {
 	public:
 		OneNu(const Ace::TyrDistribution& tyr) {/* */}
+		double getNuBar(double energy) const {return 1;}
 		double getNu(double energy, Random& random) const {return 1;}
 		void print(std::ostream& out) const {
 			out << " * No NU (one outgoing particle)" << endl;
@@ -75,6 +81,7 @@ namespace AceReaction {
 		double number;
 	public:
 		FixedNu(const Ace::TyrDistribution& tyr) : number(abs(tyr.getTyr())) {/* */}
+		double getNuBar(double energy) const {return number;}
 		double getNu(double energy, Random& random) const {return number;}
 		void print(std::ostream& out) const {
 			out << " * Fixed NU = " << number << endl;
@@ -91,7 +98,7 @@ namespace AceReaction {
 		TabularNu(const Ace::TyrDistribution& tyr) : energies(tyr.getEnergies()), nu(tyr.getNu()) {/* */}
 		/* Get from data on NU block */
 		TabularNu(const Ace::NUBlock::Tabular* nu_data) : energies(nu_data->energies), nu(nu_data->nu) {/* */}
-		double getNu(double energy, Random& random) const {
+		double getNuBar(double energy) const {
 			/* Get interpolation data */
 			std::pair<size_t,double> res = interpolate(energies.begin(), energies.end(), energy);
 			/* Index */
@@ -99,7 +106,7 @@ namespace AceReaction {
 			/* Interpolation factor */
 			double factor = res.second;
 			/* Return interpolated NU */
-			return integerPart(factor * (nu[idx + 1] - nu[idx]) + nu[idx], random);
+			return factor * (nu[idx + 1] - nu[idx]) + nu[idx];
 		}
 		void print(std::ostream& out) const {
 			out << " * Tabular NU " << endl;
@@ -115,7 +122,7 @@ namespace AceReaction {
 	public:
 		/* Get from data on NU block */
 		PolynomialNu(const Ace::NUBlock::Polynomial* nu_data) : coeffs(nu_data->coef) {/* */}
-		double getNu(double energy, Random& random) const {
+		double getNuBar(double energy) const {
 			/* Initial energy */
 			double erg = 1.0;
 			/* Accumulated NU */
@@ -124,7 +131,7 @@ namespace AceReaction {
 				accum += coeffs[i] * erg;
 				erg *= energy;
 			}
-			return integerPart(accum, random);
+			return accum;
 		}
 		void print(std::ostream& out) const {
 			out << " * Polynomial NU " << endl;

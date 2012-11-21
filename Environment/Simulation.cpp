@@ -109,11 +109,23 @@ double KeffSimulation::cycle(size_t nbank) {
 			if(isotope->isFissile()) {
 				double fission = isotope->getFissionProb(particle.erg());
 				if(prob > (absorption - fission)) {
-					/* We should bank the particle state after simulating the fission reaction */
+					/* Get NU-bar */
+					double nubar = isotope->getNuBar(particle.erg()) * particle.wgt() / keff;
+					/* Integer part */
+					int nu = (int) nubar;
+					if (r.uniform() < nubar - (double)nu) nu++;
+					/* Get fission reaction */
 					Reaction* fission_reaction = isotope->fission();
-					(*fission_reaction)(particle, r);
-					population += particle.wgt();
-					local_bank[nbank].push_back(CellParticle(cell,particle));
+					/* Accumulate population */
+					population += particle.wgt() * nu;
+					/* We should bank the particle state after simulating the fission reaction */
+					for(int i = 0 ; i < nu ; ++i) {
+						Particle new_particle(particle);
+						new_particle.wgt() = 1.0;
+						/* Apply reaction */
+						(*fission_reaction)(new_particle, r);
+						local_bank[nbank].push_back(CellParticle(cell,new_particle));
+					}
 				}
 			}
 			/* Kill the particle, this is an analog simulation */
@@ -143,7 +155,9 @@ void KeffSimulation::source(size_t nbank) {
 	/* Jump random number generator */
 	Random random(base);
 	random.jump(nbank * Source::max_samples);
-	fission_bank[nbank] = initial_source->sample(random);
+	CellParticle source_particle = initial_source->sample(random);
+	source_particle.second.wgt() = keff;
+	fission_bank[nbank] = source_particle;
 }
 
 void KeffSimulation::launch() {
@@ -166,21 +180,11 @@ void KeffSimulation::launch() {
 	fission_bank.clear();
 
 	/* --- Re-populate the particle bank with the new source */
-	for(vector<vector<CellParticle> >::iterator it = local_bank.begin() ; it != local_bank.end() ; ++it) {
+	for(vector<vector<CellParticle> >::iterator it = local_bank.begin() ; it != local_bank.end() ; ++it)
 		/* Loop over local bank */
-		for(vector<CellParticle>::iterator it_particle = (*it).begin() ; it_particle != (*it).end() ; ++it_particle) {
+		for(vector<CellParticle>::iterator it_particle = (*it).begin() ; it_particle != (*it).end() ; ++it_particle)
 			/* Get banked particle */
-			CellParticle& banked_particle = (*it_particle);
-			/* Split particle */
-			double amp = banked_particle.second.wgt() / keff;
-			int split = std::max(1,(int)(amp));
-			/* New weight of the particle */
-			banked_particle.second.wgt() = amp/(double)split;
-			/* Put the split particle into the "simulation" list */
-			for(int i = 0 ; i < split ; i++)
-				fission_bank.push_back(banked_particle);
-		}
-	}
+			fission_bank.push_back((*it_particle));
 
 	/* Clear local bank */
 	local_bank.clear();
