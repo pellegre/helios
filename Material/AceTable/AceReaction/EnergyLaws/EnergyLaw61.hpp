@@ -25,8 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ENERGYLAW4_HPP_
-#define ENERGYLAW4_HPP_
+#ifndef ENERGYLAW61_HPP_
+#define ENERGYLAW61_HPP_
 
 #include "AceEnergyLaw.hpp"
 #include "EnergyTabular.hpp"
@@ -34,19 +34,22 @@
 namespace Helios {
 namespace AceReaction {
 
-	/* ---------- Continuous tabular distribution (law 4) ---------- */
+	/* ---------- Like law 44 but with an angular distribution instead of Kalbach-87 Formalism (law 61) ---------- */
 
 	/* Sample outgoing energy using a tabular distribution */
-	class EnergyTabular : public TabularDistribution /* defined on AceReactionCommon.hpp */ {
-	public:
+	class AngularTabular : public TabularDistribution /* defined on AceReactionCommon.hpp */ {
 
-		EnergyTabular(const Ace::EnergyDistribution::Law4::EnergyData& ace_energy) :
+	public:
+		AngularTabular(const Ace::EnergyDistribution::Law61::EnergyData& ace_energy) :
 			TabularDistribution(ace_energy.intt, ace_energy.eout, ace_energy.pdf, ace_energy.cdf)
 		{/* */}
 
 		void operator()(Random& random, double& energy, double& mu) const {
-			/* Only set the energy */
-			energy = TabularDistribution::operator()(random);
+			/* Index on the outgoing grid */
+			size_t idx;
+			/* Set energy */
+			energy = TabularDistribution::operator()(random, idx);
+
 		}
 
 		void print(std::ostream& out) const {
@@ -54,16 +57,17 @@ namespace AceReaction {
 			TabularDistribution::print(out);
 		}
 
-		~EnergyTabular() {/* */}
+		~AngularTabular() {/* */}
 	};
 
-	class EnergyLaw4 : public EnergyOutgoingTabular<EnergyTabular> {
-		typedef Ace::EnergyDistribution::Law4 Law4;
+	class EnergyLaw61 : public EnergyOutgoingTabular<AngularTabular> {
+		typedef Ace::EnergyDistribution::Law61 Law61;
 	public:
-		EnergyLaw4(const Law* ace_data);
-		~EnergyLaw4() {/* */}
+		EnergyLaw61(const Law* ace_data);
+		~EnergyLaw61() {/* */}
 	};
 
 } /* namespace AceReaction */
 } /* namespace Helios */
-#endif /* ENERGYLAW4_HPP_ */
+
+#endif /* ENERGYLAW61_HPP_ */

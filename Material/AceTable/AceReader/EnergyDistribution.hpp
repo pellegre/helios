@@ -117,13 +117,13 @@ public:
 
         Law1(std::vector<double>::const_iterator it, int lnw);
 
+    public:
+
 		InterScheme int_sch;
         int nen;
         std::vector<double> ein;
         int net;
         std::vector<std::vector<double> > eout;
-
-    public:
 
         Law1(int lnw,int idat,int nr,const std::vector<int>& nbt,const std::vector<int>&aint,int ne,const std::vector<double>& energy,const std::vector<double>& prob)
                 : EnergyLaw(lnw,idat,nr,nbt,aint,ne,energy,prob) {/* */};
@@ -486,6 +486,8 @@ public:
 
         Law61(std::vector<double>::const_iterator it, int lnw);
 
+    public:
+
         struct EnergyData {
         	int intt;
             std::vector<double> eout;
@@ -508,8 +510,6 @@ public:
         std::vector<double> ein;
         std::vector<int> loca;
         std::vector<EnergyData> eout_dist;
-
-    public:
 
         Law61(int lnw,int idat,int nr,const std::vector<int>& nbt,const std::vector<int>&aint,int ne,const std::vector<double>& energy,const std::vector<double>& prob)
                 : EnergyLaw(lnw,idat,nr,nbt,aint,ne,energy,prob) {/* */};

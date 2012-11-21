@@ -92,7 +92,7 @@ namespace AceReaction {
 			/* Sample bin */
 			size_t pos = (size_t) (chi * 32);
 			/* Get interpolated cosine */
-			return bins[pos] + (chi - pos) * (bins[pos + 1] - bins[pos]);
+			return bins[pos] + (32 * chi - pos) * (bins[pos + 1] - bins[pos]);
 		}
 
 		void print(std::ostream& out) const {
@@ -129,7 +129,7 @@ namespace AceReaction {
 	 */
 	class MuSampler {
 	public:
-		MuSampler(const Ace::AngularDistribution& ace_data) {/* */}
+		MuSampler() {/* */}
 		/* Set the cosine with particle's information */
 		virtual void setCosine(const Particle& particle, Random& random, double& mu) const = 0;
 		/* Print internal data of the sampler */
@@ -178,7 +178,7 @@ namespace AceReaction {
 	class MuIsotropic : public MuSampler {
 		Isotropic isotropic;
 	public:
-		MuIsotropic(const Ace::AngularDistribution& ace_data) : MuSampler(ace_data) {/* */};
+		MuIsotropic(const Ace::AngularDistribution& ace_data) {/* */};
 
 		/* Sample scattering cosine */
 		void setCosine(const Particle& particle, Random& random, double& mu) const {

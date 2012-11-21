@@ -25,45 +25,21 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ENERGYLAW4_HPP_
-#define ENERGYLAW4_HPP_
-
-#include "AceEnergyLaw.hpp"
-#include "EnergyTabular.hpp"
+#include "EnergyLaw1.hpp"
 
 namespace Helios {
-namespace AceReaction {
 
-	/* ---------- Continuous tabular distribution (law 4) ---------- */
+using namespace AceReaction;
 
-	/* Sample outgoing energy using a tabular distribution */
-	class EnergyTabular : public TabularDistribution /* defined on AceReactionCommon.hpp */ {
-	public:
+/* Constructor */
+EnergyLaw1::EnergyLaw1(const Law* ace_data) : EnergyOutgoingTabular<EnergyEquiBins>(ace_data) {
+	const Law1* law_data = dynamic_cast<const Law1*>(ace_data);
+	setEnergies(law_data->ein);
+	/* Sanity check */
+	assert(law_data->eout.size() == law_data->ein.size());
+	/* Create the tables */
+	for(vector<vector<double> >::const_iterator it = law_data->eout.begin() ; it != law_data->eout.end() ; ++it)
+		pushTable(*it);
+}
 
-		EnergyTabular(const Ace::EnergyDistribution::Law4::EnergyData& ace_energy) :
-			TabularDistribution(ace_energy.intt, ace_energy.eout, ace_energy.pdf, ace_energy.cdf)
-		{/* */}
-
-		void operator()(Random& random, double& energy, double& mu) const {
-			/* Only set the energy */
-			energy = TabularDistribution::operator()(random);
-		}
-
-		void print(std::ostream& out) const {
-			out << " * Energy Tabular Distribution " << endl;
-			TabularDistribution::print(out);
-		}
-
-		~EnergyTabular() {/* */}
-	};
-
-	class EnergyLaw4 : public EnergyOutgoingTabular<EnergyTabular> {
-		typedef Ace::EnergyDistribution::Law4 Law4;
-	public:
-		EnergyLaw4(const Law* ace_data);
-		~EnergyLaw4() {/* */}
-	};
-
-} /* namespace AceReaction */
 } /* namespace Helios */
-#endif /* ENERGYLAW4_HPP_ */

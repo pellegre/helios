@@ -91,6 +91,7 @@ namespace AceReaction {
 		typedef Ace::EnergyDistribution::Law44 Law44;
 	public:
 		EnergyLaw44(const Law* ace_data);
+		~EnergyLaw44() {/* */}
 	};
 
 } /* namespace AceReaction */

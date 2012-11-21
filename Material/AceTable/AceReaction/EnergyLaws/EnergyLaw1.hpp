@@ -25,8 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ENERGYLAW4_HPP_
-#define ENERGYLAW4_HPP_
+#ifndef ENERGYLAW1_HPP_
+#define ENERGYLAW1_HPP_
 
 #include "AceEnergyLaw.hpp"
 #include "EnergyTabular.hpp"
@@ -34,36 +34,42 @@
 namespace Helios {
 namespace AceReaction {
 
-	/* ---------- Continuous tabular distribution (law 4) ---------- */
+/* ---------- Tabular EquiProbable Energy Bins (law 1) ---------- */
 
-	/* Sample outgoing energy using a tabular distribution */
-	class EnergyTabular : public TabularDistribution /* defined on AceReactionCommon.hpp */ {
-	public:
+	/* Sample outgoing energy using EquiProbable energy bins */
+	struct EnergyEquiBins  {
+		/* Outgoing energy values */
+		std::vector<double> out;
 
-		EnergyTabular(const Ace::EnergyDistribution::Law4::EnergyData& ace_energy) :
-			TabularDistribution(ace_energy.intt, ace_energy.eout, ace_energy.pdf, ace_energy.cdf)
-		{/* */}
+		EnergyEquiBins(const std::vector<double>& out) : out(out) {/* */}
 
 		void operator()(Random& random, double& energy, double& mu) const {
-			/* Only set the energy */
-			energy = TabularDistribution::operator()(random);
+			/* Get number of equi-probable bins */
+			size_t nbins = out.size() - 1;
+			/* Sample random number */
+			double chi = random.uniform();
+			/* Sample bin */
+			size_t pos = (size_t) (chi * nbins);
+			/* Get interpolated energy */
+			energy = out[pos] + (nbins * chi - pos) * (out[pos + 1] - out[pos]);
 		}
 
-		void print(std::ostream& out) const {
-			out << " * Energy Tabular Distribution " << endl;
-			TabularDistribution::print(out);
+		void print(std::ostream& sout) const {
+			sout << " * Equiprobable Energy bins " << endl;
+			for(size_t i = 0 ; i < out.size() ; ++i)
+				sout << (int)i << scientific << setw(15) << out[i] << endl;
 		}
 
-		~EnergyTabular() {/* */}
+		~EnergyEquiBins() {/* */}
 	};
 
-	class EnergyLaw4 : public EnergyOutgoingTabular<EnergyTabular> {
-		typedef Ace::EnergyDistribution::Law4 Law4;
+	class EnergyLaw1 : public EnergyOutgoingTabular<EnergyEquiBins> {
+		typedef Ace::EnergyDistribution::Law1 Law1;
 	public:
-		EnergyLaw4(const Law* ace_data);
-		~EnergyLaw4() {/* */}
+		EnergyLaw1(const Law* ace_data);
+		~EnergyLaw1() {/* */}
 	};
 
 } /* namespace AceReaction */
 } /* namespace Helios */
-#endif /* ENERGYLAW4_HPP_ */
+#endif /* ENERGYLAW1_HPP_ */

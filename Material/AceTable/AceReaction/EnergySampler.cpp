@@ -39,7 +39,11 @@ EnergySamplerBase* EnergySamplerFactory::createSampler(const Ace::EnergyDistribu
 	/* Get law */
 	int law = ace_data.laws[0]->getLaw();
 
-	if(law == 3) {
+	if(law == 1) {
+		/* Level Scattering */
+		return new EnergySampler<EnergyLaw1>(ace_data.laws[0]);
+	}
+	else if(law == 3) {
 		/* Level Scattering */
 		return new EnergySampler<EnergyLaw3>(ace_data.laws[0]);
 	}

@@ -46,7 +46,7 @@ CosineTable* MuTable::tableBuilder(const AceAngular* ace_array) {
 }
 
 /* Constructor */
-MuTable::MuTable(const Ace::AngularDistribution& ace_data) : MuSampler(ace_data) {
+MuTable::MuTable(const Ace::AngularDistribution& ace_data) {
 	energies = ace_data.energy;
 	/* Sanity check */
 	assert(ace_data.adist.size() == energies.size());
