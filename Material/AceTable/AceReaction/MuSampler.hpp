@@ -145,10 +145,10 @@ namespace AceReaction {
 	 * using the incident particle energy.
 	 */
 	class MuTable : public MuSampler, public TableSampler<CosineTable*> {
+	public:
 		/* Cosine table builder */
 		static CosineTable* tableBuilder(const AceAngular* ace_array);
 
-	public:
 		MuTable(const Ace::AngularDistribution& ace_data);
 
 		/* Sample scattering cosine */

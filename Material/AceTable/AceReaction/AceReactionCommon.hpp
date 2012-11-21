@@ -72,6 +72,13 @@ namespace AceReaction {
 			return getOutgoing(chi, idx);
 		}
 
+		double operator()(double chi, size_t& idx) const {
+			/* Sample the bin on the cumulative */
+			idx = std::upper_bound(cdf.begin(), cdf.end(), chi) - cdf.begin() - 1;
+			/* Return outgoing value */
+			return getOutgoing(chi, idx);
+		}
+
 		void print(std::ostream& sout) const {
 			sout << setw(15) << "out" << setw(15) << "pdf" << setw(15) << "cdf" << endl;
 			for(size_t i = 0 ; i < out.size() ; ++i)

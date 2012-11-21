@@ -38,23 +38,47 @@ namespace AceReaction {
 
 	/* Sample outgoing energy using a tabular distribution */
 	class AngularTabular : public TabularDistribution /* defined on AceReactionCommon.hpp */ {
-
+		/* Angular array */
+		typedef Ace::AngularDistribution::AngularArray AceAngular;
+		/* Cosine table associated to this energy outgoing bin */
+		std::vector<CosineTable*> cosine_table;
 	public:
 		AngularTabular(const Ace::EnergyDistribution::Law61::EnergyData& ace_energy) :
 			TabularDistribution(ace_energy.intt, ace_energy.eout, ace_energy.pdf, ace_energy.cdf)
-		{/* */}
+		{
+			/* Create the cosine table */
+			for(std::vector<AceAngular*>::const_iterator it = ace_energy.adist.begin() ; it != ace_energy.adist.end() ; ++it)
+				cosine_table.push_back(MuTable::tableBuilder((*it)));
+			/* Sanity check */
+			assert(cosine_table.size() == out.size());
+		}
 
 		void operator()(Random& random, double& energy, double& mu) const {
 			/* Index on the outgoing grid */
 			size_t idx;
+			/* Get random number (we need it to sample the angular bin) */
+			double chi = random.uniform();
 			/* Set energy */
-			energy = TabularDistribution::operator()(random, idx);
-
+			energy = TabularDistribution::operator()(chi, idx);
+			/* Sample the scattering cosine */
+			CosineTable* cosine(0);
+			if(iflag == 1) {
+				/* Histogram interpolation */
+				cosine = cosine_table[idx];
+			} else {
+				/* Linear-Linear interpolation */
+			}
+			/* Once we got the table, sample the scattering cosine */
+			mu = (*cosine)(random);
 		}
 
 		void print(std::ostream& out) const {
 			out << " * Energy Tabular Distribution " << endl;
 			TabularDistribution::print(out);
+			for(size_t i = 0 ; i < cosine_table.size() ; ++i) {
+				out << "energy = " << scientific << out[i] << endl;
+				cosine_table[i]->print(out);
+			}
 		}
 
 		~AngularTabular() {/* */}
