@@ -37,7 +37,7 @@ namespace Helios {
 
 ParticleSampler::ParticleSampler(const ParticleSamplerObject* definition, const Source* source) :
 		user_id(definition->getSamplerid()), position(definition->getPosition()),
-		direction(definition->getDirection()), energy(Energy(0,1.0)), weight(1.0), state(Particle::ALIVE) {
+		direction(definition->getDirection()), energy(Energy(0,1.0)), weight(1.0) {
 
 	/* Get distributions */
 	vector<DistributionId> distribution_ids = definition->getDistributionIds();
@@ -122,7 +122,6 @@ void ParticleCellSampler::operator() (CellParticle& particle,Random& r) const {
 	particle.second.dir() = direction;
 	particle.second.erg() = energy;
 	particle.second.wgt() = weight;
-	particle.second.sta() = state;
 	/* Apply distributions (if any) */
 	for(vector<DistributionBase*>::const_iterator it = distributions.begin() ; it != distributions.end() ; ++it)
 		(*(*it))(particle.second,r);

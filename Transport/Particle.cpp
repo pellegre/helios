@@ -94,7 +94,6 @@ std::ostream& operator<<(std::ostream& out, const Particle& q) {
 	out << "dir = " << q.direction << " ; ";
 	out << "energy = " << q.energy.second << " (index = " << q.energy.first << ") ; ";
 	out << "weight = " << q.weight << " ; ";
-	out << "state = " << q.state;
 	return out;
 }
 std::ostream& operator<<(std::ostream& out, const Energy& q) {

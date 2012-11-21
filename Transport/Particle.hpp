@@ -36,16 +36,10 @@ namespace Helios {
 
 	public:
 
-		enum State {
-			ALIVE = 0, /* The particle is alive and should be transport on next step */
-			DEAD  = 1, /* The particle is dead, the transport is done for this one */
-			BANK  = 2  /* The particle state should be banked on next step */
-		};
-
 		Particle() : position(Coordinate(0,0,0)), direction(Direction(0,0,0)), energy(Energy(0,1.0)),
-					 weight(1.0), state(ALIVE) {/* */}
+					 weight(1.0) {/* */}
 		Particle(const Coordinate& position, const Direction& direction, const Energy& energy,const double& weight) :
-				 position(position), direction(direction), energy(energy), weight(weight), state(ALIVE) {/* */}
+				 position(position), direction(direction), energy(energy), weight(weight) {/* */}
 
 		~Particle() {/* */};
 
@@ -87,7 +81,6 @@ namespace Helios {
 		Direction& dir() {return direction;}
 		double& wgt() {return weight;}
 		Energy& erg() {return energy;}
-		State& sta() {return state;}
 
 	private:
 
@@ -105,9 +98,6 @@ namespace Helios {
 
 		/* Weight of the particle */
 		double weight;
-
-		/* State of the particle */
-		State state;
 
 	};
 

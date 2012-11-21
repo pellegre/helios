@@ -32,11 +32,11 @@ using namespace std;
 
 namespace Helios {
 
-CriticalitySimulation::CriticalitySimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
-		Simulation(_random,_environment), keff(keff), particles_number(_particles_number), geometry(environment->getModule<Geometry>()) {
-}
+KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
+		Simulation(_random,_environment), keff(keff), particles_number(_particles_number),
+		initial_source(environment->getModule<Source>()), fission_bank(particles_number) {/* */}
 
-double CriticalitySimulation::cycle(size_t nbank, vector<CellParticle>& banked) {
+double KeffSimulation::cycle(size_t nbank) {
 	/* Initialize some auxiliary variables */
 	Surface* surface(0);  /* Surface pointer */
 	bool sense(true);     /* Sense of the surface we are crossing */
@@ -113,7 +113,7 @@ double CriticalitySimulation::cycle(size_t nbank, vector<CellParticle>& banked) 
 					Reaction* fission_reaction = isotope->fission();
 					(*fission_reaction)(particle, r);
 					population += particle.wgt();
-					banked.push_back(CellParticle(cell,particle));
+					local_bank[nbank].push_back(CellParticle(cell,particle));
 				}
 			}
 			/* Kill the particle, this is an analog simulation */
@@ -139,7 +139,54 @@ double CriticalitySimulation::cycle(size_t nbank, vector<CellParticle>& banked) 
 	return population;
 }
 
-Simulation::Simulation(const Random& base,McEnvironment* environment) : base(base), environment(environment) {
+void KeffSimulation::source(size_t nbank) {
+	/* Jump random number generator */
+	Random random(base);
+	random.jump(nbank * Source::max_samples);
+	fission_bank[nbank] = initial_source->sample(random);
+}
+
+void KeffSimulation::launch() {
+	/* Get number of banks */
+	size_t nbanks = fission_bank.size();
+
+	/* Resize the local bank before the simulation */
+	local_bank.resize(nbanks);
+
+	/* Simulate the current bank */
+	double total_population = simulateBank(nbanks);
+
+	/* Jump on random number generation */
+	base.jump(fission_bank.size() * max_rng_per_history);
+
+	/* --- Calculate multiplication factor for this cycle */
+	keff = total_population / (double) particles_number;
+
+	/* --- Clear particle bank (global) */
+	fission_bank.clear();
+
+	/* --- Re-populate the particle bank with the new source */
+	for(vector<vector<CellParticle> >::iterator it = local_bank.begin() ; it != local_bank.end() ; ++it) {
+		/* Loop over local bank */
+		for(vector<CellParticle>::iterator it_particle = (*it).begin() ; it_particle != (*it).end() ; ++it_particle) {
+			/* Get banked particle */
+			CellParticle& banked_particle = (*it_particle);
+			/* Split particle */
+			double amp = banked_particle.second.wgt() / keff;
+			int split = std::max(1,(int)(amp));
+			/* New weight of the particle */
+			banked_particle.second.wgt() = amp/(double)split;
+			/* Put the split particle into the "simulation" list */
+			for(int i = 0 ; i < split ; i++)
+				fission_bank.push_back(banked_particle);
+		}
+	}
+
+	/* Clear local bank */
+	local_bank.clear();
+}
+
+Simulation::Simulation(const Random& base, McEnvironment* environment) : base(base), environment(environment) {
 	/* Parameters for random number on simulations */
 	max_rng_per_history = 100000;
 }

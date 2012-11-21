@@ -104,8 +104,6 @@ set(MCFILES Common/Common.cpp
             Environment/McEnvironment.cpp   
             Environment/McModule.cpp
             Environment/Simulation.cpp 
-            Environment/OpenMpSimulation.cpp
-            Environment/TbbSimulation.cpp                                                    
             Transport/Particle.cpp
             Transport/Distribution/Distribution.cpp
             Transport/ParticleSource.cpp                       

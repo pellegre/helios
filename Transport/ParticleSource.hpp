@@ -56,8 +56,6 @@ namespace Helios {
 		Energy energy;
 		/* Initial weight */
 		double weight;
-		/* Initial state of the particle */
-		Particle::State state;
 
 		/* Sampling different stuff on phase space */
 		std::vector<DistributionBase*> distributions;
@@ -94,7 +92,6 @@ namespace Helios {
 			particle.second.dir() = direction;
 			particle.second.erg() = energy;
 			particle.second.wgt() = weight;
-			particle.second.sta() = state;
 			/* Apply distributions (if any) */
 			for(std::vector<DistributionBase*>::const_iterator it = distributions.begin() ; it != distributions.end() ; ++it)
 				(*(*it))(particle.second,r);

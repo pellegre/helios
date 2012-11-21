@@ -61,129 +61,167 @@ public:
 
 /*
  * KEFF simulation
- *
- * Apart of accumulate the user defined tallies, this class also creates a bank
- * of particles representing the source fission (as a result of this simulation).
  */
-class CriticalitySimulation : public Simulation {
-protected:
+class KeffSimulation : public Simulation {
 	/* Population after the simulation */
 	double keff;
 	/* Particles per cycle */
 	size_t particles_number;
+	/* Reference to the source of the problem */
+	Source* initial_source;
 	/* Global particle bank for this simulation */
 	std::vector<CellParticle> fission_bank;
-	/* Reference to the geometry of the problem */
-	Geometry* geometry;
-
-	/*
-	 * Execute a a random walk of a particle in a bank. If the simulation terminates with a
-	 * a fission, the banked particle is also set.
-	 */
-	double cycle(size_t nbank, vector<CellParticle>& banked);
+	/* Local bank on a cycle simulation */
+	vector<vector<CellParticle> > local_bank;
 
 public:
 	/* Initialize simulation */
-	CriticalitySimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
+	KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
+
+	/* Virtual function to simulate a batch of particles */
+	virtual double simulateBank(size_t nbanks) = 0;
+
+	/* Virtual function to simulate the source of particles */
+	virtual void simulateSource(size_t nbanks) = 0;
+
+	/*
+	 * Execute a a random walk of a particle in the current bank. If the simulation terminates with a
+	 * a fission, banked particles are also set.
+	 */
+	double cycle(size_t nbank);
+
+	/* Simulate a source particle and put it into the bank */
+	void source(size_t nbank);
+
+	/* Launch a simulation */
+	void launch();
 
 	/* Get multiplication factor */
 	double getKeff() const {return keff;}
 
-	virtual ~CriticalitySimulation() {/* */};
+	virtual ~KeffSimulation() {/* */};
 };
 
-namespace OpenMp {
-
-	/*
-	 * KEFF simulation (using OpenMp)
-	 *
-	 * Apart of accumulate the user defined tallies, this class also creates a bank
-	 * of particles representing the source fission (as a result of this simulation).
-	 */
-	class KeffSimulation : public CriticalitySimulation {
-
-	public:
-		/* Initialize simulation */
-		KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
-
-		/* Launch a simulation */
-		void launch();
-
-		/* Get multiplication factor */
-		double getKeff() const {return keff;}
-
-		virtual ~KeffSimulation() {/* */};
+template<class ParallelPolicy>
+class ParallelKeffSimulation : public KeffSimulation, public ParallelPolicy {
+public:
+	ParallelKeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number) :
+		KeffSimulation(random, environment, keff, particles_number) {
+		/* Populate the particle bank with the initial source */
+		simulateSource(particles_number);
+		/* Jump on base stream of RNGs */
+		base.jump(particles_number * Source::max_samples);
 	};
 
-}
+	/* Virtual function to simulate a batch of particles */
+	double simulateBank(size_t nbanks) {
+		return ParallelPolicy::parallelBank(nbanks, this);
+	}
 
-namespace IntelTbb {
+	/* Virtual function to simulate the source of particles */
+	void simulateSource(size_t nbanks) {
+		ParallelPolicy::parallelSource(nbanks, this);
+	}
 
-	/*
-	 * KEFF simulation (using Intel Threading Building Blocks)
-	 *
-	 * Apart of accumulate the user defined tallies, this class also creates a bank
-	 * of particles representing the source fission (as a result of this simulation).
-	 */
-	class KeffSimulation : public CriticalitySimulation {
+	virtual ~ParallelKeffSimulation() {/* */};
+};
 
+
+/* OpenMP policy */
+class OpenMp {
+public:
+	/* Parallel algorithm to fill the particle bank with the source */
+	void parallelSource(size_t nbanks, KeffSimulation* simulation) {
+		/* Populate the particle bank with the initial source */
+		#pragma omp parallel for
+		for(size_t i = 0 ; i < nbanks ; ++i)
+			simulation->source(i);
+	}
+	/* Parallel algorihtm to simulate a bank of particles */
+	double parallelBank(size_t nbanks, KeffSimulation* simulation) {
+		/* Total population */
+		double total_population = 0.0;
+
+		#pragma omp parallel
+		{
+			/* Local counter */
+			double population = 0.0;
+
+			/* Parallel loop to simulate the particle in the bank */
+			#pragma omp for
+			for(size_t i = 0 ; i < nbanks ; ++i)
+				population += simulation->cycle(i);
+
+			/* Update global population counter */
+			#pragma omp critical
+			{
+				total_population += population;
+			}
+
+		}
+		/* Return population */
+		return total_population;
+	}
+};
+
+/* IntelTbb policy */
+class IntelTbb {
+public:
+	/* ---- Source simulator */
+
+	class SourceSimulator {
+		/* Simulation */
+		KeffSimulation* simulation;
 	public:
-		/* Initialize simulation */
-		KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
-
-		/* Launch a simulation */
-		void launch();
-
-		/* Get multiplication factor */
-		double getKeff() const {return keff;}
-
-		/* ---- Source simulator */
-
-		class SourceSimulator {
-			/* Base random number stream */
-			const Random& base;
-			/* Reference to particle container */
-			vector<CellParticle>& particles;
-			/* Upper bound random numbers on source generation */
-			size_t max_rng;
-			/* Stuff got from the environment */
-			const Source* source;       /* Source defined on the problem */
-			const Geometry* geometry;   /* Geometry of the problem */
-		public:
-			SourceSimulator(const McEnvironment* environment, const Random& base, vector<CellParticle>& particles,
-					const size_t& max_rng);
-			void operator() (const tbb::blocked_range<size_t>& range) const;
-			virtual ~SourceSimulator() {/* */}
-		};
-
-		virtual ~KeffSimulation() {/* */};
-
-		/* ---- Power step simulator */
-
-		class PowerStepSimulator {
-			/* Base random number stream */
-			const Random& base;
-			/* Upper bound random numbers on source generation */
-			size_t max_rng;
-			/* Current particle bank (source of last step) */
-			vector<CellParticle>& current_bank;
-			/* Particle local bank container (save particles states after the simulation) */
-			vector<CellParticle>& after_bank;
-			/* Stuff got from the environment */
-			const Geometry* geometry;   /* Geometry of the problem */
-		public:
-			/* Population after the simulation */
-			double local_population;
-			PowerStepSimulator(const McEnvironment* environment, const Random& base, const size_t& max_rng,
-					vector<CellParticle>& current_bank, vector<vector<CellParticle> >& after_bank);
-			PowerStepSimulator(PowerStepSimulator& right, tbb::split);
-			void join(PowerStepSimulator& right);
-			void operator() (const tbb::blocked_range<size_t>& range);
-			virtual ~PowerStepSimulator() {/* */}
-		};
+		SourceSimulator(KeffSimulation* simulation) : simulation(simulation) {/* */};
+		void operator() (const tbb::blocked_range<size_t>& range) const {
+			for(size_t i = range.begin() ; i < range.end() ; ++i)
+				simulation->source(i);
+		}
+		virtual ~SourceSimulator() {/* */}
 	};
 
-}
+	/* Parallel algorithm to fill the particle bank with the source */
+	void parallelSource(size_t nbanks, KeffSimulation* simulation) {
+		/* Populate the particle bank with the initial source */
+		tbb::parallel_for(tbb::blocked_range<size_t>(0,nbanks),SourceSimulator(simulation));
+	}
+
+	/* ---- Power step simulator */
+
+	class PowerStepSimulator {
+		/* Simulation */
+		KeffSimulation* simulation;
+	public:
+		/* Population after the simulation */
+		double local_population;
+
+		PowerStepSimulator(KeffSimulation* simulation) :
+			simulation(simulation), local_population(0.0) {/* */};
+		PowerStepSimulator(PowerStepSimulator& right, tbb::split) :
+			simulation(right.simulation), local_population(0.0) {/* */}
+		void join(PowerStepSimulator& right) {
+			local_population += right.local_population;
+		}
+		void operator() (const tbb::blocked_range<size_t>& range) {
+			/* Get population */
+			double population = local_population;
+			for(size_t i = range.begin() ; i < range.end() ; ++i)
+				population += simulation->cycle(i);
+			/* Save new population */
+			local_population = population;
+		}
+		virtual ~PowerStepSimulator() {/* */}
+	};
+
+	/* Parallel algorithm to simulate a bank of particles */
+	double parallelBank(size_t nbanks, KeffSimulation* simulation) {
+		PowerStepSimulator power_step(simulation);
+		/* Simulate power step */
+		tbb::parallel_reduce(tbb::blocked_range<size_t>(0, nbanks), power_step);
+		return power_step.local_population;
+	}
+};
 
 } /* namespace Helios */
 #endif /* SIMULATION_HPP_ */
