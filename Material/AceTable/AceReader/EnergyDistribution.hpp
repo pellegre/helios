@@ -72,6 +72,13 @@ public:
 
 	protected:
 
+		/* Set the law array */
+		void set_common(std::vector<double>::const_iterator& it);
+
+		EnergyLaw(std::vector<double>::const_iterator& it, int lnw);
+
+	public:
+
 		/* Common data to all energy laws */
 		int lnw;                      /* Location of next law */
 		int idat;                     /* Location of this data */
@@ -79,13 +86,6 @@ public:
 		int ne;                       /* Number of energies */
 		std::vector<double> energy;   /* Tabular energies points */
 		std::vector<double> prob;     /* Probability law validity */
-
-		/* Set the law array */
-		void set_common(std::vector<double>::const_iterator& it);
-
-		EnergyLaw(std::vector<double>::const_iterator& it, int lnw);
-
-	public:
 
 		EnergyLaw(int lnw,int idat,int nr,const std::vector<int>& nbt,const std::vector<int>&aint,int ne,const std::vector<double>& energy,const std::vector<double>& prob) :
 			      lnw(lnw),idat(idat),endf_int(nr,nbt,aint),ne(ne),energy(energy),prob(prob) {/* */};

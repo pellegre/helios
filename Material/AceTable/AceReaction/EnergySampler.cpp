@@ -32,33 +32,61 @@ namespace Helios {
 
 using namespace AceReaction;
 
-EnergySamplerBase* EnergySamplerFactory::createSampler(const Ace::EnergyDistribution& ace_data) {
-	if(ace_data.laws.size() != 1)
-		throw(EnergySamplerBase::BadEnergySamplerCreation("More than 1 energy law distribution in is not supported"));
-
+/* Create law */
+static EnergySamplerBase* createLaw(const Ace::EnergyDistribution::EnergyLaw* ace_law) {
 	/* Get law */
-	int law = ace_data.laws[0]->getLaw();
+	int law = ace_law->getLaw();
 
 	if(law == 1) {
 		/* Level Scattering */
-		return new EnergySampler<EnergyLaw1>(ace_data.laws[0]);
+		return new EnergySampler<EnergyLaw1>(ace_law);
 	}
 	else if(law == 3) {
 		/* Level Scattering */
-		return new EnergySampler<EnergyLaw3>(ace_data.laws[0]);
+		return new EnergySampler<EnergyLaw3>(ace_law);
 	}
 	else if(law == 4) {
 		/* Continuous Tabular Distribution */
-		return new EnergySampler<EnergyLaw4>(ace_data.laws[0]);
+		return new EnergySampler<EnergyLaw4>(ace_law);
 	}
 	else if(law == 44) {
 		/* Continuous Tabular Distribution */
-		return new EnergySampler<EnergyLaw44>(ace_data.laws[0]);
+		return new EnergySampler<EnergyLaw44>(ace_law);
 	}
-
+	else if(law == 61) {
+		/* Continuous Tabular Distribution */
+		return new EnergySampler<EnergyLaw61>(ace_law);
+	}
 	/* No law */
 	throw(EnergySamplerBase::BadEnergySamplerCreation("Energy law " + toString(law) + " is not supported"));
 }
+
+EnergySamplerBase* EnergySamplerFactory::createSampler(const Ace::EnergyDistribution& ace_data) {
+	typedef Ace::EnergyDistribution::EnergyLaw EnergyLaw;
+	if(ace_data.laws.size() == 1)
+		return createLaw(ace_data.laws[0]);
+	return new MultipleLawsSampler(ace_data.laws);
+}
+
+MultipleLawsSampler::MultipleLawsSampler(const vector<EnergyLaw*>& laws) {
+	for(vector<EnergyLaw*>::const_iterator it = laws.begin() ; it != laws.end() ; ++it)
+		/* Create law data and push it into the container */
+		law_table.push_back(LawValidity((*it)->energy, (*it)->prob, createLaw((*it))));
+}
+
+void MultipleLawsSampler::print(std::ostream& out) const {
+	for(std::vector<LawValidity>::const_iterator it = law_table.begin() ; it != law_table.end() ; ++it) {
+		out << " energies = ";
+		for(size_t i = 0 ; i < (*it).energy.size() ; ++i)
+			out << scientific << (*it).energy[i] << " ";
+		out << endl; out << " probabilities = ";
+		for(size_t i = 0 ; i < (*it).prob.size() ; ++i)
+			out << scientific << (*it).prob[i] << " ";
+		out << endl;
+		(*it).energy_law->print(out);
+	}
+}
+
 
 }
 

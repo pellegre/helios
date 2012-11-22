@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ENERGYSAMPLER_HPP_
 #define ENERGYSAMPLER_HPP_
 
+#include <algorithm>
+
 #include "../../../Common/Common.hpp"
 #include "../../../Transport/Particle.hpp"
 #include "../AceReader/EnergyDistribution.hpp"
@@ -96,6 +98,70 @@ namespace AceReaction {
 		~EnergySampler() {/* */}
 	};
 
+	/* Sample energy (and MU if available) using more than one ACE law */
+	class MultipleLawsSampler : public EnergySamplerBase {
+		typedef Ace::EnergyDistribution::EnergyLaw EnergyLaw;
+
+		/* Law validity data */
+		struct LawValidity {
+			/* Tabulated energies */
+			std::vector<double> energy;
+			/* Probabilities */
+			std::vector<double> prob;
+			/* Law */
+			EnergySamplerBase* energy_law;
+
+			LawValidity(const std::vector<double>& energy, const std::vector<double>& prob, EnergySamplerBase* energy_law) :
+				energy(energy), prob(prob), energy_law(energy_law) {/* */}
+
+			/* Get probability at some energy */
+			double getProbability(double erg) const {
+				if(erg <= energy[0]) return prob[0];
+				else if(erg >= energy[energy.size() - 1]) return prob[prob.size() - 1];
+				/* Make an interpolation and return the value */
+				size_t idx = std::upper_bound(energy.begin(), energy.end(), erg) - energy.begin() - 1;
+				/* Energy bounds */
+				double low = energy[idx];
+				double high = energy[idx + 1];
+				/* Interpolation factor */
+				double factor = (erg - low) / (high - low);
+				/* Apply interpolation factor to the probability */
+				return prob[idx] + factor * (prob[idx + 1] - prob[idx]);
+			}
+
+			~LawValidity() {/* */}
+		};
+
+		/* Container of law data */
+		std::vector<LawValidity> law_table;
+
+	public:
+		/* Constructor (grab a vector of laws) */
+		MultipleLawsSampler(const vector<EnergyLaw*>& laws);
+
+		/* -- Overload base classes of the energy sampler */
+
+		/* Sample energy (and MU if information exists) using particle's information */
+		void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const {
+			/* Random number */
+			double chi = random.uniform();
+			/* Sample law */
+			std::vector<LawValidity>::const_iterator it = law_table.begin();
+			for( ; it != law_table.end() - 1 ; ++it) {
+				chi -= (*it).getProbability(energy);
+				if(chi <= 0.0) {
+					(*it).energy_law->setEnergy(particle, random, energy, mu);
+					return;
+				}
+			}
+			(*it).energy_law->setEnergy(particle, random, energy, mu);
+		}
+
+		/* Print internal data of the energy sampler */
+		void print(std::ostream& out) const;
+
+		~MultipleLawsSampler() {/* */}
+	};
 
 }
 

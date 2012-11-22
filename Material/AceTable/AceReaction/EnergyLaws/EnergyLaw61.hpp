@@ -28,6 +28,7 @@
 #ifndef ENERGYLAW61_HPP_
 #define ENERGYLAW61_HPP_
 
+#include "../MuSampler.hpp"
 #include "AceEnergyLaw.hpp"
 #include "EnergyTabular.hpp"
 
@@ -67,17 +68,21 @@ namespace AceReaction {
 				cosine = cosine_table[idx];
 			} else {
 				/* Linear-Linear interpolation */
+			    if (chi - cdf[idx] < cdf[idx + 1] - chi)
+					cosine = cosine_table[idx];
+				else
+					cosine = cosine_table[idx + 1];
 			}
 			/* Once we got the table, sample the scattering cosine */
 			mu = (*cosine)(random);
 		}
 
-		void print(std::ostream& out) const {
-			out << " * Energy Tabular Distribution " << endl;
-			TabularDistribution::print(out);
+		void print(std::ostream& sout) const {
+			sout << " * Energy Tabular Distribution " << endl;
+			TabularDistribution::print(sout);
 			for(size_t i = 0 ; i < cosine_table.size() ; ++i) {
-				out << "energy = " << scientific << out[i] << endl;
-				cosine_table[i]->print(out);
+				sout << "energy = " << scientific << out[i] << endl;
+				cosine_table[i]->print(sout);
 			}
 		}
 

@@ -32,5 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "EnergyLaw3.hpp"
 #include "EnergyLaw4.hpp"
 #include "EnergyLaw44.hpp"
+#include "EnergyLaw61.hpp"
 
 #endif /* ENERGYLAWS_HPP_ */
