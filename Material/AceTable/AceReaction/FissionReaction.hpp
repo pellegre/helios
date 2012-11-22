@@ -86,13 +86,18 @@ namespace AceReaction {
 
 		/* Sample a fission neutron (the weight of the neutron is NOT modified) */
 		void operator()(Particle& particle, Random& random) const {
-			/* Sample the fission reaction at this energy */
-			double factor;
-			size_t idx = child_grid->index(particle.erg(), factor);
-			double xs = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
-			Reaction* chance_reaction = chance_sampler->sample(idx, xs * random.uniform(), factor);
+			Reaction* chance_reaction = sample(particle.erg(), random);
 			/* Apply reaction */
 			(*chance_reaction)(particle, random);
+		}
+
+		/* Just sample a fission reaction (used for testing) */
+		Reaction* sample(Energy& energy, Random& random) const {
+			/* Sample the fission reaction at this energy */
+			double factor;
+			size_t idx = child_grid->index(energy, factor);
+			double xs = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
+			return chance_sampler->sample(idx, xs * random.uniform(), factor);
 		}
 
 		~ChanceFission() {
