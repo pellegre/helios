@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef NUSAMPLER_HPP_
 #define NUSAMPLER_HPP_
 
+#include "../../../Common/Common.hpp"
 #include "../../../Common/Interpolate.hpp"
 #include "../AceReader/TyrDistribution.hpp"
 
@@ -71,7 +72,7 @@ namespace AceReaction {
 		double getNuBar(double energy) const {return 1;}
 		double getNu(double energy, Random& random) const {return 1;}
 		void print(std::ostream& out) const {
-			out << " * No NU (one outgoing particle)" << endl;
+			out << " * No NU (one outgoing particle)" << std::endl;
 		}
 		~OneNu() {/* */}
 	};
@@ -84,7 +85,7 @@ namespace AceReaction {
 		double getNuBar(double energy) const {return number;}
 		double getNu(double energy, Random& random) const {return number;}
 		void print(std::ostream& out) const {
-			out << " * Fixed NU = " << number << endl;
+			out << " * Fixed NU = " << number << std::endl;
 		}
 		~FixedNu() {/* */}
 	};
@@ -109,9 +110,9 @@ namespace AceReaction {
 			return factor * (nu[idx + 1] - nu[idx]) + nu[idx];
 		}
 		void print(std::ostream& out) const {
-			out << " * Tabular NU " << endl;
+			out << " * Tabular NU " << std::endl;
 			for(size_t i = 0 ; i  < energies.size() ; ++i)
-				out << scientific << setw(15) << energies[i] << setw(15) << nu[i] << endl;
+				out << std::scientific << std::setw(15) << energies[i] << std::setw(15) << nu[i] << std::endl;
 		}
 		~TabularNu() {/* */}
 	};
@@ -134,10 +135,10 @@ namespace AceReaction {
 			return accum;
 		}
 		void print(std::ostream& out) const {
-			out << " * Polynomial NU " << endl;
+			out << " * Polynomial NU " << std::endl;
 			for(size_t i = 0 ; i  < coeffs.size() ; ++i)
-				out << scientific << coeffs[i] << " ";
-			out << endl;
+				out << std::scientific << coeffs[i] << " ";
+			out << std::endl;
 		}
 		~PolynomialNu() {/* */}
 	};

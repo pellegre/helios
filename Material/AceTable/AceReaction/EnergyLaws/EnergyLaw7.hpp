@@ -25,30 +25,44 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FissionReaction.hpp"
+#ifndef ENERGYLAW7_HPP_
+#define ENERGYLAW7_HPP_
+
+#include "AceEnergyLaw.hpp"
 
 namespace Helios {
+namespace AceReaction {
 
-using namespace AceReaction;
+	/* ---------- Level Scattering  ---------- */
 
-Fission::Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
-		GenericReaction(isotope, ace_reaction) {/* */}
+	class EnergyLaw7: public Helios::AceReaction::AceEnergyLaw {
+		typedef Ace::EnergyDistribution::Law7 Law7;
 
-void Fission::print(std::ostream& out) const {
-	out << " - Fission Reaction" << endl;
-	Log::printLine(out,"*");
-	out << endl;
-	/* Print the cosine and energy sampler */
-	GenericReaction::print(out);
-}
+	public:
+		EnergyLaw7(const Law* ace_data) : AceEnergyLaw(ace_data) {
+			const Law7* law_data = dynamic_cast<const Law7*>(ace_data);
+			Ace::EnergyDistribution::InterScheme int_sch = law_data->int_sch;
+			cout << " = " << endl;
+			for(int i = 0 ; i < int_sch.nr ; ++i) {
+				cout << int_sch.nbt[i] << " " << int_sch.aint[i] << endl;
+			}
+			cout << " = " << endl;
 
-void ChanceFission::print(std::ostream& out) const {
-	out << " - Fission Reaction (chance)" << endl;
-	vector<Reaction*> reactions = chance_sampler->getReactions();
-	for(vector<Reaction*>::const_iterator it = reactions.begin() ; it != reactions.end() ; ++it)
-		(*it)->print(out);
-}
+		}
 
-Fission::~Fission() {/* */}
+		/* Sample scattering outgoing energy */
+		void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const {
 
+		}
+
+		void print(std::ostream& out) const {
+
+		}
+
+		~EnergyLaw7() {/* */}
+	};
+
+} /* namespace AceReaction */
 } /* namespace Helios */
+
+#endif /* ENERGYLAW7_HPP_ */

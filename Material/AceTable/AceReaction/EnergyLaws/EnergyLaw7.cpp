@@ -25,30 +25,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FissionReaction.hpp"
+#include "EnergyLaw7.hpp"
 
 namespace Helios {
+namespace AceReaction {
 
-using namespace AceReaction;
-
-Fission::Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
-		GenericReaction(isotope, ace_reaction) {/* */}
-
-void Fission::print(std::ostream& out) const {
-	out << " - Fission Reaction" << endl;
-	Log::printLine(out,"*");
-	out << endl;
-	/* Print the cosine and energy sampler */
-	GenericReaction::print(out);
-}
-
-void ChanceFission::print(std::ostream& out) const {
-	out << " - Fission Reaction (chance)" << endl;
-	vector<Reaction*> reactions = chance_sampler->getReactions();
-	for(vector<Reaction*>::const_iterator it = reactions.begin() ; it != reactions.end() ; ++it)
-		(*it)->print(out);
-}
-
-Fission::~Fission() {/* */}
-
+} /* namespace AceReaction */
 } /* namespace Helios */

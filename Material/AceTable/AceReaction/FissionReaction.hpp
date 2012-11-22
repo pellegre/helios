@@ -28,6 +28,10 @@
 #ifndef FISSIONREACTION_HPP_
 #define FISSIONREACTION_HPP_
 
+#include "../AceReader/ReactionContainer.hpp"
+#include "../../../Common/Common.hpp"
+#include "../../../Common/XsSampler.hpp"
+#include "../../Grid/MasterGrid.hpp"
 #include "InelasticScattering.hpp"
 #include "NuSampler.hpp"
 
@@ -36,17 +40,12 @@ namespace Helios {
 namespace AceReaction {
 
 	class Fission: public GenericReaction {
-		/* NU sampler */
-		NuSampler* prompt_nu;
+
 	public:
 		Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction);
+
 		/* Print internal information of the reaction */
 		void print(std::ostream& out) const;
-
-		/* Sample NU bar (is not an integer number) */
-		double sampleNuBar(const Energy& energy) const {
-			return prompt_nu->getNuBar(energy.second);
-		}
 
 		/* Sample a fission neutron (the weight of the neutron is NOT modified) */
 		void operator()(Particle& particle, Random& random) const {
@@ -65,6 +64,42 @@ namespace AceReaction {
 		~Fission();
 	};
 
+	class ChanceFission : public Reaction {
+		/* Fission cross section (reference) */
+		const Ace::CrossSection& fission_xs;
+		/* Constant reference to a CHILD grid */
+		const ChildGrid* child_grid;
+		/* Fission chance (1st, 2nd, 3rd and 4th) reaction sampler (using an interpolation factor) */
+		XsSampler<Reaction*>* chance_sampler;
+	public:
+		ChanceFission(std::vector<pair<Reaction*,const Ace::CrossSection*> >& reaction_array,
+					const Ace::CrossSection& fission_xs, const ChildGrid* child_grid) :
+					Reaction(18), fission_xs(fission_xs), child_grid(child_grid) {
+			/* Sanity check */
+			assert(reaction_array.size() == 4);
+			/* Create sampler */
+			chance_sampler = new XsSampler<Reaction*>(reaction_array);
+		}
+
+		/* Print internal information of the reaction */
+		void print(std::ostream& out) const;
+
+		/* Sample a fission neutron (the weight of the neutron is NOT modified) */
+		void operator()(Particle& particle, Random& random) const {
+			/* Sample the fission reaction at this energy */
+			double factor;
+			size_t idx = child_grid->index(particle.erg(), factor);
+			double inel = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
+			Reaction* chance_reaction = chance_sampler->sample(idx, inel * random.uniform(), factor);
+			/* Apply reaction */
+			(*chance_reaction)(particle, random);
+		}
+
+		~ChanceFission() {
+			/* Delete sampler */
+			delete chance_sampler;
+		}
+	};
 }
 
 } /* namespace Helios */

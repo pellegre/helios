@@ -29,6 +29,7 @@
 #define ACEMODULE_HPP_
 
 #include "AceReader/ReactionContainer.hpp"
+#include "AceReaction/NuSampler.hpp"
 #include "../../Environment/McModule.hpp"
 #include "../../Common/Common.hpp"
 #include "../Grid/MasterGrid.hpp"
@@ -43,6 +44,9 @@ namespace Helios {
 
 		/* Auxiliary function to get the probability of a reaction */
 		double getProb(Energy& energy, const Ace::CrossSection& xs) const;
+
+		/* Auxiliary method to set the fission reaction stuff */
+		void setFissionReaction();
 
 		/* -- General data */
 
@@ -80,6 +84,8 @@ namespace Helios {
 		 * is NULL for non-fissiles isotopes.
 		 */
 		Reaction* fission_reaction;
+		/* NU sampler */
+		AceReaction::NuSampler* prompt_nu;
 
 		/* Elastic reaction of this isotope. This reaction always exist */
 		Reaction* elastic_scattering;
@@ -120,7 +126,9 @@ namespace Helios {
 		};
 
 		/* Get average NU-bar at some energy */
-		double getNuBar(const Energy& energy) const;
+		double getNuBar(const Energy& energy) const {
+			return prompt_nu->getNuBar(energy.second);
+		}
 
 		/* Elastic reaction */
 		Reaction* elastic() const {

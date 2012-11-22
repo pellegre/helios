@@ -162,7 +162,6 @@ namespace AceReaction {
 
 		~MultipleLawsSampler() {/* */}
 	};
-
 }
 
 }
