@@ -30,5 +30,11 @@
 namespace Helios {
 namespace AceReaction {
 
+void EnergyLaw7::print(std::ostream& out) const {
+	out << " * Level Scattering " << endl;
+	for(size_t i = 0 ; i < ein.size() ; ++i)
+		cout << ein[i] << " " << t[i] << endl;
+}
+
 } /* namespace AceReaction */
 } /* namespace Helios */

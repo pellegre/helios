@@ -148,7 +148,7 @@ namespace AceReaction {
 			/* Sample law */
 			std::vector<LawValidity>::const_iterator it = law_table.begin();
 			for( ; it != law_table.end() - 1 ; ++it) {
-				chi -= (*it).getProbability(energy);
+				chi -= (*it).getProbability(particle.getEnergy().second);
 				if(chi <= 0.0) {
 					(*it).energy_law->setEnergy(particle, random, energy, mu);
 					return;

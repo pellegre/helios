@@ -89,8 +89,8 @@ namespace AceReaction {
 			/* Sample the fission reaction at this energy */
 			double factor;
 			size_t idx = child_grid->index(particle.erg(), factor);
-			double inel = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
-			Reaction* chance_reaction = chance_sampler->sample(idx, inel * random.uniform(), factor);
+			double xs = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
+			Reaction* chance_reaction = chance_sampler->sample(idx, xs * random.uniform(), factor);
 			/* Apply reaction */
 			(*chance_reaction)(particle, random);
 		}

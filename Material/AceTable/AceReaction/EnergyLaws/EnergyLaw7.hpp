@@ -28,6 +28,7 @@
 #ifndef ENERGYLAW7_HPP_
 #define ENERGYLAW7_HPP_
 
+#include "../../../../Common/EndfInterpolate.hpp"
 #include "AceEnergyLaw.hpp"
 
 namespace Helios {
@@ -37,27 +38,52 @@ namespace AceReaction {
 
 	class EnergyLaw7: public Helios::AceReaction::AceEnergyLaw {
 		typedef Ace::EnergyDistribution::Law7 Law7;
-
+		/* Cast to law 7 */
+		const Law7* cast(const Law* law) const {return static_cast<const Law7*>(law);}
+        /* ENDF interpolate law */
+        EndfInterpolate endf_interpolate;
+		/* Incident energy */
+        std::vector<double> ein;
+        /* Temperature */
+        std::vector<double> t;
+        /* Restriction energy */
+        double u;
 	public:
-		EnergyLaw7(const Law* ace_data) : AceEnergyLaw(ace_data) {
-			const Law7* law_data = dynamic_cast<const Law7*>(ace_data);
-			Ace::EnergyDistribution::InterScheme int_sch = law_data->int_sch;
-			cout << " = " << endl;
-			for(int i = 0 ; i < int_sch.nr ; ++i) {
-				cout << int_sch.nbt[i] << " " << int_sch.aint[i] << endl;
-			}
-			cout << " = " << endl;
-
+		EnergyLaw7(const Law* ace_data) : AceEnergyLaw(ace_data),
+			endf_interpolate(cast(ace_data)->int_sch.nbt, cast(ace_data)->int_sch.aint), ein(cast(ace_data)->ein),
+			t(cast(ace_data)->t), u(cast(ace_data)->u) {
+			/* Sanity check */
+			assert(ein.size() == t.size());
 		}
 
 		/* Sample scattering outgoing energy */
 		void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const {
+			/* Incident energy */
+			double ienergy(particle.getEnergy().second);
+			/* Get temperature */
+			double temp = endf_interpolate.interpolate(ein.begin(), ein.end(), t.begin(), t.end(), ienergy);
+			/* Auxiliary variables */
+			double rnd1(0.0), rnd2(0.0), c(0.0);
+			/* Sample outgoing energy */
+		    do {
+				/* Sample two random numbers */
+				do {
+					rnd1 = random.uniform();
+					rnd2 = random.uniform();
 
+					rnd1 = rnd1*rnd1;
+					rnd2 = rnd2*rnd2;
+
+					c = rnd1 + rnd2;
+				}
+				while (c > 1.0);
+				/* Calculate energy */
+				energy = -temp*((rnd1*log(random.uniform()))/c + log(random.uniform()));
+		    } while (energy > ienergy - u);
 		}
 
-		void print(std::ostream& out) const {
-
-		}
+		/* Print internal information of the law */
+		void print(std::ostream& out) const;
 
 		~EnergyLaw7() {/* */}
 	};

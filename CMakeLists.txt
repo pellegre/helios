@@ -130,6 +130,7 @@ set(MCFILES Common/Common.cpp
             Material/AceTable/AceReaction/EnergyLaws/AceEnergyLaw.cpp 
             Material/AceTable/AceReaction/EnergyLaws/EnergyLaw1.cpp                                                                           
             Material/AceTable/AceReaction/EnergyLaws/EnergyLaw4.cpp
+            Material/AceTable/AceReaction/EnergyLaws/EnergyLaw7.cpp            
             Material/AceTable/AceReaction/EnergyLaws/EnergyLaw44.cpp
             Material/AceTable/AceReaction/EnergyLaws/EnergyLaw61.cpp                                                                                                    
 			Material/AceTable/AceReader/ACETable.cpp
