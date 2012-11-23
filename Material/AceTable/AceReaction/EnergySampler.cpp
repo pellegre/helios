@@ -33,7 +33,8 @@ namespace Helios {
 using namespace AceReaction;
 
 /* Create law */
-static EnergySamplerBase* createLaw(const Ace::EnergyDistribution::EnergyLaw* ace_law, const Ace::NeutronReaction& ace_reaction) {
+EnergySamplerBase* EnergySamplerFactory::createLaw(const Ace::EnergyDistribution::EnergyLaw* ace_law,
+		const Ace::NeutronReaction& ace_reaction) const {
 	/* Get law */
 	int law = ace_law->getLaw();
 
@@ -67,25 +68,26 @@ static EnergySamplerBase* createLaw(const Ace::EnergyDistribution::EnergyLaw* ac
 	}
 	else if(law == 66) {
 		/* N-body phase space distribution */
-		return new EnergySampler<EnergyLaw66>(ace_law);
+		return new EnergySampler<EnergyLaw66>(ace_law, ace_reaction.getQ(), isotope->getAwr());
 	}
 	/* No law */
 	throw(EnergySamplerBase::BadEnergySamplerCreation("Energy law " + toString(law) + " is not supported"));
 }
 
-EnergySamplerBase* EnergySamplerFactory::createSampler(const Ace::NeutronReaction& ace_reaction) {
+EnergySamplerBase* EnergySamplerFactory::createSampler(const Ace::NeutronReaction& ace_reaction) const {
 	/* Ace energy distribution */
 	const Ace::EnergyDistribution& ace_data = ace_reaction.getEnergy();
 	typedef Ace::EnergyDistribution::EnergyLaw EnergyLaw;
 	if(ace_data.laws.size() == 1)
 		return createLaw(ace_data.laws[0], ace_reaction);
-	return new MultipleLawsSampler(ace_data.laws, ace_reaction);
+	return new MultipleLawsSampler(ace_data.laws, ace_reaction, this);
 }
 
-MultipleLawsSampler::MultipleLawsSampler(const vector<EnergyLaw*>& laws, const Ace::NeutronReaction& ace_reaction) {
+MultipleLawsSampler::MultipleLawsSampler(const vector<EnergyLaw*>& laws, const Ace::NeutronReaction& ace_reaction,
+		const EnergySamplerFactory* factory) {
 	for(vector<EnergyLaw*>::const_iterator it = laws.begin() ; it != laws.end() ; ++it)
 		/* Create law data and push it into the container */
-		law_table.push_back(LawValidity((*it)->energy, (*it)->prob, createLaw((*it), ace_reaction)));
+		law_table.push_back(LawValidity((*it)->energy, (*it)->prob, factory->createLaw((*it), ace_reaction)));
 }
 
 void MultipleLawsSampler::print(std::ostream& out) const {
