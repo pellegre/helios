@@ -49,14 +49,16 @@ MuSampler* GenericReaction::buildMuSampler(const Ace::AngularDistribution& ace_a
 	throw(GeneralError("No angular distribution defined"));
 }
 
-EnergySamplerBase* GenericReaction::buildEnergySampler(const Ace::EnergyDistribution& ace_energy) {
+EnergySamplerBase* GenericReaction::buildEnergySampler(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) {
 	typedef Ace::EnergyDistribution AceEnergy;
 	/* Sampler factory */
-	static EnergySamplerFactory sampler_factory;
+	EnergySamplerFactory sampler_factory(isotope);
+	/* Ace energy distribution */
+	const Ace::EnergyDistribution& ace_energy = ace_reaction.getEnergy();
 	/* Check if there is data inside the table */
 	if(ace_energy.getKind() == AceEnergy::data) {
 		/* We should create an energy sampler using ACE energy laws */
-		return sampler_factory.createSampler(ace_energy);
+		return sampler_factory.createSampler(ace_reaction);
 	}
 	/* No data, probably an elastic scattering reaction */
 	return 0;
@@ -73,7 +75,7 @@ GenericReaction::GenericReaction(const AceIsotope* isotope, const Ace::NeutronRe
 	}
 	/* Build energy sampler */
 	try {
-		energy_sampler = buildEnergySampler(ace_reaction.getEnergy());
+		energy_sampler = buildEnergySampler(isotope, ace_reaction);
 	} catch (exception& error) {
 		throw(AceModule::AceError(isotope->getUserId(),
 				"Cannot create reaction for mt = " + toString(ace_reaction.getMt()) + " : " + error.what()));

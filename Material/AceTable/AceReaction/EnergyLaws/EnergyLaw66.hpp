@@ -25,8 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ENERGYLAW9_HPP_
-#define ENERGYLAW9_HPP_
+#ifndef ENERGYLAW66_HPP_
+#define ENERGYLAW66_HPP_
 
 #include "../../../../Common/EndfInterpolate.hpp"
 #include "AceEnergyLaw.hpp"
@@ -34,52 +34,33 @@
 namespace Helios {
 namespace AceReaction {
 
-	/* ---------- Evaporation Spectrum  ---------- */
+	/* ---------- N-body phase space distribution  ---------- */
 
-	class EnergyLaw9: public Helios::AceReaction::AceEnergyLaw {
-		typedef Ace::EnergyDistribution::Law9 Law9;
+	class EnergyLaw66: public Helios::AceReaction::AceEnergyLaw {
+		typedef Ace::EnergyDistribution::Law66 Law66;
 		/* Cast to law 7 */
-		const Law9* cast(const Law* law) const {return static_cast<const Law9*>(law);}
-        /* ENDF interpolate law */
-        EndfInterpolate endf_interpolate;
-		/* Incident energy */
-        std::vector<double> ein;
-        /* Temperature */
-        std::vector<double> t;
-        /* Restriction energy */
-        double u;
+		const Law66* cast(const Law* law) const {return static_cast<const Law66*>(law);}
 	public:
-		EnergyLaw9(const Law* ace_data) : AceEnergyLaw(ace_data),
-			endf_interpolate(cast(ace_data)->int_sch.nbt, cast(ace_data)->int_sch.aint), ein(cast(ace_data)->ein),
-			t(cast(ace_data)->t), u(cast(ace_data)->u) {
-			/* Sanity check */
-			assert(ein.size() == t.size());
+        EnergyLaw66(const Law* ace_data) : AceEnergyLaw(ace_data)
+        {
+
 		}
 
 		/* Sample scattering outgoing energy */
 		void setEnergy(const Particle& particle, Random& random, double& energy, double& mu) const {
-			/* Incident energy */
-			double ienergy(particle.getEnergy().second);
-			/* Get temperature */
-			double temp = endf_interpolate.interpolate(ein.begin(), ein.end(), t.begin(), t.end(), ienergy);
-		    /* Check for low sampling efficiency */
-		    if (ienergy - u < 0.01*temp) {
-				energy = ienergy - u;
-				return;
-		    }
-		    /* Sample energy (p. 2-44 in MCNP4C manual) */
-		    do {
-		    	energy = -temp*log(random.uniform()*random.uniform());
-		    } while (energy > ienergy - u);
+
 		}
 
 		/* Print internal information of the law */
-		void print(std::ostream& out) const;
+		void print(std::ostream& out) const {
 
-		~EnergyLaw9() {/* */}
+		}
+
+		~EnergyLaw66() {/* */}
 	};
 
 } /* namespace AceReaction */
 } /* namespace Helios */
 
-#endif /* ENERGYLAW9_HPP_ */
+
+#endif /* ENERGYLAW66_HPP_ */

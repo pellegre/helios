@@ -534,10 +534,10 @@ public:
 
         Law66(std::vector<double>::const_iterator it, int lnw);
 
+    public:
+
         double npxs;
         double ap;
-
-    public:
 
         Law66(int lnw,int idat,int nr,const std::vector<int>& nbt,const std::vector<int>&aint,int ne,const std::vector<double>& energy,const std::vector<double>& prob)
                 : EnergyLaw(lnw,idat,nr,nbt,aint,ne,energy,prob) {/* */};

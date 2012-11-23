@@ -61,16 +61,16 @@ double KeffSimulation::cycle(size_t nbank) {
 
 		/* 2. ---- Get material and mean free path */
 		const Material* material = cell->getMaterial();
-		double mfp = material->getMeanFreePath(particle.erg());
 
 		/* 3. ---- Get next surface's distance */
 		cell->intersect(particle.pos(), particle.dir(), surface, sense, distance);
 
 		/* 4. ---- Get collision distance */
+		double mfp = material->getMeanFreePath(particle.erg());
 		double collision_distance = -log(r.uniform())*mfp;
 
 		/* 5. ---- Check sampled distance against closest surface distance */
-		while(collision_distance > distance) {
+		while(collision_distance >= distance) {
 			/* 5.1 ---- Transport the particle to the surface */
 			particle.pos() = particle.pos() + distance * particle.dir();
 
@@ -86,7 +86,7 @@ double KeffSimulation::cycle(size_t nbank) {
 			cell->intersect(particle.pos(), particle.dir(), surface, sense, new_distance);
 
 			/* Check if there is a change on the material */
-			if(new_material->getInternalId() != material->getInternalId()) {
+			if(new_material != material) {
 				/* Mean free path (the particle didn't change the energy) */
 				mfp = new_material->getMeanFreePath(particle.erg());
 				/* 5.5 ---- Get collision distance */
