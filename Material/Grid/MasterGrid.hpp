@@ -30,6 +30,7 @@
 
 #include <iostream>
 #include <vector>
+#include <tbb/cache_aligned_allocator.h>
 
 namespace Helios {
 
@@ -45,12 +46,12 @@ namespace Helios {
 	 */
 	class MasterGrid {
 		/* --- Master Grid */
-		std::vector<double> master_grid;
+		std::vector<double,tbb::cache_aligned_allocator<double> > master_grid;
 
 		/* --- Coarse Table */
 		int size_coarse;
 		double delta_coarse;
-		std::vector<size_t> coarse_grid;
+		std::vector<size_t,tbb::cache_aligned_allocator<size_t> > coarse_grid;
 
 		/* Container of child grids */
 		std::vector<ChildGrid*> child_grids;
@@ -107,12 +108,12 @@ namespace Helios {
 		/* Master Grid */
 		const MasterGrid* master_grid;
 		/* Child Grid */
-		std::vector<double> child_grid;
+		std::vector<double,tbb::cache_aligned_allocator<double> > child_grid;
 		/* Master Grid pointers */
-		std::vector<size_t> master_pointers;
+		std::vector<size_t,tbb::cache_aligned_allocator<size_t> > master_pointers;
 
 		/* Private constructor, this can be called ONLY from a Master grid */
-		ChildGrid(const MasterGrid* master_grid, const std::vector<double>& child_grid) :
+		ChildGrid(const MasterGrid* master_grid, const std::vector<double, tbb::cache_aligned_allocator<double> >& child_grid) :
 			master_grid(master_grid), child_grid(child_grid) {/* */} ;
 
 		/* Setup child grid (put offsets of MASTER grid) */
@@ -143,7 +144,7 @@ namespace Helios {
 		master_grid.insert(master_grid.end(), first, last);
 
 		/* Create child grid */
-		std::vector<double> child_grid;
+		std::vector<double,tbb::cache_aligned_allocator<double> > child_grid;
 		child_grid.reserve(last - first);
 		child_grid.insert(child_grid.end(), first, last);
 

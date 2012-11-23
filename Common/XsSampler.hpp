@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <vector>
 #include <cassert>
+#include <tbb/cache_aligned_allocator.h>
 
 namespace Helios {
 
@@ -60,7 +61,7 @@ namespace Helios {
 		TypeReaction default_reaction;
 
 		/* Offset for reactions different from zero at each energy */
-		std::vector<int> offsets;
+		std::vector<int,tbb::cache_aligned_allocator<int> > offsets;
 
 		/*
 		 * How reactions are specified. XS are ordered from biggest to smallest index
@@ -76,7 +77,7 @@ namespace Helios {
 		 * e-mn is the energy index of the particle (not the value). e-m0 (emin) is the smallest index from all
 		 * input cross section arrays.
 		 */
-		std::vector<std::vector<double> > reaction_matrix;
+		std::vector<std::vector<double,tbb::cache_aligned_allocator<double> > > reaction_matrix;
 
 		/* Get the index of the reaction after a binary search */
 		size_t getIndex(size_t nrow, double val, double factor);
@@ -84,7 +85,7 @@ namespace Helios {
 		/* Get a value on the matrix */
 		double getMatrixValue(size_t nerg, size_t nrea) {
 			/* Get row */
-			std::vector<double>& row = reaction_matrix[nerg];
+			std::vector<double, tbb::cache_aligned_allocator<double> >& row = reaction_matrix[nerg];
 			/* Get local coordinate */
 			int li = nrea - ((nreaction - 1) - row.size());
 			/* Check out of range index */
@@ -104,9 +105,9 @@ namespace Helios {
 		/* Extension of the STL lower_bound algorithm using a functor for evaluation */
 		size_t reaction_lower_bound(size_t nrow, double val, double factor) {
 			/* Low row */
-			std::vector<double>& low = reaction_matrix[nrow];
+			std::vector<double,tbb::cache_aligned_allocator<double> >& low = reaction_matrix[nrow];
 			/* High row */
-			std::vector<double>& high = reaction_matrix[nrow + 1];
+			std::vector<double,tbb::cache_aligned_allocator<double> >& high = reaction_matrix[nrow + 1];
 
 			/* Get lower reaction index */
 			size_t first = ((nreaction - 1) - std::max(low.size(), high.size()));
@@ -195,7 +196,7 @@ namespace Helios {
 			/* Loop over energies */
 			for(size_t i = 0 ; i < offsets.size() ; ++i) {
 				/* Get row */
-				std::vector<double>& row = reaction_matrix[i];
+				std::vector<double,tbb::cache_aligned_allocator<double> >& row = reaction_matrix[i];
 				/* Resize matrix row */
 				row.resize(offsets[i] - 1);
 				/* Get absolute value of energy */

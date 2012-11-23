@@ -167,7 +167,7 @@ set(MCFILES Common/Common.cpp
             
 add_library(helios ${MCFILES})
 
-target_link_libraries (helios ${BLITZ_LIBRARY} ${TRNG_LIBRARY})
+target_link_libraries (helios ${BLITZ_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES} ${TBB_MALLOC_LIBRARY})
 
 # ---- Unit Test
 
@@ -196,13 +196,13 @@ add_executable(plottermc++ ${PNGWRITER}
                            DevUtils/PngPlotter/PngPlotter.cpp
                            )
 
-target_link_libraries(plottermc++ helios ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Blitz_LIBRARY} ${PNG_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
+target_link_libraries(plottermc++ helios ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Blitz_LIBRARY} ${PNG_LIBRARY} ${TBB_LIBRARIES} ${TBB_MALLOC_LIBRARY})
 
 # ---- Helios
 
 add_executable(helios++ Main.cpp)
                
-target_link_libraries(helios++ helios ${Blitz_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
+target_link_libraries(helios++ helios)
 
 # ---- Instal stuff
 

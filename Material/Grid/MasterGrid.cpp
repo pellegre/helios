@@ -45,7 +45,7 @@ MasterGrid::MasterGrid(){
 void MasterGrid::setup() {
 	/* Setup MASTER grid */
 	sort(master_grid.begin(), master_grid.end());
-	vector<double>::const_iterator it_master = unique(master_grid.begin(), master_grid.end());
+	vector<double,tbb::cache_aligned_allocator<double> >::const_iterator it_master = unique(master_grid.begin(), master_grid.end());
 	master_grid.resize(it_master - master_grid.begin());
 
 	/* Setup child grids */
@@ -128,8 +128,8 @@ double MasterGrid::interpolate(pair<size_t,double>& pair_value) const {
 		size_t coarse_index = (size_t) (log(energy/min_energy) / delta_coarse);
 
 		/* Search boundaries */
-		vector<double>::const_iterator begin = master_grid.begin() + coarse_grid[coarse_index];
-		vector<double>::const_iterator end = master_grid.begin() + coarse_grid[coarse_index + 1] + 1;
+		vector<double,tbb::cache_aligned_allocator<double> >::const_iterator begin = master_grid.begin() + coarse_grid[coarse_index];
+		vector<double,tbb::cache_aligned_allocator<double> >::const_iterator end = master_grid.begin() + coarse_grid[coarse_index + 1] + 1;
 
 		/* Update index */
 		pair_value.first = upper_bound(begin, end, energy) - master_grid.begin() - 1;
@@ -173,8 +173,8 @@ void MasterGrid::setIndex(std::pair<size_t,double>& pair_value) const {
 		size_t coarse_index = (size_t) (log(energy/min_energy) / delta_coarse);
 
 		/* Search boundaries */
-		vector<double>::const_iterator begin = master_grid.begin() + coarse_grid[coarse_index];
-		vector<double>::const_iterator end = master_grid.begin() + coarse_grid[coarse_index + 1] + 1;
+		vector<double,tbb::cache_aligned_allocator<double> >::const_iterator begin = master_grid.begin() + coarse_grid[coarse_index];
+		vector<double,tbb::cache_aligned_allocator<double> >::const_iterator end = master_grid.begin() + coarse_grid[coarse_index + 1] + 1;
 
 		/* Update index */
 		pair_value.first = upper_bound(begin, end, energy) - master_grid.begin() - 1;
