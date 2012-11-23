@@ -75,6 +75,24 @@ void MasterGrid::setup() {
 		/* Setup master pointer */
 		(*it)->setup(master_pointers);
 	}
+
+	/* Setup coarse grid */
+	size_coarse = 20 * master_grid.size();
+	coarse_grid.resize(size_coarse);
+
+	/* Get bound energies */
+	double emin = master_grid[0];
+	double emax = master_grid[master_grid.size() - 1];
+	delta_coarse = log(emax / emin)/(size_coarse - 1);
+
+	/* Calculate coarse grid */
+	size_t i = 0;
+	for (double erg = emin ; erg < emax; erg *= exp(delta_coarse)) {
+		coarse_grid[i] = upper_bound(master_grid.begin(), master_grid.end(), erg) - master_grid.begin() - 1;
+		++i;
+	}
+	/* Map the last index */
+	coarse_grid[size_coarse-1] = master_grid.size() - 1;
 }
 
 double MasterGrid::interpolate(pair<size_t,double>& pair_value) const {
@@ -106,9 +124,12 @@ double MasterGrid::interpolate(pair<size_t,double>& pair_value) const {
 		/* Don't touch the index and return the factor */
 		return (energy - low_energy) / (high_energy - low_energy);
 	} else {
+		/* Get coarse index */
+		size_t coarse_index = (size_t) (log(energy/min_energy) / delta_coarse);
+
 		/* Search boundaries */
-		vector<double>::const_iterator begin = master_grid.begin();
-		vector<double>::const_iterator end = master_grid.end();
+		vector<double>::const_iterator begin = master_grid.begin() + coarse_grid[coarse_index];
+		vector<double>::const_iterator end = master_grid.begin() + coarse_grid[coarse_index + 1] + 1;
 
 		/* Update index */
 		pair_value.first = upper_bound(begin, end, energy) - master_grid.begin() - 1;
@@ -148,9 +169,13 @@ void MasterGrid::setIndex(std::pair<size_t,double>& pair_value) const {
 
 	/* Check if the index is in the right place */
 	if(not (energy >= low_energy && energy <= high_energy)) {
+		/* Get coarse index */
+		size_t coarse_index = (size_t) (log(energy/min_energy) / delta_coarse);
+
 		/* Search boundaries */
-		vector<double>::const_iterator begin = master_grid.begin();
-		vector<double>::const_iterator end = master_grid.end();
+		vector<double>::const_iterator begin = master_grid.begin() + coarse_grid[coarse_index];
+		vector<double>::const_iterator end = master_grid.begin() + coarse_grid[coarse_index + 1] + 1;
+
 		/* Update index */
 		pair_value.first = upper_bound(begin, end, energy) - master_grid.begin() - 1;
 	}

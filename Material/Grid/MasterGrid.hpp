@@ -47,7 +47,12 @@ namespace Helios {
 		/* --- Master Grid */
 		std::vector<double> master_grid;
 
-		/* Container of child */
+		/* --- Coarse Table */
+		int size_coarse;
+		double delta_coarse;
+		std::vector<size_t> coarse_grid;
+
+		/* Container of child grids */
 		std::vector<ChildGrid*> child_grids;
 	public:
 		/* Number of elements to reserve for the grid */
