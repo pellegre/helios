@@ -53,6 +53,10 @@ static EnergySamplerBase* createLaw(const Ace::EnergyDistribution::EnergyLaw* ac
 		/* Continuous Tabular Distribution */
 		return new EnergySampler<EnergyLaw7>(ace_law);
 	}
+	else if(law == 9) {
+		/* Continuous Tabular Distribution */
+		return new EnergySampler<EnergyLaw9>(ace_law);
+	}
 	else if(law == 44) {
 		/* Continuous Tabular Distribution */
 		return new EnergySampler<EnergyLaw44>(ace_law);

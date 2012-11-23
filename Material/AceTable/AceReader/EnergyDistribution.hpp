@@ -307,13 +307,13 @@ public:
 
         Law9(std::vector<double>::const_iterator it, int lnw);
 
+    public:
+
 		InterScheme int_sch;
 		int nen;
         std::vector<double> ein;
         std::vector<double> t;
         double u;
-
-    public:
 
         Law9(int lnw,int idat,int nr,const std::vector<int>& nbt,const std::vector<int>&aint,int ne,const std::vector<double>& energy,const std::vector<double>& prob)
                 : EnergyLaw(lnw,idat,nr,nbt,aint,ne,energy,prob) {/* */};
