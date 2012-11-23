@@ -34,7 +34,7 @@
 namespace Helios {
 namespace AceReaction {
 
-	/* ---------- Level Scattering  ---------- */
+	/* ---------- Simple Maxwell Fission Spectrum  ---------- */
 
 	class EnergyLaw7: public Helios::AceReaction::AceEnergyLaw {
 		typedef Ace::EnergyDistribution::Law7 Law7;
