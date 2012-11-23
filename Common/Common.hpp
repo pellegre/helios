@@ -153,7 +153,7 @@ namespace Helios {
 		Random(const trng::lcg64& r,long unsigned int seed) : r(r) {this->r.seed(seed);}
 		Random(const Random& other) : r(other.r), u(other.u) {/* */}
 		/* Uniform sampling */
-		double uniform() {return u(r);}
+		double uniform() {return 1.0 - u(r);}
 		/* Jump on sequence */
 		void jump(size_t value) {r.jump(value);}
 		/* Split sequence */

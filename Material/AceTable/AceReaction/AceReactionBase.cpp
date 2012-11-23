@@ -61,6 +61,7 @@ Reaction* AceReactionFactory::createReaction(const AceIsotope* isotope, const Ac
 	int mt = ace_reaction.getMt();
 
 	if(mt == 2) {
+
 		/*
 		 * We know this is an elastic scattering reaction but we should peek over
 		 * the angular distribution to create the correct template

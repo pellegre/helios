@@ -114,11 +114,11 @@ double MasterGrid::interpolate(pair<size_t,double>& pair_value) const {
 		pair_value.first = upper_bound(begin, end, energy) - master_grid.begin() - 1;
 
 		/* Energy bounds */
-		double low_energy = master_grid[pair_value.first];
-		double high_energy = master_grid[pair_value.first + 1];
+		double low = master_grid[pair_value.first];
+		double high = master_grid[pair_value.first + 1];
 
 		/* Return factor */
-		return (energy - low_energy) / (high_energy - low_energy);
+		return (energy - low) / (high - low);
 	}
 }
 

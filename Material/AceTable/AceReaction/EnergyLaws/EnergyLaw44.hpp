@@ -87,7 +87,7 @@ namespace AceReaction {
 		~KalbachTabular() {/* */}
 	};
 
-	class EnergyLaw44 : public EnergyOutgoingTabular<KalbachTabular> {
+	class EnergyLaw44 : public EnergyOutgoingTabular<KalbachTabular> /* Defined on EnergyTabular.hpp */ {
 		typedef Ace::EnergyDistribution::Law44 Law44;
 	public:
 		EnergyLaw44(const Law* ace_data);

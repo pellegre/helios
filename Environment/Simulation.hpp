@@ -63,7 +63,7 @@ public:
  * KEFF simulation
  */
 class KeffSimulation : public Simulation {
-	/* Population after the simulation */
+	/* KEFF estimation of one cycle */
 	double keff;
 	/* Particles per cycle */
 	size_t particles_number;
@@ -113,12 +113,12 @@ public:
 		base.jump(particles_number * Source::max_samples);
 	};
 
-	/* Virtual function to simulate a batch of particles */
+	/* Method to simulate a batch of particles */
 	double simulateBank(size_t nbanks) {
 		return ParallelPolicy::parallelBank(nbanks, this);
 	}
 
-	/* Virtual function to simulate the source of particles */
+	/* Method to simulate the source of particles */
 	void simulateSource(size_t nbanks) {
 		ParallelPolicy::parallelSource(nbanks, this);
 	}

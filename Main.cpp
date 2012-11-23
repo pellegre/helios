@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 	double ave_keff = 0.0;
 	int neutrons = 10000;
 	int skip = 20;
-	int cycles = 3000;
+	int cycles = 1050;
 
 	/* Initialize simulation */
 	ParallelKeffSimulation<IntelTbb> simulation(r,&environment,keff,neutrons);

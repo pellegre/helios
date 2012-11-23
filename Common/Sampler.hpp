@@ -227,7 +227,6 @@ namespace Helios {
 		}
 
 		/* Base constructor (normally used with derived classes) */
-		template<class ProbTable>
 		Sampler(const std::vector<TypeReaction>& reactions, int nenergy) :
             nreaction(reactions.size()), nenergy(nenergy), reactions(reactions) {
 			/* Allocate reaction matrix */
