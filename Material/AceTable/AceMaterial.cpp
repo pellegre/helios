@@ -207,16 +207,18 @@ void AceMaterial::print(std::ostream& out) const {
 vector<Material*> AceMaterialFactory::createMaterials(const vector<MaterialObject*>& definitions) const {
 	/* Container of new materials */
 	vector<Material*> materials;
+	materials.resize(definitions.size());
 
 	/* Push materials */
-	for(vector<MaterialObject*>::const_iterator it = definitions.begin() ;  it != definitions.end() ; ++it) {
-		const AceMaterialObject* new_ace = static_cast<const AceMaterialObject*>((*it));
+	#pragma omp parallel for
+	for(size_t i = 0 ; i < definitions.size() ; ++i) {
+		const AceMaterialObject* new_ace = static_cast<const AceMaterialObject*>(definitions[i]);
 		AceMaterial* newMaterial = new AceMaterial(new_ace);
 		/* Print additional information */
 		Log::msg() << left << Log::ident(2) << "  Creating material ";
 		Log::color<Log::COLOR_BOLDWHITE>() << newMaterial->getUserId() << Log::endl;
 		/* Push material */
-		materials.push_back(newMaterial);
+		materials[i] = newMaterial;
 	}
 
 	/* Return container */
