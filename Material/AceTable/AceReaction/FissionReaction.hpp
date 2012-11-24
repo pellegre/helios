@@ -75,8 +75,6 @@ namespace AceReaction {
 		ChanceFission(std::vector<pair<Reaction*,const Ace::CrossSection*> >& reaction_array,
 					const Ace::CrossSection& fission_xs, const ChildGrid* child_grid) :
 					Reaction(18), fission_xs(fission_xs), child_grid(child_grid) {
-			/* Sanity check */
-			assert(reaction_array.size() == 4);
 			/* Create sampler */
 			chance_sampler = new XsSampler<Reaction*>(reaction_array);
 		}

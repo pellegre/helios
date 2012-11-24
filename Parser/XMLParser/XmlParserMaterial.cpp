@@ -228,8 +228,9 @@ static void convertZaid(string& zaid) {
 		map<string,string>::const_iterator it_element = isotope_name.find(element);
 		if(it_element != isotope_name.end()) {
 			/* Put zeroes on the isotope part */
-			for(size_t i = 0 ; i < isotope.size() - 3 ; ++i)
-				isotope = "0" + isotope;
+			if(isotope.size() < 3)
+				for(size_t i = 0 ; i < isotope.size() - 3 ; ++i)
+					isotope = "0" + isotope;
 			zaid = (*it_element).second + isotope;
 		}
 	}

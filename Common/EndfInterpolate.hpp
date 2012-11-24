@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ENDFINTERPOLATE_HPP_
 
 #include <vector>
+#include <iostream>
 #include <cassert>
 #include <cmath>
 #include <algorithm>
@@ -64,63 +65,78 @@ namespace Helios {
 			if(value <= min_value) return *ybegin;
 			else if(value >= max_value) return *(yend - 1);
 
-			/* Find interpolation region */
-			size_t lower = 0;
-			for(size_t i = 0 ; i < nbt.size() ; ++i) {
-				/* High bound */
-				size_t high = nbt[i];
-				/* Check if we are inside this range */
-				if(value > *(xbegin + lower) && value <= *(xbegin + high - 1)) {
-					/* Binary search (get lower index) */
-					DistanceType idx = std::upper_bound(xbegin + lower, xbegin + high, value) - xbegin - 1;
-					/* Get interpolation type */
-					int type = aint[i];
+			/* Check size of ENDF parameters */
+			if(nbt.size() == 0) {
+				/* Linear - Linear assumed */
+				DistanceType idx = std::upper_bound(xbegin, xend, value) - xbegin - 1;
+				/* Get bounds values */
+				double y1 = *(ybegin + idx + 1) , y0 = *(ybegin + idx);
+				double x1 = *(xbegin + idx + 1) , x0 = *(xbegin + idx);
+				/* Linear-linear */
+				if (x1 != x0)
+					return  (y1 - y0)*(value - x0)/(x1 - x0) + y0;
+				else if ((y1 == y0) || (value == x0))
+					return y0;
+			}
+			else {
+				/* Find interpolation region */
+				size_t lower = 0;
+				for(size_t i = 0 ; i < nbt.size() ; ++i) {
+					/* High bound */
+					size_t high = nbt[i];
+					/* Check if we are inside this range */
+					if(value > *(xbegin + lower) && value <= *(xbegin + high - 1)) {
+						/* Binary search (get lower index) */
+						DistanceType idx = std::upper_bound(xbegin + lower, xbegin + high, value) - xbegin - 1;
+						/* Get interpolation type */
+						int type = aint[i];
 
-					/* Get bounds values */
-					double y1 = *(ybegin + idx + 1) , y0 = *(ybegin + idx);
-					double x1 = *(xbegin + idx + 1) , x0 = *(xbegin + idx);
-					/* Return value */
-					double y(y0);
+						/* Get bounds values */
+						double y1 = *(ybegin + idx + 1) , y0 = *(ybegin + idx);
+						double x1 = *(xbegin + idx + 1) , x0 = *(xbegin + idx);
+						/* Return value */
+						double y(y0);
 
-					/* Get type */
-					switch (type) {
-					case 1:
-						/* Histogram */
-						y = y0;
-						break;
-					case 0:
-					case 2:
-						/* Linear-linear */
-						if (x1 != x0)
-							y = (y1 - y0)*(value - x0)/(x1 - x0) + y0;
-						else if ((y1 == y0) || (value == x0))
+						/* Get type */
+						switch (type) {
+						case 1:
+							/* Histogram */
 							y = y0;
-						break;
-					case 3:
-						/* Linear-log */
-						y = (y1 - y0)*log(value/x0)/log(x1/x0) + y0;
-						break;
-					case 4:
-						/* Log-linear */
-						if ((y0 != 0.0) && (x1 != x0))
-							y = pow(y1/y0, (value - x0)/(x1 - x0))*y0;
-						break;
-					case 5:
-						/* Log-log */
-						if (y0 != 0.0)
-							y = pow(y1/y0, log(value/x0)/log(x1/x0))*y0;
-						break;
-					default:
-						/* Default behavior */
-						y = y0;
-						break;
-					}
+							break;
+						case 0:
+						case 2:
+							/* Linear-linear */
+							if (x1 != x0)
+								y = (y1 - y0)*(value - x0)/(x1 - x0) + y0;
+							else if ((y1 == y0) || (value == x0))
+								y = y0;
+							break;
+						case 3:
+							/* Linear-log */
+							y = (y1 - y0)*log(value/x0)/log(x1/x0) + y0;
+							break;
+						case 4:
+							/* Log-linear */
+							if ((y0 != 0.0) && (x1 != x0))
+								y = pow(y1/y0, (value - x0)/(x1 - x0))*y0;
+							break;
+						case 5:
+							/* Log-log */
+							if (y0 != 0.0)
+								y = pow(y1/y0, log(value/x0)/log(x1/x0))*y0;
+							break;
+						default:
+							/* Default behavior */
+							y = y0;
+							break;
+						}
 
-					/* Return interpolated value */
-					return y;
+						/* Return interpolated value */
+						return y;
+					}
+					/* Update lower bound */
+					lower = high - 1;
 				}
-				/* Update lower bound */
-				lower = high - 1;
 			}
 
 			return 0.0;

@@ -62,6 +62,7 @@ namespace AceReaction {
 			double ienergy(particle.getEnergy().second);
 			/* Get temperature */
 			double temp = endf_interpolate.interpolate(ein.begin(), ein.end(), t.begin(), t.end(), ienergy);
+			//cout << scientific << temp << " ==  " << t[0] << " - " << t[t.size() - 1] << endl;
 			/* Auxiliary variables */
 			double rnd1(0.0), rnd2(0.0), c(0.0);
 			/* Sample outgoing energy */
