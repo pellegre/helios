@@ -127,6 +127,28 @@ public:
 	virtual ~ParallelKeffSimulation() {/* */};
 };
 
+/* Single thread policy */
+class SingleThread {
+public:
+	/* Parallel algorithm to fill the particle bank with the source */
+	void parallelSource(size_t nbanks, KeffSimulation* simulation) {
+		/* Populate the particle bank with the initial source */
+		for(size_t i = 0 ; i < nbanks ; ++i)
+			simulation->source(i);
+	}
+	/* Parallel algorihtm to simulate a bank of particles */
+	double parallelBank(size_t nbanks, KeffSimulation* simulation) {
+		/* Total population */
+		double total_population = 0.0;
+
+		/* Parallel loop to simulate the particle in the bank */
+		for(size_t i = 0 ; i < nbanks ; ++i)
+			total_population += simulation->cycle(i);
+
+		/* Return population */
+		return total_population;
+	}
+};
 
 /* OpenMP policy */
 class OpenMp {
