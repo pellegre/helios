@@ -120,16 +120,13 @@ void AceIsotope::setFissionReaction() {
 
 		/* Sanity check */
 		if(tyr.getType() != Ace::TyrDistribution::fission) {
-
+			/* Print warning */
 			Log::warn() << "No information on NU block for fission reaction with mt = " << fission_mt
 						<< " for isotope " << getUserId() << Log::endl;
-			int tyr_type = tyr.getType();
-			if(tyr_type == Ace::TyrDistribution::distribution)
-				/* Tabular form of number of outgoing particle */
-				prompt_nu = new AceReaction::TabularNu(tyr);
-			else
-				/* Fixed number */
-				prompt_nu = new AceReaction::FixedNu(tyr);
+
+			/* Set the isotope as non-fissile */
+			fissile = false;
+			return;
 
 		} else {
 
