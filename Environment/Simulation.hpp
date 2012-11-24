@@ -46,9 +46,10 @@ protected:
 	/* Environment (is where this class should look for the data) */
 	McEnvironment* environment;
 
+public:
+
 	/* Parameters for random number on simulations */
 	static size_t max_rng_per_history;
-public:
 
 	/* Initialize simulation */
 	Simulation(const Random& base, McEnvironment* environment);
