@@ -233,9 +233,9 @@ void KeffSimulation::launch() {
 	local_bank.clear();
 }
 
-Simulation::Simulation(const Random& base, McEnvironment* environment) : base(base), environment(environment) {
-	/* Parameters for random number on simulations */
-	max_rng_per_history = 100000;
-}
+/* Random number stride for each history */
+size_t Simulation::max_rng_per_history = 10000;
+
+Simulation::Simulation(const Random& base, McEnvironment* environment) : base(base), environment(environment) {/* */}
 
 } /* namespace Helios */

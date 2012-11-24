@@ -47,7 +47,7 @@ protected:
 	McEnvironment* environment;
 
 	/* Parameters for random number on simulations */
-	size_t max_rng_per_history;
+	static size_t max_rng_per_history;
 public:
 
 	/* Initialize simulation */
