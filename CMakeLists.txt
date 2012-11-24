@@ -97,6 +97,11 @@ find_package( Boost REQUIRED COMPONENTS program_options )
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARIES_DIRS})
 
+# Google Performance Tools 
+find_package(GooglePerfTools REQUIRED)
+include_directories(${GOOGLE_PERFTOOLS_INCLUDE_DIR})
+link_directories(${GOOGLE_PERFTOOLS_INCLUDE_DIR})
+
 # ---- Monte Carlo library
 
 set(MCFILES Common/Common.cpp
@@ -168,7 +173,7 @@ set(MCFILES Common/Common.cpp
             
 add_library(helios ${MCFILES})
 
-target_link_libraries (helios ${BLITZ_LIBRARY} ${TRNG_LIBRARY})
+target_link_libraries (helios ${BLITZ_LIBRARY} ${TRNG_LIBRARY} ${TCMALLOC_LIBRARIES})
 
 # ---- Unit Test
 
@@ -203,7 +208,7 @@ target_link_libraries(plottermc++ helios ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Blit
 
 add_executable(helios++ Main.cpp)
                
-target_link_libraries(helios++ helios ${Blitz_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
+target_link_libraries(helios++ helios ${Blitz_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES} ${TCMALLOC_LIBRARIES})
 
 # ---- Instal stuff
 
