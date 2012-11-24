@@ -33,7 +33,8 @@ namespace Helios {
 using namespace AceReaction;
 
 /* Create law */
-static EnergySamplerBase* createLaw(const Ace::EnergyDistribution::EnergyLaw* ace_law) {
+EnergySamplerBase* EnergySamplerFactory::createLaw(const Ace::EnergyDistribution::EnergyLaw* ace_law,
+		const Ace::NeutronReaction& ace_reaction) const {
 	/* Get law */
 	int law = ace_law->getLaw();
 
@@ -50,32 +51,43 @@ static EnergySamplerBase* createLaw(const Ace::EnergyDistribution::EnergyLaw* ac
 		return new EnergySampler<EnergyLaw4>(ace_law);
 	}
 	else if(law == 7) {
-		/* Continuous Tabular Distribution */
+		/* Maxwell spectrum */
 		return new EnergySampler<EnergyLaw7>(ace_law);
 	}
+	else if(law == 9) {
+		/* Evaporation spectrum */
+		return new EnergySampler<EnergyLaw9>(ace_law);
+	}
 	else if(law == 44) {
-		/* Continuous Tabular Distribution */
+		/* Kalbach-87 Formalism */
 		return new EnergySampler<EnergyLaw44>(ace_law);
 	}
 	else if(law == 61) {
-		/* Continuous Tabular Distribution */
+		/* Like 44 but tabular angular distribution instead of Kalbach-87 */
 		return new EnergySampler<EnergyLaw61>(ace_law);
+	}
+	else if(law == 66) {
+		/* N-body phase space distribution */
+		return new EnergySampler<EnergyLaw66>(ace_law, ace_reaction.getQ(), isotope->getAwr());
 	}
 	/* No law */
 	throw(EnergySamplerBase::BadEnergySamplerCreation("Energy law " + toString(law) + " is not supported"));
 }
 
-EnergySamplerBase* EnergySamplerFactory::createSampler(const Ace::EnergyDistribution& ace_data) {
+EnergySamplerBase* EnergySamplerFactory::createSampler(const Ace::NeutronReaction& ace_reaction) const {
+	/* Ace energy distribution */
+	const Ace::EnergyDistribution& ace_data = ace_reaction.getEnergy();
 	typedef Ace::EnergyDistribution::EnergyLaw EnergyLaw;
 	if(ace_data.laws.size() == 1)
-		return createLaw(ace_data.laws[0]);
-	return new MultipleLawsSampler(ace_data.laws);
+		return createLaw(ace_data.laws[0], ace_reaction);
+	return new MultipleLawsSampler(ace_data.laws, ace_reaction, this);
 }
 
-MultipleLawsSampler::MultipleLawsSampler(const vector<EnergyLaw*>& laws) {
+MultipleLawsSampler::MultipleLawsSampler(const vector<EnergyLaw*>& laws, const Ace::NeutronReaction& ace_reaction,
+		const EnergySamplerFactory* factory) {
 	for(vector<EnergyLaw*>::const_iterator it = laws.begin() ; it != laws.end() ; ++it)
 		/* Create law data and push it into the container */
-		law_table.push_back(LawValidity((*it)->energy, (*it)->prob, createLaw((*it))));
+		law_table.push_back(LawValidity((*it)->energy, (*it)->prob, factory->createLaw((*it), ace_reaction)));
 }
 
 void MultipleLawsSampler::print(std::ostream& out) const {

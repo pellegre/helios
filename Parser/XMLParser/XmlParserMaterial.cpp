@@ -222,12 +222,15 @@ static void convertZaid(string& zaid) {
 		string element = (*it++);
 		/* Get isotope */
 		string isotope = (*it);
+		/* Check for natural isotopes */
+		if(isotope == "Nat") isotope = "0";
 		/* Find element on the table */
 		map<string,string>::const_iterator it_element = isotope_name.find(element);
 		if(it_element != isotope_name.end()) {
 			/* Put zeroes on the isotope part */
-			for(size_t i = 0 ; i < isotope.size() - 3 ; ++i)
-				isotope = "0" + isotope;
+			if(isotope.size() < 3)
+				for(size_t i = 0 ; i < isotope.size() - 3 ; ++i)
+					isotope = "0" + isotope;
 			zaid = (*it_element).second + isotope;
 		}
 	}
@@ -261,16 +264,16 @@ static void convertIsotopeName(string& isotope, const string& dataset) {
 /* Parse cell attributes */
 static vector<McObject*> aceAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
-	static const string required[4] = {"id","density","units","fraction"};
-	static const string optional[1] = {"dataset"};
-	static XmlParser::XmlAttributes matAttrib(vector<string>(required, required + 4), vector<string>(optional, optional + 1));
+	static const string required[2] = {"id","density"};
+	static const string optional[3] = {"dataset","units","fraction"};
+	static XmlParser::XmlAttributes matAttrib(vector<string>(required, required + 2), vector<string>(optional, optional + 3));
 
 	/* DataSet information */
 	XmlParser::AttributeValue<string> inp_dataset("dataset","");
 
 	/* Check flags */
-	XmlParser::AttributeValue<string> units_flag("units","",initUnits());
-	XmlParser::AttributeValue<string> fraction_flag("fraction","",initFraction());
+	XmlParser::AttributeValue<string> units_flag("units","atom/b-cm",initUnits());
+	XmlParser::AttributeValue<string> fraction_flag("fraction","atom",initFraction());
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
@@ -278,7 +281,10 @@ static vector<McObject*> aceAttrib(TiXmlElement* pElement) {
 
 	/* Get attributes */
 	MaterialId id = fromString<MaterialId>(mapAttrib["id"]);
-	double density = fromString<double>(mapAttrib["density"]);
+	double density = 0.0;
+	string density_value = mapAttrib["density"];
+	if(density_value != "sum")
+		density = fromString<double>(mapAttrib["density"]);
 	string units = units_flag.getValue(mapAttrib);
 	string fraction = fraction_flag.getValue(mapAttrib);
 	string dataset = inp_dataset.getString(mapAttrib);
@@ -292,6 +298,9 @@ static vector<McObject*> aceAttrib(TiXmlElement* pElement) {
 	for (pChild = pElement->FirstChildElement(); pChild != 0; pChild = pChild->NextSiblingElement()) {
 		string element_value(pChild->Value());
 		pair<string,double> pair_value = isoAttrib(pChild);
+		/* Sum density */
+		if(density_value == "sum")
+			density += pair_value.second;
 		/* Map human readable name to the isotope ZAID */
 		convertIsotopeName(pair_value.first, dataset);
 		/* Get isotope name */

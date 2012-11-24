@@ -70,6 +70,7 @@ void AceIsotope::setFissionReaction() {
 		fission_reaction = getReaction(18);
 
 	} else if(reactions.check_all("19-21,38")) {
+
 		/* We got chance fission reactions */
 		fissile = true;
 		/* Get fission cross section */
@@ -77,16 +78,27 @@ void AceIsotope::setFissionReaction() {
 		/* Check size */
 		assert(fission_xs.size() == total_xs.size());
 
+		/* MT of chance fission reaction */
+		int mts[4] = {19, 21, 22, 38};
+		vector<int> chance_mts(mts, mts + 4);
+
 		/* Array for the secondary particle reaction sampler */
 		vector<pair<Reaction*,const CrossSection*> > chance_array;
-		/* First chance fission */
-		chance_array.push_back(make_pair(getReaction(19), &(*reactions.get_mt(19)).getXs()));
-		/* Second chance fission */
-		chance_array.push_back(make_pair(getReaction(20), &(*reactions.get_mt(20)).getXs()));
-		/* Third chance fission */
-		chance_array.push_back(make_pair(getReaction(21), &(*reactions.get_mt(21)).getXs()));
-		/* Fourth chance fission */
-		chance_array.push_back(make_pair(getReaction(38), &(*reactions.get_mt(38)).getXs()));
+
+		/* Push chance reactions */
+		for(vector<int>::const_iterator it = chance_mts.begin() ; it != chance_mts.end() ; ++it) {
+			/* Get MT */
+			int mt = (*it);
+
+			/* Get the reaction from the container */
+			ReactionContainer::const_iterator it_reaction = reactions.get_mt(mt);
+			if(it_reaction != reactions.end()) {
+				/* Reaction exist */
+				const NeutronReaction& ace_reaction = (*it_reaction);
+				/* Push reaction */
+				chance_array.push_back( make_pair(getReaction(mt), &(ace_reaction.getXs()) ));
+			}
+		}
 
 		/* Set fission cross section */
 		fission_reaction = new AceReaction::ChanceFission(chance_array, fission_xs, child_grid);
@@ -95,7 +107,7 @@ void AceIsotope::setFissionReaction() {
 		reaction_map[18] = fission_reaction;
 
 		/* Put fission MT */
-		fission_mt = 19;
+		fission_mt = (*chance_array.begin()).first->getId();
 	}
 
 	/* Set the fission probability (in case the information is available) */
@@ -105,19 +117,31 @@ void AceIsotope::setFissionReaction() {
 
 		/* Get distribution of emerging particles */
 		const Ace::TyrDistribution& tyr = ace_reaction.getTyr();
-		/* Sanity check */
-		assert(tyr.getType() == Ace::TyrDistribution::fission);
-		/* Get the NU data related to this fission reaction */
-		vector<Ace::NUBlock::NuData*> nu_data = tyr.getFission();
 
-		/* TODO - For now just sample particles with prompt spectrum */
-		if(nu_data.size() >= 2)
-			prompt_nu = buildNuSampler(nu_data[1]);
-		else if(nu_data.size() == 1)
-			prompt_nu = buildNuSampler(nu_data[0]);
-		else
-			throw(AceModule::AceError(getUserId(), "Cannot create reaction for mt = " + toString(ace_reaction.getMt()) +
-				" : Information in NU block is not available" ));
+		/* Sanity check */
+		if(tyr.getType() != Ace::TyrDistribution::fission) {
+			/* Print warning */
+			Log::warn() << "No information on NU block for fission reaction with mt = " << fission_mt
+						<< " for isotope " << getUserId() << Log::endl;
+
+			/* Set the isotope as non-fissile */
+			fissile = false;
+			return;
+
+		} else {
+
+			/* Get the NU data related to this fission reaction */
+			vector<Ace::NUBlock::NuData*> nu_data = tyr.getFission();
+
+			/* TODO - For now just sample particles with prompt spectrum */
+			if(nu_data.size() >= 2)
+				prompt_nu = buildNuSampler(nu_data[1]);
+			else if(nu_data.size() == 1)
+				prompt_nu = buildNuSampler(nu_data[0]);
+			else
+				throw(AceModule::AceError(getUserId(), "Cannot create reaction for mt = " + toString(ace_reaction.getMt()) +
+					" : Information in NU block is not available" ));
+		}
 	}
 }
 

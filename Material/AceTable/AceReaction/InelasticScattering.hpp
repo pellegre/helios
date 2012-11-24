@@ -58,7 +58,7 @@ namespace AceReaction {
 		static MuSampler* buildMuSampler(const Ace::AngularDistribution& ace_angular);
 
 		/* Build Energy Sampler */
-		static EnergySamplerBase* buildEnergySampler(const Ace::EnergyDistribution& ace_energy);
+		static EnergySamplerBase* buildEnergySampler(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction);
 
 	protected:
 		/*

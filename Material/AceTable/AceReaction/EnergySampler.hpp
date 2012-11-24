@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../../Common/Common.hpp"
 #include "../../../Transport/Particle.hpp"
 #include "../AceReader/EnergyDistribution.hpp"
+#include "../AceModule.hpp"
 
 namespace Helios {
 
@@ -67,10 +68,13 @@ namespace AceReaction {
 	};
 
 	class EnergySamplerFactory {
+		const AceIsotope* isotope;
 	public:
-		EnergySamplerFactory() {/* */}
+		EnergySamplerFactory(const AceIsotope* isotope) : isotope(isotope) {/* */}
+		/* Create law */
+		EnergySamplerBase* createLaw(const Ace::EnergyDistribution::EnergyLaw* ace_law, const Ace::NeutronReaction& ace_reaction) const;
 		/* Create a new energy sampler using information parsed from the ACE cross section file */
-		EnergySamplerBase* createSampler(const Ace::EnergyDistribution& ace_data);
+		EnergySamplerBase* createSampler(const Ace::NeutronReaction& ace_reaction) const;
 		~EnergySamplerFactory() {/* */}
 	};
 
@@ -82,6 +86,15 @@ namespace AceReaction {
 		/* Constructor for using multiple laws */
 		template<class PolicyData>
 		EnergySampler(PolicyData ace_data) : LawPolicy(ace_data) {/* */}
+
+		/* Constructor for using multiple laws (and additional parameters) */
+		template<class PolicyData, class Additional>
+		EnergySampler(PolicyData ace_data, Additional additional) : LawPolicy(ace_data, additional) {/* */}
+
+		/* Constructor for using multiple laws (and additional parameters) */
+		template<class PolicyData, class Additional1, class Additional2>
+		EnergySampler(PolicyData ace_data, Additional1 additional1, Additional2 additional2) :
+			LawPolicy(ace_data, additional1, additional2) {/* */}
 
 		/* -- Overload base classes of the energy sampler */
 
@@ -137,7 +150,7 @@ namespace AceReaction {
 
 	public:
 		/* Constructor (grab a vector of laws) */
-		MultipleLawsSampler(const vector<EnergyLaw*>& laws);
+		MultipleLawsSampler(const vector<EnergyLaw*>& laws, const Ace::NeutronReaction& ace_reaction, const EnergySamplerFactory* factory);
 
 		/* -- Overload base classes of the energy sampler */
 
