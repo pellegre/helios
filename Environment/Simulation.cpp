@@ -34,7 +34,10 @@ namespace Helios {
 
 KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
 		Simulation(_random,_environment), keff(keff), particles_number(_particles_number),
-		initial_source(environment->getModule<Source>()), fission_bank(particles_number) {/* */}
+		initial_source(environment->getModule<Source>()), fission_bank(particles_number) {
+	for(size_t i = 0 ; i < 10000 ; ++i)
+		tallies.push_back(new Tally);
+}
 
 bool nonVoid(const Material*& material, Particle& particle, const Cell*& cell) {
 	while(not material) {
@@ -60,7 +63,7 @@ bool nonVoid(const Material*& material, Particle& particle, const Cell*& cell) {
 	return true;
 }
 
-double KeffSimulation::cycle(size_t nbank) {
+double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& child_tallies) {
 	/* Initialize some auxiliary variables */
 	Surface* surface(0);  /* Surface pointer */
 	bool sense(true);     /* Sense of the surface we are crossing */
@@ -80,6 +83,9 @@ double KeffSimulation::cycle(size_t nbank) {
 	CellParticle& pc = fission_bank[nbank];
 	const Cell* cell = pc.first;
 	Particle& particle = pc.second;
+//
+//	for(size_t i = 0 ; i < child_tallies.size() ; ++i)
+//		child_tallies[i]->acc(particle.wgt());
 
 	while(true) {
 
@@ -219,6 +225,12 @@ void KeffSimulation::launch() {
 	/* --- Calculate multiplication factor for this cycle */
 	keff = total_population / (double) particles_number;
 
+	/* Accumulate tallies (using initial source weight as a normalization factor) */
+	for(size_t i = 0 ; i < tallies.size() ; ++i) {
+		tallies[i]->accumulate(fission_bank.size());
+		//cout << i << " = " << tallies[i]->mean() << " std = " << tallies[i]->std() << endl;
+	}
+
 	/* --- Clear particle bank (global) */
 	fission_bank.clear();
 
@@ -232,6 +244,12 @@ void KeffSimulation::launch() {
 	/* Clear local bank */
 	local_bank.clear();
 }
+
+KeffSimulation::~KeffSimulation() {
+	/* Delete tallies */
+	for(size_t i = 0 ; i < tallies.size() ; ++i)
+		delete tallies[i];
+};
 
 /* Random number stride for each history */
 size_t Simulation::max_rng_per_history = 10000;
