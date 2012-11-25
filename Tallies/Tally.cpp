@@ -29,13 +29,5 @@
 
 namespace Helios {
 
-Tally::Tally() {
-	// TODO Auto-generated constructor stub
-
-}
-
-Tally::~Tally() {
-	// TODO Auto-generated destructor stub
-}
 
 } /* namespace Helios */
