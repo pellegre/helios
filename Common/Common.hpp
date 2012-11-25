@@ -68,6 +68,8 @@ namespace Helios {
 	typedef UserId SamplerId;
 	/* Isotope ID defined by the user */
 	typedef UserId IsotopeId;
+	/* Tally ID defined by the user */
+	typedef UserId TallyId;
 
 	/* Internal IDs are ALWAYS unsigned integers */
 	typedef unsigned int InternalId;
@@ -86,6 +88,8 @@ namespace Helios {
 	typedef InternalId InternalSamplerId;
 	/* Isotope ID used internally */
 	typedef InternalId InternalIsotopeId;
+	/* Tally ID used internally */
+	typedef InternalId InternalTallyId;
 
 	/* Energy stuff */
 	typedef double EnergyValue;                        /* Energy of the particle in eVs */

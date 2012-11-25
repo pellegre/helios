@@ -35,8 +35,11 @@ namespace Helios {
 KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
 		Simulation(_random,_environment), keff(keff), particles_number(_particles_number),
 		initial_source(environment->getModule<Source>()), fission_bank(particles_number) {
-	for(size_t i = 0 ; i < 2 ; ++i)
-		tallies.push_back(new Tally);
+
+	/* Leakage */
+	tallies.push_back(new Tally("leakage"));
+	/* Absorption KEFF */
+	tallies.push_back(new Tally("keff (abs)"));
 }
 
 bool nonVoid(const Material*& material, Particle& particle, const Cell*& cell) {
@@ -84,16 +87,17 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 	const Cell* cell = pc.first;
 	Particle& particle = pc.second;
 
-	for(size_t i = 0 ; i < tally_container.size() ; ++i)
-		tally_container[i]->acc(2 * particle.wgt());
-
 	while(true) {
 
 		/* 2. ---- Get material and mean free path */
 		const Material* material = cell->getMaterial();
 		/* Transport the particle until a non-void cell is found (checking boundary conditions) */
 		outside = not nonVoid(material, particle, cell);
-		if(outside) break;
+		if(outside) {
+			/* Accumulate leakage */
+			tally_container[0]->acc(particle.wgt());
+			break;
+		}
 
 		/* 3. ---- Get next surface's distance */
 		cell->intersect(particle.pos(), particle.dir(), surface, sense, distance);
@@ -140,7 +144,11 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 			}
 		}
 
-		if(outside) break;
+		if(outside) {
+			/* Accumulate leakage */
+			tally_container[0]->acc(particle.wgt());
+			break;
+		}
 
 		/* 6. Move the particle to the collision point */
 		particle.pos() = particle.pos() + collision_distance * particle.dir();
@@ -154,12 +162,20 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 		double absorption = isotope->getAbsorptionProb(particle.erg());
 		double prob = r.uniform();
 		if(prob < absorption) {
+
 			/* 8.2 ---- Absorption reaction , we should check if this is a fission reaction */
 			if(isotope->isFissile()) {
+
+				/* Fission data for the isotope */
 				double fission = isotope->getFissionProb(particle.erg());
+				double nubar = isotope->getNuBar(particle.erg());
+
+				/* Accumulate absorption estimation of the KEFF */
+				tally_container[1]->acc(fission / absorption * particle.wgt() * nubar);
+
 				if(prob > (absorption - fission)) {
 					/* Get NU-bar */
-					double nubar = isotope->getNuBar(particle.erg()) * particle.wgt() / keff;
+					nubar *= particle.wgt() / keff;
 					/* Integer part */
 					int nu = (int) nubar;
 					if (r.uniform() < nubar - (double)nu) nu++;
@@ -176,6 +192,7 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 						local_bank[nbank].push_back(CellParticle(cell,new_particle));
 					}
 				}
+
 			}
 			/* Kill the particle, this is an analog simulation */
 			break;
@@ -233,6 +250,7 @@ void KeffSimulation::launch() {
 			tallies[i]->join((*child_tallies[j])[i]);
 		}
 		tallies[i]->accumulate(fission_bank.size());
+		cout << *tallies[i] << endl;
 	}
 
 	/* --- Clear particle bank (global) */

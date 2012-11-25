@@ -35,13 +35,16 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/count.hpp>
+
+#include "../Common/Common.hpp"
 
 namespace acc = boost::accumulators;
 
 namespace Helios {
 
 /* Accumulator used by the Tally class (mean and standard deviation) */
-typedef acc::accumulator_set<double, acc::stats<acc::tag::mean, acc::stats<acc::tag::variance> > > Accumulator;
+typedef acc::accumulator_set<double, acc::stats<acc::tag::count, acc::tag::mean, acc::stats<acc::tag::variance> > > Accumulator;
 
 /* Child tally */
 class ChildTally {
@@ -78,12 +81,16 @@ public:
 
 /* Base class for tallies */
 class Tally {
-	/* Single accumulator */
-	Accumulator accum;
+	/* ID of the tally */
+	TallyId user_id;
 	/* Prototype of the child accumulator */
 	ChildTally* prototype;
+	/* Single accumulator */
+	Accumulator accum;
+
+	friend std::ostream& operator<<(std::ostream& out, const Tally& q);
 public:
-	Tally() : prototype(0) {
+	Tally(const TallyId& user_id) : user_id(user_id), prototype(0) {
 		/* Create child */
 		prototype = new ChildTally;
 	}
@@ -118,20 +125,16 @@ public:
 	}
 
 	/* Get mean */
-	double mean() const {
-		return acc::mean(accum);
-	}
-
-	/* Get standard deviation */
-	double sigma() const {
-		return sqrt((double)acc::variance(accum));
-	}
+	void print(std::ostream& out) const;
 
 	virtual ~Tally() {
 		/* Delete prototype */
 		delete prototype;
 	}
 };
+
+/* Output surface information */
+std::ostream& operator<<(std::ostream& out, const Tally& q);
 
 } /* namespace Helios */
 #endif /* TALLY_HPP_ */
