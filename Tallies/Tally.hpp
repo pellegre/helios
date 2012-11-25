@@ -32,14 +32,14 @@
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/moment.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
 
 namespace acc = boost::accumulators;
 
 namespace Helios {
 
 /* Accumulator used by the Tally class (mean and standard deviation) */
-typedef acc::accumulator_set<double, acc::stats<acc::tag::mean, acc::tag::moment<2> > > Accumulator;
+typedef acc::accumulator_set<double, acc::stats<acc::tag::mean, acc::stats<acc::tag::variance> > > Accumulator;
 
 /* Child tally */
 class ChildTally {
@@ -114,13 +114,13 @@ public:
 	}
 
 	/* Get mean */
-	double average() const {
+	double mean() const {
 		return acc::mean(accum);
 	}
 
 	/* Get standard deviation */
 	double std() const {
-		return acc::moment<2>(accum);
+		return sqrt((double)acc::variance(accum));
 	}
 
 	virtual ~Tally() {
