@@ -29,6 +29,8 @@
 #define TALLY_HPP_
 
 #include <iostream>
+#include <vector>
+#include <tbb/spin_mutex.h>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
@@ -79,38 +81,40 @@ class Tally {
 	/* Single accumulator */
 	Accumulator accum;
 	/* Prototype of the child accumulator */
-	ChildTally* child_tally;
+	ChildTally* prototype;
 public:
-	Tally() : child_tally(0) {
+	Tally() : prototype(0) {
 		/* Create child */
-		child_tally = new ChildTally;
+		prototype = new ChildTally;
 	}
 
 	/* Return a child tally (to accumulate data on a thread)*/
-	ChildTally* getChild() const {
-		return child_tally->clone();
+	ChildTally* getChild() {
+		return prototype->clone();
 	}
 
 	/* Join child tally and accumulate the data (this should be called on a thread-safe environment) */
-	void join(const ChildTally* child) {
+	void join(ChildTally* child) {
 		/* Join child */
-		child_tally->join(child);
+		prototype->join(child);
+		/* Clear child */
+		child->clear();
 	}
 
 	/* Accumulate data using a normalization factor */
 	void accumulate(double norm) {
-		double value = child_tally->get();
+		double value = prototype->get();
 		/* Accumulate */
 		accum(value / norm);
 		/* Clear prototype */
-		child_tally->clear();
+		prototype->clear();
 	}
 
 	/* Accumulate data */
 	void accumulate() {
-		accum(child_tally->get());
+		accum(prototype->get());
 		/* Clear prototype */
-		child_tally->clear();
+		prototype->clear();
 	}
 
 	/* Get mean */
@@ -119,13 +123,13 @@ public:
 	}
 
 	/* Get standard deviation */
-	double std() const {
+	double sigma() const {
 		return sqrt((double)acc::variance(accum));
 	}
 
 	virtual ~Tally() {
-		/* Delete child */
-		delete child_tally;
+		/* Delete prototype */
+		delete prototype;
 	}
 };
 

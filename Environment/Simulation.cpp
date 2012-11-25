@@ -35,7 +35,7 @@ namespace Helios {
 KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
 		Simulation(_random,_environment), keff(keff), particles_number(_particles_number),
 		initial_source(environment->getModule<Source>()), fission_bank(particles_number) {
-	for(size_t i = 0 ; i < 10000 ; ++i)
+	for(size_t i = 0 ; i < 2 ; ++i)
 		tallies.push_back(new Tally);
 }
 
@@ -63,7 +63,7 @@ bool nonVoid(const Material*& material, Particle& particle, const Cell*& cell) {
 	return true;
 }
 
-double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& child_tallies) {
+double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_container) {
 	/* Initialize some auxiliary variables */
 	Surface* surface(0);  /* Surface pointer */
 	bool sense(true);     /* Sense of the surface we are crossing */
@@ -84,8 +84,8 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& child_tall
 	const Cell* cell = pc.first;
 	Particle& particle = pc.second;
 
-	for(size_t i = 0 ; i < child_tallies.size() ; ++i)
-		child_tallies[i]->acc(particle.wgt());
+	for(size_t i = 0 ; i < tally_container.size() ; ++i)
+		tally_container[i]->acc(2 * particle.wgt());
 
 	while(true) {
 
@@ -227,8 +227,12 @@ void KeffSimulation::launch() {
 
 	/* Accumulate tallies (using initial source weight as a normalization factor) */
 	for(size_t i = 0 ; i < tallies.size() ; ++i) {
+		/* Join each tally */
+		for(size_t j = 0 ; j < child_tallies.size() ; ++j) {
+			/* Join with parent tally */
+			tallies[i]->join((*child_tallies[j])[i]);
+		}
 		tallies[i]->accumulate(fission_bank.size());
-		//cout << i << " = " << tallies[i]->mean() << " std = " << tallies[i]->std() << endl;
 	}
 
 	/* --- Clear particle bank (global) */

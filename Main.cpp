@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
 	int cycles = 1150;
 
 	/* Initialize simulation */
-	ParallelKeffSimulation<IntelTbb> simulation(r,&environment,keff,neutrons);
+	ParallelKeffSimulation<OpenMp> simulation(r,&environment,keff,neutrons);
 
 	for(int ncycle = 0 ; ncycle <= cycles ; ++ncycle) {
 

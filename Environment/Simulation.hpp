@@ -79,7 +79,10 @@ class KeffSimulation : public Simulation {
 
 	/* Accumulators */
 	std::vector<Tally*> tallies;
-
+	std::vector<vector<ChildTally*>* > child_tallies;
+	/* MUTEX to request a child */
+	typedef tbb::spin_mutex RequestChildMutex;
+	RequestChildMutex child_mutex;
 public:
 	/* Initialize simulation */
 	KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
@@ -91,20 +94,32 @@ public:
 	virtual void simulateSource(size_t nbanks) = 0;
 
 	/* Get child tallies */
-	void getTallies(vector<ChildTally*>& child_tallies) {
-		child_tallies.resize(tallies.size());
-		/* Create childs */
-		for(size_t i = 0 ; i < child_tallies.size() ; ++i)
-			child_tallies[i] = tallies[i]->getChild();
+	vector<ChildTally*>& getTallies() {
+		RequestChildMutex::scoped_lock lock(child_mutex);
+		/* If there aren't tallies on the pool, create one */
+		if(child_tallies.size() == 0) {
+			/* Hopefully this should be done only once for each thread */
+			vector<ChildTally*>* new_tallies = new vector<ChildTally*>;
+			new_tallies->resize(tallies.size());
+			/* Create tallies */
+			for(size_t i = 0 ; i < tallies.size() ; ++i)
+				(*new_tallies)[i] = tallies[i]->getChild();
+			/* Return new container */
+			return *new_tallies;
+		}
+		/* Get container on the back */
+		vector<ChildTally*>* tallies_container = child_tallies.back();
+		child_tallies.pop_back();
+		/* Return reference */
+		return *tallies_container;
 	}
 
 	/* Set tallies */
-	void setTallies(vector<ChildTally*>& child_tallies) {
+	void setTallies(vector<ChildTally*>& tally_container) {
 		/* Sanity check */
-		assert(child_tallies.size() == tallies.size());
-		/* Join tallies */
-		for(size_t i = 0 ; i < tallies.size() ; ++i)
-			tallies[i]->join(child_tallies[i]);
+		assert(tally_container.size() == tallies.size());
+		/* Push back container */
+		child_tallies.push_back(&tally_container);
 	}
 
 	/*
@@ -164,8 +179,7 @@ public:
 		double total_population = 0.0;
 
 		/* Initialize local tallies accumulators */
-		vector<ChildTally*> tallies;
-		simulation->getTallies(tallies);
+		vector<ChildTally*>& tallies = simulation->getTallies();
 
 		/* Parallel loop to simulate the particle in the bank */
 		for(size_t i = 0 ; i < nbanks ; ++i)
@@ -200,8 +214,7 @@ public:
 			double population = 0.0;
 
 			/* Initialize local tallies accumulators */
-			vector<ChildTally*> tallies;
-			simulation->getTallies(tallies);
+			vector<ChildTally*>& tallies = simulation->getTallies();
 
 			/* Parallel loop to simulate the particle in the bank */
 			#pragma omp for
@@ -225,77 +238,73 @@ public:
 /* IntelTbb policy */
 class IntelTbb {
 public:
-	/* ---- Source simulator */
-
-	class SourceSimulator {
-		/* Simulation */
-		KeffSimulation* simulation;
-	public:
-		SourceSimulator(KeffSimulation* simulation) : simulation(simulation) {/* */};
-		void operator() (const tbb::blocked_range<size_t>& range) const {
-			for(size_t i = range.begin() ; i < range.end() ; ++i)
-				simulation->source(i);
-		}
-		virtual ~SourceSimulator() {/* */}
-	};
-
-	/* Parallel algorithm to fill the particle bank with the source */
-	void parallelSource(size_t nbanks, KeffSimulation* simulation) {
-		/* Populate the particle bank with the initial source */
-		tbb::parallel_for(tbb::blocked_range<size_t>(0,nbanks),SourceSimulator(simulation));
-	}
-
-	/* ---- Power step simulator */
-
-	class PowerStepSimulator {
-		/* Simulation */
-		KeffSimulation* simulation;
-	public:
-		/* Population after the simulation */
-		double local_population;
-		/* Local tallies */
-		vector<ChildTally*> tallies;
-
-		PowerStepSimulator(KeffSimulation* simulation) :
-			simulation(simulation), local_population(0.0) {
-			/* Initialize local tallies accumulators */
-			simulation->getTallies(tallies);
-		};
-		PowerStepSimulator(PowerStepSimulator& right, tbb::split) :
-			simulation(right.simulation), local_population(0.0) {
-			/* Initialize local tallies accumulators */
-			simulation->getTallies(tallies);
-		}
-		void join(PowerStepSimulator& right) {
-			local_population += right.local_population;
-			/* Combine tallies */
-			for(size_t i = 0 ; i < tallies.size() ; ++i)
-				tallies[i]->join(right.tallies[i]);
-		}
-		void operator() (const tbb::blocked_range<size_t>& range) {
-			/* Get population */
-			double population = local_population;
-			for(size_t i = range.begin() ; i < range.end() ; ++i)
-				population += simulation->cycle(i,tallies);
-			/* Save new population */
-			local_population = population;
-		}
-		virtual ~PowerStepSimulator() {
-			/* Erase tallies */
-			for(size_t i = 0 ; i < tallies.size() ; ++i)
-				delete tallies[i];
-		}
-	};
-
-	/* Parallel algorithm to simulate a bank of particles */
-	double parallelBank(size_t nbanks, KeffSimulation* simulation) {
-		PowerStepSimulator power_step(simulation);
-		/* Simulate power step */
-		tbb::parallel_reduce(tbb::blocked_range<size_t>(0, nbanks), power_step);
-		/* Set tallies */
-		simulation->setTallies(power_step.tallies);
-		return power_step.local_population;
-	}
+//	/* ---- Source simulator */
+//
+//	class SourceSimulator {
+//		/* Simulation */
+//		KeffSimulation* simulation;
+//	public:
+//		SourceSimulator(KeffSimulation* simulation) : simulation(simulation) {/* */};
+//		void operator() (const tbb::blocked_range<size_t>& range) const {
+//			for(size_t i = range.begin() ; i < range.end() ; ++i)
+//				simulation->source(i);
+//		}
+//		virtual ~SourceSimulator() {/* */}
+//	};
+//
+//	/* Parallel algorithm to fill the particle bank with the source */
+//	void parallelSource(size_t nbanks, KeffSimulation* simulation) {
+//		/* Populate the particle bank with the initial source */
+//		tbb::parallel_for(tbb::blocked_range<size_t>(0,nbanks),SourceSimulator(simulation));
+//	}
+//
+//	/* ---- Power step simulator */
+//
+//	class PowerStepSimulator {
+//		/* Simulation */
+//		KeffSimulation* simulation;
+//	public:
+//		/* Population after the simulation */
+//		double local_population;
+//		/* Local tallies */
+//		vector<ChildTally*> tallies;
+//
+//		PowerStepSimulator(KeffSimulation* simulation) :
+//			simulation(simulation), local_population(0.0) {
+//			/* Initialize local tallies accumulators */
+//			simulation->getTallies(tallies);
+//		};
+//		PowerStepSimulator(PowerStepSimulator& right, tbb::split) :
+//			simulation(right.simulation), local_population(0.0) {
+//			/* Initialize local tallies accumulators */
+//			simulation->getTallies(tallies);
+//		}
+//		void join(PowerStepSimulator& right) {
+//			local_population += right.local_population;
+//			/* Combine tallies */
+//			for(size_t i = 0 ; i < tallies.size() ; ++i)
+//				tallies[i]->join(right.tallies[i]);
+//		}
+//		void operator() (const tbb::blocked_range<size_t>& range) {
+//			/* Get population */
+//			double population = local_population;
+//			for(size_t i = range.begin() ; i < range.end() ; ++i)
+//				population += simulation->cycle(i,tallies);
+//			/* Save new population */
+//			local_population = population;
+//		}
+//		virtual ~PowerStepSimulator() {/* */}
+//	};
+//
+//	/* Parallel algorithm to simulate a bank of particles */
+//	double parallelBank(size_t nbanks, KeffSimulation* simulation) {
+//		PowerStepSimulator power_step(simulation);
+//		/* Simulate power step */
+//		tbb::parallel_reduce(tbb::blocked_range<size_t>(0, nbanks), power_step);
+//		/* Set tallies */
+//		simulation->setTallies(power_step.tallies);
+//		return power_step.local_population;
+//	}
 };
 
 } /* namespace Helios */
