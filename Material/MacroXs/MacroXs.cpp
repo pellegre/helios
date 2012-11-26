@@ -148,8 +148,14 @@ MacroXs::MacroXs(const MacroXsObject* definition, int number_groups) :
 		sigma_t[i] = sigma_a[i] + sigma_s[i];
 	}
 
+	/* Get NU-sigma fission cross section */
+	nu_sigma_fission = constant["nu_sigma_f"];
+
 	/* ---- Create the isotope */
 	isotope = new MacroXsIsotope(getUserId(), constant, sigma_t);
+
+	/* Set fissile flag */
+	fissile = isotope->isFissile();
 }
 
 void MacroXs::print(std::ostream& out) const {

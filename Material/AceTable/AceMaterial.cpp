@@ -138,6 +138,8 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 
 	/* Array for the isotope sampler */
 	vector<AceIsotope*> isotope_array(isotope_map.size());
+	/* Container of fissile isotopes */
+	vector<AceIsotope*> fissile_isotopes;
 	/* Arrays of XS of each isotope*/
 	vector<vector<double> > xs_array(isotope_map.size(), vector<double>(master_grid->size(),0.0));
 
@@ -148,6 +150,13 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 	for(; iso != isotope_map.end() ; ++iso) {
 		/* Get isotope */
 		AceIsotope* ace_isotope = (*iso).second.isotope;
+		/* Check if there are fissile isotopes */
+		if(ace_isotope->isFissile()) {
+			/* Set the flag as true */
+			fissile = true;
+			/* Push the isotope in the container */
+			fissile_isotopes.push_back(ace_isotope);
+		}
 		/* Get atomic density */
 		double density = (*iso).second.atomic_fraction * atom;
 		/* Push isotope to the array*/
@@ -170,6 +179,31 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 	/* Set the isotope sampler */
 	isotope_sampler = new FactorSampler<AceIsotope*>(isotope_array, xs_array, false);
 
+	/* If the material is fissile, we should construct the related cross sections */
+	if(isFissile()) {
+		/* Prepare container */
+		nu_sigma_fission.resize(master_grid->size());
+		nu_bar.resize(master_grid->size());
+		/* Energy */
+		Energy energy(0,0.0);
+		for(size_t i = 0 ; i < master_grid->size() ; ++i) {
+			/* Set the energy and leave the index alone (faster interpolation) */
+			energy.second = (*master_grid)[i];
+			/* Accumulated total NU-fission cross section */
+			double nu_fission = 0.0;
+			/* Loop over the fissile isotopes */
+			for(vector<AceIsotope*>::const_iterator iso = fissile_isotopes.begin() ; iso != fissile_isotopes.end() ; ++iso) {
+				/* Get density (atomic) */
+				double density = (*isotope_map.find((*iso)->getUserId())).second.atomic_fraction * atom;
+				/* Accumulate NU-fission */
+				nu_fission += density * (*iso)->getNuBar(energy) * (*iso)->getFissionXs(energy);
+			}
+			/* Setup NU-fission cross section */
+			nu_sigma_fission[i] = nu_fission;
+			/* Setup average NU */
+			nu_bar[i] = nu_fission / total_xs[i];
+		}
+	}
 }
 
 double AceMaterial::getMeanFreePath(Energy& energy) const {
@@ -177,6 +211,20 @@ double AceMaterial::getMeanFreePath(Energy& energy) const {
 	size_t idx = energy.first;
 	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
 	return 1.0 / total;
+}
+
+double AceMaterial::getNuFission(Energy& energy) const {
+	double factor = master_grid->interpolate(energy);
+	size_t idx = energy.first;
+	double nu_fission = factor * (nu_sigma_fission[idx + 1] - nu_sigma_fission[idx]) + nu_sigma_fission[idx];
+	return nu_fission;
+}
+
+double AceMaterial::getNuBar(Energy& energy) const {
+	double factor = master_grid->interpolate(energy);
+	size_t idx = energy.first;
+	double nu = factor * (nu_bar[idx + 1] - nu_bar[idx]) + nu_bar[idx];
+	return nu;
 }
 
 const Isotope* AceMaterial::getIsotope(Energy& energy, Random& random) const {

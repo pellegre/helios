@@ -76,31 +76,27 @@ int main(int argc, char **argv) {
 
 	/* Initialization - KEFF cycle */
 	double keff = 1.000;
-	double ave_keff = 0.0;
 	int neutrons = 10000;
 	int skip = 150;
-	int cycles = 1150;
+	int cycles = 1000; /* Active cycles */
 
 	/* Initialize simulation */
 	ParallelKeffSimulation<OpenMp> simulation(r,&environment,keff,neutrons);
 
-	for(int ncycle = 0 ; ncycle <= cycles ; ++ncycle) {
-
-		simulation.launch();
-
-		/* Calculate multiplication factor */
+	for(int ncycle = 0 ; ncycle < skip ; ++ncycle) {
+		simulation.launch(KeffSimulation::INACTIVE);
+		/* Get multiplication factor */
 		keff = simulation.getKeff();
-
-		if(ncycle > skip) {
-			Log::ok() << "Cycle = " << ncycle << " - keff = " << keff << Log::endl;
-			ave_keff += keff;
-		} else {
-			Log::ok() << " Cycle (Inactive) = " << ncycle << " - keff = " << keff << Log::endl;
-		}
-
+		Log::color<Log::COLOR_BOLDRED>() << Log::ident(0) << " **** Cycle (Inactive) "
+				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst <<
+				" keff = " << fixed << keff << Log::endl;
 	}
 
-	Log::ok() << " Final keff = "<< ave_keff/ (double)(cycles - skip) << Log::endl;
+	for(int ncycle = 0 ; ncycle < cycles ; ++ncycle) {
+		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
+				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
+		simulation.launch(KeffSimulation::ACTIVE);
+	}
 
 	delete parser;
 	return 0;

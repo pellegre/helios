@@ -56,9 +56,6 @@ public:
 	/* Initialize simulation */
 	Simulation(const Random& base, McEnvironment* environment);
 
-	/* Launch a simulation */
-	virtual void launch() = 0;
-
 	virtual ~Simulation() {/* */};
 };
 
@@ -66,24 +63,15 @@ public:
  * KEFF simulation
  */
 class KeffSimulation : public Simulation {
-	/* KEFF estimation of one cycle */
-	double keff;
-	/* Particles per cycle */
-	size_t particles_number;
-	/* Reference to the source of the problem */
-	Source* initial_source;
-	/* Global particle bank for this simulation */
-	std::vector<CellParticle> fission_bank;
-	/* Local bank on a cycle simulation */
-	vector<vector<CellParticle> > local_bank;
 
-	/* Accumulators */
-	std::vector<Tally*> tallies;
-	std::vector<vector<ChildTally*>* > child_tallies;
-	/* MUTEX to request a child */
-	typedef tbb::spin_mutex RequestChildMutex;
-	RequestChildMutex child_mutex;
 public:
+
+	/* Type of cycle (active or inactive) */
+	enum CycleType {
+		INACTIVE = 0,
+		ACTIVE   = 1
+	};
+
 	/* Initialize simulation */
 	KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
 
@@ -132,12 +120,34 @@ public:
 	void source(size_t nbank);
 
 	/* Launch a simulation */
-	void launch();
+	void launch(CycleType type);
 
 	/* Get multiplication factor */
 	double getKeff() const {return keff;}
 
 	virtual ~KeffSimulation();
+
+private:
+	/* KEFF estimation of one cycle */
+	double keff;
+	/* Particles per cycle */
+	size_t particles_number;
+	/* Reference to the source of the problem */
+	Source* initial_source;
+	/* Global particle bank for this simulation */
+	std::vector<CellParticle> fission_bank;
+	/* Local bank on a cycle simulation */
+	vector<vector<CellParticle> > local_bank;
+
+	/* Accumulators */
+	std::vector<Tally*> tallies;
+	std::vector<vector<ChildTally*>* > child_tallies;
+	/* MUTEX to request a child */
+	typedef tbb::spin_mutex RequestChildMutex;
+	RequestChildMutex child_mutex;
+
+	/* Current type of cycle */
+	CycleType current_type;
 };
 
 template<class ParallelPolicy>

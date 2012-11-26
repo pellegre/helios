@@ -33,8 +33,7 @@ namespace Helios {
 
 void Tally::print(std::ostream& out) const {
 	/* Print name */
-	out << Log::ident(1) <<
-		   setw(15) << user_id << " = " << fixed <<
+	out << setw(15) << user_id << " = " << fixed <<
 		   setw(9) << acc::mean(accum) << " +- " <<
 		   setw(9) << sqrt((double)acc::variance(accum) / (double)acc::count(accum));
 }

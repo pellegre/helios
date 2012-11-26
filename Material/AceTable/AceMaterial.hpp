@@ -44,6 +44,12 @@ namespace Helios {
 		/* Total cross section */
 		std::vector<double> total_xs;
 
+		/* NU-Fission cross section */
+		std::vector<double> nu_sigma_fission;
+
+		/* Average NU */
+		std::vector<double> nu_bar;
+
 		/* Isotope sampler */
 		FactorSampler<AceIsotope*>* isotope_sampler;
 
@@ -83,6 +89,22 @@ namespace Helios {
 
 		/* Sample the isotope */
 		const Isotope* getIsotope(Energy& energy, Random& random) const;
+
+		/* Return the atomic density of the material */
+		double getAtomicDensity() const {
+			return atom;
+		};
+
+		/*
+		 * NU-fission cross section (used for KEFF track length estimator).
+		 */
+		double getNuFission(Energy& energy) const;
+
+		/*
+		 * Expected number of neutrons to be produced from all fission processes
+		 * in the collision (used for KEFF collision estimator)
+		 */
+		double getNuBar(Energy& energy) const;
 
 		/* Print material information */
 		void print(std::ostream& out) const;

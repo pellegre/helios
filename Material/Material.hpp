@@ -82,12 +82,32 @@ namespace Helios {
 		 */
 		virtual const Isotope* getIsotope(Energy& energy, Random& random) const = 0;
 
-		/* "Sample" the next reaction */
+		/* ---- Material properties */
+
+		/* Return the atomic density of the material */
+		virtual double getAtomicDensity() const = 0;
+
+		/*
+		 * NU-fission cross section (used for KEFF track length estimator).
+		 * Normally, this should be pre-tabulated to speed up calculations
+		 */
+		virtual double getNuFission(Energy& energy) const = 0;
+
+		/*
+		 * Expected number of neutrons to be produced from all fission processes
+		 * in the collision (used for KEFF collision estimator)
+		 * Normally, this should be pre-tabulated to speed up calculations
+		 */
+		virtual double getNuBar(Energy& energy) const = 0;
+
+		/* Check if the material is fissile */
+		bool isFissile() const {return fissile;}
+
 		virtual ~Material() {/* */};
 
 	protected:
 
-		Material(const MaterialObject* definition) : user_id(definition->getMatid()), internal_id(0) {/* */};
+		Material(const MaterialObject* definition) : user_id(definition->getMatid()), internal_id(0), fissile(false) {/* */};
 
 		/* Prevent copy */
 		Material(const Material& mat);
@@ -97,7 +117,11 @@ namespace Helios {
 		MaterialId user_id;
 		/* Internal identification of this material */
 		InternalMaterialId internal_id;
-
+		/*
+		 * Flag if the material has fission information, should be set on child's constructor
+		 * By default is false.
+		 */
+		bool fissile;
 	};
 
 	/* Material Factory */
