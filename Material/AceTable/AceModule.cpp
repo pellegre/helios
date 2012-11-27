@@ -79,7 +79,7 @@ void AceIsotope::setFissionReaction() {
 		assert(fission_xs.size() == total_xs.size());
 
 		/* MT of chance fission reaction */
-		int mts[4] = {19, 21, 22, 38};
+		int mts[4] = {19, 20, 21, 38};
 		vector<int> chance_mts(mts, mts + 4);
 
 		/* Array for the secondary particle reaction sampler */
