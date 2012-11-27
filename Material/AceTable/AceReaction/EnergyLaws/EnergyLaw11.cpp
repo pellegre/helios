@@ -25,17 +25,21 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "EnergyLaw9.hpp"
+#include "EnergyLaw11.hpp"
 
 using namespace std;
 
 namespace Helios {
 namespace AceReaction {
 
-void EnergyLaw9::print(std::ostream& out) const {
-	out << " * Evaporation Spectrum " << endl;
-	for(size_t i = 0 ; i < ein.size() ; ++i)
-		out << ein[i] << " " << t[i] << endl;
+void EnergyLaw11::print(std::ostream& out) const {
+	out << " * Energy Dependent Watt Spectrum  " << endl;
+	out << "   a = " << endl;
+	for(size_t i = 0 ; i < eina.size() ; ++i)
+		out << eina[i] << " " << a[i] << endl;
+	out << "   b = " << endl;
+	for(size_t i = 0 ; i < einb.size() ; ++i)
+		out << einb[i] << " " << b[i] << endl;
 }
 
 } /* namespace AceReaction */

@@ -338,6 +338,8 @@ public:
 
         Law11(std::vector<double>::const_iterator it, int lnw);
 
+    public:
+
 		InterScheme inta;
 		int nena;
         std::vector<double> eina;
@@ -348,8 +350,6 @@ public:
         std::vector<double> einb;
         std::vector<double> b;
         double u;
-
-    public:
 
         Law11(int lnw,int idat,int nr,const std::vector<int>& nbt,const std::vector<int>&aint,int ne,const std::vector<double>& energy,const std::vector<double>& prob)
                 : EnergyLaw(lnw,idat,nr,nbt,aint,ne,energy,prob) {/* */};

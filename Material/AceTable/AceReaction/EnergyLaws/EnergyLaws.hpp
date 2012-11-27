@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "EnergyLaw4.hpp"
 #include "EnergyLaw7.hpp"
 #include "EnergyLaw9.hpp"
+#include "EnergyLaw11.hpp"
 #include "EnergyLaw44.hpp"
 #include "EnergyLaw61.hpp"
 #include "EnergyLaw66.hpp"

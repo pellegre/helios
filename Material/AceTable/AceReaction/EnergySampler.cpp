@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "EnergySampler.hpp"
 #include "EnergyLaws/EnergyLaws.hpp"
 
+using namespace std;
+
 namespace Helios {
 
 using namespace AceReaction;
@@ -39,7 +41,7 @@ EnergySamplerBase* EnergySamplerFactory::createLaw(const Ace::EnergyDistribution
 	int law = ace_law->getLaw();
 
 	if(law == 1) {
-		/* Level Scattering */
+		/* Energy Equi-Bins */
 		return new EnergySampler<EnergyLaw1>(ace_law);
 	}
 	else if(law == 3) {
@@ -57,6 +59,10 @@ EnergySamplerBase* EnergySamplerFactory::createLaw(const Ace::EnergyDistribution
 	else if(law == 9) {
 		/* Evaporation spectrum */
 		return new EnergySampler<EnergyLaw9>(ace_law);
+	}
+	else if(law == 11) {
+		/* Energy Dependent Watt Spectrum */
+		return new EnergySampler<EnergyLaw11>(ace_law);
 	}
 	else if(law == 44) {
 		/* Kalbach-87 Formalism */
