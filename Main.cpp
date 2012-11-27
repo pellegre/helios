@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 	int cycles = 1000; /* Active cycles */
 
 	/* Initialize simulation */
-	ParallelKeffSimulation<OpenMp> simulation(r,&environment,keff,neutrons);
+	ParallelKeffSimulation<IntelTbb> simulation(r,&environment,keff,neutrons);
 
 	for(int ncycle = 0 ; ncycle < skip ; ++ncycle) {
 		simulation.launch(KeffSimulation::INACTIVE);
