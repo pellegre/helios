@@ -120,6 +120,9 @@ namespace Helios {
 		/* Get total cross section */
 		double getTotalXs(Energy& energy) const;
 
+		/* Get fission cross section */
+		double getFissionXs(Energy& energy) const;
+
 		/* Fission reaction */
 		Reaction* fission() const {
 			return fission_reaction;

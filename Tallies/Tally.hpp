@@ -29,17 +29,22 @@
 #define TALLY_HPP_
 
 #include <iostream>
+#include <vector>
+#include <tbb/spin_mutex.h>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/count.hpp>
+
+#include "../Common/Common.hpp"
 
 namespace acc = boost::accumulators;
 
 namespace Helios {
 
 /* Accumulator used by the Tally class (mean and standard deviation) */
-typedef acc::accumulator_set<double, acc::stats<acc::tag::mean, acc::stats<acc::tag::variance> > > Accumulator;
+typedef acc::accumulator_set<double, acc::stats<acc::tag::count, acc::tag::mean, acc::stats<acc::tag::variance> > > Accumulator;
 
 /* Child tally */
 class ChildTally {
@@ -76,58 +81,60 @@ public:
 
 /* Base class for tallies */
 class Tally {
+	/* ID of the tally */
+	TallyId user_id;
+	/* Prototype of the child accumulator */
+	ChildTally* prototype;
 	/* Single accumulator */
 	Accumulator accum;
-	/* Prototype of the child accumulator */
-	ChildTally* child_tally;
+
+	friend std::ostream& operator<<(std::ostream& out, const Tally& q);
 public:
-	Tally() : child_tally(0) {
+	Tally(const TallyId& user_id) : user_id(user_id), prototype(0) {
 		/* Create child */
-		child_tally = new ChildTally;
+		prototype = new ChildTally;
 	}
 
 	/* Return a child tally (to accumulate data on a thread)*/
-	ChildTally* getChild() const {
-		return child_tally->clone();
+	ChildTally* getChild() {
+		return prototype->clone();
 	}
 
 	/* Join child tally and accumulate the data (this should be called on a thread-safe environment) */
-	void join(const ChildTally* child) {
+	void join(ChildTally* child) {
 		/* Join child */
-		child_tally->join(child);
+		prototype->join(child);
+		/* Clear child */
+		child->clear();
 	}
 
 	/* Accumulate data using a normalization factor */
 	void accumulate(double norm) {
-		double value = child_tally->get();
+		double value = prototype->get();
 		/* Accumulate */
 		accum(value / norm);
 		/* Clear prototype */
-		child_tally->clear();
+		prototype->clear();
 	}
 
 	/* Accumulate data */
 	void accumulate() {
-		accum(child_tally->get());
+		accum(prototype->get());
 		/* Clear prototype */
-		child_tally->clear();
+		prototype->clear();
 	}
 
 	/* Get mean */
-	double mean() const {
-		return acc::mean(accum);
-	}
-
-	/* Get standard deviation */
-	double std() const {
-		return sqrt((double)acc::variance(accum));
-	}
+	void print(std::ostream& out) const;
 
 	virtual ~Tally() {
-		/* Delete child */
-		delete child_tally;
+		/* Delete prototype */
+		delete prototype;
 	}
 };
+
+/* Output surface information */
+std::ostream& operator<<(std::ostream& out, const Tally& q);
 
 } /* namespace Helios */
 #endif /* TALLY_HPP_ */

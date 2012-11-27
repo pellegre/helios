@@ -103,6 +103,7 @@ namespace Helios {
 		/* Probabilities */
 		std::vector<double> absorption_prob;
 		std::vector<double> fission_prob;
+
 	public:
 		MacroXsIsotope(const IsotopeId& user_id, map<string,vector<double> >& constant, const std::vector<double>& sigma_t);
 
@@ -148,6 +149,8 @@ namespace Helios {
 		std::vector<double> mfp;
 		/* Just one isotope */
 		MacroXsIsotope* isotope;
+		/* NU-fission for each group */
+		std::vector<double> nu_sigma_fission;
 	public:
 
 		/* Name of this object */
@@ -156,10 +159,36 @@ namespace Helios {
 		MacroXs(const MacroXsObject* definition, int number_groups);
 
 		 /* Get the total cross section (using the energy index of the particle) */
-		double getMeanFreePath(Energy& energy) const {return mfp[energy.first];};
+		double getMeanFreePath(Energy& energy) const {
+			return mfp[energy.first];
+		};
 
 		/* Macro-XS materials only have one "isotope" */
-		const Isotope* getIsotope(Energy& energy, Random& random) const {return isotope;};
+		const Isotope* getIsotope(Energy& energy, Random& random) const {
+			return isotope;
+		};
+
+		/*
+		 * Return the atomic density of the material (since this material has
+		 * macroscopic cross sections, just return 1.0)
+		 */
+		double getAtomicDensity() const {
+			return 1.0;
+		};
+
+		/*
+		 * NU-fission cross section (used for KEFF track length estimator).
+		 */
+		double getNuFission(Energy& energy) const {
+			return nu_sigma_fission[energy.first];
+		};
+
+		/*
+		 * Expected number of neutrons to be produced from all fission processes.
+		 */
+		double getNuBar(Energy& energy) const {
+			return mfp[energy.first] * nu_sigma_fission[energy.first];
+		};
 
 		/* Print material information */
 		void print(std::ostream& out) const;

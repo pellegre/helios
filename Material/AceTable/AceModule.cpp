@@ -221,9 +221,16 @@ double AceIsotope::getElasticProb(Energy& energy) const {
 
 double AceIsotope::getTotalXs(Energy& energy) const {
 	double factor;
-	size_t idx = child_grid->index(energy,factor);
+	size_t idx = child_grid->index(energy, factor);
 	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
 	return total;
+}
+
+double AceIsotope::getFissionXs(Energy& energy) const {
+	double factor;
+	size_t idx = child_grid->index(energy, factor);
+	double fission = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
+	return fission;
 }
 
 Reaction* AceIsotope::inelastic(Energy& energy, Random& random) const {
