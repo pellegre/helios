@@ -148,6 +148,25 @@ private:
 
 	/* Current type of cycle */
 	CycleType current_type;
+
+	/* Estimators inside the cycle */
+	enum Estimator {
+		LEAK     = 0,
+		ABS      = 1,
+		KEFF_ABS = 2,
+		KEFF_COL = 3,
+		KEFF_TRK = 4,
+		N2N      = 5,
+		N3N      = 6,
+		N4N      = 7
+	};
+
+	/* Accumulate estimator */
+	template<Estimator Index>
+	void estimate(const vector<ChildTally*>& tally_container, double value) {
+		if(current_type == ACTIVE)
+			tally_container[Index]->acc(value);
+	}
 };
 
 template<class ParallelPolicy>

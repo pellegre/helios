@@ -38,12 +38,23 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 
 	/* Leakage */
 	tallies.push_back(new Tally("leakage"));
+	/* Absorptions */
+	tallies.push_back(new Tally("absorption"));
 	/* Absorption KEFF */
 	tallies.push_back(new Tally("keff (abs)"));
 	/* Collision KEFF */
 	tallies.push_back(new Tally("keff (col)"));
 	/* Track length KEFF */
 	tallies.push_back(new Tally("keff (trk)"));
+
+	/* Production reactions */
+
+	/* (n,2n) */
+	tallies.push_back(new Tally("(n,2n)"));
+	/* (n,3n) */
+	tallies.push_back(new Tally("(n,3n)"));
+	/* (n,4n) */
+	tallies.push_back(new Tally("(n,4n)"));
 }
 
 bool nonVoid(const Material*& material, Particle& particle, const Cell*& cell) {
@@ -99,9 +110,7 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 		/* Transport the particle until a non-void cell is found (checking boundary conditions) */
 		outside = not nonVoid(material, particle, cell);
 		if(outside) {
-			/* Accumulate leakage */
-			if(current_type == ACTIVE)
-				tally_container[0]->acc(particle.wgt());
+			estimate<LEAK>(tally_container, particle.wgt());
 			break;
 		}
 
@@ -117,9 +126,8 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 			/* 5.1 ---- Transport the particle to the surface */
 			particle.pos() = particle.pos() + distance * particle.dir();
 			/* Accumulate track length estimation of the KEFF */
-			if(current_type == ACTIVE)
-				if(material->isFissile())
-					tally_container[3]->acc(particle.wgt() * distance * material->getNuFission(particle.erg()));
+			if(material->isFissile())
+				estimate<KEFF_TRK>(tally_container, particle.wgt() * distance * material->getNuFission(particle.erg()));
 
 			/* 5.2 ---- Cross the surface (checking boundary conditions) */
 			outside = not surface->cross(particle,sense,cell);
@@ -158,32 +166,33 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 		/* Check if the particle is outside of the system */
 		if(outside) {
 			/* Accumulate leakage */
-			if(current_type == ACTIVE)
-				tally_container[0]->acc(particle.wgt());
+			estimate<LEAK>(tally_container, particle.wgt());
 			break;
 		}
 
 		/* 6. Move the particle to the collision point */
 		particle.pos() = particle.pos() + collision_distance * particle.dir();
 		/* Accumulate track length estimation of the KEFF */
-		if(current_type == ACTIVE)
-			if(material->isFissile())
-				tally_container[3]->acc(particle.wgt() * collision_distance * material->getNuFission(particle.erg()));
+		if(material->isFissile())
+			estimate<KEFF_TRK>(tally_container, particle.wgt() * collision_distance * material->getNuFission(particle.erg()));
 
 		/* 7. ---- Sample isotope */
 		const Isotope* isotope = material->getIsotope(particle.erg(),r);
 
 		/* Accumulate collision estimation of the KEFF */
-		if(current_type == ACTIVE)
-			if(material->isFissile())
-				tally_container[2]->acc(particle.wgt() * material->getNuBar(particle.erg()));
+		if(material->isFissile())
+			estimate<KEFF_COL>(tally_container, particle.wgt() * material->getNuBar(particle.erg()));
 
 		/* 8. ---- Sample reaction with the isotope */
 
 		/* 8.1 ---- Check the type of reaction reaction */
 		double absorption = isotope->getAbsorptionProb(particle.erg());
 		double prob = r.uniform();
+
 		if(prob < absorption) {
+			/* Accumulate absorptions */
+			estimate<ABS>(tally_container, particle.wgt());
+
 			/* 8.2 ---- Absorption reaction , we should check if this is a fission reaction */
 			if(isotope->isFissile()) {
 				/* Fission data for the isotope */
@@ -191,8 +200,7 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 				double nubar = isotope->getNuBar(particle.erg());
 
 				/* Accumulate absorption estimation of the KEFF */
-				if(current_type == ACTIVE)
-					tally_container[1]->acc(fission / absorption * particle.wgt() * nubar);
+				estimate<KEFF_ABS>(tally_container, fission / absorption * particle.wgt() * nubar);
 
 				if(prob > (absorption - fission)) {
 					/* Get NU-bar */
@@ -230,6 +238,16 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 				Reaction* inelastic_reaction = isotope->inelastic(particle.erg(),r);
 				/* Apply the reaction */
 				(*inelastic_reaction)(particle,r);
+
+				/* Get MT of the reaction */
+				int mt = inelastic_reaction->getId();
+				/* Check for reaction */
+				if(mt == 16)
+					estimate<N2N>(tally_container, 1.0);
+				else if(mt == 17)
+					estimate<N3N>(tally_container, 1.0);
+				else if(mt == 37)
+					estimate<N4N>(tally_container, 1.0);
 			}
 		}
 	}
