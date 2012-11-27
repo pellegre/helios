@@ -115,6 +115,7 @@ set(MCFILES Common/Common.cpp
             Geometry/Surface.cpp
             Geometry/Surfaces/CylinderOnAxis.cpp    
             Geometry/Surfaces/CylinderOnAxisOrigin.cpp
+            Geometry/Surfaces/SphereOnOrigin.cpp
             Material/Material.cpp
             Material/Materials.cpp
             Material/Isotope.cpp            

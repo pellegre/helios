@@ -104,6 +104,7 @@ SurfaceFactory::SurfaceFactory() {
 	registerSurface(CylinderOnAxis<xaxis>());       /* c/x - radius y z */
 	registerSurface(CylinderOnAxis<yaxis>());       /* c/y - radius x z */
 	registerSurface(CylinderOnAxis<zaxis>());       /* c/z - radius x y */
+	registerSurface(SphereOnOrigin());              /* so  - radius */
 }
 
 Surface* SurfaceFactory::createSurface(const SurfaceObject* definition) const {

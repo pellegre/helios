@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SURFACETYPES_HPP_
 #define SURFACETYPES_HPP_
 
+#include "SphereOnOrigin.hpp"
 #include "CylinderOnAxisOrigin.hpp"
 #include "CylinderOnAxis.hpp"
 #include "PlaneNormal.hpp"
