@@ -93,11 +93,11 @@ protected:
 
 		for(size_t h = 0 ; h < histories ; h++) {
 			/* sample particle */
-			Helios::Particle sampleParticle = source->sample(r);
+			Helios::CellParticle sampleParticle = source->sample(r);
 			/* Get coordinates */
-			Helios::Coordinate position = sampleParticle.pos();
+			Helios::Coordinate position = sampleParticle.second.pos();
 			/* Find cell */
-			const Helios::Cell* cell(geometry->findCell(sampleParticle.pos()));
+			const Helios::Cell* cell = sampleParticle.first;
 			/* Get cell ID */
 			Helios::CellId cellId(cell->getUserId());
 			/* Check */
@@ -118,11 +118,11 @@ protected:
 
 		for(size_t h = 0 ; h < samples ; h++) {
 			/* sample particle */
-			Helios::Particle sampleParticle = source->sample(r);
+			Helios::CellParticle sampleParticle = source->sample(r);
 			/* Get coordinates */
-			Helios::Coordinate position = sampleParticle.pos();
+			Helios::Coordinate position = sampleParticle.second.pos();
 			/* Find cell */
-			const Helios::Cell* cell(geometry->findCell(sampleParticle.pos()));
+			const Helios::Cell* cell = sampleParticle.first;
 			/* Get cell ID */
 			Helios::CellId cellPath(geometry->getPath(cell));
 			/* Check */
