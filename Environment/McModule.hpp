@@ -56,7 +56,6 @@ namespace Helios {
 		/*  Get the environment */
 		const McEnvironment* getEnvironment() const;
 	public:
-		/* Different type of geometric entities */
 		McObject(const std::string& module,const std::string& name) : environment(0), module(module), name(name) {/* */};
 
 		/* Get the name of the module that deals with this object */

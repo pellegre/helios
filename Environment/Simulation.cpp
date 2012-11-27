@@ -40,14 +40,6 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 	tallies.push_back(new Tally("leakage"));
 	/* Absorptions */
 	tallies.push_back(new Tally("absorption"));
-	/* Absorption KEFF */
-	tallies.push_back(new Tally("keff (abs)"));
-	/* Collision KEFF */
-	tallies.push_back(new Tally("keff (col)"));
-	/* Track length KEFF */
-	tallies.push_back(new Tally("keff (trk)"));
-
-	/* Production reactions */
 
 	/* (n,2n) */
 	tallies.push_back(new Tally("(n,2n)"));
@@ -55,6 +47,43 @@ KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environmen
 	tallies.push_back(new Tally("(n,3n)"));
 	/* (n,4n) */
 	tallies.push_back(new Tally("(n,4n)"));
+
+	/* Absorption KEFF */
+	tallies.push_back(new Tally("keff (abs)"));
+	/* Collision KEFF */
+	tallies.push_back(new Tally("keff (col)"));
+	/* Track length KEFF */
+	tallies.push_back(new Tally("keff (trk)"));
+}
+
+/* Get child tallies */
+vector<ChildTally*>& KeffSimulation::getTallies() {
+	RequestChildMutex::scoped_lock lock(child_mutex);
+	/* If there aren't tallies on the pool, create one */
+	if(child_tallies.size() == 0) {
+		/* Hopefully this should be done only once for each thread */
+		vector<ChildTally*>* new_tallies = new vector<ChildTally*>;
+		new_tallies->resize(tallies.size());
+		/* Create tallies */
+		for(size_t i = 0 ; i < tallies.size() ; ++i)
+			(*new_tallies)[i] = tallies[i]->getChild();
+		/* Return new container */
+		return *new_tallies;
+	}
+	/* Get container on the back */
+	vector<ChildTally*>* tallies_container = child_tallies.back();
+	child_tallies.pop_back();
+	/* Return reference */
+	return *tallies_container;
+}
+
+/* Set tallies */
+void KeffSimulation::setTallies(vector<ChildTally*>& tally_container) {
+	RequestChildMutex::scoped_lock lock(child_mutex);
+	/* Sanity check */
+	assert(tally_container.size() == tallies.size());
+	/* Push back container */
+	child_tallies.push_back(&tally_container);
 }
 
 bool nonVoid(const Material*& material, Particle& particle, const Cell*& cell) {
@@ -312,8 +341,14 @@ void KeffSimulation::launch(CycleType type) {
 
 KeffSimulation::~KeffSimulation() {
 	/* Delete tallies */
-	for(size_t i = 0 ; i < tallies.size() ; ++i)
-		delete tallies[i];
+	purgePointers(tallies);
+	/* Delete child tallies */
+	for(size_t i = 0 ; i < child_tallies.size() ; ++i) {
+		/* Delete each instance */
+		purgePointers(*child_tallies[i]);
+		delete child_tallies[i];
+	}
+
 };
 
 /* Random number stride for each history */

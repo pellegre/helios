@@ -33,10 +33,19 @@ namespace Helios {
 
 McEnvironment::McEnvironment(Parser* parser) : parser(parser) {
 	/* Register the module factories */
+	registerFactory(new SettingsFactory(this));
 	registerFactory(new MaterialsFactory(this));
 	registerFactory(new AceFactory(this));
 	registerFactory(new GeometryFactory(this));
 	registerFactory(new SourceFactory(this));
+
+	/* Add some common default values for some settings */
+	pushObject(new SettingsObject("max_source_samples", "100"));
+	pushObject(new SettingsObject("max_rng_per_history", "100000"));
+	pushObject(new SettingsObject("multithread", "tbb"));
+	pushObject(new SettingsObject("seed", "1"));
+	pushObject(new SettingsObject("energy_freegas_threshold", "400.0"));
+	pushObject(new SettingsObject("awr_freegas_threshold", "1.0"));
 }
 
 void McEnvironment::parseFile(const std::string& filename) {
@@ -69,23 +78,24 @@ McEnvironment::~McEnvironment() {
 		delete (*it).second;
 	for(map<std::string,McModule*>::iterator it = module_map.begin() ; it != module_map.end() ; ++it)
 		delete (*it).second;
-
 	/* Clean all definitions */
-	for(map<string,vector<McObject*> >::iterator it = object_map.begin() ; it != object_map.end() ; ++it) {
+	for(map<string,vector<McObject*> >::iterator it = object_map.begin() ; it != object_map.end() ; ++it)
 		purgePointers((*it).second);
-	}
 	/* Clear map */
 	object_map.clear();
 }
 
 void McEnvironment::setup() {
+	/* Setup Settings module */
+	setupModule<Settings>();
+
 	/* Setup the Ace module */
 	setupModule<AceModule>();
 
 	/* Setup the materials module */
 	setupModule<Materials>();
 
-	/* Once materials are setup, we need to setup the geometry module (so cells can grab materials from the environment)*/
+	/* Once materials are setup, we need to setup the geometry module (so cells can grab materials from the environment) */
 	setupModule<Geometry>();
 
 	/* Finally, we setup the source module */

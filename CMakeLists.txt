@@ -103,7 +103,8 @@ set(MCFILES Common/Common.cpp
             Common/Log/Log.cpp
             Environment/McEnvironment.cpp   
             Environment/McModule.cpp
-            Environment/Simulation.cpp 
+            Environment/Simulation.cpp
+            Environment/Settings/Settings.cpp  
             Transport/Particle.cpp
             Transport/Distribution/Distribution.cpp
             Transport/ParticleSource.cpp                       

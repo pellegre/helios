@@ -35,6 +35,9 @@
 /* MC modules */
 #include "McModule.hpp"
 
+/* General Settings class */
+#include "Settings/Settings.hpp"
+
 /* Common stuff */
 #include "../Common/Common.hpp"
 
@@ -82,6 +85,10 @@ namespace Helios {
 		/* Push a set of definitions into the environment. */
 		template<class Iterator>
 		void pushObjects(Iterator begin, Iterator end);
+
+		/* Push a definition into the environment. */
+		template<class Object>
+		void pushObject(Object object);
 
 		/* ---- Modules management */
 
@@ -228,6 +235,12 @@ namespace Helios {
 			object_map[(*begin)->getModuleName()].push_back((*begin));
 			++begin;
 		}
+	}
+
+	template<class Object>
+	void McEnvironment::pushObject(Object object) {
+		object->setEnvironment(this);
+		object_map[object->getModuleName()].push_back(object);
 	}
 
 } /* namespace Helios */

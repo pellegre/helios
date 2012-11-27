@@ -82,34 +82,10 @@ public:
 	virtual void simulateSource(size_t nbanks) = 0;
 
 	/* Get child tallies */
-	vector<ChildTally*>& getTallies() {
-		RequestChildMutex::scoped_lock lock(child_mutex);
-		/* If there aren't tallies on the pool, create one */
-		if(child_tallies.size() == 0) {
-			/* Hopefully this should be done only once for each thread */
-			vector<ChildTally*>* new_tallies = new vector<ChildTally*>;
-			new_tallies->resize(tallies.size());
-			/* Create tallies */
-			for(size_t i = 0 ; i < tallies.size() ; ++i)
-				(*new_tallies)[i] = tallies[i]->getChild();
-			/* Return new container */
-			return *new_tallies;
-		}
-		/* Get container on the back */
-		vector<ChildTally*>* tallies_container = child_tallies.back();
-		child_tallies.pop_back();
-		/* Return reference */
-		return *tallies_container;
-	}
+	vector<ChildTally*>& getTallies();
 
 	/* Set tallies */
-	void setTallies(vector<ChildTally*>& tally_container) {
-		RequestChildMutex::scoped_lock lock(child_mutex);
-		/* Sanity check */
-		assert(tally_container.size() == tallies.size());
-		/* Push back container */
-		child_tallies.push_back(&tally_container);
-	}
+	void setTallies(vector<ChildTally*>& tally_container);
 
 	/*
 	 * Execute a a random walk of a particle in the current bank. If the simulation terminates with a
@@ -154,12 +130,12 @@ private:
 	enum Estimator {
 		LEAK     = 0,
 		ABS      = 1,
-		KEFF_ABS = 2,
-		KEFF_COL = 3,
-		KEFF_TRK = 4,
-		N2N      = 5,
-		N3N      = 6,
-		N4N      = 7
+		N2N      = 2,
+		N3N      = 3,
+		N4N      = 4,
+		KEFF_ABS = 5,
+		KEFF_COL = 6,
+		KEFF_TRK = 7
 	};
 
 	/* Accumulate estimator */

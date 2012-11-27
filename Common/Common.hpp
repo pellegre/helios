@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <blitz/array.h>
 #include <trng/lcg64.hpp>
 #include <trng/uniform01_dist.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "Constant.hpp"
 #include "Log/Log.hpp"
@@ -98,11 +99,11 @@ namespace Helios {
 
 	/* Get a value from a string */
 	template<typename T>
-	static inline T fromString(const std::string& str) {std::istringstream s(str);T t;s >> t;return t;}
+	static inline T fromString(const std::string& str) {return boost::lexical_cast<T>(str);}
 
 	/* Convert to string */
 	template<typename T>
-	static inline std::string toString(const T& t) {std::ostringstream s;s << t;return s.str();}
+	static inline std::string toString(const T& t) {return boost::lexical_cast<std::string>(t);}
 
 	/* This piece of code appears in so many places */
 	template<class Seq>
