@@ -50,13 +50,40 @@ void Settings::setValidSettings() {
 	valid_settings["criticality"].insert("particles");
 }
 
-Settings::Settings(const std::vector<McObject*>& setDefinitions, const McEnvironment* environment) :
-	McModule(name(),environment) {
+Settings::Settings(const std::vector<McObject*>& setDefinitions, const McEnvironment* environment)
+	: McModule(name(),environment) {
 
+	/* Set valid settings */
+	setValidSettings();
+
+	/* Loop over definitions and set each setting */
 	for(vector<McObject*>::const_iterator it = setDefinitions.begin() ; it != setDefinitions.end() ; ++it) {
 		/* Add settings */
 		SettingsObject* newObject = static_cast<SettingsObject*>(*it);
+		/* Push settings */
+		pushSetting(newObject);
 	}
+}
+
+void Settings::pushSetting(const SettingsObject* object) {
+	/* Get name */
+	string name = object->getSettingName();
+	/* Check validity */
+	map<UserId,set<string> >::const_iterator it = valid_settings.find(name);
+	if(it != valid_settings.end()) {
+		/* Get set of keys */
+		const set<string>& keys = (*it).second;
+		/* Get user keys */
+		const map<string,string>& user_keys = object->getSettings();
+		/* Check each keys */
+		for(map<string,string>::const_iterator it_keys = user_keys.begin() ; it_keys != user_keys.end() ; ++it_keys)
+			if(keys.find((*it_keys).first) == keys.end())
+				throw(Settings::SettingsError("Key " + (*it_keys).first + " on setting " + name + " is not valid"));
+	} else
+		throw(Settings::SettingsError("Setting " + name + " not recognized"));
+
+	/* Create setting */
+	settings_map[name] = new Setting(object);
 }
 
 /* Print settings */
@@ -74,11 +101,17 @@ Setting* Settings::getSetting(const UserId& name) const {
 		return (*set).second;
 }
 
+Settings::~Settings() {
+	/* Delete settings */
+	for(map<UserId, Setting*>::const_iterator it = settings_map.begin() ; it != settings_map.end() ; ++it)
+		delete (*it).second;
+}
+
 void Setting::print(std::ostream& out) const {
 	/* Print information of the setting */
-	out << "Setting name = " << setting_name;
+	out << Log::ident(1) << setw(35) << setting_name;
 	/* Print values */
-	out << "( " << endl;
+	out << " ( ";
 	for(map<std::string, std::string>::const_iterator it = settings.begin() ; it != settings.end() ; ++it)
 		out << (*it).first << " = " << (*it).second << " ";
 	out << ")";

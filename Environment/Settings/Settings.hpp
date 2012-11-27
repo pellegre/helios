@@ -73,13 +73,16 @@ namespace Helios {
 		/* Map of settings name and objects */
 		std::map<UserId, Setting*> settings_map;
 		/* Registered settings (and valid keys) */
-		std::map<UserId, std::set<std::string> > valid_settings;
+		std::map<UserId,std::set<std::string> > valid_settings;
 
 		/* Set valid settings */
 		void setValidSettings();
 		/* Set single value */
 		void setSingleValue(const std::string& setting);
-		/* Push setting */
+
+		/* Push setting (checking validity) */
+		void pushSetting(const SettingsObject* object);
+
 	public:
 
 		/* ---- Module stuff */
@@ -114,7 +117,7 @@ namespace Helios {
 		/* Print settings */
 		void printSettings(std::ostream& out) const;
 
-		virtual ~Settings() {/* */}
+		virtual ~Settings();
 	};
 
 	/* Get object */
@@ -155,7 +158,7 @@ namespace Helios {
 			return boost::lexical_cast<Type>((*it).second);
 		else
 			/* Error */
-			throw(Settings::SettingsError("Key " + key + " does not exist on setting " + name));
+			throw(Settings::SettingsError("Key " + toString(key) + " does not exist on setting " + setting_name));
 	}
 
 

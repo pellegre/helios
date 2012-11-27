@@ -71,6 +71,8 @@ int main(int argc, char **argv) {
 	/* Setup the problem */
 	environment.setup();
 
+	environment.getModule<Settings>()->printSettings(cout);
+
 	/* Initialization - Random number */
 	Random r(10);
 
