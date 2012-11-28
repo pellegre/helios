@@ -42,7 +42,8 @@ static void pushObject(McObject* src, vector<T*>& definition) {
 	definition.push_back(dynamic_cast<T*>(src));
 }
 
-Source::Source(const vector<McObject*>& definitions, const McEnvironment* environment) : McModule(name(),environment) {
+Source::Source(const vector<McObject*>& definitions, const McEnvironment* environment) :
+		McModule(name(),environment), max_samples(environment->getSetting<string>("max_source_samples","value")) {
 	Log::bok() << "Initializing Source Module " << Log::endl;
 
 	/* Containers of each source object */

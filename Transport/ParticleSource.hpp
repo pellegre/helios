@@ -110,6 +110,8 @@ namespace Helios {
 		std::vector<Cell*> cells;
 		/* Position distributions */
 		std::vector<DistributionBase*> pos_distributions;
+		/* Max number of samples on the source */
+		size_t max_samples;
 	public:
 		ParticleCellSampler(const ParticleSamplerObject* definition, const Source* source);
 		/* Sample particle (and check cell) */

@@ -32,6 +32,7 @@
 #include "AceReaction/AceReactionBase.hpp"
 #include "AceReaction/FissionReaction.hpp"
 #include "../../Common/XsSampler.hpp"
+#include "../../Environment/McEnvironment.hpp"
 
 using namespace std;
 using namespace Ace;
@@ -121,7 +122,7 @@ void AceIsotope::setFissionReaction() {
 		/* Sanity check */
 		if(tyr.getType() != Ace::TyrDistribution::fission) {
 			/* Print warning */
-			Log::warn() << "No information on NU block for fission reaction with mt = " << fission_mt
+			Log::warn() << left << "No information on NU block for fission reaction with mt = " << fission_mt
 						<< " for isotope " << getUserId() << Log::endl;
 
 			/* Set the isotope as non-fissile */
@@ -202,9 +203,9 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 double AceIsotope::getProb(Energy& energy, const Ace::CrossSection& xs) const {
 	double factor;
 	size_t idx = child_grid->index(energy,factor);
-	double abs = factor * (xs[idx + 1] - xs[idx]) + xs[idx];
+	double prob = factor * (xs[idx + 1] - xs[idx]) + xs[idx];
 	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
-	return abs / total;
+	return prob / total;
 }
 
 double AceIsotope::getAbsorptionProb(Energy& energy) const {
@@ -291,8 +292,12 @@ AceIsotope::~AceIsotope() {
 
 AceModule::AceModule(const std::vector<McObject*>& aceObjects, const McEnvironment* environment) : McModule(name(),environment) {
 	Log::bok() << "Initializing Ace Module " << Log::endl;
+	/* Try to get the location of the XS data from the environment */
+	if(environment->isSet("xs_data"))
+		Ace::Conf::DATAPATH = environment->getSetting<string>("xs_data","value");
+
 	/* Print information about the Ace reader */
-	Log::msg() << left << Log::ident(1) << " - Using xsdir from " << Ace::Conf::DATAPATH << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Using xsdir from directory " << Ace::Conf::DATAPATH << Log::endl;
 
 	/* Create master grid */
 	master_grid = new MasterGrid();

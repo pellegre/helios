@@ -72,18 +72,19 @@ namespace Helios {
 	class Settings: public Helios::McModule {
 		/* Map of settings name and objects */
 		std::map<UserId, Setting*> settings_map;
-		/* Registered settings (and valid keys) */
-		std::map<UserId,std::set<std::string> > valid_settings;
 
-		/* Set valid settings */
-		void setValidSettings();
-		/* Set single value */
-		void setSingleValue(const std::string& setting);
+		/* Registered settings (and valid keys) */
+		static std::map<UserId,std::set<std::string> > valid_settings;
 
 		/* Push setting (checking validity) */
 		void pushSetting(const SettingsObject* object);
 
 	public:
+
+		/* Get valid set of settings */
+		static const std::map<UserId,std::set<std::string> >& getValidSettings() {
+			return valid_settings;
+		}
 
 		/* ---- Module stuff */
 
@@ -116,6 +117,11 @@ namespace Helios {
 
 		/* Print settings */
 		void printSettings(std::ostream& out) const;
+
+		/* Check if some setting is loaded */
+		bool isSet(const std::string& setting) const {
+			return (settings_map.find(setting) != settings_map.end());
+		}
 
 		virtual ~Settings();
 	};

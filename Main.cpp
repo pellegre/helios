@@ -71,21 +71,19 @@ int main(int argc, char **argv) {
 	/* Setup the problem */
 	environment.setup();
 
-	environment.getModule<Settings>()->printSettings(cout);
-
 	/* Initialization - Random number */
 	Random r(10);
 
 	/* Initialization - KEFF cycle */
 	double keff = 1.000;
-	int neutrons = 10000;
-	int skip = 150;
-	int cycles = 1000; /* Active cycles */
+	size_t neutrons = environment.getSetting<size_t>("criticality","particles");
+	size_t skip = environment.getSetting<size_t>("criticality","inactive");
+	size_t cycles = environment.getSetting<size_t>("criticality","batches") - skip; /* Active cycles */
 
 	/* Initialize simulation */
 	ParallelKeffSimulation<IntelTbb> simulation(r,&environment,keff,neutrons);
 
-	for(int ncycle = 0 ; ncycle < skip ; ++ncycle) {
+	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
 		simulation.launch(KeffSimulation::INACTIVE);
 		/* Get multiplication factor */
 		keff = simulation.getKeff();
@@ -94,7 +92,7 @@ int main(int argc, char **argv) {
 				" keff = " << fixed << keff << Log::endl;
 	}
 
-	for(int ncycle = 0 ; ncycle < cycles ; ++ncycle) {
+	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
 		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
 				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
 		simulation.launch(KeffSimulation::ACTIVE);

@@ -31,24 +31,32 @@ using namespace std;
 
 namespace Helios {
 
-void Settings::setSingleValue(const std::string& setting) {
+static void setSingleValue(std::map<UserId,std::set<std::string> >& valid_settings, const std::string& setting) {
 	valid_settings[setting].insert("value");
 }
 
-void Settings::setValidSettings() {
-	setSingleValue("max_source_samples");
-	setSingleValue("max_rng_per_history");
-	setSingleValue("xs_data");
-	setSingleValue("multithread");
-	setSingleValue("seed");
-	setSingleValue("energy_freegas_threshold");
-	setSingleValue("awr_freegas_threshold");
+static std::map<UserId,std::set<std::string> > setValidSettings() {
+	std::map<UserId,std::set<std::string> > settings;
+
+	/* General settings */
+	setSingleValue(settings, "max_source_samples");
+	setSingleValue(settings, "max_rng_per_history");
+	setSingleValue(settings, "xs_data");
+	setSingleValue(settings, "multithread");
+	setSingleValue(settings, "seed");
+	setSingleValue(settings, "energy_freegas_threshold");
+	setSingleValue(settings, "awr_freegas_threshold");
 
 	/* KEFF simulation data */
-	valid_settings["criticality"].insert("batches");
-	valid_settings["criticality"].insert("inactive");
-	valid_settings["criticality"].insert("particles");
+	settings["criticality"].insert("batches");
+	settings["criticality"].insert("inactive");
+	settings["criticality"].insert("particles");
+
+	return settings;
 }
+
+/* Initialize valid settings */
+std::map<UserId,std::set<std::string> > Settings::valid_settings = setValidSettings();
 
 Settings::Settings(const std::vector<McObject*>& setDefinitions, const McEnvironment* environment)
 	: McModule(name(),environment) {

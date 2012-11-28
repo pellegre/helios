@@ -348,12 +348,10 @@ KeffSimulation::~KeffSimulation() {
 		purgePointers(*child_tallies[i]);
 		delete child_tallies[i];
 	}
-
 };
 
-/* Random number stride for each history */
-size_t Simulation::max_rng_per_history = 100000;
-
-Simulation::Simulation(const Random& base, McEnvironment* environment) : base(base), environment(environment) {/* */}
+Simulation::Simulation(const Random& base, McEnvironment* environment) :
+		base(base), environment(environment),
+		max_rng_per_history(environment->getSetting<size_t>("max_rng_per_history","value")) {/* */}
 
 } /* namespace Helios */

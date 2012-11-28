@@ -73,11 +73,12 @@ namespace Helios {
 		template<class Object>
 		const std::map<UserId,Object*>& getObjectMap() const;
 
+		/* Max number of samples on the source */
+		size_t max_samples;
+
 	public:
 		/* Name of this module */
 		static std::string name() {return "sources";}
-		/* Max number of samples on the source */
-		static size_t max_samples;
 
 		/* Construction from definitions */
 		Source(const std::vector<McObject*>& definitions, const McEnvironment* environment);

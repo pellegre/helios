@@ -133,6 +133,7 @@ XmlParser::XmlParser() {
 	root_map["geometry"] = &XmlParser::geoNode;
 	root_map["materials"] = &XmlParser::matNode;
 	root_map["sources"] = &XmlParser::srcNode;
+	root_map["settings"] = &XmlParser::setNode;
 }
 
 } /* namespace Helios */

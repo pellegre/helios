@@ -61,7 +61,8 @@ static inline bool isPositionDistribution(const DistributionBase* distribution) 
 }
 
 ParticleCellSampler::ParticleCellSampler(const ParticleSamplerObject* definition, const Source* source)
-         : ParticleSampler(definition,source) {
+         : ParticleSampler(definition,source),
+           max_samples(definition->getEnvironment()->getSetting<string>("max_source_samples","value")) {
 
 	/* Get cells */
 	try {
@@ -114,7 +115,7 @@ void ParticleCellSampler::operator() (CellParticle& particle,Random& r) const {
 		}
 		/* Count sample */
 		nsamples++;
-		if(nsamples >= Source::max_samples)
+		if(nsamples >= max_samples)
 			throw(GeneralError("Sampler efficiency too low on sampler " + getUserId() +
 					". Please, reconsider the source definition because this is not a fair game"));
 	}

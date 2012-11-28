@@ -167,7 +167,8 @@ set(MCFILES Common/Common.cpp
             Parser/XMLParser/XmlParser.cpp    
             Parser/XMLParser/XmlParserGeometry.cpp
             Parser/XMLParser/XmlParserMaterial.cpp 
-            Parser/XMLParser/XmlParserSource.cpp                                        
+            Parser/XMLParser/XmlParserSource.cpp
+            Parser/XMLParser/XmlParserSettings.cpp                                                    
             )
             
 add_library(helios ${MCFILES})

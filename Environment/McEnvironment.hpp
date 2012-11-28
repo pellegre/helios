@@ -82,6 +82,8 @@ namespace Helios {
 		 */
 		void parseFiles(const std::vector<std::string>& input_files);
 
+		/* ---- Objects management */
+
 		/* Push a set of definitions into the environment. */
 		template<class Iterator>
 		void pushObjects(Iterator begin, Iterator end);
@@ -113,13 +115,34 @@ namespace Helios {
 		template<class Module, class Object>
 		std::vector<Object*> getObject(const UserId& id) const;
 
+		/* ---- Setting management */
+
+		/* Get setting from the environment */
+		template<class Type>
+		Type getSetting(const std::string& setting, const std::string& key) const {
+			return getModule<Settings>()->getSetting(setting)->get<Type>(key);
+		}
+
+		/* Check if some setting is loaded into the environment */
+		bool isSet(const std::string& setting) const {
+			return getModule<Settings>()->isSet(setting);
+		}
+
+		/* ---- Global management */
+
 		/*
 		 * Method to setup the environment. This should be called when there aren't more definitions
-		 * to add into the system. The definitions will be eliminated from the environment and the modules
-		 * will be created. Also, this method will thrown an exception if the connections between the modules
+		 * to add into the system. This method will thrown an exception if the connections between the modules
 		 * fail in some way.
 		 */
 		void setup();
+
+		/*
+		 * Once the environment is all setup, this method executes a simulation of the MC
+		 * problem. It will thrown an exception if some settings required to run a simulation
+		 * are missing on the problem (i.e. the environment is not sane to execute a MC simulation).
+		 */
+		void simulate() const;
 
 		/* Register a module factory */
 		void registerFactory(ModuleFactory* factory) {

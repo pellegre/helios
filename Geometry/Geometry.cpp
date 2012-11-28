@@ -151,7 +151,7 @@ Geometry::Geometry(const std::vector<McObject*>& definitions, const McEnvironmen
 	try {
 		materials = getEnvironment()->getModule<Materials>();
 	} catch (exception& error) {
-		Log::warn() << error.what() << endl;
+		Log::warn() << left << error.what() << endl;
 	}
 	/* Now, if we have a Materials pointer, we should update the materials on each cell... */
 	if(materials)
