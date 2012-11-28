@@ -129,13 +129,13 @@ void McEnvironment::simulate() const {
 	Log::msg() << left << Log::ident(1) << " - Number of particles     : " << neutrons << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - Number of active cycles : " << cycles << Log::endl;
 	if(multithread == "tbb") {
-		Log::msg() << left << Log::ident(1) << " - Multithreading         : Intel Tbb " << cycles << Log::endl;
+		Log::msg() << left << Log::ident(1) << " - Multithreading          : Intel Tbb " << Log::endl;
 		simulation = new ParallelKeffSimulation<IntelTbb>(random,this,keff,neutrons);
 	} else if(multithread == "omp") {
-		Log::msg() << left << Log::ident(1) << " - Multithreading         : Open Mp " << cycles << Log::endl;
+		Log::msg() << left << Log::ident(1) << " - Multithreading          : Open Mp " << Log::endl;
 		simulation = new ParallelKeffSimulation<OpenMp>(random,this,keff,neutrons);
 	} else if(multithread == "single") {
-		Log::msg() << left << Log::ident(1) << " - Multithreading         : Single Thread " << cycles << Log::endl;
+		Log::msg() << left << Log::ident(1) << " - Multithreading          : Single Thread " << Log::endl;
 		simulation = new ParallelKeffSimulation<SingleThread>(random,this,keff,neutrons);
 	}
 

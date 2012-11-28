@@ -130,6 +130,19 @@ static vector<McObject*> aceAttrib(TiXmlElement* pElement) {
 	map<string,double> isotopes;
 	for (pChild = pElement->FirstChildElement(); pChild != 0; pChild = pChild->NextSiblingElement()) {
 		string element_value(pChild->Value());
+
+		/* Check name of the isotope */
+		if(element_value != "isotope") {
+			/* Duplicated name of isotope */
+			std::vector<std::string> keywords;
+			XmlParser::AttribMap::const_iterator it_att = mapAttrib.begin();
+			for(; it_att != mapAttrib.end() ; ++it_att) {
+				keywords.push_back((*it_att).first);
+				keywords.push_back((*it_att).second);
+			}
+			throw Parser::KeywordParserError("Unrecognized node " + element_value + " inside material definition " + id,keywords);
+		}
+
 		pair<string,double> pair_value = isoAttrib(pChild);
 		/* Sum density */
 		if(density_value == "sum")
