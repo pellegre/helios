@@ -62,7 +62,7 @@ static inline bool isPositionDistribution(const DistributionBase* distribution) 
 
 ParticleCellSampler::ParticleCellSampler(const ParticleSamplerObject* definition, const Source* source)
          : ParticleSampler(definition,source),
-           max_samples(definition->getEnvironment()->getSetting<string>("max_source_samples","value")) {
+           max_samples(source->getEnvironment()->getSetting<size_t>("max_source_samples","value")) {
 
 	/* Get cells */
 	try {

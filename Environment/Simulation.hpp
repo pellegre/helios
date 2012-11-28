@@ -46,14 +46,15 @@ protected:
 	/* Local copy of the random number engine */
 	Random base;
 	/* Environment (is where this class should look for the data) */
-	McEnvironment* environment;
+	const McEnvironment* environment;
 	/* Parameters for random number on simulations */
 	size_t max_rng_per_history;
-
+	/* Max samples when simulating the source */
+	size_t max_samples;
 public:
 
 	/* Initialize simulation */
-	Simulation(const Random& base, McEnvironment* environment);
+	Simulation(const Random& base, const McEnvironment* environment);
 
 	virtual ~Simulation() {/* */};
 };
@@ -72,7 +73,7 @@ public:
 	};
 
 	/* Initialize simulation */
-	KeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number);
+	KeffSimulation(const Random& random, const McEnvironment* environment, double keff, size_t particles_number);
 
 	/* Virtual function to simulate a batch of particles */
 	virtual double simulateBank(size_t nbanks) = 0;
@@ -148,12 +149,12 @@ private:
 template<class ParallelPolicy>
 class ParallelKeffSimulation : public KeffSimulation, public ParallelPolicy {
 public:
-	ParallelKeffSimulation(const Random& random, McEnvironment* environment, double keff, size_t particles_number) :
+	ParallelKeffSimulation(const Random& random, const McEnvironment* environment, double keff, size_t particles_number) :
 		KeffSimulation(random, environment, keff, particles_number) {
 		/* Populate the particle bank with the initial source */
 		simulateSource(particles_number);
 		/* Jump on base stream of RNGs */
-		base.jump(particles_number * Source::max_samples);
+		base.jump(particles_number * max_samples);
 	};
 
 	/* Method to simulate a batch of particles */

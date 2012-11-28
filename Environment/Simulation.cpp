@@ -32,7 +32,7 @@ using namespace std;
 
 namespace Helios {
 
-KeffSimulation::KeffSimulation(const Random& _random, McEnvironment* _environment, double keff, size_t _particles_number) :
+KeffSimulation::KeffSimulation(const Random& _random, const McEnvironment* _environment, double keff, size_t _particles_number) :
 		Simulation(_random,_environment), keff(keff), particles_number(_particles_number),
 		initial_source(environment->getModule<Source>()), fission_bank(particles_number), current_type(INACTIVE) {
 
@@ -287,7 +287,7 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 void KeffSimulation::source(size_t nbank) {
 	/* Jump random number generator */
 	Random random(base);
-	random.jump(nbank * Source::max_samples);
+	random.jump(nbank * max_samples);
 	CellParticle source_particle = initial_source->sample(random);
 	source_particle.second.wgt() = keff;
 	fission_bank[nbank] = source_particle;
@@ -350,8 +350,9 @@ KeffSimulation::~KeffSimulation() {
 	}
 };
 
-Simulation::Simulation(const Random& base, McEnvironment* environment) :
+Simulation::Simulation(const Random& base, const McEnvironment* environment) :
 		base(base), environment(environment),
-		max_rng_per_history(environment->getSetting<size_t>("max_rng_per_history","value")) {/* */}
+		max_rng_per_history(environment->getSetting<size_t>("max_rng_per_history","value")),
+		max_samples(environment->getSetting<size_t>("max_source_samples","value")) {/* */}
 
 } /* namespace Helios */

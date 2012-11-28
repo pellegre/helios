@@ -30,14 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <list>
 
 #include "Parser/ParserTypes.hpp"
-#include "Geometry/Geometry.hpp"
-#include "Geometry/Cell.hpp"
-#include "Material/Materials.hpp"
-#include "Transport/Particle.hpp"
-#include "Transport/Source.hpp"
-#include "Common/Common.hpp"
 #include "Environment/McEnvironment.hpp"
-#include "Environment/Simulation.hpp"
 
 using namespace std;
 using namespace Helios;
@@ -71,32 +64,8 @@ int main(int argc, char **argv) {
 	/* Setup the problem */
 	environment.setup();
 
-	/* Initialization - Random number */
-	Random r(10);
-
-	/* Initialization - KEFF cycle */
-	double keff = 1.000;
-	size_t neutrons = environment.getSetting<size_t>("criticality","particles");
-	size_t skip = environment.getSetting<size_t>("criticality","inactive");
-	size_t cycles = environment.getSetting<size_t>("criticality","batches") - skip; /* Active cycles */
-
-	/* Initialize simulation */
-	ParallelKeffSimulation<IntelTbb> simulation(r,&environment,keff,neutrons);
-
-	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
-		simulation.launch(KeffSimulation::INACTIVE);
-		/* Get multiplication factor */
-		keff = simulation.getKeff();
-		Log::color<Log::COLOR_BOLDRED>() << Log::ident(0) << " **** Cycle (Inactive) "
-				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst <<
-				" keff = " << fixed << keff << Log::endl;
-	}
-
-	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
-		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
-				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
-		simulation.launch(KeffSimulation::ACTIVE);
-	}
+	/* Launch simulation */
+	environment.simulate();
 
 	delete parser;
 	return 0;

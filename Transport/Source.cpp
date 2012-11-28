@@ -26,12 +26,11 @@
  */
 
 #include "Source.hpp"
+#include "../Environment/McEnvironment.hpp"
 
 using namespace std;
 
 namespace Helios {
-
-size_t Source::max_samples = 100;
 
 McModule* SourceFactory::create(const std::vector<McObject*>& objects) const {
 	return new Source(objects,getEnvironment());
@@ -43,7 +42,7 @@ static void pushObject(McObject* src, vector<T*>& definition) {
 }
 
 Source::Source(const vector<McObject*>& definitions, const McEnvironment* environment) :
-		McModule(name(),environment), max_samples(environment->getSetting<string>("max_source_samples","value")) {
+		McModule(name(),environment), max_samples(environment->getSetting<size_t>("max_source_samples","value")) {
 	Log::bok() << "Initializing Source Module " << Log::endl;
 
 	/* Containers of each source object */

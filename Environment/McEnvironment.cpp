@@ -26,6 +26,7 @@
  */
 
 #include "McEnvironment.hpp"
+#include "Simulation.hpp"
 
 using namespace std;
 
@@ -43,7 +44,7 @@ McEnvironment::McEnvironment(Parser* parser) : parser(parser) {
 	pushObject(new SettingsObject("max_source_samples", "100"));
 	pushObject(new SettingsObject("max_rng_per_history", "100000"));
 	pushObject(new SettingsObject("multithread", "tbb"));
-	pushObject(new SettingsObject("seed", "1"));
+	pushObject(new SettingsObject("seed", "10"));
 	pushObject(new SettingsObject("energy_freegas_threshold", "400.0"));
 	pushObject(new SettingsObject("awr_freegas_threshold", "1.0"));
 }
@@ -100,6 +101,59 @@ void McEnvironment::setup() {
 
 	/* Finally, we setup the source module */
 	setupModule<Source>();
+}
+
+void McEnvironment::simulate() const {
+	/* Simulation pointer */
+	KeffSimulation* simulation(0);
+
+	/* Get multithread type of simulation */
+	string multithread = getSetting<string>("multithread", "value");
+	/* Number of particles */
+	size_t neutrons = getSetting<size_t>("criticality","particles");
+	/* Get number of inactive cycles */
+	size_t skip = getSetting<size_t>("criticality","inactive");
+	/* Active cycles */
+	size_t cycles = getSetting<size_t>("criticality","batches") - skip;
+	/* Initial KEFF */
+	double keff = 1.0;
+
+	/* Random number seed */
+	long unsigned int seed = getSetting<long unsigned int>("seed","value");
+	/* Random number stream */
+	Random random(seed);
+
+	/* Create simulation */
+	Log::bok() << "Launching simulation " << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - RNG seed                : " << seed << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Number of particles     : " << neutrons << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Number of active cycles : " << cycles << Log::endl;
+	if(multithread == "tbb") {
+		Log::msg() << left << Log::ident(1) << " - Multithreading         : Intel Tbb " << cycles << Log::endl;
+		simulation = new ParallelKeffSimulation<IntelTbb>(random,this,keff,neutrons);
+	} else if(multithread == "omp") {
+		Log::msg() << left << Log::ident(1) << " - Multithreading         : Open Mp " << cycles << Log::endl;
+		simulation = new ParallelKeffSimulation<OpenMp>(random,this,keff,neutrons);
+	} else if(multithread == "single") {
+		Log::msg() << left << Log::ident(1) << " - Multithreading         : Single Thread " << cycles << Log::endl;
+		simulation = new ParallelKeffSimulation<SingleThread>(random,this,keff,neutrons);
+	}
+
+	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
+		simulation->launch(KeffSimulation::INACTIVE);
+		/* Get multiplication factor */
+		keff = simulation->getKeff();
+		Log::color<Log::COLOR_BOLDRED>() << Log::ident(0) << " **** Cycle (Inactive) "
+				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst <<
+				" keff = " << fixed << keff << Log::endl;
+	}
+
+	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
+		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
+				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
+		simulation->launch(KeffSimulation::ACTIVE);
+	}
+
 }
 
 } /* namespace Helios */

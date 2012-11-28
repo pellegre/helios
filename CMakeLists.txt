@@ -173,7 +173,7 @@ set(MCFILES Common/Common.cpp
             
 add_library(helios ${MCFILES})
 
-target_link_libraries (helios ${BLITZ_LIBRARY} ${TRNG_LIBRARY})
+target_link_libraries (helios ${BLITZ_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
 
 # ---- Unit Test
 
@@ -183,7 +183,7 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 add_executable(testmc++ DevUtils/Utils.cpp DevUtils/Testing/Main.cpp)
                
-target_link_libraries(testmc++ helios ${Blitz_LIBRARY} ${TRNG_LIBRARY} gtest gtest_main)
+target_link_libraries(testmc++ helios gtest gtest_main)
 set(cxx_use_own_tuple "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
 set_target_properties (testmc++ PROPERTIES COMPILE_FLAGS ${cxx_use_own_tuple})
 
@@ -202,13 +202,13 @@ add_executable(plottermc++ ${PNGWRITER}
                            DevUtils/PngPlotter/PngPlotter.cpp
                            )
 
-target_link_libraries(plottermc++ helios ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Blitz_LIBRARY} ${PNG_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
+target_link_libraries(plottermc++ helios ${Boost_PROGRAM_OPTIONS_LIBRARY} ${PNG_LIBRARY})
 
 # ---- Helios
 
 add_executable(helios++ Main.cpp)
                
-target_link_libraries(helios++ helios ${Blitz_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
+target_link_libraries(helios++ helios)
 
 # ---- Instal stuff
 
