@@ -30,6 +30,7 @@
 #include "Distribution.hpp"
 #include "Spatial.hpp"
 #include "Angular.hpp"
+#include "AceDistribution.hpp"
 
 using namespace std;
 
@@ -48,6 +49,7 @@ DistributionFactory::DistributionFactory() {
 	registerDistribution(Cyl2D<yaxis>());
 	registerDistribution(Cyl2D<zaxis>());
 	registerDistribution(Isotropic());
+	registerDistribution(AceDistribution());
 }
 
 DistributionBase* DistributionFactory::createDistribution(const DistributionBaseObject* definition) const {

@@ -111,7 +111,7 @@ namespace Helios {
 		virtual Constructor constructor() const = 0;
 	};
 
-	/* Base class for distribution */
+	/* Base class for custom distribution */
 	class DistributionCustom : public DistributionBase {
 
 	public:
@@ -169,7 +169,7 @@ namespace Helios {
 		virtual ~DistributionBaseObject() {/* */}
 	};
 
-	/* Base class to define a distribution */
+	/* Base class to define a generic distribution */
 	class DistributionObject : public DistributionBaseObject {
 		/* Coefficients for each child */
 		std::vector<double> coeffs;
@@ -183,7 +183,7 @@ namespace Helios {
 		virtual ~DistributionObject() {/* */}
 	};
 
-	/* Base class to define a distribution */
+	/* Base class to define a custom distribution */
 	class DistributionCustomObject : public DistributionBaseObject {
 		/* Samplers IDs */
 		std::vector<DistributionId> samplersIds;
@@ -204,6 +204,21 @@ namespace Helios {
 			return weights;
 		}
 
+	};
+
+	/* Base class to define a distribution from an ACE isotope */
+	class DistributionAceObject : public DistributionBaseObject {
+		/* Isotope IDs */
+		IsotopeId isotope_id;
+		/* Reaction ID */
+		InternalId reaction_id;
+		friend class AceDistribution;
+	public:
+		DistributionAceObject(const DistributionId& distid,
+				   const IsotopeId& isotope_id, const InternalId& reaction_id) : DistributionBaseObject("ace",distid),
+				   isotope_id(isotope_id), reaction_id(reaction_id) {/* */}
+
+		virtual ~DistributionAceObject() {/* */}
 	};
 
 	class DistributionFactory {

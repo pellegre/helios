@@ -52,12 +52,11 @@ namespace Helios {
 		void setEnvironment(McEnvironment* env) {environment = env;}
 		/* Friendly environment */
 		friend class McEnvironment;
-	protected:
-		/*  Get the environment */
-		const McEnvironment* getEnvironment() const;
+
 	public:
 		McObject(const std::string& module,const std::string& name) : environment(0), module(module), name(name) {/* */};
-
+		/*  Get the environment */
+		const McEnvironment* getEnvironment() const;
 		/* Get the name of the module that deals with this object */
 		std::string getModuleName() const {return module;}
 		/* Get the name of this object */

@@ -107,6 +107,7 @@ set(MCFILES Common/Common.cpp
             Environment/Settings/Settings.cpp  
             Transport/Particle.cpp
             Transport/Distribution/Distribution.cpp
+            Transport/Distribution/AceDistribution.cpp            
             Transport/ParticleSource.cpp                       
             Transport/Source.cpp           
             Geometry/Geometry.cpp

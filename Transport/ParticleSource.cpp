@@ -37,7 +37,7 @@ namespace Helios {
 
 ParticleSampler::ParticleSampler(const ParticleSamplerObject* definition, const Source* source) :
 		user_id(definition->getSamplerid()), position(definition->getPosition()),
-		direction(definition->getDirection()), energy(Energy(0,1.0)), weight(1.0) {
+		direction(definition->getDirection()), energy(Energy(0,definition->getEnergy())), weight(1.0) {
 
 	/* Get distributions */
 	vector<DistributionId> distribution_ids = definition->getDistributionIds();

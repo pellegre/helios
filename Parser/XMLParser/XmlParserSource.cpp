@@ -35,6 +35,28 @@ using namespace ticpp;
 
 namespace Helios {
 
+#include "IsotopeTable.cpp"
+
+/* Box distribution */
+static SourceObject* aceAttrib(TiXmlElement* pElement) {
+	/* Initialize XML attribute checker */
+	static const string required[4] = {"id", "type", "isotope", "mt"};
+	static XmlParser::XmlAttributes surAttrib(vector<string>(required, required + 4), vector<string>());
+
+	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
+	/* Check user input */
+	surAttrib.checkAttributes(mapAttrib,"ace distribution");
+
+	/* Get attributes */
+	DistributionId id = fromString<DistributionId>(mapAttrib["id"]);
+	string isotope = mapAttrib["isotope"];
+	convertIsotopeName(isotope,"");
+	InternalId mt = fromString<InternalId>(mapAttrib["mt"]);
+
+	/* Return surface definition */
+	return new DistributionAceObject(id,isotope,mt);
+}
+
 /* Box distribution */
 static SourceObject* boxAttrib(TiXmlElement* pElement) {
 	/* Initialize XML attribute checker */
@@ -128,10 +150,11 @@ static map<string,SourceObject(*(*)(TiXmlElement*))> initMap() {
 	m["cyl"] = cylAttrib;
 	m["isotropic"] = isoAttrib;
 	m["custom"] = customAttrib;
+	m["ace"] = aceAttrib;
 	return m;
 }
 
-/* Initialization of values on the surface flag */
+/* Initialization of values */
 static map<string,string> initTypeDist() {
 	map<string,string> values_map;
 	values_map["box"] = "box";
@@ -140,6 +163,7 @@ static map<string,string> initTypeDist() {
 	values_map["cyl-x"] = "cyl";
 	values_map["cyl-y"] = "cyl";
 	values_map["cyl-z"] = "cyl";
+	values_map["ace"] = "ace";
 	return values_map;
 }
 
@@ -190,10 +214,11 @@ static SourceObject* samplerAttrib(TiXmlElement* pElement) {
 	SamplerId id = fromString<DistributionId>(mapAttrib["id"]);
 	Coordinate pos = getBlitzArray<double>(mapAttrib["pos"]);
 	Direction dir = getBlitzArray<double>(dirAttrib.getString(mapAttrib));
+	double energy = fromString<double>(mapAttrib["energy"]);
 	vector<DistributionId> distIds = getContainer<DistributionId>(mapAttrib["dist"]);
 	CellId cell = cellAttrib.getString(mapAttrib);
 	/* Return surface definition */
-	return new ParticleSamplerObject(id,pos,dir,distIds,cell);
+	return new ParticleSamplerObject(id,pos,dir,energy,distIds,cell);
 }
 
 /* Parse Source attributes */

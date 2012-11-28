@@ -193,6 +193,8 @@ namespace Helios {
 		Coordinate position;
 		/* Reference direction of the sampler */
 		Direction direction;
+		/* Energy */
+		double energy;
 		/* Samplers IDs */
 		std::vector<DistributionId> distribution_ids;
 		/* In case we need geometric constraint */
@@ -200,10 +202,10 @@ namespace Helios {
 
 		friend class ParticleSampler;
 	public:
-		ParticleSamplerObject(const SamplerId& sampler_id, const Coordinate& position,
-				   const Direction& direction, const std::vector<DistributionId>& distribution_ids, CellId& cell_id) :
-				   SourceObject(ParticleSampler::name()), sampler_id(sampler_id),
-				   position(position), direction(direction), distribution_ids(distribution_ids), cell_id(cell_id) {/* */}
+		ParticleSamplerObject(const SamplerId& sampler_id, const Coordinate& position, const Direction& direction,
+				   double energy, const std::vector<DistributionId>& distribution_ids, CellId& cell_id) :
+				   SourceObject(ParticleSampler::name()), sampler_id(sampler_id), position(position), direction(direction),
+				   energy(energy), distribution_ids(distribution_ids), cell_id(cell_id) {/* */}
 
 		Direction getDirection() const {
 			return direction;
@@ -219,6 +221,10 @@ namespace Helios {
 
 		CellId getCellId() const {
 			return cell_id;
+		}
+
+		double getEnergy() const {
+			return energy;
 		}
 
 		std::vector<DistributionId> getDistributionIds() const {

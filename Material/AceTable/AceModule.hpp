@@ -145,7 +145,7 @@ namespace Helios {
 		 * Get reaction from an MT number (thrown an exception if the reaction number does not exist)
 		 * Each created reaction is managed by the isotope.
 		 */
-		Reaction* getReaction(int mt);
+		Reaction* getReaction(InternalId mt);
 
 		~AceIsotope();
 	};

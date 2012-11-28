@@ -247,7 +247,7 @@ Reaction* AceIsotope::inelastic(Energy& energy, Random& random) const {
 	return secondary_sampler->sample(idx, inel * random.uniform(), factor);
 };
 
-Reaction* AceIsotope::getReaction(int mt) {
+Reaction* AceIsotope::getReaction(InternalId mt) {
 	/* Static instance of the reaction factory */
 	static AceReaction::AceReactionFactory reaction_factory;
 
