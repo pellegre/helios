@@ -90,14 +90,22 @@ void Settings::pushSetting(const SettingsObject* object) {
 	} else
 		throw(Settings::SettingsError("Setting " + name + " not recognized"));
 
-	/* Create setting */
-	settings_map[name] = new Setting(object);
+	/* Check if the setting is already on the map */
+	map<UserId, Setting*>::iterator sett = settings_map.find(object->getSettingName());
+	if(sett != settings_map.end()) {
+		/* Delete existing one */
+		delete (*sett).second;
+		/* Create new one */
+		(*sett).second = new Setting(object);
+	} else
+		/* Create setting */
+		settings_map[name] = new Setting(object);
 }
 
 /* Print settings */
 void Settings::printSettings(std::ostream& out) const {
 	out << "  - Settings " << endl;
-	for(std::map<UserId, Setting*>::const_iterator it = settings_map.begin() ; it != settings_map.end() ; ++it)
+	for(map<UserId, Setting*>::const_iterator it = settings_map.begin() ; it != settings_map.end() ; ++it)
 		out << "   " << *(*it).second << endl;
 }
 

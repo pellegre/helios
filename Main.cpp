@@ -37,14 +37,14 @@ using namespace Helios;
 
 int main(int argc, char **argv) {
 
+	/* Print header */
+	Log::header();
+
 	/* Check number of arguments */
 	if(argc < 2) {
 	  Helios::Log::error() << "Usage : " << argv[0] << " <filename>" << Helios::Log::endl;
-	  exit(1);
+	  return 1;
 	}
-
-	/* Print header */
-	Log::header();
 
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
@@ -59,13 +59,17 @@ int main(int argc, char **argv) {
 
 	/* Environment */
 	McEnvironment environment(parser);
-	/* Parse files, to get the information to create the environment */
-	environment.parseFiles(input_files);
-	/* Setup the problem */
-	environment.setup();
-
-	/* Launch simulation */
-	environment.simulate();
+	try {
+		/* Parse files, to get the information to create the environment */
+		environment.parseFiles(input_files);
+		/* Setup the problem */
+		environment.setup();
+		/* Launch simulation */
+		environment.simulate();
+	} catch(exception& error) {
+		Log::error() << error.what() << Log::endl;
+		return 1;
+	}
 
 	delete parser;
 	return 0;

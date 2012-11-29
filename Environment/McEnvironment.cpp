@@ -133,6 +133,8 @@ void McEnvironment::simulate() const {
 	} else if(multithread == "single") {
 		Log::msg() << left << Log::ident(1) << " - Multithreading          : Single Thread " << Log::endl;
 		simulation = new ParallelKeffSimulation<SingleThread>(this);
+	} else {
+		throw(GeneralError("Multithreading type " + multithread + " not recognized"));
 	}
 
 	/* Create some tallies for this simulation */
@@ -172,6 +174,7 @@ void McEnvironment::simulate() const {
 		simulation->launch(KeffSimulation::ACTIVE, tallies);
 	}
 
+	delete simulation;
 }
 
 } /* namespace Helios */

@@ -155,7 +155,7 @@ void Log::header(std::ostream& out) {
 	/* General information */
 	logger.messages << ident(0) << BOLDWHITE << "A Continuous-energy Monte Carlo Reactor Physics Code" << endl << endl;
 	logger.messages << ident(0) << " - Version    : " << PROJECT_VERSION << endl;
-	logger.messages << ident(0) << " - Contact    : Esteban Pellegrino (pellegre@gmail.com) " << endl;
+	logger.messages << ident(0) << " - Contact    : Esteban Pellegrino (pellegre@ib.cnea.gov.ar) " << endl;
 	/* Build related stuff */
 	logger.messages << ident(0) << " - Compiler   : " << COMPILER_NAME << endl;
 	logger.messages << ident(0) << " - Build type : " << BUILD_TYPE << " (flags = " << COMPILER_FLAGS << ")" << endl;
