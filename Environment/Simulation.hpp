@@ -80,10 +80,10 @@ public:
 	KeffSimulation(const McEnvironment* environment);
 
 	/* Virtual function to simulate a batch of particles */
-	virtual double simulateBank(size_t nbanks, TallyContainer& tallies) = 0;
+	virtual double simulateBank(TallyContainer& tallies) = 0;
 
 	/* Virtual function to simulate the source of particles */
-	virtual void simulateSource(size_t nbanks) = 0;
+	virtual void simulateSource() = 0;
 
 	/*
 	 * Execute a a random walk of a particle in the current bank. If the simulation terminates with a
@@ -102,7 +102,7 @@ public:
 
 	virtual ~KeffSimulation();
 
-private:
+protected:
 	/* KEFF estimation of one cycle */
 	double keff;
 	/* Global particle bank for this simulation */
@@ -139,19 +139,19 @@ public:
 	ParallelKeffSimulation(const McEnvironment* environment) :
 		KeffSimulation(environment) {
 		/* Populate the particle bank with the initial source */
-		simulateSource(particles_number);
+		simulateSource();
 		/* Jump on base stream of RNGs */
 		base.jump(particles_number * max_samples);
 	};
 
 	/* Method to simulate a batch of particles */
-	double simulateBank(size_t nbanks, TallyContainer& tallies) {
-		return ParallelPolicy::parallelBank(nbanks, this, tallies);
+	double simulateBank(TallyContainer& tallies) {
+		return ParallelPolicy::parallelBank(fission_bank.size(), this, tallies);
 	}
 
 	/* Method to simulate the source of particles */
-	void simulateSource(size_t nbanks) {
-		ParallelPolicy::parallelSource(nbanks, this);
+	void simulateSource() {
+		ParallelPolicy::parallelSource(fission_bank.size(), this);
 	}
 
 	virtual ~ParallelKeffSimulation() {/* */};

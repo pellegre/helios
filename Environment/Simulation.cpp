@@ -243,17 +243,14 @@ void KeffSimulation::source(size_t nbank) {
 }
 
 void KeffSimulation::launch(CycleType type, TallyContainer& tallies) {
-	/* Get number of banks */
-	size_t nbanks = fission_bank.size();
-
 	/* Resize the local bank before the simulation */
-	local_bank.resize(nbanks);
+	local_bank.resize(fission_bank.size());
 
 	/* Set current type of the simulation */
 	current_type = type;
 
 	/* Simulate the current bank (using some parallel policy)*/
-	double total_population = simulateBank(nbanks, tallies);
+	double total_population = simulateBank(tallies);
 
 	/* Jump on random number generation */
 	base.jump(fission_bank.size() * max_rng_per_history);

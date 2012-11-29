@@ -145,6 +145,13 @@ std::string Log::date()  {
 	return string(asctime(timeinfo));
 }
 
+void Log::setRank(int rank) {
+	if(rank != 0) {
+		std::cout.setstate(std::ios::failbit);
+		std::cerr.setstate(std::ios::failbit);
+	}
+}
+
 void Log::header(std::ostream& out) {
 	logger.messages << endl;
 	/* Print header */

@@ -85,6 +85,9 @@ public:
 	/* Set output file */
 	static void setOutput(const std::string& out_file);
 
+	/* Set rank */
+	static void setRank(int rank);
+
 	/* Write stuff */
 	static std::ostream& msg();   /* This is a ordinary message printed into the screen */
 	static std::ostream& bmsg();   /* This is a ordinary message printed into the screen */

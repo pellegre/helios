@@ -104,7 +104,7 @@ void McEnvironment::setup() {
 	setupModule<Source>();
 }
 
-void McEnvironment::simulate() const {
+void McEnvironment::simulate(boost::mpi::communicator& world) const {
 	/* Simulation pointer */
 	KeffSimulation* simulation(0);
 
@@ -158,7 +158,7 @@ void McEnvironment::simulate() const {
 	/* Track length KEFF */
 	tallies.pushTally(new Tally("keff (trk)"));
 
-
+	double ave = 0.0;
 	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
 		simulation->launch(KeffSimulation::INACTIVE, tallies);
 		/* Get multiplication factor */
@@ -166,7 +166,10 @@ void McEnvironment::simulate() const {
 		Log::color<Log::COLOR_BOLDRED>() << Log::ident(0) << " **** Cycle (Inactive) "
 				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst <<
 				" keff = " << fixed << keff << Log::endl;
+		ave += keff;
 	}
+
+	cout << "Average = " << ave / skip << endl;
 
 	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
 		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "

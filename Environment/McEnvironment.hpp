@@ -28,6 +28,8 @@
 #ifndef MCENVIRONMENT_HPP_
 #define MCENVIRONMENT_HPP_
 
+#include <boost/mpi/communicator.hpp>
+
 #include <string>
 #include <vector>
 #include <map>
@@ -142,7 +144,7 @@ namespace Helios {
 		 * problem. It will thrown an exception if some settings required to run a simulation
 		 * are missing on the problem (i.e. the environment is not sane to execute a MC simulation).
 		 */
-		void simulate() const;
+		void simulate(boost::mpi::communicator& world) const;
 
 		/* Register a module factory */
 		void registerFactory(ModuleFactory* factory) {

@@ -24,6 +24,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include <boost/mpi/environment.hpp>
+#include <boost/mpi/communicator.hpp>
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -33,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Environment/McEnvironment.hpp"
 
 using namespace std;
+namespace mpi = boost::mpi;
 using namespace Helios;
 
 int main(int argc, char **argv) {
@@ -45,6 +49,13 @@ int main(int argc, char **argv) {
 	  Helios::Log::error() << "Usage : " << argv[0] << " <filename>" << Helios::Log::endl;
 	  return 1;
 	}
+
+	/* Initialize MPI environment */
+	mpi::environment env(argc, argv);
+	mpi::communicator world;
+
+	/* Set rank on the logger */
+	Log::setRank(world.rank());
 
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
@@ -65,7 +76,7 @@ int main(int argc, char **argv) {
 		/* Setup the problem */
 		environment.setup();
 		/* Launch simulation */
-		environment.simulate();
+		environment.simulate(world);
 	} catch(exception& error) {
 		Log::error() << error.what() << Log::endl;
 		return 1;
