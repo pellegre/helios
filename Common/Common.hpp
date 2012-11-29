@@ -97,13 +97,39 @@ namespace Helios {
 	typedef size_t EnergyIndex;                        /* Index used to access energies grids (or group number) */
 	typedef std::pair<EnergyIndex,EnergyValue> Energy; /* Pair of energy value and the closest (lower) index on the grid */
 
+	class GeneralError : public std::exception {
+		std::string reason;
+	public:
+		GeneralError(const std::string& msg) {
+			reason = msg;
+		}
+		const char *what() const throw() {
+			return reason.c_str();
+		}
+		~GeneralError() throw() {/* */};
+	};
+
 	/* Get a value from a string */
 	template<typename T>
-	static inline T fromString(const std::string& str) {return boost::lexical_cast<T>(str);}
+	static inline T fromString(const std::string& str) {
+		try {
+			return boost::lexical_cast<T>(str);
+		} catch(boost::bad_lexical_cast & error) {
+            Log::error() << "Problem converting " << str << " from string : " << error.what() << Log::endl;
+            throw;
+        }
+	}
 
 	/* Convert to string */
 	template<typename T>
-	static inline std::string toString(const T& t) {return boost::lexical_cast<std::string>(t);}
+	static inline std::string toString(const T& t) {
+		try {
+			return boost::lexical_cast<std::string>(t);
+		} catch(boost::bad_lexical_cast & error) {
+            Log::error() << "Problem converting " << t << " to string : " << error.what() << Log::endl;
+            throw;
+        }
+	}
 
 	/* This piece of code appears in so many places */
 	template<class Seq>
@@ -129,21 +155,6 @@ namespace Helios {
 	static inline bool compareTinyVector(const Coordinate& a, const Coordinate& b) {
 		return (compareFloating(a[0],b[0]) && compareFloating(a[1],b[1]) && compareFloating(a[2],b[2]));
 	}
-
-	/* ---- General exception common to all the program */
-
-	class GeneralError : public std::exception {
-		std::string reason;
-	public:
-		GeneralError(const std::string& msg) {
-			reason = msg;
-		}
-		const char *what() const throw() {
-			return reason.c_str();
-		}
-		~GeneralError() throw() {/* */};
-	};
-
 
 	/* ---- Random number */
 

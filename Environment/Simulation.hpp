@@ -43,18 +43,22 @@ namespace Helios {
 /* Class that launch a simulation from a bank of particles */
 class Simulation {
 protected:
-	/* Local copy of the random number engine */
-	Random base;
 	/* Environment (is where this class should look for the data) */
 	const McEnvironment* environment;
+	/* Local copy of the random number engine */
+	Random base;
 	/* Parameters for random number on simulations */
 	size_t max_rng_per_history;
 	/* Max samples when simulating the source */
 	size_t max_samples;
+	/* Particles per cycle */
+	size_t particles_number;
+	/* Reference to the source of the problem */
+	Source* initial_source;
 public:
 
 	/* Initialize simulation */
-	Simulation(const Random& base, const McEnvironment* environment);
+	Simulation(const McEnvironment* environment);
 
 	virtual ~Simulation() {/* */};
 };
@@ -73,7 +77,7 @@ public:
 	};
 
 	/* Initialize simulation */
-	KeffSimulation(const Random& random, const McEnvironment* environment, double keff, size_t particles_number);
+	KeffSimulation(const McEnvironment* environment);
 
 	/* Virtual function to simulate a batch of particles */
 	virtual double simulateBank(size_t nbanks) = 0;
@@ -107,10 +111,6 @@ public:
 private:
 	/* KEFF estimation of one cycle */
 	double keff;
-	/* Particles per cycle */
-	size_t particles_number;
-	/* Reference to the source of the problem */
-	Source* initial_source;
 	/* Global particle bank for this simulation */
 	std::vector<CellParticle> fission_bank;
 	/* Local bank on a cycle simulation */
@@ -149,8 +149,8 @@ private:
 template<class ParallelPolicy>
 class ParallelKeffSimulation : public KeffSimulation, public ParallelPolicy {
 public:
-	ParallelKeffSimulation(const Random& random, const McEnvironment* environment, double keff, size_t particles_number) :
-		KeffSimulation(random, environment, keff, particles_number) {
+	ParallelKeffSimulation(const McEnvironment* environment) :
+		KeffSimulation(environment) {
 		/* Populate the particle bank with the initial source */
 		simulateSource(particles_number);
 		/* Jump on base stream of RNGs */

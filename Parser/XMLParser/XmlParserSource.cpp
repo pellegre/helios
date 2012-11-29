@@ -214,7 +214,7 @@ static SourceObject* samplerAttrib(TiXmlElement* pElement) {
 	SamplerId id = fromString<DistributionId>(mapAttrib["id"]);
 	Coordinate pos = getBlitzArray<double>(mapAttrib["pos"]);
 	Direction dir = getBlitzArray<double>(dirAttrib.getString(mapAttrib));
-	double energy = fromString<double>(mapAttrib["energy"]);
+	double energy = energyAttrib.getValue(mapAttrib);
 	vector<DistributionId> distIds = getContainer<DistributionId>(mapAttrib["dist"]);
 	CellId cell = cellAttrib.getString(mapAttrib);
 	/* Return surface definition */

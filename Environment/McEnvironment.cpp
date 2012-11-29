@@ -115,13 +115,8 @@ void McEnvironment::simulate() const {
 	size_t skip = getSetting<size_t>("criticality","inactive");
 	/* Active cycles */
 	size_t cycles = getSetting<size_t>("criticality","batches") - skip;
-	/* Initial KEFF */
-	double keff = 1.0;
-
 	/* Random number seed */
 	long unsigned int seed = getSetting<long unsigned int>("seed","value");
-	/* Random number stream */
-	Random random(seed);
 
 	/* Create simulation */
 	Log::bok() << "Launching simulation " << Log::endl;
@@ -130,19 +125,19 @@ void McEnvironment::simulate() const {
 	Log::msg() << left << Log::ident(1) << " - Number of active cycles : " << cycles << Log::endl;
 	if(multithread == "tbb") {
 		Log::msg() << left << Log::ident(1) << " - Multithreading          : Intel Tbb " << Log::endl;
-		simulation = new ParallelKeffSimulation<IntelTbb>(random,this,keff,neutrons);
+		simulation = new ParallelKeffSimulation<IntelTbb>(this);
 	} else if(multithread == "omp") {
 		Log::msg() << left << Log::ident(1) << " - Multithreading          : Open Mp " << Log::endl;
-		simulation = new ParallelKeffSimulation<OpenMp>(random,this,keff,neutrons);
+		simulation = new ParallelKeffSimulation<OpenMp>(this);
 	} else if(multithread == "single") {
 		Log::msg() << left << Log::ident(1) << " - Multithreading          : Single Thread " << Log::endl;
-		simulation = new ParallelKeffSimulation<SingleThread>(random,this,keff,neutrons);
+		simulation = new ParallelKeffSimulation<SingleThread>(this);
 	}
 
 	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
 		simulation->launch(KeffSimulation::INACTIVE);
 		/* Get multiplication factor */
-		keff = simulation->getKeff();
+		double keff = simulation->getKeff();
 		Log::color<Log::COLOR_BOLDRED>() << Log::ident(0) << " **** Cycle (Inactive) "
 				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst <<
 				" keff = " << fixed << keff << Log::endl;

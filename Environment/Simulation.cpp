@@ -32,9 +32,8 @@ using namespace std;
 
 namespace Helios {
 
-KeffSimulation::KeffSimulation(const Random& _random, const McEnvironment* _environment, double keff, size_t _particles_number) :
-		Simulation(_random,_environment), keff(keff), particles_number(_particles_number),
-		initial_source(environment->getModule<Source>()), fission_bank(particles_number), current_type(INACTIVE) {
+KeffSimulation::KeffSimulation(const McEnvironment* environment) :
+		Simulation(environment), keff(1.0), fission_bank(particles_number), current_type(INACTIVE) {
 
 	/* Leakage */
 	tallies.push_back(new Tally("leakage"));
@@ -350,9 +349,12 @@ KeffSimulation::~KeffSimulation() {
 	}
 };
 
-Simulation::Simulation(const Random& base, const McEnvironment* environment) :
-		base(base), environment(environment),
+Simulation::Simulation(const McEnvironment* environment) :
+		environment(environment),
+		base(environment->getSetting<long unsigned int>("seed","value")),
 		max_rng_per_history(environment->getSetting<size_t>("max_rng_per_history","value")),
-		max_samples(environment->getSetting<size_t>("max_source_samples","value")) {/* */}
+		max_samples(environment->getSetting<size_t>("max_source_samples","value")),
+		particles_number(environment->getSetting<size_t>("criticality","particles")),
+		initial_source(environment->getModule<Source>()) {/* */}
 
 } /* namespace Helios */
