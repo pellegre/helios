@@ -124,18 +124,18 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 	Log::msg() << left << Log::ident(1) << " - RNG seed                : " << seed << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - Number of particles     : " << neutrons << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - Number of active cycles : " << cycles << Log::endl;
-	if(multithread == "tbb") {
-		Log::msg() << left << Log::ident(1) << " - Multithreading          : Intel Tbb " << Log::endl;
-		simulation = new ParallelKeffSimulation<IntelTbb>(this);
-	} else if(multithread == "omp") {
-		Log::msg() << left << Log::ident(1) << " - Multithreading          : Open Mp " << Log::endl;
-		simulation = new ParallelKeffSimulation<OpenMp>(this);
-	} else if(multithread == "single") {
-		Log::msg() << left << Log::ident(1) << " - Multithreading          : Single Thread " << Log::endl;
-		simulation = new ParallelKeffSimulation<SingleThread>(this);
-	} else {
+	Log::msg() << left << Log::ident(1) << " - Number of MPI nodes     : " << world.size() << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Multithreading          : " << multithread << Log::endl;
+
+	if(multithread == "tbb")
+		simulation = new ParallelKeffSimulation<IntelTbb>(this, 0);
+	else if(multithread == "omp")
+		simulation = new ParallelKeffSimulation<OpenMp>(this, 0);
+	else if(multithread == "single")
+		simulation = new ParallelKeffSimulation<SingleThread>(this, 0);
+	else
 		throw(GeneralError("Multithreading type " + multithread + " not recognized"));
-	}
+
 
 	/* Create some tallies for this simulation */
 	TallyContainer tallies;
@@ -160,20 +160,33 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 
 	double ave = 0.0;
 	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
-		simulation->launch(KeffSimulation::INACTIVE, tallies);
+
+		/* Simulate and get the total population */
+		double total_population = simulation->launch(KeffSimulation::INACTIVE, tallies);
+
+		/* Get the bank size (after the simulaton of the current cycle) */
+		size_t bank_size = simulation->bankSize();
+
+		/* Update information (preparing for next cycle) */
+		simulation->update(total_population, bank_size, 0);
+
 		/* Get multiplication factor */
 		double keff = simulation->getKeff();
+
+		/* Print information */
 		Log::color<Log::COLOR_BOLDRED>() << Log::ident(0) << " **** Cycle (Inactive) "
-				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst <<
-				" keff = " << fixed << keff << Log::endl;
+				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst << " keff = " << fixed << keff << Log::endl;
+
 		ave += keff;
 	}
 
 	cout << "Average = " << ave / skip << endl;
 
 	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
+		/* Print information */
 		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
 				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
+
 		simulation->launch(KeffSimulation::ACTIVE, tallies);
 	}
 

@@ -165,7 +165,7 @@ void Log::header(std::ostream& out) {
 	logger.messages << ident(0) << " - Contact    : Esteban Pellegrino (pellegre@ib.cnea.gov.ar) " << endl;
 	/* Build related stuff */
 	logger.messages << ident(0) << " - Compiler   : " << COMPILER_NAME << endl;
-	logger.messages << ident(0) << " - Build type : " << BUILD_TYPE << " (flags = " << COMPILER_FLAGS << ")" << endl;
+	logger.messages << ident(0) << " - Build type : " << BUILD_TYPE << endl;
 	logger.messages << ident(0) << " - Build date : " << COMPILATION_DATE << " (commit " << GIT_SHA1 << ")" << endl;
 	logger.messages << ident(0) << " - Boost      : Version " << BOOST_LIB_VERSION << endl;
 	logger.messages << ident(0) << " - Intel TBB  : Version " << TBB_VERSION_MAJOR << "." << TBB_VERSION_MINOR << endl;

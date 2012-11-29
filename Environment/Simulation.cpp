@@ -32,8 +32,8 @@ using namespace std;
 
 namespace Helios {
 
-KeffSimulation::KeffSimulation(const McEnvironment* environment) :
-		Simulation(environment), keff(1.0), fission_bank(particles_number), current_type(INACTIVE) {/* */}
+KeffSimulation::KeffSimulation(const McEnvironment* environment, size_t stride) :
+		Simulation(environment), keff(1.0), stride(stride), fission_bank(particles_number), current_type(INACTIVE) {/* */}
 
 bool nonVoid(const Material*& material, Particle& particle, const Cell*& cell) {
 	while(not material) {
@@ -70,7 +70,8 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 
 	/* Random number stream for this particle */
 	Random r(base);
-	r.jump(nbank * max_rng_per_history);
+	/* Jump random number engine (using local stride) */
+	r.jump((stride + nbank) * max_rng_per_history);
 
 	/* Flag if particle is out of the system */
 	bool outside = false;
@@ -236,33 +237,36 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 void KeffSimulation::source(size_t nbank) {
 	/* Jump random number generator */
 	Random random(base);
-	random.jump(nbank * max_samples);
+	/* Jump random number engine (using local stride) */
+	random.jump((stride + nbank) * max_samples);
 	CellParticle source_particle = initial_source->sample(random);
 	source_particle.second.wgt() = keff;
 	fission_bank[nbank] = source_particle;
 }
 
-void KeffSimulation::launch(CycleType type, TallyContainer& tallies) {
+double KeffSimulation::launch(CycleType type, TallyContainer& tallies) {
 	/* Resize the local bank before the simulation */
 	local_bank.resize(fission_bank.size());
 
 	/* Set current type of the simulation */
 	current_type = type;
 
-	/* Simulate the current bank (using some parallel policy)*/
+	/* Simulate the current bank (using some parallel policy) */
 	double total_population = simulateBank(tallies);
 
+	/* Return population of this cycle */
+	return total_population;
+}
+
+void KeffSimulation::update(double total_population, size_t total_bank, size_t new_stride) {
+	/* Update stride */
+	stride = new_stride;
+
 	/* Jump on random number generation */
-	base.jump(fission_bank.size() * max_rng_per_history);
+	base.jump(total_bank * max_rng_per_history);
 
 	/* --- Calculate multiplication factor for this cycle */
 	keff = total_population / (double) particles_number;
-
-	if(current_type == ACTIVE) {
-		tallies.accumulate(fission_bank.size());
-		for(TallyContainer::const_iterator it = tallies.begin() ; it != tallies.end() ; ++it)
-			Log::msg() << Log::ident(1) << left << *(*it) << Log::endl;
-	}
 
 	/* --- Clear particle bank (global) */
 	fission_bank.clear();

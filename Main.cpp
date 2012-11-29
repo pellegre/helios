@@ -41,9 +41,6 @@ using namespace Helios;
 
 int main(int argc, char **argv) {
 
-	/* Print header */
-	Log::header();
-
 	/* Check number of arguments */
 	if(argc < 2) {
 	  Helios::Log::error() << "Usage : " << argv[0] << " <filename>" << Helios::Log::endl;
@@ -56,6 +53,9 @@ int main(int argc, char **argv) {
 
 	/* Set rank on the logger */
 	Log::setRank(world.rank());
+
+	/* Print header */
+	Log::header();
 
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
