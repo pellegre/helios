@@ -6,6 +6,8 @@
 cmake_minimum_required(VERSION 2.6.0 FATAL_ERROR)
 project(Helios++)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake/")
+
 # ---- Version Information
 
 set( ${PROJECT_NAME}_MAJOR_VERSION 0 ) 
@@ -16,41 +18,22 @@ set( ${PROJECT_NAME}_MINOR_VERSION 1 )
 # Include root directory
 include_directories(".")
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-	message("-- Setting flags for gnu/g++ compiler")
-	# Using GNU compiler
-	if(CMAKE_BUILD_TYPE STREQUAL "release")
-	  set(CMAKE_CXX_FLAGS_RELEASE "-ansi -Wall -fopenmp -O3")
-	  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
-	else(CMAKE_BUILD_TYPE STREQUAL "debug")
-	  set(CMAKE_CXX_FLAGS_DEBUG "-g -ansi -Wall -fopenmp -O1")
-	  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
-	endif()
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-	message("-- Setting flags for intel compiler")
-	# Using intel compiler
-	if(CMAKE_BUILD_TYPE STREQUAL "release")
-	  set(CMAKE_AR xiar)
-	  set(CMAKE_CXX_FLAGS_RELEASE "-ansi -openmp -xHOST -O3 -ipo -no-prec-div -static-intel") 
-	  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
-	else(CMAKE_BUILD_TYPE STREQUAL "debug")
-	  set(CMAKE_CXX_FLAGS_DEBUG "-ansi -g -O1 -Wall -openmp")
-	  set(COMPILER_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
-	endif()
+# Set a default build type if none was specified
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'release' as none was specified.")
+  set(CMAKE_BUILD_TYPE release CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-# ---- Configuration stuff
+# ++++ Configuration stuff
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake/")
-
-# Version
+# ------- Version
 set(PROJECT_VERSION "${${PROJECT_NAME}_MAJOR_VERSION}.${${PROJECT_NAME}_MINOR_VERSION}")
 
-# Git stuff
+# ------- Git stuff
 include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
-# Compilation date
+# ------- Compilation date
 macro (TODAY RESULT)
   if (WIN32)
     execute_process(COMMAND "date" "/T" OUTPUT_VARIABLE ${RESULT})
@@ -65,39 +48,52 @@ macro (TODAY RESULT)
 endmacro ()
 today(COMPILATION_DATE)
 
+# ------- Configuration file
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/CMake/Config.hpp.cmake ${CMAKE_SOURCE_DIR}/Common/Config.hpp)
 
-# ---- External dependencies
+# ++++ External dependencies
 
+# ---- Find Blitz
 FIND_PATH(BLITZ_INCLUDE_DIR blitz/blitz.h)
 FIND_LIBRARY(BLITZ_LIBRARY NAMES blitz )
-
 IF(BLITZ_FOUND)
   SET( BLITZ_LIBRARIES ${BLITZ_LIBRARY} )
 ENDIF(BLITZ_FOUND)
-
 MARK_AS_ADVANCED(BLITZ_INCLUDE_DIR BLITZ_LIBRARY)
 
+# ---- Find Tina's Random Number Generator
 FIND_LIBRARY(TRNG_LIBRARY NAMES trng4 )
-
 IF(TRNG_FOUND)
   SET( TRNG_LIBRARIES ${TRNG_LIBRARY} )
 ENDIF(TRNG_FOUND)
-
 MARK_AS_ADVANCED(TRNG_INCLUDE_DIR TRNG_LIBRARY)
 
-# Intel TBB
+# ---- Boost stuff
+find_package( Boost REQUIRED COMPONENTS program_options mpi serialization)
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARIES_DIRS})
+
+# ---- Find OpenMP
+find_package (OPENMP)
+if(OPENMP_FOUND)
+  message(STATUS "Found OPENMP")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
+
+# ---- Find MPI
+find_package(MPI REQUIRED)
+include_directories(${MPI_INCLUDE_PATH})
+link_directories(${MPI_LIBRARY})
+
+# ---- Find Intel TBB
 find_package(TBB REQUIRED)
 # Here goes the actual project
 include_directories(${TBB_INCLUDE_DIRS})
 link_directories(${TBB_LIBRARY_DIRS})
 
-# Boost
-find_package( Boost REQUIRED COMPONENTS program_options )
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARIES_DIRS})
-
-# ---- Monte Carlo library
+# ---- Monte Carlo (helios) library
 
 set(MCFILES Common/Common.cpp
             Common/Log/Log.cpp
@@ -173,8 +169,7 @@ set(MCFILES Common/Common.cpp
             )
             
 add_library(helios ${MCFILES})
-
-target_link_libraries (helios ${BLITZ_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
+target_link_libraries (helios ${Boost_LIBRARIES} ${MPI_LIBRARIES} ${BLITZ_LIBRARY} ${TRNG_LIBRARY} ${TBB_LIBRARIES})
 
 # ---- Unit Test
 
@@ -208,10 +203,10 @@ target_link_libraries(plottermc++ helios ${Boost_PROGRAM_OPTIONS_LIBRARY} ${PNG_
 # ---- Helios
 
 add_executable(helios++ Main.cpp)
-               
+
 target_link_libraries(helios++ helios)
 
-# ---- Instal stuff
+# ---- Install stuff
 
 install(TARGETS plottermc++ RUNTIME DESTINATION bin)
 install(TARGETS helios++ RUNTIME DESTINATION bin)
