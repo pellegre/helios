@@ -164,10 +164,13 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 	/* Set the absorption cross section */
 	absorption_xs = reactions.get_xs(27);
 	/* Check size */
-	if(absorption_xs.size() != 0)
-		assert(absorption_xs.size() == total_xs.size());
-	else
+	if(absorption_xs.size() != 0) {
+		if(absorption_xs.size() != total_xs.size())
+			throw(AceModule::AceError(getUserId(), "Absorption and total cross section don't have the same size"));
+	} else {
+		/* The only case when this happens is with 1002 isotope */
 		absorption_xs = CrossSection(total_xs.size());
+	}
 
 	/* 	Calculate inelastic cross section */
 	inelastic_xs = total_xs - absorption_xs - elastic_xs;
@@ -180,7 +183,7 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 		/* Get angular distribution type */
 		int angular_data = (*it).getAngular().getKind();
 
-		/* If the reaction does not contains angular data, we reach the end "secondary" particle's reactions */
+		/* If the reaction does not contains angular data, we reach the end of "secondary" particle reactions */
 		if(angular_data == Ace::AngularDistribution::no_data) break;
 
 		/* Get MT of the reaction */

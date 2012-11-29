@@ -27,6 +27,7 @@
 
 #include "McEnvironment.hpp"
 #include "Simulation.hpp"
+#include "../Tallies/Tally.hpp"
 
 using namespace std;
 
@@ -134,8 +135,30 @@ void McEnvironment::simulate() const {
 		simulation = new ParallelKeffSimulation<SingleThread>(this);
 	}
 
+	/* Create some tallies for this simulation */
+	TallyContainer tallies;
+	/* Leakage */
+	tallies.pushTally(new Tally("leakage"));
+	/* Absorptions */
+	tallies.pushTally(new Tally("absorption"));
+
+	/* (n,2n) */
+	tallies.pushTally(new Tally("(n,2n)"));
+	/* (n,3n) */
+	tallies.pushTally(new Tally("(n,3n)"));
+	/* (n,4n) */
+	tallies.pushTally(new Tally("(n,4n)"));
+
+	/* Absorption KEFF */
+	tallies.pushTally(new Tally("keff (abs)"));
+	/* Collision KEFF */
+	tallies.pushTally(new Tally("keff (col)"));
+	/* Track length KEFF */
+	tallies.pushTally(new Tally("keff (trk)"));
+
+
 	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
-		simulation->launch(KeffSimulation::INACTIVE);
+		simulation->launch(KeffSimulation::INACTIVE, tallies);
 		/* Get multiplication factor */
 		double keff = simulation->getKeff();
 		Log::color<Log::COLOR_BOLDRED>() << Log::ident(0) << " **** Cycle (Inactive) "
@@ -146,7 +169,7 @@ void McEnvironment::simulate() const {
 	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
 		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
 				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
-		simulation->launch(KeffSimulation::ACTIVE);
+		simulation->launch(KeffSimulation::ACTIVE, tallies);
 	}
 
 }

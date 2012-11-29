@@ -33,57 +33,7 @@ using namespace std;
 namespace Helios {
 
 KeffSimulation::KeffSimulation(const McEnvironment* environment) :
-		Simulation(environment), keff(1.0), fission_bank(particles_number), current_type(INACTIVE) {
-
-	/* Leakage */
-	tallies.push_back(new Tally("leakage"));
-	/* Absorptions */
-	tallies.push_back(new Tally("absorption"));
-
-	/* (n,2n) */
-	tallies.push_back(new Tally("(n,2n)"));
-	/* (n,3n) */
-	tallies.push_back(new Tally("(n,3n)"));
-	/* (n,4n) */
-	tallies.push_back(new Tally("(n,4n)"));
-
-	/* Absorption KEFF */
-	tallies.push_back(new Tally("keff (abs)"));
-	/* Collision KEFF */
-	tallies.push_back(new Tally("keff (col)"));
-	/* Track length KEFF */
-	tallies.push_back(new Tally("keff (trk)"));
-}
-
-/* Get child tallies */
-vector<ChildTally*>& KeffSimulation::getTallies() {
-	RequestChildMutex::scoped_lock lock(child_mutex);
-	/* If there aren't tallies on the pool, create one */
-	if(child_tallies.size() == 0) {
-		/* Hopefully this should be done only once for each thread */
-		vector<ChildTally*>* new_tallies = new vector<ChildTally*>;
-		new_tallies->resize(tallies.size());
-		/* Create tallies */
-		for(size_t i = 0 ; i < tallies.size() ; ++i)
-			(*new_tallies)[i] = tallies[i]->getChild();
-		/* Return new container */
-		return *new_tallies;
-	}
-	/* Get container on the back */
-	vector<ChildTally*>* tallies_container = child_tallies.back();
-	child_tallies.pop_back();
-	/* Return reference */
-	return *tallies_container;
-}
-
-/* Set tallies */
-void KeffSimulation::setTallies(vector<ChildTally*>& tally_container) {
-	RequestChildMutex::scoped_lock lock(child_mutex);
-	/* Sanity check */
-	assert(tally_container.size() == tallies.size());
-	/* Push back container */
-	child_tallies.push_back(&tally_container);
-}
+		Simulation(environment), keff(1.0), fission_bank(particles_number), current_type(INACTIVE) {/* */}
 
 bool nonVoid(const Material*& material, Particle& particle, const Cell*& cell) {
 	while(not material) {
@@ -292,7 +242,7 @@ void KeffSimulation::source(size_t nbank) {
 	fission_bank[nbank] = source_particle;
 }
 
-void KeffSimulation::launch(CycleType type) {
+void KeffSimulation::launch(CycleType type, TallyContainer& tallies) {
 	/* Get number of banks */
 	size_t nbanks = fission_bank.size();
 
@@ -303,7 +253,7 @@ void KeffSimulation::launch(CycleType type) {
 	current_type = type;
 
 	/* Simulate the current bank (using some parallel policy)*/
-	double total_population = simulateBank(nbanks);
+	double total_population = simulateBank(nbanks, tallies);
 
 	/* Jump on random number generation */
 	base.jump(fission_bank.size() * max_rng_per_history);
@@ -312,16 +262,9 @@ void KeffSimulation::launch(CycleType type) {
 	keff = total_population / (double) particles_number;
 
 	if(current_type == ACTIVE) {
-		/* Accumulate tallies (using initial source weight as a normalization factor) */
-		for(size_t i = 0 ; i < tallies.size() ; ++i) {
-			/* Join each tally */
-			for(size_t j = 0 ; j < child_tallies.size() ; ++j) {
-				/* Join with parent tally */
-				tallies[i]->join((*child_tallies[j])[i]);
-			}
-			tallies[i]->accumulate(fission_bank.size());
-			Log::msg() << Log::ident(1) << Log::ident(0) << *tallies[i] << Log::endl;
-		}
+		tallies.accumulate(fission_bank.size());
+		for(TallyContainer::const_iterator it = tallies.begin() ; it != tallies.end() ; ++it)
+			Log::msg() << Log::ident(1) << left << *(*it) << Log::endl;
 	}
 
 	/* --- Clear particle bank (global) */
@@ -338,16 +281,7 @@ void KeffSimulation::launch(CycleType type) {
 	local_bank.clear();
 }
 
-KeffSimulation::~KeffSimulation() {
-	/* Delete tallies */
-	purgePointers(tallies);
-	/* Delete child tallies */
-	for(size_t i = 0 ; i < child_tallies.size() ; ++i) {
-		/* Delete each instance */
-		purgePointers(*child_tallies[i]);
-		delete child_tallies[i];
-	}
-};
+KeffSimulation::~KeffSimulation() {/* */};
 
 Simulation::Simulation(const McEnvironment* environment) :
 		environment(environment),

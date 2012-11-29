@@ -136,5 +136,52 @@ public:
 /* Output surface information */
 std::ostream& operator<<(std::ostream& out, const Tally& q);
 
+/* Tally container (thread-safe) */
+class TallyContainer {
+
+	/* Accumulators */
+	std::vector<Tally*> tallies;
+	std::vector<std::vector<ChildTally*>* > child_tallies;
+
+	/* MUTEX to request a child */
+	typedef tbb::spin_mutex RequestChildMutex;
+	RequestChildMutex child_mutex;
+
+public:
+
+	/* Get child tallies */
+	std::vector<ChildTally*>& getChildTallies();
+
+	/* Set child tallies */
+	void setChildTallies(std::vector<ChildTally*>& tally_container);
+
+	/* Push a tally into the conatiner */
+	void pushTally(Tally* tally) {
+		tallies.push_back(tally);
+	}
+
+	/* Iterators for this container */
+	typedef std::vector<Tally*>::iterator iterator;
+	typedef std::vector<Tally*>::const_iterator const_iterator;
+
+	/* Iterators */
+	iterator begin() {return tallies.begin();};
+	const_iterator begin() const {return tallies.begin();};
+	iterator end() {return tallies.end();};
+	const_iterator end() const {return tallies.end();};
+
+	/* Get size of the container */
+	size_t size() const {
+		return tallies.size();
+	}
+
+	/* ---- Operations over the container */
+
+	/* Accumulate tally using a normalization factor */
+	void accumulate(double norm);
+
+	~TallyContainer();
+};
+
 } /* namespace Helios */
 #endif /* TALLY_HPP_ */
