@@ -77,7 +77,7 @@ public:
 	};
 
 	/* Initialize simulation */
-	KeffSimulation(const McEnvironment* environment, size_t new_stride);
+	KeffSimulation(const McEnvironment* environment, size_t local_particles, size_t new_stride);
 
 	/* Virtual function to simulate a batch of particles */
 	virtual double simulateBank(TallyContainer& tallies) = 0;
@@ -98,11 +98,16 @@ public:
 	double launch(CycleType type, TallyContainer& tallies);
 
 	/* Update internal data given the total population and bank size */
-	void update(double total_population, size_t total_bank, size_t stride);
+	void update(double total_population, size_t total_bank);
 
 	/* Get the bank size of this simulation */
 	size_t bankSize() const {
 		return fission_bank.size();
+	}
+
+	/* Set new stride on distributed fission bank */
+	void setStride(size_t new_stride) {
+		stride = new_stride;
 	}
 
 	/* Get multiplication factor */
@@ -147,7 +152,8 @@ protected:
 template<class ParallelPolicy>
 class ParallelKeffSimulation : public KeffSimulation, public ParallelPolicy {
 public:
-	ParallelKeffSimulation(const McEnvironment* environment, size_t stride) : KeffSimulation(environment, stride) {
+	ParallelKeffSimulation(const McEnvironment* environment, size_t local_particles, size_t stride) :
+		KeffSimulation(environment, local_particles, stride) {
 		/* Populate the particle bank with the initial source */
 		simulateSource();
 		/* Jump on base stream of RNGs */

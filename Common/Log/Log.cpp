@@ -148,7 +148,6 @@ std::string Log::date()  {
 void Log::setRank(int rank) {
 	if(rank != 0) {
 		std::cout.setstate(std::ios::failbit);
-		std::cerr.setstate(std::ios::failbit);
 	}
 }
 

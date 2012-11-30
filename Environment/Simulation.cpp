@@ -32,8 +32,8 @@ using namespace std;
 
 namespace Helios {
 
-KeffSimulation::KeffSimulation(const McEnvironment* environment, size_t stride) :
-		Simulation(environment), keff(1.0), stride(stride), fission_bank(particles_number), current_type(INACTIVE) {/* */}
+KeffSimulation::KeffSimulation(const McEnvironment* environment, size_t local_particles, size_t stride) :
+		Simulation(environment), keff(1.0), stride(stride), fission_bank(local_particles), current_type(INACTIVE) {/* */}
 
 bool nonVoid(const Material*& material, Particle& particle, const Cell*& cell) {
 	while(not material) {
@@ -254,20 +254,6 @@ double KeffSimulation::launch(CycleType type, TallyContainer& tallies) {
 	/* Simulate the current bank (using some parallel policy) */
 	double total_population = simulateBank(tallies);
 
-	/* Return population of this cycle */
-	return total_population;
-}
-
-void KeffSimulation::update(double total_population, size_t total_bank, size_t new_stride) {
-	/* Update stride */
-	stride = new_stride;
-
-	/* Jump on random number generation */
-	base.jump(total_bank * max_rng_per_history);
-
-	/* --- Calculate multiplication factor for this cycle */
-	keff = total_population / (double) particles_number;
-
 	/* --- Clear particle bank (global) */
 	fission_bank.clear();
 
@@ -280,6 +266,17 @@ void KeffSimulation::update(double total_population, size_t total_bank, size_t n
 
 	/* Clear local bank */
 	local_bank.clear();
+
+	/* Return population of this cycle */
+	return total_population;
+}
+
+void KeffSimulation::update(double total_population, size_t total_bank) {
+	/* Jump on random number generation */
+	base.jump(total_bank * max_rng_per_history);
+
+	/* --- Calculate multiplication factor for this cycle */
+	keff = total_population / (double) particles_number;
 }
 
 KeffSimulation::~KeffSimulation() {/* */};

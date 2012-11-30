@@ -25,11 +25,15 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <boost/mpi.hpp>
+#include <numeric>
+
 #include "McEnvironment.hpp"
 #include "Simulation.hpp"
 #include "../Tallies/Tally.hpp"
 
 using namespace std;
+namespace mpi = boost::mpi;
 
 namespace Helios {
 
@@ -119,23 +123,42 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 	/* Random number seed */
 	long unsigned int seed = getSetting<long unsigned int>("seed","value");
 
+	/* Get number of MPI nodes */
+	size_t nodes = world.size();
+
+	/* Divide number of particles */
+	size_t local_particles = neutrons / nodes;
+
+	/* Check non-integer division */
+	int extra_particles = neutrons % nodes;
+	if(world.rank() < extra_particles)
+		local_particles++;
+
+	/* Get extra particles from other node (to calculate the stride) */
+	std::vector<size_t> all_bank_sizes;
+	mpi::all_gather(world, local_particles, all_bank_sizes);
+
+	/* Calculate local stride on the fission bank (calculating extra particles) */
+	size_t local_stride(0);
+	if(world.rank() != 0)
+		local_stride = accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + world.rank(), 0);
+
 	/* Create simulation */
 	Log::bok() << "Launching simulation " << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - RNG seed                : " << seed << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - Number of particles     : " << neutrons << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - Number of active cycles : " << cycles << Log::endl;
-	Log::msg() << left << Log::ident(1) << " - Number of MPI nodes     : " << world.size() << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Number of MPI nodes     : " << nodes << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - Multithreading          : " << multithread << Log::endl;
 
 	if(multithread == "tbb")
-		simulation = new ParallelKeffSimulation<IntelTbb>(this, 0);
+		simulation = new ParallelKeffSimulation<IntelTbb>(this, local_particles, local_stride);
 	else if(multithread == "omp")
-		simulation = new ParallelKeffSimulation<OpenMp>(this, 0);
+		simulation = new ParallelKeffSimulation<OpenMp>(this, local_particles, local_stride);
 	else if(multithread == "single")
-		simulation = new ParallelKeffSimulation<SingleThread>(this, 0);
+		simulation = new ParallelKeffSimulation<SingleThread>(this, local_particles, local_stride);
 	else
 		throw(GeneralError("Multithreading type " + multithread + " not recognized"));
-
 
 	/* Create some tallies for this simulation */
 	TallyContainer tallies;
@@ -158,17 +181,34 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 	/* Track length KEFF */
 	tallies.pushTally(new Tally("keff (trk)"));
 
-	double ave = 0.0;
 	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
 
 		/* Simulate and get the total population */
-		double total_population = simulation->launch(KeffSimulation::INACTIVE, tallies);
+		double local_population = simulation->launch(KeffSimulation::INACTIVE, tallies);
+
+		/* ---- Get data from nodes */
+
+		/* Reduce total population */
+		double total_population(0.0);
+		mpi::all_reduce(world, local_population, total_population, std::plus<double>());
+
+		/* Update information (preparing for next cycle). The fission bank gets updated here with the new particles */
+		simulation->update(total_population, neutrons);
 
 		/* Get the bank size (after the simulaton of the current cycle) */
-		size_t bank_size = simulation->bankSize();
+		size_t local_bank_size = simulation->bankSize();
 
-		/* Update information (preparing for next cycle) */
-		simulation->update(total_population, bank_size, 0);
+		/* Gather fission bank size to create new strides (this is the number of particles at the end of this cycle) */
+		mpi::all_gather(world, local_bank_size, all_bank_sizes);
+
+		/* Update number of particles */
+		neutrons = accumulate(all_bank_sizes.begin(), all_bank_sizes.end(), 0);
+
+		/* Update stride of the current local simulation */
+		if(world.rank() == 0)
+			simulation->setStride(0);
+		else
+			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + world.rank(), 0));
 
 		/* Get multiplication factor */
 		double keff = simulation->getKeff();
@@ -177,17 +217,31 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 		Log::color<Log::COLOR_BOLDRED>() << Log::ident(0) << " **** Cycle (Inactive) "
 				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst << " keff = " << fixed << keff << Log::endl;
 
-		ave += keff;
 	}
-
-	cout << "Average = " << ave / skip << endl;
 
 	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
 		/* Print information */
 		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
 				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
 
-		simulation->launch(KeffSimulation::ACTIVE, tallies);
+		/* Launch active simulation */
+		double local_population = simulation->launch(KeffSimulation::ACTIVE, tallies);
+
+		/* Reduce the tallies */
+		tallies.accumulate(neutrons);
+
+		/* Print tallies */
+		for(TallyContainer::const_iterator it = tallies.begin() ; it != tallies.end() ; ++it)
+			Log::msg() << left << Log::ident(1) << *(*it) << Log::endl;
+
+		/* Update information (preparing for next cycle). The fission bank gets updated here with the new particles */
+		simulation->update(local_population, neutrons);
+
+		/* Get the bank size (after the simulaton of the current cycle) */
+		size_t local_bank_size = simulation->bankSize();
+
+		/* Update number of particles */
+		neutrons = local_bank_size;
 	}
 
 	delete simulation;
