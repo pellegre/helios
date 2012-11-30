@@ -167,9 +167,12 @@ int main(int argc, char **argv) {
 			Log::fout() << endl << endl << "[#] Materials module" << endl << endl;
 			environment.getModule<Materials>()->print(Log::fout());
 
-			Log::printLine(Log::fout(), "*");
-			Log::fout() << endl << endl << "[#] Ace module" << endl << endl;
-			environment.getModule<AceModule>()->print(Log::fout());
+			/* ACE module may not be loaded on Macro-XS calculations */
+			try {
+				Log::printLine(Log::fout(), "*");
+				Log::fout() << endl << endl << "[#] Ace module" << endl << endl;
+				environment.getModule<AceModule>()->print(Log::fout());
+			} catch(exception& e) {/* */}
 
 			Log::printLine(Log::fout(), "*");
 			Log::fout() << endl << endl << "[#] Source module" << endl << endl;
