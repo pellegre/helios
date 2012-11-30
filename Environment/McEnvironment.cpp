@@ -231,7 +231,10 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 
 	}
 
+	/* Average time per cycle */
 	double average_time(0.0);
+	/* Average particle rate per cycle */
+	double average_rate(0.0);
 	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
 		/* Initialize timer for the cycle */
 		mpi::timer cycle_time;
@@ -299,13 +302,18 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + world.rank(), 0));
 
 		if (world.rank() == 0) {
+			/* Get tiem elapsed */
 			double time_elapsed = cycle_time.elapsed();
+
 			/* Print time on master node */
 			Log::msg() << Log::endl;
 			Log::msg() << "Time elapsed in this cycle : " << time_elapsed << " seconds " << Log::endl;
 			Log::msg() << Log::endl;
+
 			/* Accumulate average time */
 			average_time += time_elapsed;
+			/* Accumulate average rate */
+			average_rate += neutrons / time_elapsed;
 		}
 	}
 
@@ -313,10 +321,12 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 		/* Print data on console */
 		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << "End simulation on " << Log::date() << Log::endl;
 		Log::msg() << left << "Average time per cycle : " << average_time / cycles << " seconds " << Log::endl;
+		Log::msg() << left << "Average neutrons / sec : " << average_rate / (1000 * cycles) << " K neutrons / sec " << endl;
 
 		/* Put final estimation on output file */
 		Log::fout() << endl << "End simulation on " << Log::date() << endl;
 		Log::fout() << "Average time per cycle : " << average_time / cycles << " seconds " << endl;
+		Log::fout() << "Average neutrons / sec : " << average_rate / (1000 * cycles) << " K neutrons / sec " << endl;
 		Log::fout() << endl << "Final estimation " << endl << endl;
 		/* Print tallies (only on master) */
 		for(TallyContainer::const_iterator it = tallies.begin() ; it != tallies.end() ; ++it) {
