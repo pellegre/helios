@@ -181,6 +181,9 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 	/* Track length KEFF */
 	tallies.pushTally(new Tally("keff (trk)"));
 
+	/* Start timing to get total elapsed time */
+	mpi::timer total_time;
+
 	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
 
 		/* Simulate and get the total population */
@@ -221,6 +224,8 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 	}
 
 	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
+		/* Initialize timer for the cycle */
+		mpi::timer cycle_time;
 
 		/* Print information (on master node) */
 		if (world.rank() == 0) {
@@ -283,6 +288,19 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 			simulation->setStride(0);
 		else
 			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + world.rank(), 0));
+
+		if (world.rank() == 0) {
+			/* Print time on master node */
+			Log::msg() << Log::endl;
+			Log::msg() << "Time elapsed in this cycle : " << cycle_time.elapsed() << " seconds " << Log::endl;
+			Log::msg() << Log::endl;
+		}
+	}
+
+	/* Print total time on master node */
+	if (world.rank() == 0) {
+		Log::msg() << Log::endl;
+		Log::msg() << Log::ident(0) << "Total time elapsed : " << total_time.elapsed() << " seconds " << Log::endl;
 	}
 
 	delete simulation;
