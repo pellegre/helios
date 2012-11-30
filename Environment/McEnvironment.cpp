@@ -215,33 +215,74 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 
 		/* Print information */
 		Log::color<Log::COLOR_BOLDRED>() << Log::ident(0) << " **** Cycle (Inactive) "
-				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst << " keff = " << fixed << keff << Log::endl;
+				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst
+				<< " keff = " << fixed << keff << Log::endl;
 
 	}
 
 	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
-		/* Print information */
-		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
-				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
+
+		/* Print information (on master node) */
+		if (world.rank() == 0) {
+			Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
+					<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
+		}
 
 		/* Launch active simulation */
 		double local_population = simulation->launch(KeffSimulation::ACTIVE, tallies);
 
-		/* Reduce the tallies */
-		tallies.accumulate(neutrons);
+		/* ---- Reduce tallies */
 
-		/* Print tallies */
-		for(TallyContainer::const_iterator it = tallies.begin() ; it != tallies.end() ; ++it)
-			Log::msg() << left << Log::ident(1) << *(*it) << Log::endl;
+		/* Reduce the tallies */
+		tallies.reduce();
+
+		if (world.rank() == 0) {
+			/* TODO - (this is *too* naive) Get all tallies from slaves */
+			for(int i = 1 ; i < world.size() ; ++i) {
+				TallyContainer slave_tallies;
+				world.recv(i, 0, slave_tallies);
+				tallies.join(slave_tallies);
+			}
+			/* Accumulate tallies on the master */
+			tallies.accumulate(neutrons);
+
+			/* Print tallies (only on master) */
+			for(TallyContainer::const_iterator it = tallies.begin() ; it != tallies.end() ; ++it) {
+				(*it)->print(Log::msg());
+				Log::msg() << Log::endl;
+			}
+		} else {
+			/* Send tally container to the master node */
+			world.send(0, 0, tallies);
+			/* And clear it */
+			tallies.clear();
+		}
+
+		/* ---- Get data from nodes */
+
+		/* Reduce total population */
+		double total_population(0.0);
+		mpi::all_reduce(world, local_population, total_population, std::plus<double>());
 
 		/* Update information (preparing for next cycle). The fission bank gets updated here with the new particles */
-		simulation->update(local_population, neutrons);
+		simulation->update(total_population, neutrons);
 
 		/* Get the bank size (after the simulaton of the current cycle) */
 		size_t local_bank_size = simulation->bankSize();
 
+		/* Gather fission bank size to create new strides (this is the number of particles at the end of this cycle) */
+		mpi::all_gather(world, local_bank_size, all_bank_sizes);
+
+		/* ---- Update internal data of the simulation */
+
 		/* Update number of particles */
-		neutrons = local_bank_size;
+		neutrons = accumulate(all_bank_sizes.begin(), all_bank_sizes.end(), 0);
+
+		/* Update stride of the current local simulation */
+		if(world.rank() == 0)
+			simulation->setStride(0);
+		else
+			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + world.rank(), 0));
 	}
 
 	delete simulation;

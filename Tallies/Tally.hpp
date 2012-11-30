@@ -36,6 +36,8 @@
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 #include <boost/accumulators/statistics/count.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 #include "../Common/Common.hpp"
 
@@ -50,6 +52,15 @@ typedef acc::accumulator_set<double, acc::stats<acc::tag::count, acc::tag::mean,
 class ChildTally {
 	double value;
 public:
+
+	friend class boost::serialization::access;
+    template<class Archive>
+    /* Serialize value on the child tally */
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & value;
+    }
+
 	ChildTally() : value(0.0) {/* */}
 
 	/* Accumulate data */
@@ -88,8 +99,18 @@ class Tally {
 	/* Single accumulator */
 	Accumulator accum;
 
-	friend std::ostream& operator<<(std::ostream& out, const Tally& q);
 public:
+
+	friend class boost::serialization::access;
+    template<class Archive>
+    /* Serialize value on the child tally */
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & prototype;
+    }
+
+	Tally() {/* */}
+
 	Tally(const TallyId& user_id) : user_id(user_id), prototype(0) {
 		/* Create child */
 		prototype = new ChildTally;
@@ -108,6 +129,12 @@ public:
 		child->clear();
 	}
 
+	/* Join tally and accumulate the data */
+	void join(Tally* tally) {
+		/* Join child */
+		prototype->join(tally->prototype);
+	}
+
 	/* Accumulate data using a normalization factor */
 	void accumulate(double norm) {
 		double value = prototype->get();
@@ -124,6 +151,12 @@ public:
 		prototype->clear();
 	}
 
+	/* Just clear the data (don't accumulate anything) */
+	void clear() {
+		/* Clear prototype */
+		prototype->clear();
+	}
+
 	/* Get mean */
 	void print(std::ostream& out) const;
 
@@ -132,9 +165,6 @@ public:
 		delete prototype;
 	}
 };
-
-/* Output surface information */
-std::ostream& operator<<(std::ostream& out, const Tally& q);
 
 /* Tally container (thread-safe) */
 class TallyContainer {
@@ -148,6 +178,15 @@ class TallyContainer {
 	RequestChildMutex child_mutex;
 
 public:
+	TallyContainer() {/* */}
+
+	friend class boost::serialization::access;
+    template<class Archive>
+    /* Serialize value on the child tally */
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & tallies;
+    }
 
 	/* Get child tallies */
 	std::vector<ChildTally*>& getChildTallies();
@@ -155,7 +194,7 @@ public:
 	/* Set child tallies */
 	void setChildTallies(std::vector<ChildTally*>& tally_container);
 
-	/* Push a tally into the conatiner */
+	/* Push a tally into the container */
 	void pushTally(Tally* tally) {
 		tallies.push_back(tally);
 	}
@@ -177,8 +216,17 @@ public:
 
 	/* ---- Operations over the container */
 
-	/* Accumulate tally using a normalization factor */
+	/* Reduce values (i.e. clear all the child and accumulate values on the tallies)*/
+	void reduce();
+
+	/* Accumulate tally using a normalization factor (this only make sense to be called after reducing the tallies) */
 	void accumulate(double norm);
+
+	/* Join with another tally container */
+	void join(TallyContainer& right);
+
+	/* Clear container */
+	void clear();
 
 	~TallyContainer();
 };

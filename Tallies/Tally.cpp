@@ -73,7 +73,7 @@ void TallyContainer::setChildTallies(vector<ChildTally*>& tally_container) {
 	child_tallies.push_back(&tally_container);
 }
 
-void TallyContainer::accumulate(double norm) {
+void TallyContainer::reduce() {
 	/* Accumulate tallies (using initial source weight as a normalization factor) */
 	for(size_t i = 0 ; i < tallies.size() ; ++i) {
 		/* Join each tally */
@@ -81,8 +81,25 @@ void TallyContainer::accumulate(double norm) {
 			/* Join with parent tally */
 			tallies[i]->join((*child_tallies[j])[i]);
 		}
-		tallies[i]->accumulate(norm);
 	}
+}
+
+void TallyContainer::accumulate(double norm) {
+	/* Accumulate tallies (using initial source weight as a normalization factor) */
+	for(size_t i = 0 ; i < tallies.size() ; ++i)
+		/* Accumulate each tally */
+		tallies[i]->accumulate(norm);
+}
+
+void TallyContainer::clear() {
+	for(size_t i = 0 ; i < tallies.size() ; ++i)
+		/* Accumulate each tally */
+		tallies[i]->clear();
+}
+
+void TallyContainer::join(TallyContainer& right) {
+	for(size_t i = 0 ; i < tallies.size() ; ++i)
+		tallies[i]->join(right.tallies[i]);
 }
 
 TallyContainer::~TallyContainer() {
