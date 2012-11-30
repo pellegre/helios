@@ -35,7 +35,8 @@ namespace Helios {
 KeffSimulation::KeffSimulation(const McEnvironment* environment, size_t local_particles, size_t stride) :
 		Simulation(environment), keff(1.0), stride(stride), fission_bank(local_particles), current_type(INACTIVE) {/* */}
 
-bool nonVoid(const Material*& material, Particle& particle, const Cell*& cell) {
+bool KeffSimulation::voidTransport(const Material*& material, Particle& particle, const Cell*& cell) {
+	/* Check the material pointer */
 	while(not material) {
 		/* Initialize some auxiliary variables */
 		Surface* surface(0);  /* Surface pointer */
@@ -51,11 +52,13 @@ bool nonVoid(const Material*& material, Particle& particle, const Cell*& cell) {
 		/*  Cross the surface (checking boundary conditions) */
 		bool outside = not surface->cross(particle,sense,cell);
 		assert(cell != 0);
+		/* Particle is outside the system */
 		if(outside) return false;
 
 		/* Update material */
 		material = cell->getMaterial();
 	}
+	/* Particle inside the system */
 	return true;
 }
 
@@ -87,7 +90,7 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 		const Material* material = cell->getMaterial();
 
 		/* Transport the particle until a non-void cell is found (checking boundary conditions) */
-		outside = not nonVoid(material, particle, cell);
+		outside = not voidTransport(material, particle, cell);
 		if(outside) {
 			estimate<LEAK>(tally_container, particle.wgt());
 			break;
@@ -116,7 +119,7 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 			/* 5.3 ---- Get material of the current cell (after crossing the surface) */
 			const Material* new_material = cell->getMaterial();
 			/* Transport the particle until a non-void cell is found (checking boundary conditions) */
-			outside = not nonVoid(new_material, particle, cell);
+			outside = not voidTransport(new_material, particle, cell);
 			if(outside) break;
 
 			/* 5.4 ---- Get next surface's distance */

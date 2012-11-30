@@ -24,6 +24,8 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <unistd.h>
+
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
@@ -60,8 +62,8 @@ const char* Log::BOLDMAGENTA = "\033[1m\033[35m";
 const char* Log::BOLDCYAN = "\033[1m\033[36m";
 const char* Log::BOLDWHITE = "\033[1m\033[37m";
 
-const std::string Log::endl = RESETN;
-const std::string Log::crst = RESET;
+std::string Log::endl = RESETN;
+std::string Log::crst = RESET;
 
 /* Initialize color map */
 map<Log::Color,const char*> initColorMap() {
@@ -87,18 +89,64 @@ map<Log::Color,const char*> initColorMap() {
 	return m;
 }
 
-map<Log::Color,const char*> Log::color_map = initColorMap();
+/* Initialize color map */
+map<Log::Color,const char*> initNoColorMap() {
+	map<Log::Color,const char*> m;
+	m[Log::COLOR_RESET] = "";
+	m[Log::COLOR_RESETN] = "";
+	m[Log::COLOR_BLACK] = "";
+	m[Log::COLOR_RED] = "";
+	m[Log::COLOR_GREEN] = "";
+	m[Log::COLOR_YELLOW] = "";
+	m[Log::COLOR_BLUE] = "";
+	m[Log::COLOR_MAGENTA] = "";
+	m[Log::COLOR_CYAN] = "";
+	m[Log::COLOR_WHITE] = "";
+	m[Log::COLOR_BOLDBLACK] = "";
+	m[Log::COLOR_BOLDRED] = "";
+	m[Log::COLOR_BOLDGREEN] = "";
+	m[Log::COLOR_BOLDYELLOW] = "";
+	m[Log::COLOR_BOLDBLUE] = "";
+	m[Log::COLOR_BOLDMAGENTA] = "";
+	m[Log::COLOR_BOLDCYAN] = "";
+	m[Log::COLOR_BOLDWHITE] = "";
+	return m;
+}
 
-Log::Log() : messages(cout), oerror(cerr) {/* */}
+static map<Log::Color,const char*> with_color_map = initColorMap();
+static map<Log::Color,const char*> no_color_map = initNoColorMap();
+
+Log::Log() : messages(cout), oerror(cerr), rank(0), current_map(with_color_map) {/* */}
 
 /* Set output file */
 void Log::setOutput(const std::string& out_file) {
-	/* Open the output file */
-	logger.output.open(out_file.c_str());
-	if (!logger.output.is_open()) {
-        cerr << "[E] Error opening the output file (" + out_file + ") : " << strerror(errno) << endl;
-        exit(1);
-    }
+	if(logger.rank == 0) {
+		/* Set output file */
+		Log::msg() << left << "Output file set to " << out_file << Log::endl;
+		Log::msg() << Log::endl;
+		/* Open the output file */
+		logger.output.open(out_file.c_str());
+		if (!logger.output.is_open()) {
+			error() << "Error opening the output file (" + out_file + ") : " << strerror(errno) << endl;
+	        exit(1);
+	    }
+	}
+}
+
+void Log::putColor() {
+	logger.current_map = with_color_map;
+	endl = string(RESETN);
+	crst = string(RESET);
+}
+
+void Log::nonColor() {
+	logger.current_map = no_color_map;
+	endl = "\n";
+	crst = "";
+}
+
+void Log::closeOutput() {
+	logger.output.close();
 }
 
 std::string Log::ident(size_t n) {
@@ -108,32 +156,48 @@ std::string Log::ident(size_t n) {
 }
 
 std::ostream& Log::msg() {
+	if(isatty(fileno(stdout))) logger.putColor();
+	else logger.nonColor();
 	logger.messages << ident(0);
 	return logger.messages;
 }
 
+std::ofstream& Log::fout() {
+	return logger.output;
+}
+
 std::ostream& Log::bmsg() {
-	logger.messages << BOLDWHITE << ident(0);
+	if(isatty(fileno(stdout))) logger.putColor();
+	else logger.nonColor();
+	logger.messages << logger.current_map[COLOR_BOLDWHITE] << ident(0);
 	return logger.messages;
 }
 
 std::ostream& Log::warn() {
-	logger.oerror << BOLDYELLOW << ident(0) << "[W] " << RESET << YELLOW;
+	if(isatty(fileno(stderr))) logger.putColor();
+	else logger.nonColor();
+	logger.oerror << logger.current_map[COLOR_BOLDYELLOW] << ident(0) << "[W] " << logger.current_map[COLOR_RESET] << logger.current_map[COLOR_YELLOW];
 	return logger.oerror;
 }
 
 std::ostream& Log::error() {
-	logger.oerror << BOLDRED << ident(0) << "[E] " << RESET << RED;
+	if(isatty(fileno(stderr))) logger.putColor();
+	else logger.nonColor();
+	logger.oerror << logger.current_map[COLOR_BOLDRED] << ident(0) << "[E] " << logger.current_map[COLOR_RESET] << logger.current_map[COLOR_RED];
 	return logger.oerror;
 }
 
 std::ostream& Log::ok() {
-	logger.messages << ident(0) << RESET << CYAN;
+	if(isatty(fileno(stdout))) logger.putColor();
+	else logger.nonColor();
+	logger.messages << ident(0) << logger.current_map[COLOR_RESET] << logger.current_map[COLOR_CYAN];
 	return logger.messages;
 }
 
 std::ostream& Log::bok() {
-	logger.messages << ident(0) << RESET << BOLDCYAN;
+	if(isatty(fileno(stdout))) logger.putColor();
+	else logger.nonColor();
+	logger.messages << ident(0) << logger.current_map[COLOR_RESET] << logger.current_map[COLOR_BOLDCYAN];
 	return logger.messages;
 }
 
@@ -145,31 +209,59 @@ std::string Log::date()  {
 	return string(asctime(timeinfo));
 }
 
-void Log::setRank(int rank) {
-	if(rank != 0) {
+void Log::setRank(int new_rank) {
+	logger.rank = new_rank;
+	if(logger.rank != 0) {
 		std::cout.setstate(std::ios::failbit);
+		std::cerr.setstate(std::ios::failbit);
+		logger.output.setstate(std::ios::failbit);
 	}
 }
 
-void Log::header(std::ostream& out) {
-	logger.messages << endl;
-	/* Print header */
-	logger.messages << BOLDBLUE << ident(0) <<"   / / / /__  / (_)___  _____  __    __"    << endl;
-	logger.messages << BOLDBLUE << ident(0) <<"  / /_/ / _ \\/ / / __ \\/ ___/_/ /___/ /_" << endl;
-	logger.messages << BOLDBLUE << ident(0) <<" / __  /  __/ / / /_/ (__  )_  __/_  __/"   << endl;
-	logger.messages << BOLDBLUE << ident(0) <<"/_/ /_/\\___/_/_/\\____/____/ /_/   /_/"    << crst << endl << endl;
-	/* General information */
-	logger.messages << ident(0) << BOLDWHITE << "A Continuous-energy Monte Carlo Reactor Physics Code" << endl << endl;
-	logger.messages << ident(0) << " - Version    : " << PROJECT_VERSION << endl;
-	logger.messages << ident(0) << " - Contact    : Esteban Pellegrino (pellegre@ib.cnea.gov.ar) " << endl;
-	/* Build related stuff */
-	logger.messages << ident(0) << " - Compiler   : " << COMPILER_NAME << endl;
-	logger.messages << ident(0) << " - Build type : " << BUILD_TYPE << endl;
-	logger.messages << ident(0) << " - Build date : " << COMPILATION_DATE << " (commit " << GIT_SHA1 << ")" << endl;
-	logger.messages << ident(0) << " - Boost      : Version " << BOOST_LIB_VERSION << endl;
-	logger.messages << ident(0) << " - Intel TBB  : Version " << TBB_VERSION_MAJOR << "." << TBB_VERSION_MINOR << endl;
-	/* Print when the calculation began */
-	logger.messages << endl << BOLDWHITE << ident(0) << "Begin calculation on " << date() << endl;
+void Log::header(std::ostream& out, bool output_color) {
+	if(output_color) {
+
+		out << endl;
+		/* Print header */
+		out << logger.current_map[COLOR_BOLDBLUE] << ident(0) <<"   / / / /__  / (_)___  _____  __    __"    << endl;
+		out << logger.current_map[COLOR_BOLDBLUE] << ident(0) <<"  / /_/ / _ \\/ / / __ \\/ ___/_/ /___/ /_" << endl;
+		out << logger.current_map[COLOR_BOLDBLUE] << ident(0) <<" / __  /  __/ / / /_/ (__  )_  __/_  __/"   << endl;
+		out << logger.current_map[COLOR_BOLDBLUE] << ident(0) <<"/_/ /_/\\___/_/_/\\____/____/ /_/   /_/"    << crst << endl << endl;
+		/* General information */
+		out << ident(0) << logger.current_map[COLOR_BOLDWHITE] << "A Continuous-energy Monte Carlo Reactor Physics Code" << endl << endl;
+		out << ident(0) << " - Version    : " << PROJECT_VERSION << endl;
+		out << ident(0) << " - Contact    : Esteban Pellegrino (pellegre@ib.cnea.gov.ar) " << endl;
+		/* Build related stuff */
+		out << ident(0) << " - Compiler   : " << COMPILER_NAME << endl;
+		out << ident(0) << " - Build type : " << BUILD_TYPE << endl;
+		out << ident(0) << " - Build date : " << COMPILATION_DATE << " (commit " << GIT_SHA1 << ")" << endl;
+		out << ident(0) << " - Boost      : Version " << BOOST_LIB_VERSION << endl;
+		out << ident(0) << " - Intel TBB  : Version " << TBB_VERSION_MAJOR << "." << TBB_VERSION_MINOR << endl;
+		/* Print when the calculation began */
+		out << endl << logger.current_map[COLOR_BOLDWHITE] << ident(0) << "Begin calculation on " << date() << endl;
+
+	} else {
+
+		out << std::endl;
+		/* Print header */
+		out << ident(0) <<"   / / / /__  / (_)___  _____  __    __"    << std::endl;
+		out << ident(0) <<"  / /_/ / _ \\/ / / __ \\/ ___/_/ /___/ /_" << std::endl;
+		out << ident(0) <<" / __  /  __/ / / /_/ (__  )_  __/_  __/"   << std::endl;
+		out << ident(0) <<"/_/ /_/\\___/_/_/\\____/____/ /_/   /_/"    << std::endl << std::endl << std::endl;
+		/* General information */
+		out << ident(0) << "A Continuous-energy Monte Carlo Reactor Physics Code" << std::endl << std::endl;
+		out << ident(0) << " - Version    : " << PROJECT_VERSION << std::endl;
+		out << ident(0) << " - Contact    : Esteban Pellegrino (pellegre@ib.cnea.gov.ar) " << std::endl;
+		/* Build related stuff */
+		out << ident(0) << " - Compiler   : " << COMPILER_NAME << std::endl;
+		out << ident(0) << " - Build type : " << BUILD_TYPE << std::endl;
+		out << ident(0) << " - Build date : " << COMPILATION_DATE << " (commit " << GIT_SHA1 << ")" << std::endl;
+		out << ident(0) << " - Boost      : Version " << BOOST_LIB_VERSION << std::endl;
+		out << ident(0) << " - Intel TBB  : Version " << TBB_VERSION_MAJOR << "." << TBB_VERSION_MINOR << std::endl;
+		/* Print when the calculation began */
+		out << std::endl << ident(0) << "Begin calculation on " << date() << std::endl;
+
+	}
 }
 
 Log::~Log() {

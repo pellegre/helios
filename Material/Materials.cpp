@@ -89,7 +89,7 @@ Materials::Materials(const vector<McObject*>& matDefinitions, const McEnvironmen
 	}
 }
 
-void Materials::printMaterials(std::ostream& out) const {
+void Materials::print(std::ostream& out) const {
 	vector<Material*>::const_iterator it_mat = materials.begin();
 	for(; it_mat != materials.end() ; it_mat++) {
 		out << *(*it_mat) << endl;

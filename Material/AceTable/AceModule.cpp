@@ -354,11 +354,11 @@ std::vector<AceIsotope*> AceModule::getObject<AceIsotope>(const UserId& id) cons
 	}
 }
 
-void AceModule::printIsotopes(std::ostream& out) const {
-	out << "Ace Module  " << endl;
+void AceModule::print(std::ostream& out) const {
 	out << " - Master grid size :" << master_grid->size() << endl;
 	for(map<IsotopeId,AceIsotope*>::const_iterator it = isotope_map.begin() ; it != isotope_map.end() ; ++it)
 		out << " - " << *(*it).second << endl;
+	out << endl;
 }
 
 AceModule::~AceModule() {

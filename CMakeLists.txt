@@ -204,7 +204,7 @@ target_link_libraries(plottermc++ helios ${Boost_PROGRAM_OPTIONS_LIBRARY} ${PNG_
 
 add_executable(helios++ Main.cpp)
 
-target_link_libraries(helios++ helios)
+target_link_libraries(helios++ helios ${Boost_PROGRAM_OPTIONS_LIBRARY})
 
 # ---- Install stuff
 

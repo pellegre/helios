@@ -116,7 +116,7 @@ namespace Helios {
 		std::vector<Object*> getObject(const UserId& id) const;
 
 		/* Print settings */
-		void printSettings(std::ostream& out) const;
+		void print(std::ostream& out) const;
 
 		/* Check if some setting is loaded */
 		bool isSet(const std::string& setting) const {

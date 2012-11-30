@@ -103,10 +103,10 @@ void Settings::pushSetting(const SettingsObject* object) {
 }
 
 /* Print settings */
-void Settings::printSettings(std::ostream& out) const {
-	out << "  - Settings " << endl;
+void Settings::print(std::ostream& out) const {
 	for(map<UserId, Setting*>::const_iterator it = settings_map.begin() ; it != settings_map.end() ; ++it)
 		out << "   " << *(*it).second << endl;
+	out << endl;
 }
 
 Setting* Settings::getSetting(const UserId& name) const {

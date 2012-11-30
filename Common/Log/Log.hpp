@@ -89,28 +89,34 @@ public:
 	static void setRank(int rank);
 
 	/* Write stuff */
-	static std::ostream& msg();   /* This is a ordinary message printed into the screen */
+	static std::ostream& msg();    /* This is a ordinary message printed into the screen */
 	static std::ostream& bmsg();   /* This is a ordinary message printed into the screen */
-	static std::ostream& warn();  /* A warning printed in the error channel */
-	static std::ostream& error(); /* Error message */
-	static std::ostream& ok();    /* O.K. message, printed on the screen */
-	static std::ostream& bok();   /* O.K. message, printed on the screen (bold) */
+	static std::ostream& warn();   /* A warning printed in the error channel */
+	static std::ostream& error();  /* Error message */
+	static std::ostream& ok();     /* O.K. message, printed on the screen */
+	static std::ostream& bok();    /* O.K. message, printed on the screen (bold) */
+	static std::ofstream& fout();  /* Output file */
+
+	/* Close output file */
+	static void closeOutput();
 
 	/* A lot of cool stuff to print on the screen / output */
 
 	/* Indentation */
 	static std::string ident(size_t n = 0);
 	/* End of line */
-	static const std::string endl;
+	static std::string endl;
 	/* Reset color on output stream */
-	static const std::string crst;
+	static std::string crst;
 	 /* Print date */
 	static std::string date();
 	/* Print program header */
-	static void header(std::ostream& out = std::cout);
+	static void header(std::ostream& out = std::cout, bool output_color = true);
 	/* Get a color out stream (to standard output) */
 	template<Color _color> static std::ostream& color() {
-		logger.messages << color_map[_color];
+		if(isatty(fileno(stdout))) logger.putColor();
+		else logger.nonColor();
+		logger.messages << logger.current_map[_color];
 		return logger.messages;
 	}
 
@@ -129,6 +135,10 @@ private:
 	Log(const Log& log);
 	Log& operator=(const Log& log);
 
+	/* Switch from color to non-color output */
+	void putColor();
+	void nonColor();
+
 	/* ---- Stream channels */
 
 	/* General messages - this writes to the "console" */
@@ -137,9 +147,10 @@ private:
 	std::ostream& oerror;
 	/* Output file */
 	std::ofstream output;
-
+	/* Rank of this process */
+	int rank;
 	/* Map of colors */
-	static std::map<Log::Color,const char*> color_map;
+	std::map<Log::Color,const char*>& current_map;
 
 };
 

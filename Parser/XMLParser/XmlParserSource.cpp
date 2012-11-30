@@ -204,7 +204,7 @@ static SourceObject* samplerAttrib(TiXmlElement* pElement) {
 	static XmlParser::XmlAttributes surAttrib(vector<string>(required, required + 2), vector<string>(optional, optional + 4));
 	XmlParser::AttributeValue<string> dirAttrib("dir","1 0 0");
 	XmlParser::AttributeValue<CellId> cellAttrib("cell","0");
-	XmlParser::AttributeValue<double> energyAttrib("energy",1.0);
+	XmlParser::AttributeValue<string> energyAttrib("energy","1.0");
 
 	XmlParser::AttribMap mapAttrib = dump_attribs(pElement);
 	/* Check user input */
@@ -214,7 +214,7 @@ static SourceObject* samplerAttrib(TiXmlElement* pElement) {
 	SamplerId id = fromString<DistributionId>(mapAttrib["id"]);
 	Coordinate pos = getBlitzArray<double>(mapAttrib["pos"]);
 	Direction dir = getBlitzArray<double>(dirAttrib.getString(mapAttrib));
-	double energy = energyAttrib.getValue(mapAttrib);
+	double energy = fromString<double>(energyAttrib.getString(mapAttrib));
 	vector<DistributionId> distIds = getContainer<DistributionId>(mapAttrib["dist"]);
 	CellId cell = cellAttrib.getString(mapAttrib);
 	/* Return surface definition */

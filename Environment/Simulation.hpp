@@ -147,6 +147,9 @@ protected:
 		if(current_type == ACTIVE)
 			tally_container[Index]->acc(value);
 	}
+
+	/* Transport a particle through void cells until a material is found or the particle get out of the system */
+	bool voidTransport(const Material*& material, Particle& particle, const Cell*& cell);
 };
 
 template<class ParallelPolicy>

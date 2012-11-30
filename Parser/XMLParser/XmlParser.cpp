@@ -124,7 +124,8 @@ void XmlParser::parseInputFile(const string& file) {
 		doc.LoadFile();
 		rootNode(doc.GetTiXmlPointer(),file);
 	} catch(ticpp::Exception& ex) {
-		throw(ParserError(ex.what()));
+		throw(ParserError(ex.details.description + " at line " +
+				toString(ex.details.line) + " in column " + toString(ex.details.column)));
 	}
 }
 

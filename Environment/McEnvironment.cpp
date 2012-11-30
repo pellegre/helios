@@ -143,14 +143,25 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 	if(world.rank() != 0)
 		local_stride = accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + world.rank(), 0);
 
-	/* Create simulation */
+	/* Print data of the simulation */
 	Log::bok() << "Launching simulation " << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - RNG seed                : " << seed << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - Number of particles     : " << neutrons << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - Number of active cycles : " << cycles << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - Number of MPI nodes     : " << nodes << Log::endl;
 	Log::msg() << left << Log::ident(1) << " - Multithreading          : " << multithread << Log::endl;
+	Log::msg() << Log::endl;
 
+	/* Print simulation data on the output file */
+	Log::printLine(Log::fout(), "*");
+	Log::fout() << endl << endl << "[#] Simulation" << endl << endl;
+	Log::fout() << " - RNG seed                : " << seed << endl;
+	Log::fout() << " - Number of particles     : " << neutrons << endl;
+	Log::fout() << " - Number of active cycles : " << cycles << endl;
+	Log::fout() << " - Number of MPI nodes     : " << nodes << endl;
+	Log::fout() << " - Multithreading          : " << multithread << endl;
+
+	/* Create simulation */
 	if(multithread == "tbb")
 		simulation = new ParallelKeffSimulation<IntelTbb>(this, local_particles, local_stride);
 	else if(multithread == "omp")
@@ -180,9 +191,6 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 	tallies.pushTally(new Tally("keff (col)"));
 	/* Track length KEFF */
 	tallies.pushTally(new Tally("keff (trk)"));
-
-	/* Start timing to get total elapsed time */
-	mpi::timer total_time;
 
 	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
 
@@ -223,6 +231,7 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 
 	}
 
+	double average_time(0.0);
 	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
 		/* Initialize timer for the cycle */
 		mpi::timer cycle_time;
@@ -290,17 +299,30 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + world.rank(), 0));
 
 		if (world.rank() == 0) {
+			double time_elapsed = cycle_time.elapsed();
 			/* Print time on master node */
 			Log::msg() << Log::endl;
-			Log::msg() << "Time elapsed in this cycle : " << cycle_time.elapsed() << " seconds " << Log::endl;
+			Log::msg() << "Time elapsed in this cycle : " << time_elapsed << " seconds " << Log::endl;
 			Log::msg() << Log::endl;
+			/* Accumulate average time */
+			average_time += time_elapsed;
 		}
 	}
 
-	/* Print total time on master node */
 	if (world.rank() == 0) {
-		Log::msg() << Log::endl;
-		Log::msg() << Log::ident(0) << "Total time elapsed : " << total_time.elapsed() << " seconds " << Log::endl;
+		/* Print data on console */
+		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << "End simulation on " << Log::date() << Log::endl;
+		Log::msg() << left << "Average time per cycle : " << average_time / cycles << " seconds " << Log::endl;
+
+		/* Put final estimation on output file */
+		Log::fout() << endl << "End simulation on " << Log::date() << endl;
+		Log::fout() << "Average time per cycle : " << average_time / cycles << " seconds " << endl;
+		Log::fout() << endl << "Final estimation " << endl << endl;
+		/* Print tallies (only on master) */
+		for(TallyContainer::const_iterator it = tallies.begin() ; it != tallies.end() ; ++it) {
+			(*it)->print(Log::fout());
+			Log::fout() << endl;
+		}
 	}
 
 	delete simulation;

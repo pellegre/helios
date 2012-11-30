@@ -98,7 +98,7 @@ namespace Helios {
 		}
 
 		/* Print a list of materials on the container */
-		void printMaterials(std::ostream& out) const;
+		void print(std::ostream& out) const;
 
 		virtual ~Materials();
 	};

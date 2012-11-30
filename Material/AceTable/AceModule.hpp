@@ -189,7 +189,7 @@ namespace Helios {
 		std::vector<Object*> getObject(const UserId& id) const;
 
 		/* Print descriptions of each isotope and grid information */
-		void printIsotopes(std::ostream& out) const;
+		void print(std::ostream& out) const;
 
 		/* Get isotope map */
 		std::map<IsotopeId,AceIsotope*> getIsotopeMap() const {return isotope_map;}
