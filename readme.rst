@@ -105,10 +105,15 @@ You will need to solve some dependencies before compiling Helios :
 When you have all this installed in your system, to compile Helios you should execute:
 
 $ git clone https://github.com/pellegre/helios.git
+
 $ cd helios
+
 $ mkdir Build
+
 $ cd Build
+
 $ cmake .. # You need to install cmake too – sudo apt-get install cmake
+
 $ make && sudo make install 
 
 This will install helios++ and plottermc++ (a simple app to generate PNG files 
