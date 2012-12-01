@@ -95,12 +95,12 @@ How to compile
 
 You will need to solve some dependencies before compiling Helios :
 
-1 - Tina's Random Number Generator Library - http://numbercrunch.de/trng/
-2 - Blitz++ - http://blitz.sourceforge.net/
-3 - Boost libraries (program_options mpi serialization). On debian based distros  you can install all boost components executing “sudo apt-get install libboost-all-dev” 
-4 - Some MPI implementation (I recommend to use openmpi because works well with boost mpi). “sudo apt-get install libopenmpi-dev libopenmpi1.3 openmpi-bin openmpi-common”
-5 - Intel Tbb - http://threadingbuildingblocks.org/
-6 - OpenMP-capable compiler
+1) Tina's Random Number Generator Library - http://numbercrunch.de/trng/
+2) Blitz++ - http://blitz.sourceforge.net/
+3) Boost libraries (program_options mpi serialization). On debian based distros  you can install all boost components executing “sudo apt-get install libboost-all-dev” 
+4) Some MPI implementation (I recommend to use openmpi because works well with boost mpi). “sudo apt-get install libopenmpi-dev libopenmpi1.3 openmpi-bin openmpi-common”
+5) Intel Tbb - http://threadingbuildingblocks.org/
+6) OpenMP-capable compiler
 
 When you have all this installed in your system, to compile Helios you should execute:
 
