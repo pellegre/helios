@@ -102,7 +102,7 @@ You will need to solve some dependencies before compiling Helios :
 5) Intel Tbb - http://threadingbuildingblocks.org/
 6) OpenMP-capable compiler
 
-When you have all this installed in your system, to compile Helios you should execute:
+When you have all this installed in your system, you should execute:
 
 $ git clone https://github.com/pellegre/helios.git
 
