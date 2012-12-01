@@ -38,7 +38,7 @@ Helios layout
 
 Helios contains a few modules:
 
-[*] Geometry module: Is some kind of Mediator between geometric objects (cells, 
+* Geometry module: Is some kind of Mediator between geometric objects (cells, 
 surfaces, lattices, pins, etc). Also each geometric object has its own Factory 
 to encapsulates the knowledge of which object subclass should create and moves 
 this knowledge out of the rest of the system (for example, there are surfaces 
@@ -56,13 +56,13 @@ recursion. The geometric module also keeps track of this operations and provides
 a way to the “user / client” to access cells/surfaces on different levels in the 
 same way than MCNP (i.e. 1<3<4[2,3,0]). 
 
-[*] Materials module: Is a very simple Mediator between materials and isotopes 
+* Materials module: Is a very simple Mediator between materials and isotopes 
 (although there is no need to have isotopes on a material, for example, 
 macroscopic cross sections are supported by Helios). The most important task of 
 this module is to provide a centralized place for other module to look for 
 materials created for a specific problem.
 
-[*] ACE module: It was a big dilemma for me whether or not to expose ACE isotopes 
+* ACE module: It was a big dilemma for me whether or not to expose ACE isotopes 
 as a module. At first, I wanted to keep within a single module (Materials module) 
 everything related to materials and isotopes. But let's face it, ACE tables play 
 a major role in neutron MC, so they deserve their own module :-). From this 
@@ -83,7 +83,7 @@ problem  (this avoid a big sub-classing required to combine all ACE energy laws,
 mu laws, CM-LAB frame transformation and NU samplers). 
 Currently, Helios supports all ACE tables distributed with serpent.
 
-[*] Source module: Source modeling on a MC code is a very important task 
+* Source module: Source modeling on a MC code is a very important task 
 (especially for fixed source calculations). Helios does not support fixed 
 source calculations ATM, but eventually it will. In Helios you can have can have 
 as many sources as you want, each of which is composed by different distributions 
@@ -100,7 +100,7 @@ any object that have a position and support a translation (such as sources,
 universes, cells, surfaces...) you can create a lattice of sources (this is very 
 useful to model the initial source of a KEFF problem with a lot of “fuel pins”).
 
-[*] Tally module: Coming Soon! :-p I'm still trying to figure it out what is the 
+* Tally module: Coming Soon! :-p I'm still trying to figure it out what is the 
 best way to put tallies in the current system. Since parallelism in Helios is 
 completely transparent to the simulation (is handled as a policy too) you can 
 combine MPI + OpenMP + IntelTbb + (hopefully CUDA + thrust in the future) in any 
@@ -124,8 +124,8 @@ It centralize the control and promotes loose coupling between modules. This mean
 that the internal representation of each module (and the internal objects) can 
 vary independently without propagating those changes to the “outside world”. As 
 an example, the simulation “routine” in Helios is exactly the same no matter if 
-the material is defined by macroscopic cross sections or with ACE isotopes (and
- will be the same if any other neutron-matter interaction representation is 
+the material is defined by macroscopic cross sections or with ACE isotopes (and 
+will be the same if any other neutron-matter interaction representation is 
 added on the future).
 
 The goal of design patterns is to isolate changes in the code. This is 
@@ -159,8 +159,7 @@ $ helios++ --output file.output input1.xml input2.xml ... inputN.xml
 
 Or with MPI:
 
-$ mpiexec.openmpi -n 4 -machinefile machine -x LD_LIBRARY_PATH helios++ \ 
-  --output file.output input1.xml input2.xml … inputN.xml
+$ mpiexec.openmpi -n 4 -machinefile machine -x LD_LIBRARY_PATH helios++ --output file.output input1.xml input2.xml … inputN.xml
 
 Helios use a combination of MPI + shared memory paradigm. It has two levels of 
 parallelism: node-parallelism (MPI) + intranode-parallelism (OpenMp or IntelTbb, 
@@ -179,13 +178,8 @@ available resources in the node in the best way possible. This is accomplished
 with task based parallelism. This execution configuration is better for two main 
 reasons:
 
-* Task based parallelism is better suited than a paradigm where threads (or 
-processes) are mapped to logical tasks. This is true on a neutron MC simulation, 
-because the computational load of a set histories could be very different from 
-another set.
-* RAM memory is not multiplied by the number of MPI processes inside each node. 
-The cross sections tables, geometry, sources, etc, are shared by the “threads” 
-whithin the node.
+* Task based parallelism is better suited than a paradigm where threads (or  processes) are mapped to logical tasks. This is true on a neutron MC simulation,  because the computational load of a set histories could be very different from  another set.
+* RAM memory is not multiplied by the number of MPI processes inside each node.  The cross sections tables, geometry, sources, etc, are shared by the “threads”  whithin the node.
 
 I'll be adding new benchmarks / examples on this repository:
 
@@ -236,10 +230,8 @@ You will need to solve some dependencies before compiling Helios :
 
 1 - Tina's Random Number Generator Library - http://numbercrunch.de/trng/
 2 - Blitz++ - http://blitz.sourceforge.net/
-3 - Boost libraries (program_options mpi serialization). On debian based distros 
-    you can install all boost components executing “sudo apt-get install libboost-all-dev” 
-4 - Some MPI implementation (I recommend to use openmpi because works well with 
-    boost mpi). “sudo apt-get install libopenmpi-dev libopenmpi1.3 openmpi-bin openmpi-common”
+3 - Boost libraries (program_options mpi serialization). On debian based distros  you can install all boost components executing “sudo apt-get install libboost-all-dev” 
+4 - Some MPI implementation (I recommend to use openmpi because works well with boost mpi). “sudo apt-get install libopenmpi-dev libopenmpi1.3 openmpi-bin openmpi-common”
 5 - Intel Tbb - http://threadingbuildingblocks.org/
 6 - OpenMP-capable compiler
 
