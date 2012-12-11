@@ -28,6 +28,7 @@
 #ifndef MCENVIRONMENT_HPP_
 #define MCENVIRONMENT_HPP_
 
+#include <boost/mpi/environment.hpp>
 #include <boost/mpi/communicator.hpp>
 
 #include <string>
@@ -63,6 +64,9 @@ namespace Helios {
 	class McEnvironment {
 
 	public:
+
+		/* Constructor from a parser and command line argument */
+		McEnvironment(int argc, char **argv, Parser* parser = 0);
 
 		/* Constructor from a parser */
 		McEnvironment(Parser* parser = 0);
@@ -111,6 +115,12 @@ namespace Helios {
 		Module* getModule() const;
 
 		/*
+		 * Check whether or not a module is loaded into the environment.
+		 */
+		template<class Module>
+		bool isModuleSet() const;
+
+		/*
 		 * Get a collection of objects managed by some module (referenced with an user id). If the module
 		 * or the object is not present on the system, an exception will be thrown.
 		 */
@@ -144,7 +154,7 @@ namespace Helios {
 		 * problem. It will thrown an exception if some settings required to run a simulation
 		 * are missing on the problem (i.e. the environment is not sane to execute a MC simulation).
 		 */
-		void simulate(boost::mpi::communicator& world) const;
+		void simulate() const;
 
 		/* Register a module factory */
 		void registerFactory(ModuleFactory* factory) {
@@ -169,6 +179,9 @@ namespace Helios {
 
 		/* Parser pointer */
 		Parser* parser;
+
+		/* MPI communicator on this environment */
+		boost::mpi::communicator comm;
 	};
 
 	template<class Module>
@@ -182,6 +195,16 @@ namespace Helios {
 			return dynamic_cast<Module*>(it->second);
 		else
 			throw(GeneralError("The definition of the module *" + module + "* is missing on the input"));
+	}
+
+	template<class Module>
+	bool McEnvironment::isModuleSet() const {
+		/* Get the module name (all modules should have this static function) */
+		std::string module = Module::name();
+		/* Find on map */
+		std::map<std::string,McModule*>::const_iterator it = module_map.find(module);
+		/* Return module */
+		return(it != module_map.end());
 	}
 
 	template<class Module>

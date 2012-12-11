@@ -37,6 +37,31 @@ namespace mpi = boost::mpi;
 
 namespace Helios {
 
+McEnvironment::McEnvironment(int argc, char **argv, Parser* parser) : parser(parser) {
+	/* Static instances of MPI environment and communicator */
+	static mpi::environment env(argc, argv);
+	static mpi::communicator world;
+	/* Set communicator */
+	comm = world;
+	/* Set rank on the logger */
+	Log::setRank(comm.rank());
+
+	/* Register the module factories */
+	registerFactory(new SettingsFactory(this));
+	registerFactory(new MaterialsFactory(this));
+	registerFactory(new AceFactory(this));
+	registerFactory(new GeometryFactory(this));
+	registerFactory(new SourceFactory(this));
+
+	/* Add some common default values for some settings */
+	pushObject(new SettingsObject("max_source_samples", "100"));
+	pushObject(new SettingsObject("max_rng_per_history", "100000"));
+	pushObject(new SettingsObject("multithread", "tbb"));
+	pushObject(new SettingsObject("seed", "10"));
+	pushObject(new SettingsObject("energy_freegas_threshold", "400.0"));
+	pushObject(new SettingsObject("awr_freegas_threshold", "1.0"));
+}
+
 McEnvironment::McEnvironment(Parser* parser) : parser(parser) {
 	/* Register the module factories */
 	registerFactory(new SettingsFactory(this));
@@ -108,7 +133,7 @@ void McEnvironment::setup() {
 	setupModule<Source>();
 }
 
-void McEnvironment::simulate(boost::mpi::communicator& world) const {
+void McEnvironment::simulate() const {
 	/* Simulation pointer */
 	KeffSimulation* simulation(0);
 
@@ -124,24 +149,24 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 	long unsigned int seed = getSetting<long unsigned int>("seed","value");
 
 	/* Get number of MPI nodes */
-	size_t nodes = world.size();
+	size_t nodes = comm.size();
 
 	/* Divide number of particles */
 	size_t local_particles = neutrons / nodes;
 
 	/* Check non-integer division */
 	int extra_particles = neutrons % nodes;
-	if(world.rank() < extra_particles)
+	if(comm.rank() < extra_particles)
 		local_particles++;
 
 	/* Get extra particles from other node (to calculate the stride) */
 	std::vector<size_t> all_bank_sizes;
-	mpi::all_gather(world, local_particles, all_bank_sizes);
+	mpi::all_gather(comm, local_particles, all_bank_sizes);
 
 	/* Calculate local stride on the fission bank (calculating extra particles) */
 	size_t local_stride(0);
-	if(world.rank() != 0)
-		local_stride = accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + world.rank(), 0);
+	if(comm.rank() != 0)
+		local_stride = accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + comm.rank(), 0);
 
 	/* Print data of the simulation */
 	Log::bok() << "Launching simulation " << Log::endl;
@@ -201,7 +226,7 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 
 		/* Reduce total population */
 		double total_population(0.0);
-		mpi::all_reduce(world, local_population, total_population, std::plus<double>());
+		mpi::all_reduce(comm, local_population, total_population, std::plus<double>());
 
 		/* Update information (preparing for next cycle). The fission bank gets updated here with the new particles */
 		simulation->update(total_population, neutrons);
@@ -210,16 +235,16 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 		size_t local_bank_size = simulation->bankSize();
 
 		/* Gather fission bank size to create new strides (this is the number of particles at the end of this cycle) */
-		mpi::all_gather(world, local_bank_size, all_bank_sizes);
+		mpi::all_gather(comm, local_bank_size, all_bank_sizes);
 
 		/* Update number of particles */
 		neutrons = accumulate(all_bank_sizes.begin(), all_bank_sizes.end(), 0);
 
 		/* Update stride of the current local simulation */
-		if(world.rank() == 0)
+		if(comm.rank() == 0)
 			simulation->setStride(0);
 		else
-			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + world.rank(), 0));
+			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + comm.rank(), 0));
 
 		/* Get multiplication factor */
 		double keff = simulation->getKeff();
@@ -240,7 +265,7 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 		mpi::timer cycle_time;
 
 		/* Print information (on master node) */
-		if (world.rank() == 0) {
+		if (comm.rank() == 0) {
 			Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
 					<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
 		}
@@ -253,11 +278,11 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 		/* Reduce the tallies */
 		tallies.reduce();
 
-		if (world.rank() == 0) {
+		if (comm.rank() == 0) {
 			/* TODO - (this is *too* naive) Get all tallies from slaves */
-			for(int i = 1 ; i < world.size() ; ++i) {
+			for(int i = 1 ; i < comm.size() ; ++i) {
 				TallyContainer slave_tallies;
-				world.recv(i, 0, slave_tallies);
+				comm.recv(i, 0, slave_tallies);
 				tallies.join(slave_tallies);
 			}
 			/* Accumulate tallies on the master */
@@ -270,7 +295,7 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 			}
 		} else {
 			/* Send tally container to the master node */
-			world.send(0, 0, tallies);
+			comm.send(0, 0, tallies);
 			/* And clear it */
 			tallies.clear();
 		}
@@ -279,7 +304,7 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 
 		/* Reduce total population */
 		double total_population(0.0);
-		mpi::all_reduce(world, local_population, total_population, std::plus<double>());
+		mpi::all_reduce(comm, local_population, total_population, std::plus<double>());
 
 		/* Update information (preparing for next cycle). The fission bank gets updated here with the new particles */
 		simulation->update(total_population, neutrons);
@@ -288,7 +313,7 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 		size_t local_bank_size = simulation->bankSize();
 
 		/* Gather fission bank size to create new strides (this is the number of particles at the end of this cycle) */
-		mpi::all_gather(world, local_bank_size, all_bank_sizes);
+		mpi::all_gather(comm, local_bank_size, all_bank_sizes);
 
 		/* ---- Update internal data of the simulation */
 
@@ -296,12 +321,12 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 		neutrons = accumulate(all_bank_sizes.begin(), all_bank_sizes.end(), 0);
 
 		/* Update stride of the current local simulation */
-		if(world.rank() == 0)
+		if(comm.rank() == 0)
 			simulation->setStride(0);
 		else
-			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + world.rank(), 0));
+			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + comm.rank(), 0));
 
-		if (world.rank() == 0) {
+		if (comm.rank() == 0) {
 			/* Get tiem elapsed */
 			double time_elapsed = cycle_time.elapsed();
 
@@ -317,7 +342,7 @@ void McEnvironment::simulate(boost::mpi::communicator& world) const {
 		}
 	}
 
-	if (world.rank() == 0) {
+	if (comm.rank() == 0) {
 		/* Print data on console */
 		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << "End simulation on " << Log::date() << Log::endl;
 		Log::msg() << left << "Average time per cycle : " << average_time / cycles << " seconds " << Log::endl;

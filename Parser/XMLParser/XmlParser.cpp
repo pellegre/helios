@@ -95,7 +95,7 @@ void XmlParser::rootNode(TiXmlNode* pParent, const string& filename) {
 			/* Check node parser map */
 			if(it_root != root_map.end()) {
 				/* File name */
-				Log::msg() << left << Log::ident(1) << " - Reading node ";
+				Log::msg() << " - Reading node ";
 				Log::color<Log::COLOR_BOLDWHITE>() << setw(9) << element_value << Log::crst;
 				Log::msg()  << " from file " + filename << Log::endl;
 				/* Process node */
@@ -130,7 +130,6 @@ void XmlParser::parseInputFile(const string& file) {
 }
 
 XmlParser::XmlParser() {
-	Log::bok() << "Initializing XML Parser " << Log::endl;
 	root_map["geometry"] = &XmlParser::geoNode;
 	root_map["materials"] = &XmlParser::matNode;
 	root_map["sources"] = &XmlParser::srcNode;

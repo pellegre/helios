@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <signal.h>
 
 #include <boost/mpi.hpp>
-#include <boost/mpi/environment.hpp>
-#include <boost/mpi/communicator.hpp>
 #include <boost/program_options.hpp>
 
 #include <iostream>
@@ -60,13 +58,6 @@ int main(int argc, char **argv) {
 
 	/* Set the signal handler */
 	signal(SIGINT,ctrl_c);
-
-	/* Initialize MPI environment */
-	mpi::environment env(argc, argv);
-	mpi::communicator world;
-
-	/* Set rank on the logger */
-	Log::setRank(world.rank());
 
 	/* Map of command line values */
     po::variables_map vm;
@@ -133,26 +124,24 @@ int main(int argc, char **argv) {
 	/* Get output file name */
 	string output = vm["output"].as<string>();
 
-	/* Print general information on master node */
-	if(world.rank() == 0) {
-		/* Print header */
-		Log::header(Log::msg());
-
-		/* Open output file from the logger */
-		Log::setOutput(output);
-
-		/* Print header inside the output file */
-		Log::header(Log::fout(), false);
-	}
-
 	/* Parser (XML for now) */
 	Parser* parser = new XmlParser;
+
+	/* Environment */
+	McEnvironment environment(argc, argv, parser);
+
+	/* Print header */
+	Log::header(Log::msg());
+
+	/* Open output file from the logger */
+	Log::setOutput(output);
+
+	/* Print header inside the output file */
+	Log::header(Log::fout(), false);
 
 	/* Start timing to get total elapsed time */
 	mpi::timer total_time;
 
-	/* Environment */
-	McEnvironment environment(parser);
 	try {
 
 		/* Parse files, to get the information to create the environment */
@@ -162,29 +151,27 @@ int main(int argc, char **argv) {
 		environment.setup();
 
 		/* Once the problem is setup, print some stuff on the output file */
-		if(world.rank() == 0) {
-			Log::printLine(Log::fout(), "*");
-			Log::fout() << endl << endl << "[#] Materials module" << endl << endl;
-			environment.getModule<Materials>()->print(Log::fout());
+		Log::printLine(Log::fout(), "*");
+		Log::fout() << endl << endl << "[#] Materials module" << endl << endl;
+		environment.getModule<Materials>()->print(Log::fout());
 
-			/* ACE module may not be loaded on Macro-XS calculations */
-			try {
-				Log::printLine(Log::fout(), "*");
-				Log::fout() << endl << endl << "[#] Ace module" << endl << endl;
-				environment.getModule<AceModule>()->print(Log::fout());
-			} catch(exception& e) {/* */}
-
+		/* ACE module may not be loaded on Macro-XS calculations */
+		if(environment.isModuleSet<AceModule>()) {
 			Log::printLine(Log::fout(), "*");
-			Log::fout() << endl << endl << "[#] Source module" << endl << endl;
-			environment.getModule<Source>()->print(Log::fout());
-
-			Log::printLine(Log::fout(), "*");
-			Log::fout() << endl << endl << "[#] General settings" << endl << endl;
-			environment.getModule<Settings>()->print(Log::fout());
+			Log::fout() << endl << endl << "[#] Ace module" << endl << endl;
+			environment.getModule<AceModule>()->print(Log::fout());
 		}
 
+		Log::printLine(Log::fout(), "*");
+		Log::fout() << endl << endl << "[#] Source module" << endl << endl;
+		environment.getModule<Source>()->print(Log::fout());
+
+		Log::printLine(Log::fout(), "*");
+		Log::fout() << endl << endl << "[#] General settings" << endl << endl;
+		environment.getModule<Settings>()->print(Log::fout());
+
 		/* Launch simulation */
-		environment.simulate(world);
+		environment.simulate();
 
 	} catch(exception& error) {
 		/* Print error message and return */
@@ -192,15 +179,12 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	/* Print total time on master node */
-	if (world.rank() == 0) {
-		/* Final time on console */
-		Log::msg()  << left << "Total time elapsed     : " << total_time.elapsed() << " seconds " << Log::endl;
+	/* Final time on console */
+	Log::msg()  << left << "Total time elapsed     : " << total_time.elapsed() << " seconds " << Log::endl;
 
-		/* Final time on output file */
-		Log::fout() << endl;
-		Log::fout() << left << "Total time elapsed     : " << total_time.elapsed() << " seconds " << endl;
-	}
+	/* Final time on output file */
+	Log::fout() << endl;
+	Log::fout() << left << "Total time elapsed     : " << total_time.elapsed() << " seconds " << endl;
 
 	delete parser;
 	return 0;
