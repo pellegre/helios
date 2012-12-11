@@ -74,7 +74,7 @@ void TallyContainer::setChildTallies(vector<ChildTally*>& tally_container) {
 }
 
 void TallyContainer::reduce() {
-	/* Accumulate tallies (using initial source weight as a normalization factor) */
+	/* Accumulate tallies */
 	for(size_t i = 0 ; i < tallies.size() ; ++i) {
 		/* Join each tally */
 		for(size_t j = 0 ; j < child_tallies.size() ; ++j) {

@@ -161,6 +161,11 @@ namespace Helios {
 			factory_map[factory->getName()] = factory;
 		}
 
+		/* Get MPI communicator */
+		const boost::mpi::communicator& getCommunicator() const {
+			return comm;
+		}
+
 		virtual ~McEnvironment();
 
 	private:
