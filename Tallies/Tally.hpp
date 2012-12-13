@@ -92,14 +92,21 @@ public:
 
 /* Base class for tallies */
 class Tally {
+
+protected:
 	/* ID of the tally */
 	TallyId user_id;
 	/* Prototype of the child accumulator */
 	ChildTally* prototype;
-	/* Single accumulator */
-	Accumulator accum;
 
 public:
+
+	Tally() {/* */}
+
+	Tally(const TallyId& user_id) : user_id(user_id), prototype(0) {
+		/* Create child */
+		prototype = new ChildTally;
+	}
 
 	friend class boost::serialization::access;
     template<class Archive>
@@ -108,13 +115,6 @@ public:
     {
         ar & prototype;
     }
-
-	Tally() {/* */}
-
-	Tally(const TallyId& user_id) : user_id(user_id), prototype(0) {
-		/* Create child */
-		prototype = new ChildTally;
-	}
 
 	/* Return a child tally (to accumulate data on a thread)*/
 	ChildTally* getChild() {
@@ -136,6 +136,44 @@ public:
 	}
 
 	/* Accumulate data using a normalization factor */
+	virtual void accumulate(double norm) = 0;
+
+	/* Get value (as a pair, mean and deviation) */
+	virtual std::pair<double,double> getValue() const = 0;
+
+	/* Just clear the data (don't accumulate anything) */
+	void clear() {
+		/* Clear prototype */
+		prototype->clear();
+	}
+
+	/* Print internal data */
+	virtual void print(std::ostream& out) const = 0;
+
+	virtual ~Tally() {
+		/* Delete prototype */
+		delete prototype;
+	}
+};
+
+class FloatTally : public Tally {
+	/* Single accumulator */
+	Accumulator accum;
+public:
+
+	FloatTally() {/* */}
+
+	FloatTally(const TallyId& user_id) : Tally(user_id) {/* */}
+
+	friend class boost::serialization::access;
+    template<class Archive>
+    /* Serialize value on the child tally */
+    void serialize(Archive & ar, const unsigned int version)
+    {
+    	ar & boost::serialization::base_object<Tally>(*this);
+    }
+
+	/* Accumulate data using a normalization factor */
 	void accumulate(double norm) {
 		double value = prototype->get();
 		/* Accumulate */
@@ -144,26 +182,46 @@ public:
 		prototype->clear();
 	}
 
-	/* Accumulate data */
-	void accumulate() {
-		accum(prototype->get());
-		/* Clear prototype */
-		prototype->clear();
+	std::pair<double,double> getValue() const {
+		return std::pair<double,double>(acc::mean(accum), sqrt((double)acc::variance(accum) / (double)acc::count(accum)));
 	}
 
-	/* Just clear the data (don't accumulate anything) */
-	void clear() {
-		/* Clear prototype */
-		prototype->clear();
-	}
-
-	/* Get mean */
 	void print(std::ostream& out) const;
 
-	virtual ~Tally() {
-		/* Delete prototype */
-		delete prototype;
+	~FloatTally() {/* */}
+};
+
+class CounterTally : public Tally {
+	/* Single accumulator */
+	double accum;
+public:
+
+	CounterTally() {/* */}
+
+	CounterTally(const TallyId& user_id) : Tally(user_id) {/* */}
+
+	friend class boost::serialization::access;
+    template<class Archive>
+    /* Serialize value on the child tally */
+    void serialize(Archive & ar, const unsigned int version)
+    {
+    	ar & boost::serialization::base_object<Tally>(*this);
+    }
+
+	/* Accumulate data using a normalization factor */
+	void accumulate(double norm) {
+		/* Set accumulator and ignore the normalization factor */
+		accum = prototype->get();
+		/* Clear prototype */
+		prototype->clear();
 	}
+
+	std::pair<double,double> getValue() const {
+		return std::pair<double,double>(accum,0.0);
+	}
+
+	void print(std::ostream& out) const;
+	~CounterTally() {/* */}
 };
 
 /* Tally container (thread-safe) */
@@ -185,6 +243,8 @@ public:
     /* Serialize value on the child tally */
     void serialize(Archive & ar, const unsigned int version)
     {
+        ar.register_type(static_cast<FloatTally *>(NULL));
+        ar.register_type(static_cast<CounterTally *>(NULL));
         ar & tallies;
     }
 
@@ -198,6 +258,8 @@ public:
 	void pushTally(Tally* tally) {
 		tallies.push_back(tally);
 	}
+
+	const Tally& operator[](size_t x) {return *(tallies[x]);}
 
 	/* Iterators for this container */
 	typedef std::vector<Tally*>::iterator iterator;

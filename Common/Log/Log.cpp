@@ -116,7 +116,7 @@ map<Log::Color,const char*> initNoColorMap() {
 static map<Log::Color,const char*> with_color_map = initColorMap();
 static map<Log::Color,const char*> no_color_map = initNoColorMap();
 
-Log::Log() : messages(cout), oerror(cerr), rank(0), current_map(with_color_map) {/* */}
+Log::Log() : messages(cout), oerror(cout), rank(0), current_map(with_color_map) {/* */}
 
 /* Set output file */
 void Log::setOutput(const std::string& out_file) {
@@ -213,7 +213,6 @@ void Log::setRank(int new_rank) {
 	logger.rank = new_rank;
 	if(logger.rank != 0) {
 		std::cout.setstate(std::ios::failbit);
-		std::cerr.setstate(std::ios::failbit);
 		logger.output.setstate(std::ios::failbit);
 	}
 }

@@ -31,11 +31,16 @@ using namespace std;
 
 namespace Helios {
 
-void Tally::print(std::ostream& out) const {
+void FloatTally::print(std::ostream& out) const {
 	/* Print name */
 	out << setw(15) << user_id << " = " << fixed <<
 		   setw(9) << acc::mean(accum) << " +- " <<
 		   setw(9) << sqrt((double)acc::variance(accum) / (double)acc::count(accum));
+}
+
+void CounterTally::print(std::ostream& out) const {
+	/* Print name */
+	out << setw(15) << user_id << " = " << fixed << setw(9) << accum;
 }
 
 std::ostream& operator<<(std::ostream& out, const Tally& q) {

@@ -24,18 +24,54 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <omp.h>
+#include <boost/mpi.hpp>
+#include <numeric>
 
-#include "Simulation.hpp"
+#include "AnalogKeff.hpp"
 
 using namespace std;
+namespace mpi = boost::mpi;
 
 namespace Helios {
 
-KeffSimulation::KeffSimulation(const McEnvironment* environment, size_t local_particles, size_t stride) :
-		Simulation(environment), keff(1.0), stride(stride), fission_bank(local_particles), current_type(INACTIVE) {/* */}
+AnalogKeff::AnalogKeff(const McEnvironment* environment) :
+	SimulationBase(environment, environment->getSetting<size_t>("criticality","particles"),
+			       environment->getSetting<size_t>("criticality","batches"),
+			       environment->getSetting<size_t>("criticality","inactive")), keff(1.0),
+			       particles_number(nparticles), fission_bank(local_particles) {
 
-bool KeffSimulation::voidTransport(const Material*& material, Particle& particle, const Cell*& cell) {
+	/* Population counter */
+	inactive_tallies.pushTally(new CounterTally("population"));
+
+	/* Population counter */
+	active_tallies.pushTally(new CounterTally("population"));
+
+	/* Leakage */
+	active_tallies.pushTally(new FloatTally("leakage"));
+	/* Absorptions */
+	active_tallies.pushTally(new FloatTally("absorption"));
+
+	/* Absorption KEFF */
+	active_tallies.pushTally(new FloatTally("keff (abs)"));
+	/* Collision KEFF */
+	active_tallies.pushTally(new FloatTally("keff (col)"));
+	/* Track length KEFF */
+	active_tallies.pushTally(new FloatTally("keff (trk)"));
+
+}
+
+/* Simulate source if the n-th particle on the batch */
+void AnalogKeff::source(size_t nbank) {
+	/* Jump random number generator */
+	Random random(base);
+	/* Jump random number engine (using local stride) */
+	random.jump((local_stride + nbank) * max_samples);
+	CellParticle source_particle = initial_source->sample(random);
+	source_particle.second.wgt() = keff;
+	fission_bank[nbank] = source_particle;
+}
+
+bool AnalogKeff::voidTransport(const Material*& material, Particle& particle, const Cell*& cell) {
 	/* Check the material pointer */
 	while(not material) {
 		/* Initialize some auxiliary variables */
@@ -62,19 +98,17 @@ bool KeffSimulation::voidTransport(const Material*& material, Particle& particle
 	return true;
 }
 
-double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_container) {
+/* Simulate history of the n-th particle on the batch */
+void AnalogKeff::history(size_t nbank, const std::vector<ChildTally*>& tally_container) {
 	/* Initialize some auxiliary variables */
 	Surface* surface(0);  /* Surface pointer */
 	bool sense(true);     /* Sense of the surface we are crossing */
 	double distance(0.0); /* Distance to closest surface */
 
-	/* Local counter */
-	double population = 0.0;
-
 	/* Random number stream for this particle */
 	Random r(base);
 	/* Jump random number engine (using local stride) */
-	r.jump((stride + nbank) * max_rng_per_history);
+	r.jump((local_stride + nbank) * max_rng_per_history);
 
 	/* Flag if particle is out of the system */
 	bool outside = false;
@@ -192,8 +226,8 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 					if (r.uniform() < nubar - (double)nu) nu++;
 					/* Get fission reaction */
 					Reaction* fission_reaction = isotope->fission();
-					/* Accumulate population */
-					population += particle.wgt() * nu;
+					/* Accumulate population (always, no matter if the cycle is active or inactive) */
+					tally_container[POP]->acc(particle.wgt() * nu);
 					/* We should bank the particle state after simulating the fission reaction */
 					for(int i = 0 ; i < nu ; ++i) {
 						Particle new_particle(particle);
@@ -220,43 +254,27 @@ double KeffSimulation::cycle(size_t nbank, const vector<ChildTally*>& tally_cont
 				Reaction* inelastic_reaction = isotope->inelastic(particle.erg(),r);
 				/* Apply the reaction */
 				(*inelastic_reaction)(particle,r);
-
-				/* Get MT of the reaction */
-				int mt = inelastic_reaction->getId();
-				/* Check for reaction */
-				if(mt == 16)
-					estimate<N2N>(tally_container, 1.0);
-				else if(mt == 17)
-					estimate<N3N>(tally_container, 1.0);
-				else if(mt == 37)
-					estimate<N4N>(tally_container, 1.0);
 			}
 		}
 	}
-	/* Return the population */
-	return population;
 }
 
-void KeffSimulation::source(size_t nbank) {
-	/* Jump random number generator */
-	Random random(base);
-	/* Jump random number engine (using local stride) */
-	random.jump((stride + nbank) * max_samples);
-	CellParticle source_particle = initial_source->sample(random);
-	source_particle.second.wgt() = keff;
-	fission_bank[nbank] = source_particle;
-}
-
-double KeffSimulation::launch(CycleType type, TallyContainer& tallies) {
+/* Update internal data before executing a batch of particles */
+void AnalogKeff::beforeBatch() {
 	/* Resize the local bank before the simulation */
 	local_bank.resize(fission_bank.size());
+}
 
-	/* Set current type of the simulation */
-	current_type = type;
+/* Update internal data after the batch simulation */
+void AnalogKeff::afterBatch() {
+	/* --- Get total population from tallies */
+	double total_population(0.0);
+	if(local_comm.rank() == 0)
+		total_population = getTallies()[POP].getValue().first;
+	broadcast(local_comm, total_population, 0);
 
-	/* Simulate the current bank (using some parallel policy) */
-	double total_population = simulateBank(tallies);
-
+	/* --- Calculate multiplication factor for this cycle (using initial number of particles as a reference) */
+	keff = total_population / (double) particles_number;
 	/* --- Clear particle bank (global) */
 	fission_bank.clear();
 
@@ -267,29 +285,26 @@ double KeffSimulation::launch(CycleType type, TallyContainer& tallies) {
 			/* Get banked particle */
 			fission_bank.push_back((*it_particle));
 
-	/* Clear local bank */
+	/* --- Clear local bank */
 	local_bank.clear();
 
-	/* Return population of this cycle */
-	return total_population;
+	/* ---- Update internal data of the simulation */
+
+	/* New number of local particles */
+	local_particles = fission_bank.size();
+
+	/* Gather fission bank size to create new strides (this is the number of particles at the end of this cycle) */
+	std::vector<size_t> all_bank_sizes;
+	mpi::all_gather(local_comm, local_particles, all_bank_sizes);
+
+	/* Update number of particles */
+	nparticles = accumulate(all_bank_sizes.begin(), all_bank_sizes.end(), 0);
+
+	/* Update stride of the current local simulation */
+	if(local_comm.rank() == 0) local_stride = 0;
+	else local_stride = accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + local_comm.rank(), 0);
 }
 
-void KeffSimulation::update(double total_population, size_t total_bank) {
-	/* Jump on random number generation */
-	base.jump(total_bank * max_rng_per_history);
-
-	/* --- Calculate multiplication factor for this cycle */
-	keff = total_population / (double) particles_number;
-}
-
-KeffSimulation::~KeffSimulation() {/* */};
-
-Simulation::Simulation(const McEnvironment* environment) :
-		environment(environment),
-		base(environment->getSetting<long unsigned int>("seed","value")),
-		max_rng_per_history(environment->getSetting<size_t>("max_rng_per_history","value")),
-		max_samples(environment->getSetting<size_t>("max_source_samples","value")),
-		particles_number(environment->getSetting<size_t>("criticality","particles")),
-		initial_source(environment->getModule<Source>()) {/* */}
+AnalogKeff::~AnalogKeff() {/* */}
 
 } /* namespace Helios */

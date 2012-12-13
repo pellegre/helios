@@ -138,7 +138,8 @@ protected:
 		N4N      = 4,
 		KEFF_ABS = 5,
 		KEFF_COL = 6,
-		KEFF_TRK = 7
+		KEFF_TRK = 7,
+		POP      = 8
 	};
 
 	/* Accumulate estimator */

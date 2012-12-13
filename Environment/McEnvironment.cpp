@@ -29,7 +29,8 @@
 #include <numeric>
 
 #include "McEnvironment.hpp"
-#include "Simulation.hpp"
+#include "Simulation/Simulation.hpp"
+#include "Simulation/AnalogKeff.hpp"
 #include "../Tallies/Tally.hpp"
 
 using namespace std;
@@ -133,9 +134,244 @@ void McEnvironment::setup() {
 	setupModule<Source>();
 }
 
+//void McEnvironment::simulate() const {
+//	/* Simulation pointer */
+//	KeffSimulation* simulation(0);
+//
+//	/* Get multithread type of simulation */
+//	string multithread = getSetting<string>("multithread", "value");
+//	/* Number of particles */
+//	size_t neutrons = getSetting<size_t>("criticality","particles");
+//	/* Get number of inactive cycles */
+//	size_t skip = getSetting<size_t>("criticality","inactive");
+//	/* Active cycles */
+//	size_t cycles = getSetting<size_t>("criticality","batches") - skip;
+//	/* Random number seed */
+//	long unsigned int seed = getSetting<long unsigned int>("seed","value");
+//
+//	const boost::mpi::communicator& local_comm = getCommunicator();
+//
+//	/* Get number of MPI nodes */
+//	size_t nodes = local_comm.size();
+//
+//	/* Divide number of particles */
+//	size_t local_particles = neutrons / nodes;
+//
+//	/* Check non-integer division */
+//	int extra_particles = neutrons % nodes;
+//	if(local_comm.rank() < extra_particles)
+//		local_particles++;
+//
+//	/* Get extra particles from other node (to calculate the stride) */
+//	std::vector<size_t> all_bank_sizes;
+//	mpi::all_gather(local_comm, local_particles, all_bank_sizes);
+//
+//	/* Calculate local stride on the fission bank (calculating extra particles) */
+//	size_t local_stride(0);
+//	if(local_comm.rank() != 0)
+//		local_stride = accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + local_comm.rank(), 0);
+//
+//	/* Print data of the simulation */
+//	Log::bok() << "Launching simulation " << Log::endl;
+//	Log::msg() << left << Log::ident(1) << " - RNG seed                : " << seed << Log::endl;
+//	Log::msg() << left << Log::ident(1) << " - Number of particles     : " << neutrons << Log::endl;
+//	Log::msg() << left << Log::ident(1) << " - Number of active cycles : " << cycles << Log::endl;
+//	Log::msg() << left << Log::ident(1) << " - Number of MPI nodes     : " << nodes << Log::endl;
+//	Log::msg() << left << Log::ident(1) << " - Multithreading          : " << multithread << Log::endl;
+//	Log::msg() << Log::endl;
+//
+//	/* Print simulation data on the output file */
+//	Log::printLine(Log::fout(), "*");
+//	Log::fout() << endl << endl << "[#] Simulation" << endl << endl;
+//	Log::fout() << " - RNG seed                : " << seed << endl;
+//	Log::fout() << " - Number of particles     : " << neutrons << endl;
+//	Log::fout() << " - Number of active cycles : " << cycles << endl;
+//	Log::fout() << " - Number of MPI nodes     : " << nodes << endl;
+//	Log::fout() << " - Multithreading          : " << multithread << endl;
+//
+//	/* Create simulation */
+//	if(multithread == "tbb")
+//		simulation = new ParallelKeffSimulation<IntelTbb>(this, local_particles, local_stride);
+//	else if(multithread == "omp")
+//		simulation = new ParallelKeffSimulation<OpenMp>(this, local_particles, local_stride);
+//	else if(multithread == "single")
+//		simulation = new ParallelKeffSimulation<SingleThread>(this, local_particles, local_stride);
+//	else
+//		throw(GeneralError("Multithreading type " + multithread + " not recognized"));
+//
+//	/* Create some tallies for this simulation */
+//	TallyContainer tallies;
+//	/* Leakage */
+//	tallies.pushTally(new FloatTally("leakage"));
+//	/* Absorptions */
+//	tallies.pushTally(new FloatTally("absorption"));
+//
+//	/* (n,2n) */
+//	tallies.pushTally(new FloatTally("(n,2n)"));
+//	/* (n,3n) */
+//	tallies.pushTally(new FloatTally("(n,3n)"));
+//	/* (n,4n) */
+//	tallies.pushTally(new FloatTally("(n,4n)"));
+//
+//	/* Absorption KEFF */
+//	tallies.pushTally(new FloatTally("keff (abs)"));
+//	/* Collision KEFF */
+//	tallies.pushTally(new FloatTally("keff (col)"));
+//	/* Track length KEFF */
+//	tallies.pushTally(new FloatTally("keff (trk)"));
+//
+//	/* Population counter */
+//	tallies.pushTally(new CounterTally("population"));
+//
+//	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
+//
+//		/* Simulate and get the total population */
+//		double local_population = simulation->launch(KeffSimulation::INACTIVE, tallies);
+//
+//		/* ---- Get data from nodes */
+//
+//		/* Reduce total population */
+//		double total_population(0.0);
+//		mpi::all_reduce(local_comm, local_population, total_population, std::plus<double>());
+//
+//		/* Update information (preparing for next cycle). The fission bank gets updated here with the new particles */
+//		simulation->update(total_population, neutrons);
+//
+//		/* Get the bank size (after the simulaton of the current cycle) */
+//		size_t local_bank_size = simulation->bankSize();
+//
+//		/* Gather fission bank size to create new strides (this is the number of particles at the end of this cycle) */
+//		mpi::all_gather(local_comm, local_bank_size, all_bank_sizes);
+//
+//		/* Update number of particles */
+//		neutrons = accumulate(all_bank_sizes.begin(), all_bank_sizes.end(), 0);
+//
+//		/* Update stride of the current local simulation */
+//		if(local_comm.rank() == 0)
+//			simulation->setStride(0);
+//		else
+//			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + local_comm.rank(), 0));
+//
+//		/* Get multiplication factor */
+//		double keff = simulation->getKeff();
+//
+//		/* Print information */
+//		Log::color<Log::COLOR_BOLDRED>() << Log::ident(0) << " **** Cycle (Inactive) "
+//				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst
+//				<< " keff = " << fixed << keff << Log::endl;
+//
+//	}
+//
+//	/* Average time per cycle */
+//	double average_time(0.0);
+//	/* Average particle rate per cycle */
+//	double average_rate(0.0);
+//	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
+//		/* Initialize timer for the cycle */
+//		mpi::timer cycle_time;
+//
+//		/* Print information (on master node) */
+//		if (local_comm.rank() == 0) {
+//			Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
+//					<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
+//		}
+//
+//		/* Launch active simulation */
+//		double local_population = simulation->launch(KeffSimulation::ACTIVE, tallies);
+//
+//		/* ---- Reduce tallies */
+//
+//		/* Reduce the tallies */
+//		tallies.reduce();
+//
+//		if (local_comm.rank() == 0) {
+//			/* TODO - (this is *too* naive) Get all tallies from slaves */
+//			for(int i = 1 ; i < local_comm.size() ; ++i) {
+//				TallyContainer slave_tallies;
+//				local_comm.recv(i, 0, slave_tallies);
+//				tallies.join(slave_tallies);
+//			}
+//			/* Accumulate tallies on the master */
+//			tallies.accumulate(neutrons);
+//
+//			/* Print tallies (only on master) */
+//			for(TallyContainer::const_iterator it = tallies.begin() ; it != tallies.end() ; ++it) {
+//				(*it)->print(Log::msg());
+//				Log::msg() << Log::endl;
+//			}
+//		} else {
+//			/* Send tally container to the master node */
+//			local_comm.send(0, 0, tallies);
+//			/* And clear it */
+//			tallies.clear();
+//		}
+//
+//		/* ---- Get data from nodes */
+//
+//		/* Reduce total population */
+//		double total_population(0.0);
+//		mpi::all_reduce(local_comm, local_population, total_population, std::plus<double>());
+//
+//		/* Update information (preparing for next cycle). The fission bank gets updated here with the new particles */
+//		simulation->update(total_population, neutrons);
+//
+//		/* Get the bank size (after the simulaton of the current cycle) */
+//		size_t local_bank_size = simulation->bankSize();
+//
+//		/* Gather fission bank size to create new strides (this is the number of particles at the end of this cycle) */
+//		mpi::all_gather(local_comm, local_bank_size, all_bank_sizes);
+//
+//		/* ---- Update internal data of the simulation */
+//
+//		/* Update number of particles */
+//		neutrons = accumulate(all_bank_sizes.begin(), all_bank_sizes.end(), 0);
+//
+//		/* Update stride of the current local simulation */
+//		if(local_comm.rank() == 0)
+//			simulation->setStride(0);
+//		else
+//			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + local_comm.rank(), 0));
+//
+//		if (local_comm.rank() == 0) {
+//			/* Get tiem elapsed */
+//			double time_elapsed = cycle_time.elapsed();
+//
+//			/* Print time on master node */
+//			Log::msg() << Log::endl;
+//			Log::msg() << "Time elapsed in this cycle : " << time_elapsed << " seconds " << Log::endl;
+//			Log::msg() << Log::endl;
+//
+//			/* Accumulate average time */
+//			average_time += time_elapsed;
+//			/* Accumulate average rate */
+//			average_rate += neutrons / time_elapsed;
+//		}
+//	}
+//
+//	if (local_comm.rank() == 0) {
+//		/* Print data on console */
+//		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << "End simulation on " << Log::date() << Log::endl;
+//		Log::msg() << left << "Average time per cycle : " << average_time / cycles << " seconds " << Log::endl;
+//		Log::msg() << left << "Average neutrons / sec : " << average_rate / (1000 * cycles) << " K neutrons / sec " << endl;
+//
+//		/* Put final estimation on output file */
+//		Log::fout() << endl << "End simulation on " << Log::date() << endl;
+//		Log::fout() << "Average time per cycle : " << average_time / cycles << " seconds " << endl;
+//		Log::fout() << "Average neutrons / sec : " << average_rate / (1000 * cycles) << " K neutrons / sec " << endl;
+//		Log::fout() << endl << "Final estimation " << endl << endl;
+//		/* Print tallies (only on master) */
+//		for(TallyContainer::const_iterator it = tallies.begin() ; it != tallies.end() ; ++it) {
+//			(*it)->print(Log::fout());
+//			Log::fout() << endl;
+//		}
+//	}
+//
+//	delete simulation;
+//}
+
 void McEnvironment::simulate() const {
 	/* Simulation pointer */
-	KeffSimulation* simulation(0);
+	SimulationBase* simulation(0);
 
 	/* Get multithread type of simulation */
 	string multithread = getSetting<string>("multithread", "value");
@@ -152,23 +388,6 @@ void McEnvironment::simulate() const {
 
 	/* Get number of MPI nodes */
 	size_t nodes = local_comm.size();
-
-	/* Divide number of particles */
-	size_t local_particles = neutrons / nodes;
-
-	/* Check non-integer division */
-	int extra_particles = neutrons % nodes;
-	if(local_comm.rank() < extra_particles)
-		local_particles++;
-
-	/* Get extra particles from other node (to calculate the stride) */
-	std::vector<size_t> all_bank_sizes;
-	mpi::all_gather(local_comm, local_particles, all_bank_sizes);
-
-	/* Calculate local stride on the fission bank (calculating extra particles) */
-	size_t local_stride(0);
-	if(local_comm.rank() != 0)
-		local_stride = accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + local_comm.rank(), 0);
 
 	/* Print data of the simulation */
 	Log::bok() << "Launching simulation " << Log::endl;
@@ -190,177 +409,15 @@ void McEnvironment::simulate() const {
 
 	/* Create simulation */
 	if(multithread == "tbb")
-		simulation = new ParallelKeffSimulation<IntelTbb>(this, local_particles, local_stride);
+		simulation = new ParallelSimulation<AnalogKeff,IntelTbb>(this);
 	else if(multithread == "omp")
-		simulation = new ParallelKeffSimulation<OpenMp>(this, local_particles, local_stride);
+		simulation = new ParallelSimulation<AnalogKeff,OpenMp>(this);
 	else if(multithread == "single")
-		simulation = new ParallelKeffSimulation<SingleThread>(this, local_particles, local_stride);
+		simulation = new ParallelSimulation<AnalogKeff,SingleThread>(this);
 	else
 		throw(GeneralError("Multithreading type " + multithread + " not recognized"));
 
-	/* Create some tallies for this simulation */
-	TallyContainer tallies;
-	/* Leakage */
-	tallies.pushTally(new Tally("leakage"));
-	/* Absorptions */
-	tallies.pushTally(new Tally("absorption"));
-
-	/* (n,2n) */
-	tallies.pushTally(new Tally("(n,2n)"));
-	/* (n,3n) */
-	tallies.pushTally(new Tally("(n,3n)"));
-	/* (n,4n) */
-	tallies.pushTally(new Tally("(n,4n)"));
-
-	/* Absorption KEFF */
-	tallies.pushTally(new Tally("keff (abs)"));
-	/* Collision KEFF */
-	tallies.pushTally(new Tally("keff (col)"));
-	/* Track length KEFF */
-	tallies.pushTally(new Tally("keff (trk)"));
-
-	for(size_t ncycle = 0 ; ncycle < skip ; ++ncycle) {
-
-		/* Simulate and get the total population */
-		double local_population = simulation->launch(KeffSimulation::INACTIVE, tallies);
-
-		/* ---- Get data from nodes */
-
-		/* Reduce total population */
-		double total_population(0.0);
-		mpi::all_reduce(local_comm, local_population, total_population, std::plus<double>());
-
-		/* Update information (preparing for next cycle). The fission bank gets updated here with the new particles */
-		simulation->update(total_population, neutrons);
-
-		/* Get the bank size (after the simulaton of the current cycle) */
-		size_t local_bank_size = simulation->bankSize();
-
-		/* Gather fission bank size to create new strides (this is the number of particles at the end of this cycle) */
-		mpi::all_gather(local_comm, local_bank_size, all_bank_sizes);
-
-		/* Update number of particles */
-		neutrons = accumulate(all_bank_sizes.begin(), all_bank_sizes.end(), 0);
-
-		/* Update stride of the current local simulation */
-		if(local_comm.rank() == 0)
-			simulation->setStride(0);
-		else
-			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + local_comm.rank(), 0));
-
-		/* Get multiplication factor */
-		double keff = simulation->getKeff();
-
-		/* Print information */
-		Log::color<Log::COLOR_BOLDRED>() << Log::ident(0) << " **** Cycle (Inactive) "
-				<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << skip << Log::crst
-				<< " keff = " << fixed << keff << Log::endl;
-
-	}
-
-	/* Average time per cycle */
-	double average_time(0.0);
-	/* Average particle rate per cycle */
-	double average_rate(0.0);
-	for(size_t ncycle = 0 ; ncycle < cycles ; ++ncycle) {
-		/* Initialize timer for the cycle */
-		mpi::timer cycle_time;
-
-		/* Print information (on master node) */
-		if (local_comm.rank() == 0) {
-			Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << " **** Cycle (Active)   "
-					<< setw(4) << right << ncycle + 1 << " / " << setw(4) << left << cycles << Log::endl;
-		}
-
-		/* Launch active simulation */
-		double local_population = simulation->launch(KeffSimulation::ACTIVE, tallies);
-
-		/* ---- Reduce tallies */
-
-		/* Reduce the tallies */
-		tallies.reduce();
-
-		if (local_comm.rank() == 0) {
-			/* TODO - (this is *too* naive) Get all tallies from slaves */
-			for(int i = 1 ; i < local_comm.size() ; ++i) {
-				TallyContainer slave_tallies;
-				local_comm.recv(i, 0, slave_tallies);
-				tallies.join(slave_tallies);
-			}
-			/* Accumulate tallies on the master */
-			tallies.accumulate(neutrons);
-
-			/* Print tallies (only on master) */
-			for(TallyContainer::const_iterator it = tallies.begin() ; it != tallies.end() ; ++it) {
-				(*it)->print(Log::msg());
-				Log::msg() << Log::endl;
-			}
-		} else {
-			/* Send tally container to the master node */
-			local_comm.send(0, 0, tallies);
-			/* And clear it */
-			tallies.clear();
-		}
-
-		/* ---- Get data from nodes */
-
-		/* Reduce total population */
-		double total_population(0.0);
-		mpi::all_reduce(local_comm, local_population, total_population, std::plus<double>());
-
-		/* Update information (preparing for next cycle). The fission bank gets updated here with the new particles */
-		simulation->update(total_population, neutrons);
-
-		/* Get the bank size (after the simulaton of the current cycle) */
-		size_t local_bank_size = simulation->bankSize();
-
-		/* Gather fission bank size to create new strides (this is the number of particles at the end of this cycle) */
-		mpi::all_gather(local_comm, local_bank_size, all_bank_sizes);
-
-		/* ---- Update internal data of the simulation */
-
-		/* Update number of particles */
-		neutrons = accumulate(all_bank_sizes.begin(), all_bank_sizes.end(), 0);
-
-		/* Update stride of the current local simulation */
-		if(local_comm.rank() == 0)
-			simulation->setStride(0);
-		else
-			simulation->setStride(accumulate(all_bank_sizes.begin(), all_bank_sizes.begin() + local_comm.rank(), 0));
-
-		if (local_comm.rank() == 0) {
-			/* Get tiem elapsed */
-			double time_elapsed = cycle_time.elapsed();
-
-			/* Print time on master node */
-			Log::msg() << Log::endl;
-			Log::msg() << "Time elapsed in this cycle : " << time_elapsed << " seconds " << Log::endl;
-			Log::msg() << Log::endl;
-
-			/* Accumulate average time */
-			average_time += time_elapsed;
-			/* Accumulate average rate */
-			average_rate += neutrons / time_elapsed;
-		}
-	}
-
-	if (local_comm.rank() == 0) {
-		/* Print data on console */
-		Log::color<Log::COLOR_BOLDWHITE>() << Log::ident(0) << "End simulation on " << Log::date() << Log::endl;
-		Log::msg() << left << "Average time per cycle : " << average_time / cycles << " seconds " << Log::endl;
-		Log::msg() << left << "Average neutrons / sec : " << average_rate / (1000 * cycles) << " K neutrons / sec " << endl;
-
-		/* Put final estimation on output file */
-		Log::fout() << endl << "End simulation on " << Log::date() << endl;
-		Log::fout() << "Average time per cycle : " << average_time / cycles << " seconds " << endl;
-		Log::fout() << "Average neutrons / sec : " << average_rate / (1000 * cycles) << " K neutrons / sec " << endl;
-		Log::fout() << endl << "Final estimation " << endl << endl;
-		/* Print tallies (only on master) */
-		for(TallyContainer::const_iterator it = tallies.begin() ; it != tallies.end() ; ++it) {
-			(*it)->print(Log::fout());
-			Log::fout() << endl;
-		}
-	}
+	simulation->launch();
 
 	delete simulation;
 }
