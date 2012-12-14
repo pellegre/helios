@@ -109,6 +109,19 @@ public:
 	/* Initialize simulation */
 	SimulationBase(const McEnvironment* environment, size_t nparticles, size_t nbatches, size_t ninactive = 0);
 
+	/* ---- Exception */
+	class SimulationError : public std::exception {
+		std::string reason;
+	public:
+		SimulationError(const std::string& msg) {
+			reason = "Simulation error : " + msg;
+		}
+		const char *what() const throw() {
+			return reason.c_str();
+		}
+		~SimulationError() throw() {/* */};
+	};
+
 	/* ---- Global simulation methods */
 
 	/* Simulate the entire source */

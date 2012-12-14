@@ -44,8 +44,32 @@ SimulationBase::SimulationBase(const McEnvironment* environment, size_t nparticl
 		nbatches(nbatches), nparticles(nparticles), ninactive(ninactive), simulation_type(INACTIVE),
 		local_comm(environment->getCommunicator()),
 		local_stride(0) {
+
+	/* Check number of batches and inactive cycles */
+	if(nbatches < ninactive)
+		throw(SimulationError("Number of batches is smaller than inactive cycles"));
+
 	/* Calculate local number of particles and set the stride on the random number generator */
 	size_t nodes = local_comm.size();
+	/* Random number seed */
+	long unsigned int seed = environment->getSetting<long unsigned int>("seed","value");
+
+	/* Print data of the simulation */
+	Log::bok() << "Initializing simulation " << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - RNG seed                : " << seed << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Number of MPI nodes     : " << nodes << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Batches                 : " << nbatches << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Inactive batches        : " << ninactive << Log::endl;
+	Log::msg() << left << Log::ident(1) << " - Particles               : " << nparticles << Log::endl;
+
+	/* Print simulation data on the output file */
+	Log::printLine(Log::fout(), "*");
+	Log::fout() << endl << endl << "[#] Simulation" << endl << endl;
+	Log::fout() << " - RNG seed                : " << seed << endl;
+	Log::fout() << " - Number of MPI nodes     : " << nodes << endl;
+	Log::fout() << " - Batches                 : " << nbatches << endl;
+	Log::fout() << " - Inactive batches        : " << ninactive << endl;
+	Log::fout() << " - Particles               : " << nparticles << endl;
 
 	/* Divide number of particles */
 	local_particles = nparticles / nodes;
