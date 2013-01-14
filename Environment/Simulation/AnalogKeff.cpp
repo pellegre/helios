@@ -226,7 +226,7 @@ void AnalogKeff::history(size_t nbank, const std::vector<ChildTally*>& tally_con
 					int nu = (int) nubar;
 					if (r.uniform() < nubar - (double)nu) nu++;
 					/* Get fission reaction */
-					Reaction* fission_reaction = isotope->fission();
+					Reaction* fission_reaction = isotope->fission(particle.erg(),r);
 					/* Accumulate population (always, no matter if the cycle is active or inactive) */
 					tally_container[POP]->acc(particle.wgt() * nu);
 					/* We should bank the particle state after simulating the fission reaction */

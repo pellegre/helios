@@ -125,7 +125,7 @@ template<typename TypeReaction> class XsSampler;
 		double getFissionXs(Energy& energy) const;
 
 		/* Fission reaction */
-		Reaction* fission() const {
+		Reaction* fission(Energy& energy, Random& random) const {
 			return fission_reaction;
 		};
 

@@ -99,7 +99,7 @@ namespace Helios {
 		 * We also need to bank particles with a fission distribution on
 		 * KEFF simulations.
 		 */
-		virtual Reaction* fission() const = 0;
+		virtual Reaction* fission(Energy& energy, Random& random) const = 0;
 
 		/*
 		 * -- Elastic scattering

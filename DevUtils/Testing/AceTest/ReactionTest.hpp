@@ -261,7 +261,7 @@ TEST_F(SimpleReactionTest, ChanceFission) {
 		#pragma omp for
 		for(size_t  i = 0 ; i < nsamples ; ++i) {
 			Energy energy_pair(0,energy);
-			Reaction* rea = dynamic_cast<ChanceFission*>(isotope->fission())->sample(energy_pair, random);
+			Reaction* rea = dynamic_cast<ChanceFission*>(isotope->fission(energy_pair, local_random))->sample(energy_pair, random);
 			int mt = rea->getId();
 			reaction_local_samples[mt]++;
 		}
