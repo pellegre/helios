@@ -39,8 +39,15 @@ using namespace Ace;
 
 namespace Helios {
 
-double AceIsotope::energy_freegas_threshold = 400.0; /* By default, 400.0 kT*/
-double AceIsotope::awr_freegas_threshold = 1.0;      /* By default, only H */
+AceIsotopeBase* AceIsotopeFactory::createIsotope(const Ace::NeutronTable& table) const {
+	/* Create child grid */
+	const ChildGrid* child_grid = master_grid->pushGrid(table.getEnergyGrid().begin(), table.getEnergyGrid().end());
+	/* Create isotope */
+	return new AceIsotopeBase(table, child_grid);
+}
+
+double AceIsotopeBase::energy_freegas_threshold = 400.0; /* By default, 400.0 kT*/
+double AceIsotopeBase::awr_freegas_threshold = 1.0;      /* By default, only H */
 
 /* Create NU sampler based on the information on the ACE data */
 static AceReaction::NuSampler* buildNuSampler(const Ace::NUBlock::NuData* nu_data) {
@@ -54,7 +61,7 @@ static AceReaction::NuSampler* buildNuSampler(const Ace::NUBlock::NuData* nu_dat
 	return new AceReaction::TabularNu(dynamic_cast<const AceNu::Tabular*>(nu_data));
 }
 
-void AceIsotope::setFissionReaction() {
+void AceIsotopeBase::setFissionReaction(const Ace::NeutronTable& _table) {
 
 	/* Fission MT for get the NU sampler */
 	int fission_mt(18);
@@ -116,11 +123,11 @@ void AceIsotope::setFissionReaction() {
 		/* Get fission reaction */
 		const Ace::NeutronReaction& ace_reaction = (*reactions.get_mt(fission_mt));
 
-		/* Get distribution of emerging particles */
-		const Ace::TyrDistribution& tyr = ace_reaction.getTyr();
+		/* Get distribution of emerging particles from the NU-block */
+		const Ace::NUBlock* nu_block = _table.block<NUBlock>();
 
 		/* Sanity check */
-		if(tyr.getType() != Ace::TyrDistribution::fission) {
+		if(not nu_block) {
 			/* Print warning */
 			Log::warn() << left << "No information on NU block for fission reaction with mt = " << fission_mt
 						<< " for isotope " << getUserId() << Log::endl;
@@ -128,11 +135,9 @@ void AceIsotope::setFissionReaction() {
 			/* Set the isotope as non-fissile */
 			fissile = false;
 			return;
-
 		} else {
-
 			/* Get the NU data related to this fission reaction */
-			vector<Ace::NUBlock::NuData*> nu_data = tyr.getFission();
+			vector<Ace::NUBlock::NuData*> nu_data = nu_block->clone();
 
 			/* TODO - For now just sample particles with prompt spectrum */
 			if(nu_data.size() >= 2)
@@ -146,8 +151,8 @@ void AceIsotope::setFissionReaction() {
 	}
 }
 
-AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid* _child_grid) : Isotope(_reactions.name()),
-	reactions(_reactions), aweight(_reactions.awr()), temperature(_reactions.temp()), child_grid(_child_grid),
+AceIsotopeBase::AceIsotopeBase(const Ace::NeutronTable& _table, const ChildGrid* _child_grid) : Isotope(_table.getReactions().name()),
+	reactions(_table.getReactions()), aweight(reactions.awr()), temperature(reactions.temp()), child_grid(_child_grid),
 	fission_reaction(0), total_nu(0), secondary_sampler(0) {
 
 	/* Total microscopic cross section of this isotope */
@@ -159,7 +164,7 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 	elastic_scattering = getReaction(2);
 
 	/* Set fission stuff */
-	setFissionReaction();
+	setFissionReaction(_table);
 
 	/* Set the absorption cross section */
 	absorption_xs = reactions.get_xs(27);
@@ -203,7 +208,7 @@ AceIsotope::AceIsotope(const Ace::ReactionContainer& _reactions, const ChildGrid
 }
 
 /* Auxiliary function to get the probability of a reaction */
-double AceIsotope::getProb(Energy& energy, const Ace::CrossSection& xs) const {
+double AceIsotopeBase::getProb(Energy& energy, const Ace::CrossSection& xs) const {
 	double factor;
 	size_t idx = child_grid->index(energy,factor);
 	double prob = factor * (xs[idx + 1] - xs[idx]) + xs[idx];
@@ -211,33 +216,33 @@ double AceIsotope::getProb(Energy& energy, const Ace::CrossSection& xs) const {
 	return prob / total;
 }
 
-double AceIsotope::getAbsorptionProb(Energy& energy) const {
+double AceIsotopeBase::getAbsorptionProb(Energy& energy) const {
 	return getProb(energy, absorption_xs);
 }
 
-double AceIsotope::getFissionProb(Energy& energy) const {
+double AceIsotopeBase::getFissionProb(Energy& energy) const {
 	return getProb(energy, fission_xs);
 }
 
-double AceIsotope::getElasticProb(Energy& energy) const {
+double AceIsotopeBase::getElasticProb(Energy& energy) const {
 	return getProb(energy, elastic_xs);
 }
 
-double AceIsotope::getTotalXs(Energy& energy) const {
+double AceIsotopeBase::getTotalXs(Energy& energy) const {
 	double factor;
 	size_t idx = child_grid->index(energy, factor);
 	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
 	return total;
 }
 
-double AceIsotope::getFissionXs(Energy& energy) const {
+double AceIsotopeBase::getFissionXs(Energy& energy) const {
 	double factor;
 	size_t idx = child_grid->index(energy, factor);
 	double fission = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
 	return fission;
 }
 
-Reaction* AceIsotope::inelastic(Energy& energy, Random& random) const {
+Reaction* AceIsotopeBase::inelastic(Energy& energy, Random& random) const {
 	/*
 	 * Check if there is a sampler. This method shouldn't be executed when
 	 * there aren't non-elastic reactions, but who knows...
@@ -250,7 +255,7 @@ Reaction* AceIsotope::inelastic(Energy& energy, Random& random) const {
 	return secondary_sampler->sample(idx, inel * random.uniform(), factor);
 };
 
-Reaction* AceIsotope::getReaction(InternalId mt) {
+Reaction* AceIsotopeBase::getReaction(InternalId mt) {
 	/* Static instance of the reaction factory */
 	static AceReaction::AceReactionFactory reaction_factory;
 
@@ -278,12 +283,12 @@ Reaction* AceIsotope::getReaction(InternalId mt) {
 
 }
 
-void AceIsotope::print(std::ostream& out) const {
+void AceIsotopeBase::print(std::ostream& out) const {
 	out << "isotope = " <<  setw(9) << reactions.name()
 		<< " ; awr = " << setw(9) << aweight << " ; temperature = " << temperature / Constant::boltz << " K ";
 }
 
-AceIsotope::~AceIsotope() {
+AceIsotopeBase::~AceIsotopeBase() {
 	/* Delete NU-sampler */
 	delete total_nu;
 	/* Delete reactions */

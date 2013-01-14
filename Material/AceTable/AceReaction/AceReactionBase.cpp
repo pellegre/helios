@@ -36,7 +36,7 @@ using namespace AceReaction;
 
 /* Get inelastic in CM or LAB frame */
 template<class Frame>
-static Reaction* getInelastic(int tyr_type, int tyr_number, const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) {
+static Reaction* getInelastic(int tyr_type, int tyr_number, const AceIsotopeBase* isotope, const Ace::NeutronReaction& ace_reaction) {
 	/* Reaction on CM frame */
 	if(tyr_type == Ace::TyrDistribution::distribution)
 		/* Tabular form of number of outgoing particle */
@@ -55,7 +55,7 @@ static Reaction* getInelastic(int tyr_type, int tyr_number, const AceIsotope* is
 			" is not supported"));
 }
 
-Reaction* AceReactionFactory::createReaction(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) const {
+Reaction* AceReactionFactory::createReaction(const AceIsotopeBase* isotope, const Ace::NeutronReaction& ace_reaction) const {
 	typedef Ace::AngularDistribution AceAngular;
 	/* Get MT of the reaction to handle known cases */
 	int mt = ace_reaction.getMt();

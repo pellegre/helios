@@ -116,9 +116,13 @@ public:
 	/* Check if the table contains fission information */
 	bool isFissile() const {return jxs[NU];}
 
-	/* Get block */
+	/* Get block (throws an exception if the block is not inside the table) */
 	template<class Block>
 	Block* getBlock() const;
+
+	/* Get a block, return a NULL pointer if the block is not on the table */
+	template<class Block>
+	Block* block() const;
 
 	virtual ~NeutronTable();
 
@@ -131,6 +135,15 @@ Block* NeutronTable::getBlock() const {
 		if(name == (*it)->blockName())
 			return dynamic_cast<Block*>((*it));
 	throw(AceTableError(this,"Cannot find block " + name));
+}
+
+template<class Block>
+Block* NeutronTable::block() const {
+	std::string name = Block::name();
+	for(std::vector<ACEBlock*>::const_iterator it = blocks.begin() ; it != blocks.end() ; ++it)
+		if(name == (*it)->blockName())
+			return dynamic_cast<Block*>((*it));
+	return 0;
 }
 
 } /* namespace ACE */

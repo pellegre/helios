@@ -51,7 +51,7 @@ namespace Helios {
 		std::vector<double> nu_bar;
 
 		/* Isotope sampler */
-		FactorSampler<AceIsotope*>* isotope_sampler;
+		FactorSampler<AceIsotopeBase*>* isotope_sampler;
 
 		/* Density of the material */
 		double atom;   /* atom/b-cm*/
@@ -64,15 +64,15 @@ namespace Helios {
 			/* Atomic fraction */
 			double atomic_fraction;
 			/* Pointer to the ACE isotope */
-			AceIsotope* isotope;
+			AceIsotopeBase* isotope;
 			/* Constructor */
-			IsotopeData(const double& mass_fraction, const double& atomic_fraction, AceIsotope* isotope) :
+			IsotopeData(const double& mass_fraction, const double& atomic_fraction, AceIsotopeBase* isotope) :
 				mass_fraction(mass_fraction), atomic_fraction(atomic_fraction), isotope(isotope) {/* */}
 			~IsotopeData() {/* */}
 		};
 
 		/* Set isotope map */
-		double setIsotopeMap(string& type, map<string,double> isotopes_fraction, const std::map<std::string,AceIsotope*>& isotopes);
+		double setIsotopeMap(string& type, map<string,double> isotopes_fraction, const std::map<std::string,AceIsotopeBase*>& isotopes);
 
 		/* Map of isotopes with their respective data in this material */
 		std::map<std::string,IsotopeData> isotope_map;

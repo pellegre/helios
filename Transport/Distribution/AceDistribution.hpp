@@ -55,7 +55,7 @@ namespace Helios {
 		Reaction* ace_reaction;
 
 		/* Isotope */
-		AceIsotope* isotope;
+		AceIsotopeBase* isotope;
 
 	public:
 		AceDistribution() {/* */}

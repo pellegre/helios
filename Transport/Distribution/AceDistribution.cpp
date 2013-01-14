@@ -39,7 +39,7 @@ AceDistribution::AceDistribution(const DistributionBaseObject* definition) : Dis
 	/* Get environment */
 	const McEnvironment* environment = ace_definition->getEnvironment();
 	/* Get isotope */
-	isotope = environment->getObject<AceModule,AceIsotope>(ace_definition->isotope_id)[0];
+	isotope = environment->getObject<AceModule,AceIsotopeBase>(ace_definition->isotope_id)[0];
 	/* Get the reaction */
 	ace_reaction = isotope->getReaction(ace_definition->reaction_id);
 }

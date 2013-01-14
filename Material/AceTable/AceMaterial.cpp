@@ -45,7 +45,7 @@ static void normalize(map<string,double>& isotopes_fraction) {
 }
 
 /* Calculate the average atomic number, and set the isotope map on the material */
-double AceMaterial::setIsotopeMap(string& type, map<string,double> isotopes_fraction, const map<string,AceIsotope*>& isotopes) {
+double AceMaterial::setIsotopeMap(string& type, map<string,double> isotopes_fraction, const map<string,AceIsotopeBase*>& isotopes) {
 	/* Normalize fractions */
 	normalize(isotopes_fraction);
 
@@ -60,7 +60,7 @@ double AceMaterial::setIsotopeMap(string& type, map<string,double> isotopes_frac
 			throw(Material::BadMaterialCreation(getUserId(),"Isotope " + name + " does not exist"));
 
 		/* Get isotope */
-		AceIsotope* ace_isotope = (*isotopes.find(name)).second;
+		AceIsotopeBase* ace_isotope = (*isotopes.find(name)).second;
 		/* Get fraction */
 		double fraction = isotopes_fraction[name];
 
@@ -102,8 +102,7 @@ double AceMaterial::setIsotopeMap(string& type, map<string,double> isotopes_frac
 	return average_atomic;
 }
 
-AceMaterial::AceMaterial(const AceMaterialObject* definition) :
-		 Material(definition)
+AceMaterial::AceMaterial(const AceMaterialObject* definition) : Material(definition)
 		,master_grid(definition->getEnvironment()->getModule<AceModule>()->getMasterGrid())
 		,total_xs(master_grid->size(),0.0) {
 
@@ -116,7 +115,7 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 		throw(Material::BadMaterialCreation(getUserId(),"Material does not contain any isotope"));
 
 	/* Get isotope map from the ACE module */
-	map<string,AceIsotope*> isotopes = definition->getEnvironment()->getModule<AceModule>()->getIsotopeMap();
+	map<string,AceIsotopeBase*> isotopes = definition->getEnvironment()->getModule<AceModule>()->getIsotopeMap();
 
 	/* Get average atomic number and set the isotope map */
 	double average_atomic = setIsotopeMap(type, isotope_fraction, isotopes);
@@ -137,9 +136,9 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 	/* -- Setup the isotope sampler and the mean free path of the material */
 
 	/* Array for the isotope sampler */
-	vector<AceIsotope*> isotope_array(isotope_map.size());
+	vector<AceIsotopeBase*> isotope_array(isotope_map.size());
 	/* Container of fissile isotopes */
-	vector<AceIsotope*> fissile_isotopes;
+	vector<AceIsotopeBase*> fissile_isotopes;
 	/* Arrays of XS of each isotope*/
 	vector<vector<double> > xs_array(isotope_map.size(), vector<double>(master_grid->size(),0.0));
 
@@ -149,7 +148,7 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 	size_t counter = 0;
 	for(; iso != isotope_map.end() ; ++iso) {
 		/* Get isotope */
-		AceIsotope* ace_isotope = (*iso).second.isotope;
+		AceIsotopeBase* ace_isotope = (*iso).second.isotope;
 		/* Check if there are fissile isotopes */
 		if(ace_isotope->isFissile()) {
 			/* Set the flag as true */
@@ -177,7 +176,7 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 	}
 
 	/* Set the isotope sampler */
-	isotope_sampler = new FactorSampler<AceIsotope*>(isotope_array, xs_array, false);
+	isotope_sampler = new FactorSampler<AceIsotopeBase*>(isotope_array, xs_array, false);
 
 	/* If the material is fissile, we should construct the related cross sections */
 	if(isFissile()) {
@@ -192,7 +191,7 @@ AceMaterial::AceMaterial(const AceMaterialObject* definition) :
 			/* Accumulated total NU-fission cross section */
 			double nu_fission = 0.0;
 			/* Loop over the fissile isotopes */
-			for(vector<AceIsotope*>::const_iterator iso = fissile_isotopes.begin() ; iso != fissile_isotopes.end() ; ++iso) {
+			for(vector<AceIsotopeBase*>::const_iterator iso = fissile_isotopes.begin() ; iso != fissile_isotopes.end() ; ++iso) {
 				/* Get density (atomic) */
 				double density = (*isotope_map.find((*iso)->getUserId())).second.atomic_fraction * atom;
 				/* Accumulate NU-fission */

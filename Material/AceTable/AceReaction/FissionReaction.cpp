@@ -31,7 +31,7 @@ namespace Helios {
 
 using namespace AceReaction;
 
-Fission::Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
+Fission::Fission(const AceIsotopeBase* isotope, const Ace::NeutronReaction& ace_reaction) :
 		GenericReaction(isotope, ace_reaction) {/* */}
 
 void Fission::print(std::ostream& out) const {

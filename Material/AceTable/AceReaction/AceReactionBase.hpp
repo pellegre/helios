@@ -40,7 +40,7 @@ namespace AceReaction {
 		/* Prevent construction or copy */
 		AceReactionFactory() {/* */};
 		/* Create a new surface */
-		Reaction* createReaction(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) const;
+		Reaction* createReaction(const AceIsotopeBase* isotope, const Ace::NeutronReaction& ace_reaction) const;
 		virtual ~AceReactionFactory() {/* */}
 	};
 

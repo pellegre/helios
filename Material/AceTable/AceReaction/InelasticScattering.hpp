@@ -58,7 +58,7 @@ namespace AceReaction {
 		static MuSampler* buildMuSampler(const Ace::AngularDistribution& ace_angular);
 
 		/* Build Energy Sampler */
-		static EnergySamplerBase* buildEnergySampler(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction);
+		static EnergySamplerBase* buildEnergySampler(const AceIsotopeBase* isotope, const Ace::NeutronReaction& ace_reaction);
 
 	protected:
 		/*
@@ -81,7 +81,7 @@ namespace AceReaction {
 
 	public:
 		/* Constructor, from ACE isotope and the reaction parsed from the ACE library */
-		GenericReaction(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction);
+		GenericReaction(const AceIsotopeBase* isotope, const Ace::NeutronReaction& ace_reaction);
 
 		/* Print ACE reaction */
 		void print(std::ostream& out) const;
@@ -101,7 +101,7 @@ namespace AceReaction {
 	template<class FramePolicy, class NuPolicy>
 	class InelasticScattering : public GenericReaction, public FramePolicy, public NuPolicy {
 	public:
-		InelasticScattering(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) :
+		InelasticScattering(const AceIsotopeBase* isotope, const Ace::NeutronReaction& ace_reaction) :
 			 GenericReaction(isotope, ace_reaction), FramePolicy(isotope->getAwr()), NuPolicy(ace_reaction.getTyr()) {/* */};
 
 		void operator()(Particle& particle, Random& random) const {

@@ -197,7 +197,7 @@ protected:
 			string name = test_isotopes[i];
 			Log::bok() << " - Checking probabilities for " << name << Log::endl;
 			/* Get isotope from environment */
-			AceIsotope* iso = environment->getObject<AceModule,AceIsotope>(name)[0];
+			AceIsotopeBase* iso = environment->getObject<AceModule,AceIsotopeBase>(name)[0];
 			/* Get table from file */
 			NeutronTable* ace_table = dynamic_cast<NeutronTable*>(AceReader::getTable(name));
 
@@ -368,7 +368,7 @@ protected:
 		double max_energy = (*master_grid)[master_grid->size() - 1];
 
 		/* Get isotope map of the system (we know there is only one material that contains all the isotopes) */
-		map<string,AceIsotope*> isotopes = environment->getModule<AceModule>()->getIsotopeMap();
+		map<string,AceIsotopeBase*> isotopes = environment->getModule<AceModule>()->getIsotopeMap();
 
 		/* Get material */
 		AceMaterial* material = environment->getObject<Materials,AceMaterial>("test")[0];
@@ -382,7 +382,7 @@ protected:
 			double total_xs = 0.0;
 
 			/* Loop over the isotopes */
-			for(map<string,AceIsotope*>::iterator it = isotopes.begin() ; it != isotopes.end() ; ++it)
+			for(map<string,AceIsotopeBase*>::iterator it = isotopes.begin() ; it != isotopes.end() ; ++it)
 				total_xs += fraction * atomic * (*it).second->getTotalXs(energy);
 
 			/* Mean free path at this energy */
@@ -575,7 +575,7 @@ protected:
 		const MasterGrid* master_grid = environment->getModule<AceModule>()->getMasterGrid();
 
 		/* Get isotope map of the system (we know there is only one material that contains all the isotopes) */
-		map<string,AceIsotope*> isotopes = environment->getModule<AceModule>()->getIsotopeMap();
+		map<string,AceIsotopeBase*> isotopes = environment->getModule<AceModule>()->getIsotopeMap();
 
 		/* Get material */
 		AceMaterial* material = environment->getObject<Materials,AceMaterial>("test")[0];
@@ -593,7 +593,7 @@ protected:
 			map<InternalIsotopeId,double> isotopes_prob;
 
 			/* Loop over the isotopes */
-			for(map<string,AceIsotope*>::iterator it = isotopes.begin() ; it != isotopes.end() ; ++it) {
+			for(map<string,AceIsotopeBase*>::iterator it = isotopes.begin() ; it != isotopes.end() ; ++it) {
 				double total = fraction * atomic * (*it).second->getTotalXs(energy);
 				total_xs += total;
 				isotopes_prob[(*it).second->getInternalId()] = total;

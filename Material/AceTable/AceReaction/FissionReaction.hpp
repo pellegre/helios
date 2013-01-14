@@ -42,7 +42,7 @@ namespace AceReaction {
 	class Fission: public GenericReaction {
 
 	public:
-		Fission(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction);
+		Fission(const AceIsotopeBase* isotope, const Ace::NeutronReaction& ace_reaction);
 
 		/* Print internal information of the reaction */
 		void print(std::ostream& out) const;

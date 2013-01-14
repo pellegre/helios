@@ -48,7 +48,7 @@ namespace AceReaction {
 		/* Sample target velocity. */
 		void targetVelocity(double energy, Direction direction, Direction& velocity, Random& random) const;
 	public:
-		ElasticScattering(const AceIsotope* isotope, const Ace::NeutronReaction& ace_reaction) : Reaction(ace_reaction.getMt()),
+		ElasticScattering(const AceIsotopeBase* isotope, const Ace::NeutronReaction& ace_reaction) : Reaction(ace_reaction.getMt()),
 			MuSampling(ace_reaction.getAngular()), awr(isotope->getAwr()), temperature(isotope->getTemperature()) {/* */};
 
 		/* Change particle state */
@@ -62,7 +62,7 @@ namespace AceReaction {
 	template<class MuSampling>
 	void ElasticScattering<MuSampling>::targetVelocity(double energy, Direction direction, Direction& velocity, Random& random) const {
 		/* Compare to threshold criteria */
-		if ((energy > AceIsotope::energy_freegas_threshold*temperature) && (awr > AceIsotope::awr_freegas_threshold)) {
+		if ((energy > AceIsotopeBase::energy_freegas_threshold*temperature) && (awr > AceIsotopeBase::awr_freegas_threshold)) {
 			/* Target velocity insignificant, set components to zero */
 			velocity = Direction(0.0,0.0,0.0);
 			return;

@@ -68,9 +68,9 @@ namespace AceReaction {
 	};
 
 	class EnergySamplerFactory {
-		const AceIsotope* isotope;
+		const AceIsotopeBase* isotope;
 	public:
-		EnergySamplerFactory(const AceIsotope* isotope) : isotope(isotope) {/* */}
+		EnergySamplerFactory(const AceIsotopeBase* isotope) : isotope(isotope) {/* */}
 		/* Create law */
 		EnergySamplerBase* createLaw(const Ace::EnergyDistribution::EnergyLaw* ace_law, const Ace::NeutronReaction& ace_reaction) const;
 		/* Create a new energy sampler using information parsed from the ACE cross section file */

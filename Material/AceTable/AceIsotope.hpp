@@ -29,6 +29,7 @@
 #define ACEISOTOPE_HPP_
 
 #include "AceReader/ReactionContainer.hpp"
+#include "AceReader/NeutronTable.hpp"
 #include "AceReaction/NuSampler.hpp"
 #include "../../Environment/McModule.hpp"
 #include "../../Common/Common.hpp"
@@ -40,13 +41,13 @@ namespace Helios {
 template<typename TypeReaction> class XsSampler;
 
 	/* Isotope related to an ACE table. */
-	class AceIsotope : public Isotope {
+	class AceIsotopeBase : public Isotope {
 
 		/* Auxiliary function to get the probability of a reaction */
 		double getProb(Energy& energy, const Ace::CrossSection& xs) const;
 
 		/* Auxiliary method to set the fission reaction stuff */
-		void setFissionReaction();
+		void setFissionReaction(const Ace::NeutronTable& _table);
 
 		/* -- General data */
 
@@ -102,7 +103,7 @@ template<typename TypeReaction> class XsSampler;
 		static double energy_freegas_threshold;
 		static double awr_freegas_threshold;
 
-		AceIsotope(const Ace::ReactionContainer& reactions, const ChildGrid* child_grid);
+		AceIsotopeBase(const Ace::NeutronTable& _table, const ChildGrid* child_grid);
 
 		/* Get isotope information */
 		double getAwr() const {return aweight;}
@@ -147,7 +148,7 @@ template<typename TypeReaction> class XsSampler;
 		 */
 		Reaction* getReaction(InternalId mt);
 
-		~AceIsotope();
+		~AceIsotopeBase();
 	};
 
 	/*
@@ -155,8 +156,14 @@ template<typename TypeReaction> class XsSampler;
 	 * from an ACE table.
 	 */
 	class AceIsotopeFactory {
+		/* Master grid */
+		MasterGrid* master_grid;
 	public:
-		AceIsotopeFactory() {/* */}
+		AceIsotopeFactory(MasterGrid* master_grid) : master_grid(master_grid) {/* */}
+
+		/* Returns an ACE isotope */
+		AceIsotopeBase* createIsotope(const Ace::NeutronTable& table) const;
+
 		~AceIsotopeFactory() {/* */}
 	};
 

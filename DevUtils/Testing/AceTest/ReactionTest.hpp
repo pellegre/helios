@@ -129,7 +129,7 @@ TEST_F(SimpleReactionTest, CheckReaction) {
 	/* Sample reactions */
 	size_t nsamples = 1000000000;
 	/* Get isotope */
-	AceIsotope* isotope = environment->getObject<AceModule,AceIsotope>(name)[0];
+	AceIsotopeBase* isotope = environment->getObject<AceModule,AceIsotopeBase>(name)[0];
 	/* Random number */
 	Random random(1);
 	/* Samples */
@@ -244,7 +244,7 @@ TEST_F(SimpleReactionTest, ChanceFission) {
 	/* Sample reactions */
 	size_t nsamples = 100000000;
 	/* Get isotope */
-	AceIsotope* isotope = environment->getObject<AceModule,AceIsotope>(name)[0];
+	AceIsotopeBase* isotope = environment->getObject<AceModule,AceIsotopeBase>(name)[0];
 	/* Random number */
 	Random random(1);
 	/* Samples */

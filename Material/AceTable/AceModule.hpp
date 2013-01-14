@@ -44,13 +44,13 @@ namespace Helios {
 		MasterGrid* master_grid;
 
 		/* Map of isotopes created */
-		std::map<IsotopeId,AceIsotope*> isotope_map;
+		std::map<IsotopeId,AceIsotopeBase*> isotope_map;
 
 		/* Map internal index to user index */
 		std::map<IsotopeId, InternalIsotopeId> internal_isotope_map;
 
 		/* Container of isotopes */
-		std::vector<AceIsotope*> isotopes;
+		std::vector<AceIsotopeBase*> isotopes;
 
 	public:
 		/* Name of the module */
@@ -80,7 +80,7 @@ namespace Helios {
 		void print(std::ostream& out) const;
 
 		/* Get isotope map */
-		std::map<IsotopeId,AceIsotope*> getIsotopeMap() const {return isotope_map;}
+		std::map<IsotopeId,AceIsotopeBase*> getIsotopeMap() const {return isotope_map;}
 
 		/* Get master grid */
 		const MasterGrid* getMasterGrid() const {return master_grid;};
@@ -90,7 +90,7 @@ namespace Helios {
 
 	/* Get map of objects */
 	template<>
-	std::vector<AceIsotope*> AceModule::getObject<AceIsotope>(const UserId& id) const;
+	std::vector<AceIsotopeBase*> AceModule::getObject<AceIsotopeBase>(const UserId& id) const;
 
 	/* Class to define an Ace Object (which will produce an AceIsotope as a product) */
 	class AceObject : public McObject {

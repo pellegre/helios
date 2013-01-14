@@ -50,6 +50,9 @@ AceModule::AceModule(const std::vector<McObject*>& aceObjects, const McEnvironme
 
 	/* Create master grid */
 	master_grid = new MasterGrid();
+	/* Ace isotope factory */
+	AceIsotopeFactory isotope_factory(master_grid);
+
 	/* Loop over the definitions to create isotopes */
 	for(vector<McObject*>::const_iterator it = aceObjects.begin() ; it != aceObjects.end() ; ++it) {
 		/* Cast to AceObject */
@@ -61,10 +64,8 @@ AceModule::AceModule(const std::vector<McObject*>& aceObjects, const McEnvironme
 			Log::color<Log::COLOR_BOLDWHITE>() << isotope << Log::endl;
 			/* Get the neutron table using the AceReader */
 			NeutronTable* table = dynamic_cast<NeutronTable*>(AceReader::getTable(isotope));
-			/* Create child grid */
-			const ChildGrid* child_grid = master_grid->pushGrid(table->getEnergyGrid().begin(), table->getEnergyGrid().end());
 			/* Create isotope */
-			AceIsotope* new_isotope = new AceIsotope(table->getReactions(), child_grid);
+			AceIsotopeBase* new_isotope = isotope_factory.createIsotope(*table);
 			/* Update the map */
 			isotope_map[isotope] = new_isotope;
 			/* Push isotope into the container */
@@ -73,6 +74,7 @@ AceModule::AceModule(const std::vector<McObject*>& aceObjects, const McEnvironme
 			delete table;
 		}
 	}
+
 	Log::msg() << left << Log::ident(1) << " - Setting up master grid " << Log::endl;
 	/* Setup master grid */
 	master_grid->setup();
@@ -89,12 +91,12 @@ AceModule::AceModule(const std::vector<McObject*>& aceObjects, const McEnvironme
 }
 
 template<>
-std::vector<AceIsotope*> AceModule::getObject<AceIsotope>(const UserId& id) const {
-	map<std::string,AceIsotope*>::const_iterator iso = isotope_map.find(id);
+std::vector<AceIsotopeBase*> AceModule::getObject<AceIsotopeBase>(const UserId& id) const {
+	map<std::string,AceIsotopeBase*>::const_iterator iso = isotope_map.find(id);
 	if(iso == isotope_map.end()) {
 		throw AceError(id,"Isotope does not exist inside the ace module");
 	} else {
-		vector<AceIsotope*> v;
+		vector<AceIsotopeBase*> v;
 		v.push_back((*iso).second);
 		return v;
 	}
@@ -102,14 +104,14 @@ std::vector<AceIsotope*> AceModule::getObject<AceIsotope>(const UserId& id) cons
 
 void AceModule::print(std::ostream& out) const {
 	out << " - Master grid size :" << master_grid->size() << endl;
-	for(map<IsotopeId,AceIsotope*>::const_iterator it = isotope_map.begin() ; it != isotope_map.end() ; ++it)
+	for(map<IsotopeId,AceIsotopeBase*>::const_iterator it = isotope_map.begin() ; it != isotope_map.end() ; ++it)
 		out << " - " << *(*it).second << endl;
 	out << endl;
 }
 
 AceModule::~AceModule() {
 	/* Delete isotopes */
-	for(map<IsotopeId,AceIsotope*>::iterator it = isotope_map.begin() ; it != isotope_map.end() ; ++it)
+	for(map<IsotopeId,AceIsotopeBase*>::iterator it = isotope_map.begin() ; it != isotope_map.end() ; ++it)
 		delete (*it).second;
 	/* Delete master grid */
 	delete master_grid;
