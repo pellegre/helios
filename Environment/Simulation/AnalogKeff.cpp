@@ -213,6 +213,7 @@ void AnalogKeff::history(size_t nbank, const std::vector<ChildTally*>& tally_con
 			if(isotope->isFissile()) {
 				/* Fission data for the isotope */
 				double fission = isotope->getFissionProb(particle.erg());
+				/* Get total NU */
 				double nubar = isotope->getNuBar(particle.erg());
 
 				/* Accumulate absorption estimation of the KEFF */
