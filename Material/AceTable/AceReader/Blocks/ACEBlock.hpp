@@ -53,6 +53,7 @@ namespace Ace {
 		friend class NRBlock;  /* Some raw blocks are managed by NRBlock */
 		friend class ANDBlock; /* Some raw blocks are managed by ANDBlock */
 		friend class DLWBlock; /* Some raw blocks are managed by DLWBlock */
+		friend class DLYBlock; /* Some raw blocks are managed by DLYBlock */
 
 		/* Dump the block, on a XSS stream */
 		void dump(std::ostream& xss) {putXSS(raw_data,xss);};

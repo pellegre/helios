@@ -608,6 +608,7 @@ public:
 private:
 
 	friend class DLWBlock;
+	friend class DLYBlock;
 
 	EnergyDistribution(std::vector<double>::const_iterator it, std::vector<double>::const_iterator begin);
 

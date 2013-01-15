@@ -35,5 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "NRBlock.hpp"
 #include "ANDBlock.hpp"
 #include "DLWBlock.hpp"
+#include "DLYBlock.hpp"
 
 #endif /* BLOCKS_HPP_ */

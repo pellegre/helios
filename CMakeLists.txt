@@ -142,6 +142,7 @@ set(MCFILES Common/Common.cpp
 			Material/AceTable/AceReader/CrossSection.cpp
 			Material/AceTable/AceReader/Blocks/NUBlock.cpp
 			Material/AceTable/AceReader/Blocks/DLWBlock.cpp
+			Material/AceTable/AceReader/Blocks/DLYBlock.cpp			
 			Material/AceTable/AceReader/Blocks/ANDBlock.cpp
 			Material/AceTable/AceReader/Blocks/ACEBlock.cpp
 			Material/AceTable/AceReader/Blocks/ESZBlock.cpp

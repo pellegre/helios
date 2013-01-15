@@ -240,6 +240,9 @@ NeutronTable::NeutronTable(const std::string& _table_name, const std::string& fu
 	if(nxs[NeutronTable::NR])
 		dlw_block = getBlock<DLWBlock>();
 
+	if(jxs[NeutronTable::NPCR])
+		blocks.push_back(new DLYBlock(nxs,jxs,xss,this));
+
 	/* Set the energy grid */
 	reactions.set_grid(getEnergyGrid());
 	/* Create elastic scattering reaction */
