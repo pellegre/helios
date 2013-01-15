@@ -25,8 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ACEISOTOPE_HPP_
-#define ACEISOTOPE_HPP_
+#ifndef ACEISOTOPEBASE_HPP_
+#define ACEISOTOPEBASE_HPP_
 
 #include "AceReader/ReactionContainer.hpp"
 #include "AceReader/NeutronTable.hpp"
@@ -42,12 +42,13 @@ template<typename TypeReaction> class XsSampler;
 
 	/* Isotope related to an ACE table. */
 	class AceIsotopeBase : public Isotope {
+		/* Friendly factory */
+		friend class AceIsotopeFactory;
+
+	protected:
 
 		/* Auxiliary function to get the probability of a reaction */
 		double getProb(Energy& energy, const Ace::CrossSection& xs) const;
-
-		/* Auxiliary method to set the fission reaction stuff */
-		void setFissionReaction(const Ace::NeutronTable& _table);
 
 		/* -- General data */
 
@@ -69,8 +70,7 @@ template<typename TypeReaction> class XsSampler;
 
 		/* Total cross section */
 		Ace::CrossSection total_xs;
-		/* Fission cross section */
-		Ace::CrossSection fission_xs;
+
 		/* Absorption cross section */
 		Ace::CrossSection absorption_xs;
 		/* Elastic cross section */
@@ -79,14 +79,6 @@ template<typename TypeReaction> class XsSampler;
 		Ace::CrossSection inelastic_xs;
 
 		/* -- Reactions */
-
-		/*
-		 * Fission reaction. As always, this reaction is treated separately. Pointer
-		 * is NULL for non-fissiles isotopes.
-		 */
-		Reaction* fission_reaction;
-		/* NU sampler */
-		AceReaction::NuSampler* total_nu;
 
 		/* Elastic reaction of this isotope. This reaction always exist */
 		Reaction* elastic_scattering;
@@ -113,26 +105,23 @@ template<typename TypeReaction> class XsSampler;
 
 		/* Get absorption probability */
 		double getAbsorptionProb(Energy& energy) const;
-		/* Get fission probability */
-		double getFissionProb(Energy& energy) const;
 		/* Get elastic probability */
 		double getElasticProb(Energy& energy) const;
 
 		/* Get total cross section */
 		double getTotalXs(Energy& energy) const;
 
+		/* Fission treatment of the isotope */
+
+		/* Get fission probability */
+		double getFissionProb(Energy& energy) const;
+
 		/* Get fission cross section */
-		double getFissionXs(Energy& energy) const;
-
+		virtual double getFissionXs(Energy& energy) const = 0;
 		/* Fission reaction */
-		Reaction* fission(Energy& energy, Random& random) const {
-			return fission_reaction;
-		};
-
+		virtual Reaction* fission(Energy& energy, Random& random) const = 0;
 		/* Get average NU-bar at some energy */
-		double getNuBar(const Energy& energy) const {
-			return total_nu->getNuBar(energy.second);
-		}
+		virtual double getNuBar(const Energy& energy) const = 0;
 
 		/* Elastic reaction */
 		Reaction* elastic() const {
@@ -169,4 +158,4 @@ template<typename TypeReaction> class XsSampler;
 
 } /* namespace Helios */
 
-#endif /* ACEISOTOPE_HPP_ */
+#endif /* ACEISOTOPEBASE_HPP_ */

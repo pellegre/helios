@@ -30,7 +30,7 @@
 
 #include "AceReader/ReactionContainer.hpp"
 #include "AceReaction/NuSampler.hpp"
-#include "AceIsotope.hpp"
+#include "AceIsotopeBase.hpp"
 #include "../../Environment/McModule.hpp"
 #include "../../Common/Common.hpp"
 #include "../Grid/MasterGrid.hpp"

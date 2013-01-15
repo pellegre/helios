@@ -25,7 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "AceIsotope.hpp"
+#include "AceIsotopeBase.hpp"
 #include "AceReader/ACEReader.hpp"
 #include "AceReader/NeutronTable.hpp"
 #include "AceReader/Conf.hpp"
@@ -33,6 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "AceReaction/FissionReaction.hpp"
 #include "../../Common/XsSampler.hpp"
 #include "../../Environment/McEnvironment.hpp"
+
+#include "AceIsotopes/AceIsotope.hpp"
+#include "AceIsotopes/FissionPolicy.hpp"
 
 using namespace std;
 using namespace Ace;
@@ -42,118 +45,129 @@ namespace Helios {
 AceIsotopeBase* AceIsotopeFactory::createIsotope(const Ace::NeutronTable& table) const {
 	/* Create child grid */
 	const ChildGrid* child_grid = master_grid->pushGrid(table.getEnergyGrid().begin(), table.getEnergyGrid().end());
+
+	/* Get distribution of emerging particles from the NU-block */
+	const Ace::NUBlock* nu_block = table.block<NUBlock>();
+
+	/* Check if NU block is available in the table */
+	if(nu_block) {
+		/* Create isotope*/
+		AceIsotopeBase* isotope(0);
+
+		/* Get reaction */
+		const ReactionContainer& reactions(table.getReactions());
+
+		/* Check the available cross sections on the table */
+		if(reactions.check_all("18")) {
+			isotope = new AceIsotope<TotalNuFission>(table, child_grid);
+		}
+
+		/* Set fissile flag in the isotope */
+		isotope->fissile = true;
+		/* Fissile isotope */
+		return isotope;
+	}
+
 	/* Create isotope */
-	return new AceIsotopeBase(table, child_grid);
+	return new AceIsotope<NonFissile>(table, child_grid);
 }
 
 double AceIsotopeBase::energy_freegas_threshold = 400.0; /* By default, 400.0 kT*/
 double AceIsotopeBase::awr_freegas_threshold = 1.0;      /* By default, only H */
 
-/* Create NU sampler based on the information on the ACE data */
-static AceReaction::NuSampler* buildNuSampler(const Ace::NUBlock::NuData* nu_data) {
-	typedef Ace::NUBlock AceNu;
-	/* Get type */
-	int type = nu_data->getType();
-	/* Polynomial type */
-	if(type == AceNu::flag_pol)
-		return new AceReaction::PolynomialNu(dynamic_cast<const AceNu::Polynomial*>(nu_data));
-	/* Tabular type */
-	return new AceReaction::TabularNu(dynamic_cast<const AceNu::Tabular*>(nu_data));
-}
-
-void AceIsotopeBase::setFissionReaction(const Ace::NeutronTable& _table) {
-
-	/* Fission MT for get the NU sampler */
-	int fission_mt(18);
-
-	/* Check if the isotope contains a fission cross section */
-	if(reactions.check_all("18")) {
-		/* We just got one fission reaction */
-		fissile = true;
-		/* Get fission cross section */
-		fission_xs = reactions.get_xs(18);
-		/* Check size */
-		assert(fission_xs.size() == total_xs.size());
-		/* Set fission cross section */
-		fission_reaction = getReaction(18);
-
-	} else if(reactions.check_all("19-21,38")) {
-
-		/* We got chance fission reactions */
-		fissile = true;
-		/* Get fission cross section */
-		fission_xs = reactions.get_xs(18);
-		/* Check size */
-		assert(fission_xs.size() == total_xs.size());
-
-		/* MT of chance fission reaction */
-		int mts[4] = {19, 20, 21, 38};
-		vector<int> chance_mts(mts, mts + 4);
-
-		/* Array for the secondary particle reaction sampler */
-		vector<pair<Reaction*,const CrossSection*> > chance_array;
-
-		/* Push chance reactions */
-		for(vector<int>::const_iterator it = chance_mts.begin() ; it != chance_mts.end() ; ++it) {
-			/* Get MT */
-			int mt = (*it);
-
-			/* Get the reaction from the container */
-			ReactionContainer::const_iterator it_reaction = reactions.get_mt(mt);
-			if(it_reaction != reactions.end()) {
-				/* Reaction exist */
-				const NeutronReaction& ace_reaction = (*it_reaction);
-				/* Push reaction */
-				chance_array.push_back( make_pair(getReaction(mt), &(ace_reaction.getXs()) ));
-			}
-		}
-
-		/* Set fission cross section */
-		fission_reaction = new AceReaction::ChanceFission(chance_array, fission_xs, child_grid);
-
-		/* Push reaction into local map (since is not created in a "legal" way) */
-		reaction_map[18] = fission_reaction;
-
-		/* Put fission MT */
-		fission_mt = (*chance_array.begin()).first->getId();
-	}
-
-	/* Set the fission probability (in case the information is available) */
-	if(fissile) {
-		/* Get fission reaction */
-		const Ace::NeutronReaction& ace_reaction = (*reactions.get_mt(fission_mt));
-
-		/* Get distribution of emerging particles from the NU-block */
-		const Ace::NUBlock* nu_block = _table.block<NUBlock>();
-
-		/* Sanity check */
-		if(not nu_block) {
-			/* Print warning */
-			Log::warn() << left << "No information on NU block for fission reaction with mt = " << fission_mt
-						<< " for isotope " << getUserId() << Log::endl;
-
-			/* Set the isotope as non-fissile */
-			fissile = false;
-			return;
-		} else {
-			/* Get the NU data related to this fission reaction */
-			vector<Ace::NUBlock::NuData*> nu_data = nu_block->clone();
-
-			/* TODO - For now just sample particles with prompt spectrum */
-			if(nu_data.size() >= 2)
-				total_nu = buildNuSampler(nu_data[1]);
-			else if(nu_data.size() == 1)
-				total_nu = buildNuSampler(nu_data[0]);
-			else
-				throw(AceModule::AceError(getUserId(), "Cannot create reaction for mt = " + toString(ace_reaction.getMt()) +
-					" : Information in NU block is not available" ));
-		}
-	}
-}
+//void AceIsotopeBase::setFissionReaction(const Ace::NeutronTable& _table) {
+//
+//	/* Fission MT for get the NU sampler */
+//	int fission_mt(18);
+//
+//	/* Check if the isotope contains a fission cross section */
+//	if(reactions.check_all("18")) {
+//		/* We just got one fission reaction */
+//		fissile = true;
+//		/* Get fission cross section */
+//		fission_xs = reactions.get_xs(18);
+//		/* Check size */
+//		assert(fission_xs.size() == total_xs.size());
+//		/* Set fission cross section */
+//		fission_reaction = getReaction(18);
+//
+//	} else if(reactions.check_all("19-21,38")) {
+//
+//		/* We got chance fission reactions */
+//		fissile = true;
+//		/* Get fission cross section */
+//		fission_xs = reactions.get_xs(18);
+//		/* Check size */
+//		assert(fission_xs.size() == total_xs.size());
+//
+//		/* MT of chance fission reaction */
+//		int mts[4] = {19, 20, 21, 38};
+//		vector<int> chance_mts(mts, mts + 4);
+//
+//		/* Array for the secondary particle reaction sampler */
+//		vector<pair<Reaction*,const CrossSection*> > chance_array;
+//
+//		/* Push chance reactions */
+//		for(vector<int>::const_iterator it = chance_mts.begin() ; it != chance_mts.end() ; ++it) {
+//			/* Get MT */
+//			int mt = (*it);
+//
+//			/* Get the reaction from the container */
+//			ReactionContainer::const_iterator it_reaction = reactions.get_mt(mt);
+//			if(it_reaction != reactions.end()) {
+//				/* Reaction exist */
+//				const NeutronReaction& ace_reaction = (*it_reaction);
+//				/* Push reaction */
+//				chance_array.push_back( make_pair(getReaction(mt), &(ace_reaction.getXs()) ));
+//			}
+//		}
+//
+//		/* Set fission cross section */
+//		fission_reaction = new AceReaction::ChanceFission(chance_array, fission_xs, child_grid);
+//
+//		/* Push reaction into local map (since is not created in a "legal" way) */
+//		reaction_map[18] = fission_reaction;
+//
+//		/* Put fission MT */
+//		fission_mt = (*chance_array.begin()).first->getId();
+//	}
+//
+//	/* Set the fission probability (in case the information is available) */
+//	if(fissile) {
+//		/* Get fission reaction */
+//		const Ace::NeutronReaction& ace_reaction = (*reactions.get_mt(fission_mt));
+//
+//		/* Get distribution of emerging particles from the NU-block */
+//		const Ace::NUBlock* nu_block = _table.block<NUBlock>();
+//
+//		/* Sanity check */
+//		if(not nu_block) {
+//			/* Print warning */
+//			Log::warn() << left << "No information on NU block for fission reaction with mt = " << fission_mt
+//						<< " for isotope " << getUserId() << Log::endl;
+//
+//			/* Set the isotope as non-fissile */
+//			fissile = false;
+//			return;
+//		} else {
+//			/* Get the NU data related to this fission reaction */
+//			vector<Ace::NUBlock::NuData*> nu_data = nu_block->clone();
+//
+//			/* TODO - For now just sample particles with prompt spectrum */
+//			if(nu_data.size() >= 2)
+//				total_nu = buildNuSampler(nu_data[1]);
+//			else if(nu_data.size() == 1)
+//				total_nu = buildNuSampler(nu_data[0]);
+//			else
+//				throw(AceModule::AceError(getUserId(), "Cannot create reaction for mt = " + toString(ace_reaction.getMt()) +
+//					" : Information in NU block is not available" ));
+//		}
+//	}
+//}
 
 AceIsotopeBase::AceIsotopeBase(const Ace::NeutronTable& _table, const ChildGrid* _child_grid) : Isotope(_table.getReactions().name()),
 	reactions(_table.getReactions()), aweight(reactions.awr()), temperature(reactions.temp()), child_grid(_child_grid),
-	fission_reaction(0), total_nu(0), secondary_sampler(0) {
+	secondary_sampler(0) {
 
 	/* Total microscopic cross section of this isotope */
 	total_xs = reactions.get_xs(1);
@@ -162,9 +176,6 @@ AceIsotopeBase::AceIsotopeBase(const Ace::NeutronTable& _table, const ChildGrid*
 	elastic_xs = reactions.get_xs(2);
 	/* Set elastic reaction */
 	elastic_scattering = getReaction(2);
-
-	/* Set fission stuff */
-	setFissionReaction(_table);
 
 	/* Set the absorption cross section */
 	absorption_xs = reactions.get_xs(27);
@@ -221,7 +232,7 @@ double AceIsotopeBase::getAbsorptionProb(Energy& energy) const {
 }
 
 double AceIsotopeBase::getFissionProb(Energy& energy) const {
-	return getProb(energy, fission_xs);
+	return getFissionXs(energy) / getTotalXs(energy);
 }
 
 double AceIsotopeBase::getElasticProb(Energy& energy) const {
@@ -233,13 +244,6 @@ double AceIsotopeBase::getTotalXs(Energy& energy) const {
 	size_t idx = child_grid->index(energy, factor);
 	double total = factor * (total_xs[idx + 1] - total_xs[idx]) + total_xs[idx];
 	return total;
-}
-
-double AceIsotopeBase::getFissionXs(Energy& energy) const {
-	double factor;
-	size_t idx = child_grid->index(energy, factor);
-	double fission = factor * (fission_xs[idx + 1] - fission_xs[idx]) + fission_xs[idx];
-	return fission;
 }
 
 Reaction* AceIsotopeBase::inelastic(Energy& energy, Random& random) const {
@@ -289,8 +293,6 @@ void AceIsotopeBase::print(std::ostream& out) const {
 }
 
 AceIsotopeBase::~AceIsotopeBase() {
-	/* Delete NU-sampler */
-	delete total_nu;
 	/* Delete reactions */
 	for(map<int,Reaction*>::const_iterator it = reaction_map.begin() ; it != reaction_map.end() ; ++it)
 		delete (*it).second;
