@@ -43,7 +43,7 @@ namespace Helios {
 	/* Base class to deal with fission treatment */
 	class FissilePolicyBase {
 		/* Constant reference to a CHILD grid */
-		const ChildGrid* iso_child_grid;
+		const ChildGrid* child_grid;
 	protected:
 		/* Fission cross section */
 		Ace::CrossSection fission_xs;
@@ -86,10 +86,6 @@ namespace Helios {
 		Reaction* fission_reaction;
 		/* NU sampler */
 		AceReaction::NuSampler* total_nu;
-		/*
-		 * Flag if the isotope has fission information
-		 */
-		bool fissile;
 
 	public:
 		/* Constructor from table */
@@ -105,9 +101,6 @@ namespace Helios {
 			return total_nu->getNuBar(energy.second);
 		}
 
-		/* Check if the isotope is fissile */
-		bool isFissile() const {return fissile;}
-
 		~TotalNuFission() {/* */}
 	};
 
@@ -118,6 +111,7 @@ namespace Helios {
 		Reaction* fission_reaction;
 		/* NU sampler */
 		AceReaction::NuSampler* total_nu;
+
 	public:
 		/* Constructor from table */
 		TotalNuChanceFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid);
