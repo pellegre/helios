@@ -109,7 +109,6 @@ void MultipleLawsSampler::print(std::ostream& out) const {
 	}
 }
 
-
 }
 
 

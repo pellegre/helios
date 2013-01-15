@@ -47,11 +47,22 @@ namespace Helios {
 	protected:
 		/* Fission cross section */
 		Ace::CrossSection fission_xs;
+
+		/* NU sampler */
+		AceReaction::NuSampler* total_nu;   /* Total NU  */
+		AceReaction::NuSampler* prompt_nu;  /* Prompt NU */
+		AceReaction::NuSampler* delayed_nu; /* Delayed NU */
+
 	public:
 		FissilePolicyBase(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid);
 
 		/* Get fission cross section */
 		double getFissionXs(Energy& energy) const;
+
+		/* Get average NU-bar at some energy */
+		double getNuBar(const Energy& energy) const {
+			return total_nu->getNuBar(energy.second);
+		}
 
 		~FissilePolicyBase() {}
 	};
@@ -84,8 +95,6 @@ namespace Helios {
 		 * Fission reaction. As always, this reaction is treated separately.
 		 */
 		Reaction* fission_reaction;
-		/* NU sampler */
-		AceReaction::NuSampler* total_nu;
 
 	public:
 		/* Constructor from table */
@@ -96,11 +105,6 @@ namespace Helios {
 			return fission_reaction;
 		};
 
-		/* Get average NU-bar at some energy */
-		double getNuBar(const Energy& energy) const {
-			return total_nu->getNuBar(energy.second);
-		}
-
 		~TotalNuFission() {/* */}
 	};
 
@@ -109,8 +113,6 @@ namespace Helios {
 		 * Fission reaction. As always, this reaction is treated separately.
 		 */
 		Reaction* fission_reaction;
-		/* NU sampler */
-		AceReaction::NuSampler* total_nu;
 
 	public:
 		/* Constructor from table */
@@ -120,11 +122,6 @@ namespace Helios {
 		Reaction* fission(Energy& energy, Random& random) const {
 			return fission_reaction;
 		};
-
-		/* Get average NU-bar at some energy */
-		double getNuBar(const Energy& energy) const {
-			return total_nu->getNuBar(energy.second);
-		}
 
 		/* Check if the isotope is fissile */
 		bool isFissile() const {return true;}

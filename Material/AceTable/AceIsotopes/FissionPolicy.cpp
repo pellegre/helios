@@ -48,8 +48,29 @@ static AceReaction::NuSampler* buildNuSampler(const Ace::NUBlock::NuData* nu_dat
 }
 
 FissilePolicyBase::FissilePolicyBase(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) :
-		fission_xs(CrossSection(_table.getEnergyGrid().size())), child_grid(_child_grid) {
-	/* Null cross section */
+		fission_xs(CrossSection(_table.getEnergyGrid().size())), child_grid(_child_grid),
+		total_nu(0), prompt_nu(0), delayed_nu(0) {
+	/* Get reaction */
+	const ReactionContainer& reactions(_table.getReactions());
+
+	/* Get fission reaction */
+	const Ace::NeutronReaction& ace_reaction = (*reactions.get_mt(18));
+	/* Get distribution of emerging particles from the NU-block */
+	const Ace::NUBlock* nu_block = _table.block<NUBlock>();
+
+	if(nu_block) {
+		/* Get the NU data related to this fission reaction */
+		vector<Ace::NUBlock::NuData*> nu_data = nu_block->clone();
+
+		/* If total NU is available in NU-block, get it from here */
+		if(nu_data.size() >= 2)
+			total_nu = buildNuSampler(nu_data[1]);
+		else if(nu_data.size() == 1)
+			total_nu = buildNuSampler(nu_data[0]);
+		else
+			throw(AceModule::AceError(_isotope->getUserId(), "Cannot create reaction for mt = " + toString(ace_reaction.getMt()) +
+				" : Information in NU block is not available" ));
+	}
 }
 
 /* Get fission cross section */
