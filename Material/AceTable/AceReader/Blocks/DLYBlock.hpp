@@ -89,6 +89,14 @@ public:
 	static std::string name() {return "DLYBlock";}
 	std::string blockName() const {return name();};
 
+	/* Clone NU data inside this block */
+	NUBlock::NuData* clone() const {
+		return nu_data->clone();
+	}
+
+	/* Get the NU data */
+	const NUBlock::NuData& getNuData() const {return *nu_data;};
+
 	virtual ~DLYBlock() { delete nu_data; };
 };
 

@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "AceReader/ACEReader.hpp"
 #include "AceReader/NeutronTable.hpp"
 #include "AceReader/Conf.hpp"
+#include "AceReader/Ace.hpp"
 #include "AceReaction/AceReactionBase.hpp"
 #include "AceReaction/FissionReaction.hpp"
 #include "../../Common/XsSampler.hpp"
@@ -57,13 +58,32 @@ AceIsotopeBase* AceIsotopeFactory::createIsotope(const Ace::NeutronTable& table)
 		/* Get reaction */
 		const ReactionContainer& reactions(table.getReactions());
 
-		/* Check the available cross sections on the table */
-		if(reactions.check_all("18")) {
-			isotope = new AceIsotope<TotalNuFission>(table, child_grid);
-		} else if(reactions.check_all("19-21,38")) {
-			isotope = new AceIsotope<TotalNuChanceFission>(table, child_grid);
+		/* Get distribution of delayed emerging particles from the NU-block */
+		const Ace::DLYBlock* del_block = table.block<DLYBlock>();
+
+		/* Check if delayed neutron information is available */
+		if(del_block) {
+
+			/* Check the available cross sections on the table */
+			if(reactions.check_all("18")) {
+				isotope = new AceIsotope<PromptFission<SingleFission, DelayedNu> >(table, child_grid);
+			} else if(reactions.check_all("19-21,38")) {
+				isotope = new AceIsotope<PromptFission<ChanceFission, DelayedNu> >(table, child_grid);
+			} else {
+				throw(AceModule::AceError(table.getName(), "Cannot create fission reaction : Fission cross section is not available" ));
+			}
+
 		} else {
-			throw(AceModule::AceError(table.getName(), "Cannot create fission reaction : Fission cross section is not available" ));
+
+			/* Check the available cross sections on the table */
+			if(reactions.check_all("18")) {
+				isotope = new AceIsotope<PromptFission<SingleFission, TotalNu> >(table, child_grid);
+			} else if(reactions.check_all("19-21,38")) {
+				isotope = new AceIsotope<PromptFission<ChanceFission, TotalNu> >(table, child_grid);
+			} else {
+				throw(AceModule::AceError(table.getName(), "Cannot create fission reaction : Fission cross section is not available" ));
+			}
+
 		}
 
 		/* Set fissile flag in the isotope */

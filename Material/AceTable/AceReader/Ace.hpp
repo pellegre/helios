@@ -33,4 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ACEReader.hpp"
 
+#include "AceUtils.hpp"
+#include "Blocks/Blocks.hpp"
+
 #endif /* ACE_HPP_ */

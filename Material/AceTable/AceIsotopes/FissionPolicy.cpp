@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "FissionPolicy.hpp"
 #include "../AceReaction/FissionReaction.hpp"
+#include "../AceReader/Ace.hpp"
 #include "../AceIsotopeBase.hpp"
 #include "../AceModule.hpp"
 
@@ -48,30 +49,7 @@ static AceReaction::NuSampler* buildNuSampler(const Ace::NUBlock::NuData* nu_dat
 }
 
 FissilePolicyBase::FissilePolicyBase(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) :
-		fission_xs(CrossSection(_table.getEnergyGrid().size())), child_grid(_child_grid),
-		total_nu(0), prompt_nu(0), delayed_nu(0) {
-	/* Get reaction */
-	const ReactionContainer& reactions(_table.getReactions());
-
-	/* Get fission reaction */
-	const Ace::NeutronReaction& ace_reaction = (*reactions.get_mt(18));
-	/* Get distribution of emerging particles from the NU-block */
-	const Ace::NUBlock* nu_block = _table.block<NUBlock>();
-
-	if(nu_block) {
-		/* Get the NU data related to this fission reaction */
-		vector<Ace::NUBlock::NuData*> nu_data = nu_block->clone();
-
-		/* If total NU is available in NU-block, get it from here */
-		if(nu_data.size() >= 2)
-			total_nu = buildNuSampler(nu_data[1]);
-		else if(nu_data.size() == 1)
-			total_nu = buildNuSampler(nu_data[0]);
-		else
-			throw(AceModule::AceError(_isotope->getUserId(), "Cannot create reaction for mt = " + toString(ace_reaction.getMt()) +
-				" : Information in NU block is not available" ));
-	}
-}
+		fission_xs(CrossSection(_table.getEnergyGrid().size())), child_grid(_child_grid) {}
 
 /* Get fission cross section */
 double FissilePolicyBase::getFissionXs(Energy& energy) const {
@@ -81,42 +59,73 @@ double FissilePolicyBase::getFissionXs(Energy& energy) const {
 	return fission;
 }
 
-TotalNuFission::TotalNuFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) :
-	FissilePolicyBase(_isotope, _table, _child_grid) {
-	/* Get reaction */
-	const ReactionContainer& reactions(_table.getReactions());
-	/* Get fission cross section */
-	fission_xs = reactions.get_xs(18);
-	/* Set fission cross section */
-	fission_reaction = _isotope->getReaction(18);
-
-	/* Get fission reaction */
-	const Ace::NeutronReaction& ace_reaction = (*reactions.get_mt(18));
+TotalNu::TotalNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) {
 	/* Get distribution of emerging particles from the NU-block */
-	const Ace::NUBlock* nu_block = _table.block<NUBlock>();
+	const NUBlock* nu_block = _table.block<NUBlock>();
 
 	/* Get the NU data related to this fission reaction */
-	vector<Ace::NUBlock::NuData*> nu_data = nu_block->clone();
+	const vector<Ace::NUBlock::NuData*>& nu_data = nu_block->getNuData();
 
 	/* If total NU is available in NU-block, get it from here */
-	if(nu_data.size() >= 2)
+	if(nu_data.size() >= 2) {
+		/* Total NU */
 		total_nu = buildNuSampler(nu_data[1]);
-	else if(nu_data.size() == 1)
+		/* Prompt NU*/
+		prompt_nu = buildNuSampler(nu_data[0]);
+	}
+	else if(nu_data.size() == 1) {
+		/*
+		 * Only prompt information, and assume is the total NU fraction (because delayed NU
+		 * information is not available)
+		 */
 		total_nu = buildNuSampler(nu_data[0]);
+		prompt_nu = buildNuSampler(nu_data[0]);
+	}
 	else
-		throw(AceModule::AceError(_isotope->getUserId(), "Cannot create reaction for mt = " + toString(ace_reaction.getMt()) +
+		throw(AceModule::AceError(_isotope->getUserId(), "Cannot create fission reaction"
 			" : Information in NU block is not available" ));
-};
+}
 
-TotalNuChanceFission::TotalNuChanceFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) :
-		FissilePolicyBase(_isotope, _table, _child_grid) {
+DelayedNu::DelayedNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) {
+	/* Get distribution of emerging particles from the NU-block */
+	const NUBlock* nu_block = _table.block<NUBlock>();
+
+	/* Get the NU data related to this fission reaction */
+	const vector<Ace::NUBlock::NuData*>& nu_data = nu_block->getNuData();
+
+	/* If total NU is available in NU-block, get it from here */
+	if(nu_data.size() >= 2) {
+		/* Total NU */
+		total_nu = buildNuSampler(nu_data[1]);
+		/* Prompt NU*/
+		prompt_nu = buildNuSampler(nu_data[0]);
+	}
+	else if(nu_data.size() == 1) {
+		/* Only prompt information, and total NU is not available */
+		total_nu = 0;
+		prompt_nu = buildNuSampler(nu_data[0]);
+	}
+	else
+		throw(AceModule::AceError(_isotope->getUserId(), "Cannot create fission reaction"
+			" : Information in NU block is not available" ));
+
+	/* Get distribution of emerging particles from the DLY-block */
+	const DLYBlock* del_block = _table.block<DLYBlock>();
+
+	/* Get delayed NU data related to this fission reaction */
+	delayed_nu = buildNuSampler(&del_block->getNuData());
+}
+
+SingleFission::SingleFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) {
+	/* Set fission cross section */
+	fission_reaction = _isotope->getReaction(18);
+}
+
+ChanceFission::ChanceFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) {
 	/* Get reaction */
 	const ReactionContainer& reactions(_table.getReactions());
 	/* Get fission cross section */
-	fission_xs = reactions.get_xs(18);
-
-	int fission_mt(19);
-
+	const CrossSection& fission_xs = reactions.get_xs(18);
 	/* MT of chance fission reaction */
 	int mts[4] = {19, 20, 21, 38};
 	vector<int> chance_mts(mts, mts + 4);
@@ -141,24 +150,6 @@ TotalNuChanceFission::TotalNuChanceFission(AceIsotopeBase* _isotope, const Ace::
 
 	/* Set fission cross section */
 	fission_reaction = new AceReaction::ChanceFission(chance_array, fission_xs, _child_grid);
-
-	/* Put fission MT */
-	fission_mt = (*chance_array.begin()).first->getId();
-
-	/* Get distribution of emerging particles from the NU-block */
-	const Ace::NUBlock* nu_block = _table.block<NUBlock>();
-
-	/* Get the NU data related to this fission reaction */
-	vector<Ace::NUBlock::NuData*> nu_data = nu_block->clone();
-
-	/* If total NU is available in NU-block, get it from here */
-	if(nu_data.size() >= 2)
-		total_nu = buildNuSampler(nu_data[1]);
-	else if(nu_data.size() == 1)
-		total_nu = buildNuSampler(nu_data[0]);
-	else
-		throw(AceModule::AceError(_isotope->getUserId(), "Cannot create reaction for fission "
-				": Information in NU block is not available" ));
 }
 
 }
