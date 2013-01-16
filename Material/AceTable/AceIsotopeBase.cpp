@@ -66,9 +66,9 @@ AceIsotopeBase* AceIsotopeFactory::createIsotope(const Ace::NeutronTable& table)
 
 			/* Check the available cross sections on the table */
 			if(reactions.check_all("18")) {
-				isotope = new AceIsotope<PromptFission<SingleFission, DelayedNu> >(table, child_grid);
+				isotope = new AceIsotope<DelayedFissionSampler<SingleFissionReaction, DelayedNu> >(table, child_grid);
 			} else if(reactions.check_all("19-21,38")) {
-				isotope = new AceIsotope<PromptFission<ChanceFission, DelayedNu> >(table, child_grid);
+				isotope = new AceIsotope<DelayedFissionSampler<ChanceFissionReaction, DelayedNu> >(table, child_grid);
 			} else {
 				throw(AceModule::AceError(table.getName(), "Cannot create fission reaction : Fission cross section is not available" ));
 			}
@@ -77,9 +77,9 @@ AceIsotopeBase* AceIsotopeFactory::createIsotope(const Ace::NeutronTable& table)
 
 			/* Check the available cross sections on the table */
 			if(reactions.check_all("18")) {
-				isotope = new AceIsotope<PromptFission<SingleFission, TotalNu> >(table, child_grid);
+				isotope = new AceIsotope<PromptFissionSampler<SingleFissionReaction, TotalNu> >(table, child_grid);
 			} else if(reactions.check_all("19-21,38")) {
-				isotope = new AceIsotope<PromptFission<ChanceFission, TotalNu> >(table, child_grid);
+				isotope = new AceIsotope<PromptFissionSampler<ChanceFissionReaction, TotalNu> >(table, child_grid);
 			} else {
 				throw(AceModule::AceError(table.getName(), "Cannot create fission reaction : Fission cross section is not available" ));
 			}

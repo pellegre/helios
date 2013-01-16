@@ -42,10 +42,10 @@ namespace Ace {
 /* Virtual block to handle delayed neutron data */
 class DLYBlock: public AceTable::ACEBlock {
 
-	/* Update pointers on the ACE table according  to data on this block */
-	void updatePointers(int nxs[nxs_size], const int jxs_old[jxs_size], int jxs_new[jxs_size]) const;
+public:
 
 	class BasicData {
+	public:
 		double dec;                   /* Decay constant of this group */
 		int nr;                       /* Number of interpolation regions */
 		std::vector<int> nbt;         /* ENDF interpolation parameters */
@@ -53,29 +53,13 @@ class DLYBlock: public AceTable::ACEBlock {
 		int ne;                       /* Number of energies */
 		std::vector<double> energies; /* tabular energies points */
 		std::vector<double> prob;     /* Probabilities */
-	public:
+
 		BasicData() {/* */};
 		BasicData(std::vector<double>::const_iterator& it);
 		void dump(std::ostream& xss);
 		int getSize() const {return (3 + nbt.size() + aint.size() + energies.size() + prob.size());};
 		~BasicData() {/* */};
 	};
-
-	/* NU data of delayed neutrons */
-	NUBlock::Tabular* nu_data;
-	/* Delayed data for each precusor family */
-	std::vector<BasicData> delayed_data;
-	/* Block of locators of energy distributions of the delayed data of each precursor groups */
-	RawBlock<int,NeutronTable::DNEDL> DNEDLBlock;
-	/* Energy distributions of precursor groups */
-	std::vector<EnergyDistribution> energy_dist;
-
-	/* Access to the reaction container on the parent table */
-	ReactionContainer& reas() const;
-
-	DLYBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable::AceTable* ace_table);
-
-public:
 
 	friend class NeutronTable;
 
@@ -97,7 +81,33 @@ public:
 	/* Get the NU data */
 	const NUBlock::NuData& getNuData() const {return *nu_data;};
 
+	const std::vector<BasicData>& getDelayedData() const {
+		return delayed_data;
+	}
+
+	const std::vector<EnergyDistribution>& getEnergyDistribution() const {
+		return energy_dist;
+	}
+
 	virtual ~DLYBlock() { delete nu_data; };
+
+private:
+	/* Update pointers on the ACE table according  to data on this block */
+	void updatePointers(int nxs[nxs_size], const int jxs_old[jxs_size], int jxs_new[jxs_size]) const;
+
+	/* NU data of delayed neutrons */
+	NUBlock::Tabular* nu_data;
+	/* Delayed data for each precusor family */
+	std::vector<BasicData> delayed_data;
+	/* Block of locators of energy distributions of the delayed data of each precursor groups */
+	RawBlock<int,NeutronTable::DNEDL> DNEDLBlock;
+	/* Energy distributions of precursor groups */
+	std::vector<EnergyDistribution> energy_dist;
+
+	/* Access to the reaction container on the parent table */
+	ReactionContainer& reas() const;
+
+	DLYBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable::AceTable* ace_table);
 };
 
 } /* namespace ACE */

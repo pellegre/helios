@@ -51,4 +51,31 @@ void ChanceFission::print(std::ostream& out) const {
 
 Fission::~Fission() {/* */}
 
+DelayedFission::DelayedFission(const std::vector<Ace::DLYBlock::BasicData>& delayed_data,
+		const std::vector<Ace::EnergyDistribution>& energy_dist, const Ace::NeutronReaction& ace_reaction) : Reaction(18) {
+	EnergySamplerFactory sampler_factory(0);
+	/* Create probability container */
+	for(size_t i = 0 ; i < delayed_data.size() ; ++i)
+		probs.push_back(PrecursorProbability(delayed_data[i]));
+	/* Create energy sampler container */
+	for(size_t i = 0 ; i < energy_dist.size() ; ++i)
+		energy_sampler.push_back(sampler_factory.createLaw(energy_dist[i].laws[0], ace_reaction));
+	/* Sanity check */
+	assert(probs.size() == energy_sampler.size());
+}
+
+void DelayedFission::print(std::ostream& out) const {
+	out << "Probability Table (delayed data) " << endl;
+	for(size_t i = 0 ; i < probs.size() ; ++i) {
+		out << "Group = " << i << " : ";
+		for(size_t j = 0 ; j < probs[i].energy.size() ; ++j)
+			out << scientific << probs[i].energy[j] << " " << probs[i].prob[j] << " ; ";
+		out << endl;
+	}
+}
+
+DelayedFission::~DelayedFission() {
+	for(size_t i = 0 ; i < energy_sampler.size() ; ++i)
+		delete energy_sampler[i];
+}
 } /* namespace Helios */

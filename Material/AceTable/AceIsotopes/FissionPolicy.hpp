@@ -30,7 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../AceReader/ReactionContainer.hpp"
 #include "../AceReader/NeutronTable.hpp"
+#include "../AceReader/Ace.hpp"
 #include "../AceReaction/NuSampler.hpp"
+#include "../AceReaction/FissionReaction.hpp"
 #include "../../../Environment/McModule.hpp"
 #include "../../../Common/Common.hpp"
 #include "../../Grid/MasterGrid.hpp"
@@ -146,42 +148,54 @@ namespace Helios {
 	};
 
 	/* Prompt fission cross section sampling (singles reaction or several chance fission available) */
-	class SingleFission {
+	class SingleFissionReaction {
 		/* Fission reaction */
 		Reaction* fission_reaction;
+		/* Reaction extracted from the table */
+		const Ace::NeutronReaction* ace_reaction;
 	public:
-		SingleFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid);
+		SingleFissionReaction(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid);
 
 		/* Return prompt fission reaction */
 		Reaction* getPromptFission() const {
 			return fission_reaction;
 		}
 
-		~SingleFission() {}
+		/* Return fission reaction (constant reference) */
+		const Ace::NeutronReaction& getAceReaction() const {
+			return *ace_reaction;
+		}
+
+		~SingleFissionReaction() {}
 	};
 
-	class ChanceFission {
+	class ChanceFissionReaction {
 		/* Fission reaction */
 		Reaction* fission_reaction;
+		/* Reaction extracted from the table */
+		const Ace::NeutronReaction* ace_reaction;
 	public:
-		ChanceFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid);
+		ChanceFissionReaction(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid);
 
 		/* Return prompt fission reaction */
 		Reaction* getPromptFission() const {
 			return fission_reaction;
 		}
 
-		~ChanceFission() {
-			delete fission_reaction;
+		/* Return fission reaction (constant reference) */
+		const Ace::NeutronReaction& getAceReaction() const {
+			return *ace_reaction;
 		}
+
+		~ChanceFissionReaction() {}
 	};
 
 	template<class FissionPolicy, class NuPolicy>
-	class PromptFission : public FissilePolicyBase, public FissionPolicy, public NuPolicy {
+	class PromptFissionSampler : public FissilePolicyBase, public FissionPolicy, public NuPolicy {
 
 	public:
 		/* Constructor from table */
-		PromptFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid):
+		PromptFissionSampler(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid):
 			FissilePolicyBase(_isotope, _table, _child_grid),
 			FissionPolicy(_isotope, _table, _child_grid), NuPolicy(_isotope, _table) {
 			/* Get reaction */
@@ -193,14 +207,53 @@ namespace Helios {
 		/* Fission reaction */
 		Reaction* fission(Energy& energy, Random& random) const {
 			return FissionPolicy::getPromptFission();
-		};
+		}
 
 		/* Get average NU-bar at some energy */
 		double getNuBar(const Energy& energy) const {
 			return NuPolicy::getTotalNu(energy);
 		}
 
-		PromptFission() {}
+		PromptFissionSampler() {}
+	};
+
+	template<class FissionPolicy, class NuPolicy>
+	class DelayedFissionSampler : public FissilePolicyBase, public FissionPolicy, public NuPolicy {
+		/* Delayed fission reaction */
+		Reaction* delayed_fission;
+	public:
+		/* Constructor from table */
+		DelayedFissionSampler(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid):
+			FissilePolicyBase(_isotope, _table, _child_grid), FissionPolicy(_isotope, _table, _child_grid),
+			NuPolicy(_isotope, _table), delayed_fission(0) {
+			/* Get reaction */
+			const Ace::ReactionContainer& reactions(_table.getReactions());
+			/* Get fission cross section */
+			fission_xs = reactions.get_xs(18);
+
+			/* Get block where the delayed data is contained */
+			const Ace::DLYBlock* del_block = _table.block<Ace::DLYBlock>();
+			/* Create delayed fission reaction */
+			delayed_fission = new AceReaction::DelayedFission(del_block->getDelayedData(), del_block->getEnergyDistribution(),
+					FissionPolicy::getAceReaction());
+		}
+
+		/* Fission reaction */
+		Reaction* fission(Energy& energy, Random& random) const {
+			/* Sample random number */
+			double rho(random.uniform());
+			/* Sample particles with delayed spectrum */
+			if(rho < NuPolicy::getBeta(energy)) return delayed_fission;
+			/* Return prompt neutron spectrum */
+			return FissionPolicy::getPromptFission();
+		}
+
+		/* Get average NU-bar at some energy */
+		double getNuBar(const Energy& energy) const {
+			return NuPolicy::getTotalNu(energy);
+		}
+
+		DelayedFissionSampler() {}
 	};
 
 }

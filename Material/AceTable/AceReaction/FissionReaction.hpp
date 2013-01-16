@@ -29,8 +29,10 @@
 #define FISSIONREACTION_HPP_
 
 #include "../AceReader/ReactionContainer.hpp"
+#include "../AceReader/Ace.hpp"
 #include "../../../Common/Common.hpp"
 #include "../../../Common/XsSampler.hpp"
+#include "../../../Common/EndfInterpolate.hpp"
 #include "../../Grid/MasterGrid.hpp"
 #include "InelasticScattering.hpp"
 #include "NuSampler.hpp"
@@ -102,6 +104,73 @@ namespace AceReaction {
 			/* Delete sampler */
 			delete chance_sampler;
 		}
+	};
+
+	class DelayedFission : public Reaction {
+
+		/* Precursor probability */
+		struct PrecursorProbability {
+			EndfInterpolate endf_scheme; /* ENDF interpolate scheme */
+			std::vector<double> energy;  /* Energy points */
+			std::vector<double> prob;    /* Tabulated probability */
+
+			/* Initialize from data obtained from ACE table */
+			PrecursorProbability(const Ace::DLYBlock::BasicData& data) : endf_scheme(data.nbt, data.aint),
+					energy(data.energies), prob(data.prob) {
+				/* Sanity check */
+				assert(energy.size() == prob.size());
+			};
+
+			/* Interpolate and get probability */
+			double getProb(double ienergy) const {
+				return endf_scheme.interpolate(energy.begin(), energy.end(), prob.begin(), prob.end(), ienergy);
+			}
+
+			~PrecursorProbability() {};
+		};
+
+		/* Energy sampler for each precursor group */
+		std::vector<EnergySamplerBase*> energy_sampler;
+		/* Precursor probabilities */
+		std::vector<PrecursorProbability> probs;
+
+		/* Get an energy sampler using precursor probabilities */
+		EnergySamplerBase* getSampler(Energy& energy, Random& random) const {
+			/* Get energy */
+			double ienergy(energy.second);
+			/* Sample random number */
+			double rho(random.uniform());
+			/* Select precursor group */
+			size_t group(0);
+			/* Accumulate probability */
+			double accum(0.0);
+			for(; group < probs.size() - 1 ; ++group) {
+				accum += probs[group].getProb(ienergy);
+				if(rho <= accum) break;
+			}
+			assert(group < energy_sampler.size());
+			return energy_sampler[group];
+		}
+
+	public:
+		DelayedFission(const std::vector<Ace::DLYBlock::BasicData>& delayed_data,
+				const std::vector<Ace::EnergyDistribution>& energy_dist, const Ace::NeutronReaction& ace_reaction);
+
+		/* Print internal information of the reaction */
+		void print(std::ostream& out) const;
+
+		/* Sample a fission neutron (the weight of the neutron is NOT modified) */
+		void operator()(Particle& particle, Random& random) const {
+			/* Sample new energy */
+			double energy, mu;
+			getSampler(particle.erg(), random)->setEnergy(particle, random, energy, mu);
+			/* Set new direction (assume isotropic) */
+			isotropicDirection(particle.dir(), random);
+			/* Set new energy */
+			particle.erg().second = energy;
+		}
+
+		~DelayedFission();
 	};
 }
 

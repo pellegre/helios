@@ -27,7 +27,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "FissionPolicy.hpp"
 #include "../AceReaction/FissionReaction.hpp"
-#include "../AceReader/Ace.hpp"
 #include "../AceIsotopeBase.hpp"
 #include "../AceModule.hpp"
 
@@ -132,12 +131,15 @@ DelayedNu::DelayedNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) 
 	delete del_data;
 }
 
-SingleFission::SingleFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) {
+SingleFissionReaction::SingleFissionReaction(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) {
 	/* Set fission cross section */
 	fission_reaction = _isotope->getReaction(18);
+	/* Get reaction from ACE table */
+	const ReactionContainer& reactions(_table.getReactions());
+	ace_reaction = &(*reactions.get_mt(18));
 }
 
-ChanceFission::ChanceFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) {
+ChanceFissionReaction::ChanceFissionReaction(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) {
 	/* Get reaction */
 	const ReactionContainer& reactions(_table.getReactions());
 	/* Get fission cross section */
@@ -166,6 +168,9 @@ ChanceFission::ChanceFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& 
 
 	/* Set fission cross section */
 	fission_reaction = new AceReaction::ChanceFission(chance_array, fission_xs, _child_grid);
+
+	/* Set ACE reaction (the first one of all available) */
+	ace_reaction = &(*reactions.get_mt(chance_array.begin()->first->getId()));
 }
 
 }
