@@ -59,7 +59,7 @@ double FissilePolicyBase::getFissionXs(Energy& energy) const {
 	return fission;
 }
 
-TotalNu::TotalNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) {
+TotalNu::TotalNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) : total_nu(0), prompt_nu(0) {
 	/* Get distribution of emerging particles from the NU-block */
 	const NUBlock* nu_block = _table.block<NUBlock>();
 
@@ -86,7 +86,7 @@ TotalNu::TotalNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) {
 			" : Information in NU block is not available" ));
 }
 
-DelayedNu::DelayedNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) {
+DelayedNu::DelayedNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) :total_nu(0), prompt_nu(0), delayed_nu(0) {
 	/* Get distribution of emerging particles from the NU-block */
 	const NUBlock* nu_block = _table.block<NUBlock>();
 
