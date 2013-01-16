@@ -157,9 +157,7 @@ namespace Helios {
 			return fission_reaction;
 		}
 
-		~SingleFission() {
-			delete fission_reaction;
-		}
+		~SingleFission() {}
 	};
 
 	class ChanceFission {

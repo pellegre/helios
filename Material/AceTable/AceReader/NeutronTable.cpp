@@ -240,7 +240,7 @@ NeutronTable::NeutronTable(const std::string& _table_name, const std::string& fu
 	if(nxs[NeutronTable::NR])
 		dlw_block = getBlock<DLWBlock>();
 
-	if(jxs[NeutronTable::NPCR])
+	if(jxs[NeutronTable::DNU])
 		blocks.push_back(new DLYBlock(nxs,jxs,xss,this));
 
 	/* Set the energy grid */

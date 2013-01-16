@@ -64,7 +64,7 @@ TotalNu::TotalNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) : to
 	const NUBlock* nu_block = _table.block<NUBlock>();
 
 	/* Get the NU data related to this fission reaction */
-	const vector<Ace::NUBlock::NuData*>& nu_data = nu_block->getNuData();
+	vector<Ace::NUBlock::NuData*> nu_data = nu_block->clone();
 
 	/* If total NU is available in NU-block, get it from here */
 	if(nu_data.size() >= 2) {
@@ -84,6 +84,11 @@ TotalNu::TotalNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) : to
 	else
 		throw(AceModule::AceError(_isotope->getUserId(), "Cannot create fission reaction"
 			" : Information in NU block is not available" ));
+
+	/* Delete prompt data */
+	std::vector<Ace::NUBlock::NuData*>::const_iterator it;
+	for(it = nu_data.begin() ; it != nu_data.end() ; it++)
+		delete (*it);
 }
 
 DelayedNu::DelayedNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) :total_nu(0), prompt_nu(0), delayed_nu(0) {
@@ -91,7 +96,7 @@ DelayedNu::DelayedNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) 
 	const NUBlock* nu_block = _table.block<NUBlock>();
 
 	/* Get the NU data related to this fission reaction */
-	const vector<Ace::NUBlock::NuData*>& nu_data = nu_block->getNuData();
+	vector<Ace::NUBlock::NuData*> nu_data = nu_block->clone();
 
 	/* If total NU is available in NU-block, get it from here */
 	if(nu_data.size() >= 2) {
@@ -112,8 +117,19 @@ DelayedNu::DelayedNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) 
 	/* Get distribution of emerging particles from the DLY-block */
 	const DLYBlock* del_block = _table.block<DLYBlock>();
 
+	/* Get delayed NU */
+	Ace::NUBlock::NuData* del_data = del_block->clone();
+
 	/* Get delayed NU data related to this fission reaction */
-	delayed_nu = buildNuSampler(&del_block->getNuData());
+	delayed_nu = buildNuSampler(del_data);
+
+	/* Delete prompt data */
+	std::vector<Ace::NUBlock::NuData*>::const_iterator it;
+	for(it = nu_data.begin() ; it != nu_data.end() ; it++)
+		delete (*it);
+
+	/* Delete delayed data */
+	delete del_data;
 }
 
 SingleFission::SingleFission(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) {
