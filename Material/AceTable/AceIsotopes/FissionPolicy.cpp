@@ -131,7 +131,7 @@ DelayedNu::DelayedNu(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table) 
 	delete del_data;
 }
 
-SingleFissionReaction::SingleFissionReaction(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) {
+SingleFissionReaction::SingleFissionReaction(AceIsotopeBase* _isotope, const CrossSection& fission_xs, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) {
 	/* Set fission cross section */
 	fission_reaction = _isotope->getReaction(18);
 	/* Get reaction from ACE table */
@@ -139,11 +139,9 @@ SingleFissionReaction::SingleFissionReaction(AceIsotopeBase* _isotope, const Ace
 	ace_reaction = &(*reactions.get_mt(18));
 }
 
-ChanceFissionReaction::ChanceFissionReaction(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) {
+ChanceFissionReaction::ChanceFissionReaction(AceIsotopeBase* _isotope, const CrossSection& fission_xs, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) {
 	/* Get reaction */
 	const ReactionContainer& reactions(_table.getReactions());
-	/* Get fission cross section */
-	const CrossSection& fission_xs = reactions.get_xs(18);
 	/* MT of chance fission reaction */
 	int mts[4] = {19, 20, 21, 38};
 	vector<int> chance_mts(mts, mts + 4);

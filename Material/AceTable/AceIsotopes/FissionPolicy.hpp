@@ -59,26 +59,6 @@ namespace Helios {
 		~FissilePolicyBase() {}
 	};
 
-	class NonFissile : public FissilePolicyBase {
-
-	public:
-		/* Constructor from table */
-		NonFissile(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) :
-			FissilePolicyBase(_isotope, _table, _child_grid) {/* */};
-
-		/* Fission reaction */
-		Reaction* fission(Energy& energy, Random& random) const {
-			return 0;
-		};
-
-		/* Get average NU-bar at some energy */
-		double getNuBar(const Energy& energy) const {
-			return 0.0;
-		}
-
-		~NonFissile() {/* */}
-	};
-
 	/* NU sampling schemes */
 	class TotalNu {
 		/* NU sampler */
@@ -154,7 +134,7 @@ namespace Helios {
 		/* Reaction extracted from the table */
 		const Ace::NeutronReaction* ace_reaction;
 	public:
-		SingleFissionReaction(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid);
+		SingleFissionReaction(AceIsotopeBase* _isotope, const Ace::CrossSection& fission_xs, const Ace::NeutronTable& _table, const ChildGrid* _child_grid);
 
 		/* Return prompt fission reaction */
 		Reaction* getPromptFission() const {
@@ -175,7 +155,7 @@ namespace Helios {
 		/* Reaction extracted from the table */
 		const Ace::NeutronReaction* ace_reaction;
 	public:
-		ChanceFissionReaction(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid);
+		ChanceFissionReaction(AceIsotopeBase* _isotope, const Ace::CrossSection& fission_xs, const Ace::NeutronTable& _table, const ChildGrid* _child_grid);
 
 		/* Return prompt fission reaction */
 		Reaction* getPromptFission() const {
@@ -187,7 +167,29 @@ namespace Helios {
 			return *ace_reaction;
 		}
 
-		~ChanceFissionReaction() {}
+		~ChanceFissionReaction() {
+			delete fission_reaction;
+		}
+	};
+
+	class NonFissile : public FissilePolicyBase {
+
+	public:
+		/* Constructor from table */
+		NonFissile(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) :
+			FissilePolicyBase(_isotope, _table, _child_grid) {/* */};
+
+		/* Fission reaction */
+		Reaction* fission(Energy& energy, Random& random) const {
+			return 0;
+		};
+
+		/* Get average NU-bar at some energy */
+		double getNuBar(const Energy& energy) const {
+			return 0.0;
+		}
+
+		~NonFissile() {/* */}
 	};
 
 	template<class FissionPolicy, class NuPolicy>
@@ -195,9 +197,9 @@ namespace Helios {
 
 	public:
 		/* Constructor from table */
-		PromptFissionSampler(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid):
+		PromptFissionSampler(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid) :
 			FissilePolicyBase(_isotope, _table, _child_grid),
-			FissionPolicy(_isotope, _table, _child_grid), NuPolicy(_isotope, _table) {
+			FissionPolicy(_isotope, FissilePolicyBase::fission_xs, _table, _child_grid), NuPolicy(_isotope, _table) {
 			/* Get reaction */
 			const Ace::ReactionContainer& reactions(_table.getReactions());
 			/* Get fission cross section */
@@ -224,7 +226,7 @@ namespace Helios {
 	public:
 		/* Constructor from table */
 		DelayedFissionSampler(AceIsotopeBase* _isotope, const Ace::NeutronTable& _table, const ChildGrid* _child_grid):
-			FissilePolicyBase(_isotope, _table, _child_grid), FissionPolicy(_isotope, _table, _child_grid),
+			FissilePolicyBase(_isotope, _table, _child_grid), FissionPolicy(_isotope, FissilePolicyBase::fission_xs, _table, _child_grid),
 			NuPolicy(_isotope, _table), delayed_fission(0) {
 			/* Get reaction */
 			const Ace::ReactionContainer& reactions(_table.getReactions());
@@ -253,7 +255,9 @@ namespace Helios {
 			return NuPolicy::getTotalNu(energy);
 		}
 
-		DelayedFissionSampler() {}
+		DelayedFissionSampler() {
+			delete delayed_fission;
+		}
 	};
 
 }
