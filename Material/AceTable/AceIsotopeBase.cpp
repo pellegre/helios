@@ -75,6 +75,9 @@ AceIsotopeBase* AceIsotopeFactory::createIsotope(const Ace::NeutronTable& table)
 
 		} else {
 
+			// Print warning
+			Log::warn() << left << "Delayed neutron information is not available for isotope " << table.getName() << endl;
+
 			/* Check the available cross sections on the table */
 			if(reactions.check_all("18")) {
 				isotope = new AceIsotope<PromptFissionSampler<SingleFissionReaction, TotalNu> >(table, child_grid);
