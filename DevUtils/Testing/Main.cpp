@@ -30,7 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //#include "SourceTest/SourceTest.hpp"
 //#include "ReactionTest/GridTest.hpp"
 //#include "AceTest/AceTests.hpp"
-#include "AceTest/ReactionTest.hpp"
+//#include "AceTest/ReactionTest.hpp"
+#include "AceTest/SabTests.hpp"
 
 InputPath InputPath::inputpath;
 

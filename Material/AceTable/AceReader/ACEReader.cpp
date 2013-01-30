@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* Different ACE tables */
 #include "NeutronTable.hpp"
+#include "SabTable.hpp"
 
 using namespace std;
 using namespace Ace;
@@ -47,6 +48,7 @@ namespace Ace {
 
 AceReader::AceReader() {
 	constructor_table["c"] = NeutronTable::NewTable;
+	constructor_table["t"] = SabTable::NewTable;
 }
 
 AceTable* AceReader::getTable(const std::string& table_name) {
