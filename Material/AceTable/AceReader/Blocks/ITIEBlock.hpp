@@ -37,7 +37,7 @@ class ITIEBlock: public Ace::AceTable::ACEBlock {
 	void updateData();
 
 	/* Update pointers on the ACE table according  to data on this block */
-	void updatePointers(int nxs[nxs_size], const int jxs_old[jxs_size], int jxs_new[jxs_size]) const;
+	void updatePointers(int nxs[nxs_size], const int jxs_old[jxs_size], int jxs_new[jxs_size]) const {}
 
 	/* Data of this block */
 	std::vector<double> energy;

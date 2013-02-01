@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SABTESTS_HPP_
 
 #include <iostream>
+#include <fstream>
 
 #include "../../../Common/Common.hpp"
 #include "../../../Material/AceTable/AceReader/Ace.hpp"
@@ -51,8 +52,11 @@ protected:
 TEST_F(SimpleSabTest, PrintSabTable) {
 	using namespace Ace;
 	using namespace std;
-	SabTable* ace_table = dynamic_cast<SabTable*>(AceReader::getTable("lwe6.00t"));
-	ace_table->dump(std::cout);
+	std::string filename("sab.test");
+	std::ofstream output(filename.c_str());
+
+	SabTable* ace_table = dynamic_cast<SabTable*>(AceReader::getTable("grj3.00t"));
+	ace_table->dump(output);
 }
 
 #endif /* SABTESTS_HPP_ */

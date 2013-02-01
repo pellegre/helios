@@ -147,7 +147,8 @@ set(MCFILES Common/Common.cpp
 			Material/AceTable/AceReader/Blocks/ACEBlock.cpp
 			Material/AceTable/AceReader/Blocks/ESZBlock.cpp
 			Material/AceTable/AceReader/Blocks/NRBlock.cpp
-			Material/AceTable/AceReader/Blocks/ITIEBlock.cpp			
+			Material/AceTable/AceReader/Blocks/ITIEBlock.cpp
+			Material/AceTable/AceReader/Blocks/ITCEBlock.cpp						
 			Material/AceTable/AceReader/NeutronReaction.cpp
 			Material/AceTable/AceReader/AceUtils.cpp
 			Material/AceTable/AceReader/Conf.cpp

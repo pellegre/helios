@@ -37,5 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "DLWBlock.hpp"
 #include "DLYBlock.hpp"
 #include "ITIEBlock.hpp"
+#include "ITCEBlock.hpp"
 
 #endif /* BLOCKS_HPP_ */

@@ -25,25 +25,44 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SabTable.hpp"
-#include "Blocks/Blocks.hpp"
-#include "AceUtils.hpp"
+#include "ITCEBlock.hpp"
+#include "../AceUtils.hpp"
+#include "../SabTable.hpp"
+
+using namespace std;
 
 namespace Ace {
 
-SabTable::SabTable(const std::string& _table_name, const std::string& full_path, size_t address) :
-		AceTable(_table_name,full_path,address) {
+ITCEBlock::ITCEBlock(const int nxs[nxs_size], const int jxs[jxs_size], const vector<double>& xss, AceTable* ace_table)
+	: ACEBlock(xss,ace_table) {
+	/* Begin of ITIE block */
+	setBegin(xss.begin() + (jxs[SabTable::ITCE] - 1));
 
-	blocks.push_back(new ITIEBlock(nxs,jxs,xss,this));
-
-	if(jxs[ITCE])
-		blocks.push_back(new ITCEBlock(nxs,jxs,xss,this));
+	/* Length */
+	int table_length;
+	getXSS(table_length);
+	getXSS(energy,table_length);
+	getXSS(prob,table_length);
 }
 
-void SabTable::printTableInfo(std::ostream& out) const {
-
+void ITCEBlock::dump(ostream& xss) {
+	int length = energy.size();
+	putXSS(length, xss);
+	putXSS(energy,xss);
+	putXSS(prob,xss);
 }
 
-SabTable::~SabTable() {}
+void ITCEBlock::updateData() {}
 
-} /* namespace Ace */
+int ITCEBlock::getType() const {
+	return SabTable::ITCE;
+};
+
+int ITCEBlock::getSize() const {
+	return energy.size() * 2 + 1;
+};
+
+
+ITCEBlock::~ITCEBlock() {/* */}
+
+} /* namespace Helios */

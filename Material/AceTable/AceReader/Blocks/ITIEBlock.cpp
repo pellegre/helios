@@ -54,11 +54,6 @@ void ITIEBlock::dump(ostream& xss) {
 
 void ITIEBlock::updateData() {}
 
-void ITIEBlock::updatePointers(int nxs[nxs_size], const int jxs_old[jxs_size], int jxs_new[jxs_size]) const {
-	/* Recalculate pointers on the JXS array */
-	shiftJXSArray(jxs_old,jxs_new,SabTable::ITIE,getSize());
-}
-
 int ITIEBlock::getType() const {
 	return SabTable::ITIE;
 };

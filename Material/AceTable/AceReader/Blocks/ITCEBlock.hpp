@@ -25,25 +25,42 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SabTable.hpp"
-#include "Blocks/Blocks.hpp"
-#include "AceUtils.hpp"
+#ifndef ITCEBLOCK_HPP_
+#define ITCEBLOCK_HPP_
+
+#include "../ACETable.hpp"
 
 namespace Ace {
 
-SabTable::SabTable(const std::string& _table_name, const std::string& full_path, size_t address) :
-		AceTable(_table_name,full_path,address) {
+class ITCEBlock: public Ace::AceTable::ACEBlock {
+	/* Update internal data of each block */
+	void updateData();
 
-	blocks.push_back(new ITIEBlock(nxs,jxs,xss,this));
+	/* Update pointers on the ACE table according  to data on this block */
+	void updatePointers(int nxs[nxs_size], const int jxs_old[jxs_size], int jxs_new[jxs_size]) const {}
 
-	if(jxs[ITCE])
-		blocks.push_back(new ITCEBlock(nxs,jxs,xss,this));
-}
+	/* Data of this block */
+	std::vector<double> energy;
+	std::vector<double> prob;
 
-void SabTable::printTableInfo(std::ostream& out) const {
+	ITCEBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable* ace_table);
 
-}
+public:
 
-SabTable::~SabTable() {}
+	friend class SabTable;
+
+	/* Dump the block, on a xss stream */
+	void dump(std::ostream& xss);
+
+	int getSize() const;
+
+	int getType() const;
+
+	static std::string name() {return "ITCEBlock";}
+	std::string blockName() const {return name();};
+
+	virtual ~ITCEBlock();
+};
 
 } /* namespace Ace */
+#endif /* ITCEBLOCK_HPP_ */
