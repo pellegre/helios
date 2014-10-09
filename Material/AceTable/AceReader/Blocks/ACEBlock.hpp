@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <fstream>
 #include "../ACETable.hpp"
+#include "../AceUtils.hpp"
 
 namespace Ace {
 

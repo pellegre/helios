@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "NeutronTable.hpp"
 #include "AceUtils.hpp"
 #include "PrintMessage.hpp"
+#include "NeutronReaction.hpp"
 
 #include "../../../Common/Common.hpp"
 

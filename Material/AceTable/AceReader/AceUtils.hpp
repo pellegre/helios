@@ -36,7 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 
 #include "ACETable.hpp"
-#include "NeutronReaction.hpp"
 #include "CrossSection.hpp"
 
 namespace Ace {

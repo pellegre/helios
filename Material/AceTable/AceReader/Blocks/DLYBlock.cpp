@@ -33,7 +33,7 @@
 using namespace std;
 using namespace Ace;
 
-DLYBlock::DLYBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable::AceTable* ace_table)
+DLYBlock::DLYBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, Ace::AceTable* ace_table)
     : ACEBlock(xss,ace_table),
       DNEDLBlock(nxs,jxs,xss,nxs[NeutronTable::NPCR],ace_table) {
 

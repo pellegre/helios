@@ -107,7 +107,7 @@ private:
 	/* Access to the reaction container on the parent table */
 	ReactionContainer& reas() const;
 
-	DLYBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, AceTable::AceTable* ace_table);
+	DLYBlock(const int nxs[nxs_size], const int jxs[jxs_size],const std::vector<double>& xss, Ace::AceTable* ace_table);
 };
 
 } /* namespace ACE */
